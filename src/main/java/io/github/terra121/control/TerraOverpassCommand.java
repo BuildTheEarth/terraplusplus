@@ -34,7 +34,7 @@ public class TerraOverpassCommand extends CommandBase {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-        if (!canUse(sender)) {
+        if (!this.canUse(sender)) {
             return;
         }
         if (args.length != 1) {
@@ -42,7 +42,7 @@ public class TerraOverpassCommand extends CommandBase {
         }
         String inUse = OpenStreetMaps.getOverpassEndpoint();
         boolean isDefault = inUse.equals(TerraConfig.serverOverpassDefault);
-        boolean hasFallback = !TerraConfig.serverOverpassFallback.equals("");
+        boolean hasFallback = !TerraConfig.serverOverpassFallback.isEmpty();
         switch (args[0]) {
             case "status":
                 String t = isDefault ? "terra121.commands.overpass.status.default" : "terra121.commands.overpass.status.fallback";
@@ -83,7 +83,7 @@ public class TerraOverpassCommand extends CommandBase {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args, s);
         } else {
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
     }
 

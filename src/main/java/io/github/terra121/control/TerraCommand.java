@@ -64,7 +64,7 @@ public class TerraCommand extends CommandBase {
             case "":
             case "where":
             case "ou":
-                c = getPlayerCoords(sender, args.length < 2 ? null : args[1], projection);
+                c = this.getPlayerCoords(sender, args.length < 2 ? null : args[1], projection);
                 if (c == null) {
                     throw new CommandException("terra121.error.getcoords", new Object[0]);
                 } else {
@@ -78,7 +78,7 @@ public class TerraCommand extends CommandBase {
                 break;
 
             case "osm":
-                c = getPlayerCoords(sender, args.length < 2 ? null : args[1], projection);
+                c = this.getPlayerCoords(sender, args.length < 2 ? null : args[1], projection);
                 if (c == null) {
                     throw new CommandException("terra121.error.getcoords", new Object[0]);
                 }
@@ -93,10 +93,10 @@ public class TerraCommand extends CommandBase {
             case "conv":
             case "convert":
                 if (args.length < 3) {
-                    throw new WrongUsageException(getUsage(sender), new Object[0]);
+                    throw new WrongUsageException(this.getUsage(sender), new Object[0]);
                 }
 
-                c = getNumbers(args[1], args[2]);
+                c = this.getNumbers(args[1], args[2]);
                 if (c == null) {
                     break;
                 }
@@ -117,7 +117,7 @@ public class TerraCommand extends CommandBase {
                     throw new CommandException("terra121.error.notterra", new Object[0]);
                 }
 
-                c = getCoordArgs(sender, args, projection);
+                c = this.getCoordArgs(sender, args, projection);
 
                 c = ((EarthBiomeProvider) bp).getEnv(c[0], c[1]);
 
@@ -127,7 +127,7 @@ public class TerraCommand extends CommandBase {
             case "distortion":
             case "tissot":
             case "tiss":
-                c = getCoordArgs(sender, args, projection);
+                c = this.getCoordArgs(sender, args, projection);
                 c = projection.tissot(c[0], c[1], 0.0000001);
 
                 result = I18n.format("terra121.commands.terra.tissot", Math.sqrt(Math.abs(c[0])), c[1] * 180.0 / Math.PI);
@@ -138,15 +138,15 @@ public class TerraCommand extends CommandBase {
             case "restorewater":
             case "rstwtr":
 
-                if (!isOp(sender)) {
+                if (!this.isOp(sender)) {
                     throw new CommandException("terra121.error.notop", new Object[0]);
                 }
 
-                result = doInvert(getCoordArgs(sender, args, projection), terrain, args[0].toLowerCase().charAt(0) == 'r');
+                result = this.doInvert(this.getCoordArgs(sender, args, projection), terrain, args[0].toLowerCase().charAt(0) == 'r');
                 break;
 
             default:
-                throw new WrongUsageException(getUsage(sender), new Object[0]);
+                throw new WrongUsageException(this.getUsage(sender), new Object[0]);
         }
 
         if (result != null) {
@@ -156,15 +156,15 @@ public class TerraCommand extends CommandBase {
 
     double[] getCoordArgs(ICommandSender sender, String[] args, GeographicProjection projection) throws CommandException {
         if (args.length == 3) {
-            return getNumbers(args[2], args[1]);
+            return this.getNumbers(args[2], args[1]);
         } else if (args.length == 2) {
-            double[] c = getPlayerCoords(sender, args[1], projection);
+            double[] c = this.getPlayerCoords(sender, args[1], projection);
             if (c == null) {
                 throw new CommandException("terra121.error.getcoords", new Object[0]);
             }
             return c;
         } else {
-            double[] c = getPlayerCoords(sender, null, projection);
+            double[] c = this.getPlayerCoords(sender, null, projection);
             if (c == null) {
                 throw new CommandException("terra121.error.getcoords", new Object[0]);
             }
@@ -173,7 +173,8 @@ public class TerraCommand extends CommandBase {
     }
 
     double[] getNumbers(String s1, String s2) throws CommandException {
-        double x, y;
+        double x;
+        double y;
         try {
             x = Double.parseDouble(s1);
             y = Double.parseDouble(s2);
@@ -188,7 +189,7 @@ public class TerraCommand extends CommandBase {
         Vec3d pos;
         Entity e = sender.getCommandSenderEntity();
         if (arg != null) {
-            if (!isOp(sender)) {
+            if (!this.isOp(sender)) {
                 throw new CommandException("terra121.error.notopothers", new Object[0]);
             }
             e = sender.getEntityWorld().getPlayerEntityByName(arg);
@@ -202,9 +203,7 @@ public class TerraCommand extends CommandBase {
             throw new CommandException("terra121.error.notplayer", new Object[0]);
         }
 
-        double[] proj = projection.toGeo(pos.x, pos.z);
-
-        return proj;
+        return projection.toGeo(pos.x, pos.z);
     }
 
     //invert water

@@ -23,29 +23,29 @@ public class EarthGeneratorSettings {
             TerraMod.LOGGER.info(generatorSettings);
         }
 
-        gson = new GsonBuilder().create();
+        this.gson = new GsonBuilder().create();
 
-        if (generatorSettings.length() == 0) { //blank string means default
-            settings = new JsonSettings();
+        if (generatorSettings.isEmpty()) { //blank string means default
+            this.settings = new JsonSettings();
         } else {
             try {
-                settings = gson.fromJson(generatorSettings, JsonSettings.class);
+                this.settings = this.gson.fromJson(generatorSettings, JsonSettings.class);
             } catch (JsonSyntaxException e) {
                 TerraMod.LOGGER.error("Invalid Earth Generator Settings, using default settings");
-                settings = new JsonSettings();
+                this.settings = new JsonSettings();
             }
         }
     }
 
     public String toString() {
-        return gson.toJson(settings, JsonSettings.class);
+        return this.gson.toJson(this.settings, JsonSettings.class);
     }
 
     public CustomGeneratorSettings getCustomCubic() {
-        if (settings.customcubic.length() == 0) {
+        if (this.settings.customcubic.isEmpty()) {
             CustomGeneratorSettings cfg = CustomGeneratorSettings.defaults();
             cfg.ravines = false;
-            if (settings.caves) {
+            if (this.settings.caves) {
                 cfg.dungeonCount = 3;
             } else {
                 cfg.dungeonCount = 0;
@@ -54,7 +54,7 @@ public class EarthGeneratorSettings {
             for (CustomGeneratorSettings.LakeConfig lake : cfg.lakes) {
                 lake.surfaceProbability = new CustomGeneratorSettings.UserFunction();
             }
-            if (!settings.caves) {
+            if (!this.settings.caves) {
                 for (CustomGeneratorSettings.LakeConfig lake : cfg.lakes) {
                     lake.mainProbability = new CustomGeneratorSettings.UserFunction();
                 }
@@ -62,7 +62,7 @@ public class EarthGeneratorSettings {
             return cfg;
         }
 
-        return customCubicFromJson(settings.customcubic);
+        return this.customCubicFromJson(this.settings.customcubic);
     }
 
     //Crappy attempt to coerce custom cubic settings
@@ -72,29 +72,29 @@ public class EarthGeneratorSettings {
         } catch (PresetLoadError | DeserializationException err) {
             throw new RuntimeException(err);
         } catch (SyntaxError err) {
-            String message = err.getMessage() + "\n" + err.getLineMessage();
+            String message = err.getMessage() + '\n' + err.getLineMessage();
             throw new RuntimeException(message, err);
         }
     }
 
     public GeographicProjection getProjection() {
         GeographicProjection p = GeographicProjection.orientProjection(
-                GeographicProjection.projections.get(settings.projection), settings.orentation);
+                GeographicProjection.projections.get(this.settings.projection), this.settings.orentation);
 
-        if (settings.scaleX == null || settings.scaleY == null) {
+        if (this.settings.scaleX == null || this.settings.scaleY == null) {
             return new ScaleProjection(p, 100000, 100000); //TODO: better default
         }
 
-        if (settings.scaleX == 1 && settings.scaleY == 1) {
+        if (this.settings.scaleX == 1 && this.settings.scaleY == 1) {
             FMLCommonHandler.instance().exitJava(-1, false);
         }
 
-        return new ScaleProjection(p, settings.scaleX, settings.scaleY);
+        return new ScaleProjection(p, this.settings.scaleX, this.settings.scaleY);
     }
 
     public GeographicProjection getNormalizedProjection() {
         return GeographicProjection.orientProjection(
-                GeographicProjection.projections.get(settings.projection), GeographicProjection.Orientation.upright);
+                GeographicProjection.projections.get(this.settings.projection), GeographicProjection.Orientation.upright);
     }
 
     //json template to be filled by Gson

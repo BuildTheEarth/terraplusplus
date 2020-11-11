@@ -37,19 +37,19 @@ public class EarthBiomeProvider extends BiomeProvider {
         this(biomeIn);
 
         EarthGeneratorSettings cfg = new EarthGeneratorSettings(world.getWorldInfo().getGeneratorOptions());
-        projection = cfg.getProjection();
+        this.projection = cfg.getProjection();
     }
 
     public EarthBiomeProvider(Biome biomeIn) {
         //load soil and climate data from assets
         this.defaultBiome = biomeIn;
         try {
-            InputStream is = getClass().getClassLoader().getResourceAsStream("assets/terra121/data/suborder.img");
-            soil = new Soil(is);
+            InputStream is = this.getClass().getClassLoader().getResourceAsStream("assets/terra121/data/suborder.img");
+            this.soil = new Soil(is);
             is.close();
 
-            is = getClass().getClassLoader().getResourceAsStream("assets/terra121/data/climate.dat");
-            climate = new Climate(is);
+            is = this.getClass().getClassLoader().getResourceAsStream("assets/terra121/data/climate.dat");
+            this.climate = new Climate(is);
             is.close();
         } catch (IOException ioe) {
             TerraMod.LOGGER.error("Failed to load biome data: " + ioe);
@@ -68,23 +68,23 @@ public class EarthBiomeProvider extends BiomeProvider {
             return Biomes.MUSHROOM_ISLAND;
         }
 
-        return classify(projection.toGeo(pos.getX(), pos.getZ()));
+        return this.classify(this.projection.toGeo(pos.getX(), pos.getZ()));
     }
 
     /**
      * Get explicit data on the environment (soil, tempature, precipitation)
      */
     public double[] getEnv(double lon, double lat) {
-        Climate.ClimateData clim = climate.getPoint(lon, lat);
+        Climate.ClimateData clim = this.climate.getPoint(lon, lat);
 
-        return new double[]{ soil.getPoint(lon, lat),
+        return new double[]{ this.soil.getPoint(lon, lat),
                 clim.temp, clim.precip };
     }
 
     public Biome classify(double[] projected) {
 
-        Climate.ClimateData clim = climate.getPoint(projected[0], projected[1]);
-        byte stype = soil.getPoint(projected[0], projected[1]);
+        Climate.ClimateData clim = this.climate.getPoint(projected[0], projected[1]);
+        byte stype = this.soil.getPoint(projected[0], projected[1]);
 
         switch (stype) {
             case 0: //Ocean
@@ -244,7 +244,7 @@ public class EarthBiomeProvider extends BiomeProvider {
 
         for (int r = 0; r < width; r++) {
             for (int c = 0; c < depth; c++) {
-                oldBiomeList[r * depth + c] = getBiome(new BlockPos(x + r, 0, z + c));
+                oldBiomeList[r * depth + c] = this.getBiome(new BlockPos(x + r, 0, z + c));
             }
         }
         return oldBiomeList;

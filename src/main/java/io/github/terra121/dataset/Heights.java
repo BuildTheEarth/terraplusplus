@@ -17,19 +17,15 @@ public class Heights extends TiledDataset {
     private int zoom;
     private String url_prefix = TerraConfig.serverTerrain;
     private String file_prefix = EarthTerrainProcessor.localTerrain;
-    private boolean lidar = false;
 
     private Water water;
-
-    private double oceanRadius = 2.0 / (60 * 60);
 
     public Heights(int zoom, boolean lidar, boolean smooth, Water water) {
         super(256, 256, TerraConfig.cacheSize, new MapsProjection(), 1 << (zoom + 8), 1 << (zoom + 8), smooth);
         this.zoom = zoom;
-        url_prefix += zoom + "/";
-        file_prefix += zoom + "/";
+        this.url_prefix += zoom + "/";
+        this.file_prefix += zoom + "/";
         this.water = water;
-        this.lidar = lidar;
     }
 
     public Heights(int zoom, Water water) {
@@ -40,20 +36,20 @@ public class Heights extends TiledDataset {
     //TODO: better error handle
     protected int[] request(Coord place, boolean lidar) {
 
-        int out[] = new int[256 * 256];
+        int[] out = new int[256 * 256];
 
         for (int i = 0; i < 5; i++) {
 
 
             BufferedImage img = null;
             InputStream is = null;
-            int lidarzoom = zoom;
+            int lidarzoom = this.zoom;
 
             try {
 
                 if (lidar) { //Check if LIDAR data is enabled
 
-                    File data = new File(file_prefix + place.x + "/" + place.y + ".png");
+                    File data = new File(this.file_prefix + place.x + '/' + place.y + ".png");
                     if (data.exists()) {
                         img = ImageIO.read(data); //img == null if there is no LIDAR data for that coord.
                     }
@@ -62,7 +58,7 @@ public class Heights extends TiledDataset {
 
                 if (img == null) { //Catches if LIDAR data is disabled or if there is no LIDAR data for that coord.
 
-                    String urlText = url_prefix + place.x + "/" + place.y + ".png";
+                    String urlText = this.url_prefix + place.x + '/' + place.y + ".png";
                     if (!TerraConfig.reducedConsoleMessages) {
                         TerraMod.LOGGER.info(urlText);
                     }
@@ -124,7 +120,7 @@ public class Heights extends TiledDataset {
                 }
 
                 if (!TerraConfig.reducedConsoleMessages) {
-                    TerraMod.LOGGER.error("Failed to get elevation " + place.x + " " + place.y + " : " + ioe);
+                    TerraMod.LOGGER.error("Failed to get elevation " + place.x + ' ' + place.y + " : " + ioe);
                 }
             }
         }
@@ -137,13 +133,14 @@ public class Heights extends TiledDataset {
         double ret = super.getOfficialHeight(coord, lidar);
 
         //shoreline smoothing
-        if (water != null && ret > -1 && ret != 0 && ret < 200) {
-            double[] proj = projection.toGeo(coord.x / scaleX, coord.y / scaleY); //another projection, i know (horrendous)
-            double mine = water.estimateLocal(proj[0], proj[1]);
+        if (this.water != null && ret > -1 && ret != 0 && ret < 200) {
+            double[] proj = this.projection.toGeo(coord.x / this.scaleX, coord.y / this.scaleY); //another projection, i know (horrendous)
+            double mine = this.water.estimateLocal(proj[0], proj[1]);
 
+            double oceanRadius = 2.0 / (60 * 60);
             if (mine > 1.4 || (ret > 10 & (mine > 1 ||
-                                           water.estimateLocal(proj[0] + oceanRadius, proj[1]) > 1 || water.estimateLocal(proj[0] - oceanRadius, proj[1]) > 1 ||
-                                           water.estimateLocal(proj[0], proj[1] + oceanRadius) > 1 || water.estimateLocal(proj[0], proj[1] - oceanRadius) > 1))) {
+                                           this.water.estimateLocal(proj[0] + oceanRadius, proj[1]) > 1 || this.water.estimateLocal(proj[0] - oceanRadius, proj[1]) > 1 ||
+                                           this.water.estimateLocal(proj[0], proj[1] + oceanRadius) > 1 || this.water.estimateLocal(proj[0], proj[1] - oceanRadius) > 1))) {
                 return -1;
             }
         }
@@ -153,7 +150,7 @@ public class Heights extends TiledDataset {
     protected double dataToDouble(int data) {
         if (data >> 24 != 0) { //check for alpha value
             data = (data & 0x00ffffff) - 8388608;
-            if (zoom > 10 && data < -1500 * 256) {
+            if (this.zoom > 10 && data < -1500 * 256) {
                 data = 0;
             }
             return data / 256.0;

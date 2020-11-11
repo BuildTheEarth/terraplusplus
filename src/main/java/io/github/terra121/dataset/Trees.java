@@ -29,7 +29,7 @@ public class Trees extends TiledDataset {
     }
 
     protected int[] request(Coord place, boolean lidar) { //TODO: custom tree data
-        int out[] = new int[256 * 256];
+        int[] out = new int[256 * 256];
 
         if (TerraConfig.serverTree.isEmpty()) {
             return out;
@@ -40,7 +40,7 @@ public class Trees extends TiledDataset {
             InputStream is = null;
 
             try {
-                String urlText = URL_PREFIX + (place.x * REGION_SIZE - 180) + "," + (90 - place.y * REGION_SIZE) + "," + ((place.x + 1) * REGION_SIZE - 180) + "," + (90 - (place.y + 1) * REGION_SIZE) + URL_SUFFIX;
+                String urlText = this.URL_PREFIX + (place.x * REGION_SIZE - 180) + ',' + (90 - place.y * REGION_SIZE) + ',' + ((place.x + 1) * REGION_SIZE - 180) + ',' + (90 - (place.y + 1) * REGION_SIZE) + this.URL_SUFFIX;
                 if (!TerraConfig.reducedConsoleMessages) {
                     TerraMod.LOGGER.info(urlText);
                 }
@@ -52,7 +52,7 @@ public class Trees extends TiledDataset {
 
                 ByteSourceInputStream by = new ByteSourceInputStream(is, "shits and giggles");
                 TiffImageParser p = new TiffImageParser();
-                BufferedImage img = p.getBufferedImage(by, new HashMap<String, Object>());
+                BufferedImage img = p.getBufferedImage(by, new HashMap<>());
                 is.close();
                 is = null;
 
@@ -81,7 +81,7 @@ public class Trees extends TiledDataset {
                 }
 
                 if (!TerraConfig.reducedConsoleMessages) {
-                    TerraMod.LOGGER.error("Failed to get tree cover data " + place.x + " " + place.y + " : " + ioe);
+                    TerraMod.LOGGER.error("Failed to get tree cover data " + place.x + ' ' + place.y + " : " + ioe);
                 }
             }
         }

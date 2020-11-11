@@ -8,14 +8,14 @@ public abstract class ProjectionTransform extends GeographicProjection {
     }
 
     public boolean upright() {
-        return input.upright();
+        return this.input.upright();
     }
 
     public double[] bounds() {
-        return input.bounds();
+        return this.input.bounds();
     }
 
     public double metersPerUnit() {
-        return input.metersPerUnit();
+        return this.input.metersPerUnit();
     }
 }

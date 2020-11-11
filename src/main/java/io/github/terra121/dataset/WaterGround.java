@@ -10,7 +10,7 @@ public class WaterGround {
     private int height;
 
     public WaterGround(InputStream input) throws IOException {
-        data = new RandomAccessRunlength<Byte>();
+        this.data = new RandomAccessRunlength<>();
         DataInputStream in = new DataInputStream(input);
 
         //save some memory by tying the same bytes to the same object (idk if java does this already) //TODO: static share with Soil.java
@@ -21,34 +21,34 @@ public class WaterGround {
 
         while (in.available() > 0) {
             int v = in.readInt();
-            data.addRun(bytes[v >>> 30], v & ((1 << 30) - 1));
+            this.data.addRun(bytes[v >>> 30], v & ((1 << 30) - 1));
         }
 
         in.close();
         input.close();
 
-        height = (int) Math.sqrt(data.size() / 2);
-        width = height * 2;
+        this.height = (int) Math.sqrt(this.data.size() / 2);
+        this.width = this.height * 2;
 
         //System.out.println(data.size()+" "+height);
     }
 
     public int getWidth() {
-        return width;
+        return this.width;
     }
 
     public int getHeight() {
-        return height;
+        return this.height;
     }
 
     public byte getOfficial(int x, int y) {
-        if (x >= width || x < 0 || y >= height || y < 0) {
+        if (x >= this.width || x < 0 || y >= this.height || y < 0) {
             return 0;
         }
-        return data.get(x + y * width);
+        return this.data.get(x + y * this.width);
     }
 
     public byte state(int x, int y) {
-        return getOfficial(x + (width / 2), y + (height / 2));
+        return this.getOfficial(x + (this.width / 2), y + (this.height / 2));
     }
 }

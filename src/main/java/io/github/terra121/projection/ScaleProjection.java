@@ -2,7 +2,8 @@ package io.github.terra121.projection;
 
 public class ScaleProjection extends ProjectionTransform {
 
-    double scaleX, scaleY;
+    double scaleX;
+    double scaleY;
 
     public ScaleProjection(GeographicProjection input, double scaleX, double scaleY) {
         super(input);
@@ -15,30 +16,30 @@ public class ScaleProjection extends ProjectionTransform {
     }
 
     public double[] toGeo(double x, double y) {
-        return input.toGeo(x / scaleX, y / scaleY);
+        return this.input.toGeo(x / this.scaleX, y / this.scaleY);
     }
 
     public double[] fromGeo(double lon, double lat) {
-        double[] p = input.fromGeo(lon, lat);
-        p[0] *= scaleX;
-        p[1] *= scaleY;
+        double[] p = this.input.fromGeo(lon, lat);
+        p[0] *= this.scaleX;
+        p[1] *= this.scaleY;
         return p;
     }
 
     public boolean upright() {
-        return (scaleY < 0) ^ input.upright();
+        return (this.scaleY < 0) ^ this.input.upright();
     }
 
     public double[] bounds() {
-        double[] b = input.bounds();
-        b[0] *= scaleX;
-        b[1] *= scaleY;
-        b[2] *= scaleX;
-        b[3] *= scaleY;
+        double[] b = this.input.bounds();
+        b[0] *= this.scaleX;
+        b[1] *= this.scaleY;
+        b[2] *= this.scaleX;
+        b[3] *= this.scaleY;
         return b;
     }
 
     public double metersPerUnit() {
-        return input.metersPerUnit() / Math.sqrt((scaleX * scaleX + scaleY * scaleY) / 2); //TODO: better transform
+        return this.input.metersPerUnit() / Math.sqrt((this.scaleX * this.scaleX + this.scaleY * this.scaleY) / 2); //TODO: better transform
     }
 }

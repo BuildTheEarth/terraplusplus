@@ -13,17 +13,17 @@ public class Water {
     public boolean doingInverts;
 
     public Water(OpenStreetMaps osm, int horizontalres) throws IOException {
-        InputStream is = getClass().getClassLoader().getResourceAsStream("assets/terra121/data/ground.dat");
-        grounding = new WaterGround(is);
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream("assets/terra121/data/ground.dat");
+        this.grounding = new WaterGround(is);
         this.osm = osm;
         this.hres = horizontalres;
-        this.inverts = new HashSet<OpenStreetMaps.Coord>();
+        this.inverts = new HashSet<>();
         this.doingInverts = false;
     }
 
     public byte getState(double lon, double lat) {
 
-        Region region = osm.regionCache(new double[]{ lon, lat });
+        Region region = this.osm.regionCache(new double[]{ lon, lat });
 
         //default if download failed
         if (region == null) {
@@ -33,8 +33,8 @@ public class Water {
         //transform to water render res
         lon -= region.west;
         lat -= region.south;
-        lon /= osm.TILE_SIZE / hres;
-        lat /= osm.TILE_SIZE / hres;
+        lon /= OpenStreetMaps.TILE_SIZE / this.hres;
+        lat /= OpenStreetMaps.TILE_SIZE / this.hres;
 
         //System.out.println(lon + " " + lat);
 
@@ -43,7 +43,7 @@ public class Water {
 
         byte state = region.states[(int) lon][idx];
 
-        if (doingInverts && (state == 0 || state == 1) && inverts.contains(region.coord)) {
+        if (this.doingInverts && (state == 0 || state == 1) && this.inverts.contains(region.coord)) {
             state = state == 1 ? (byte) 0 : (byte) 1; //invert state if in an inverted region
         }
 
@@ -61,8 +61,8 @@ public class Water {
             return 2; //all other out of bounds is water
         }
 
-        double oshift = osm.TILE_SIZE / hres;
-        double ashift = osm.TILE_SIZE / hres;
+        double oshift = OpenStreetMaps.TILE_SIZE / this.hres;
+        double ashift = OpenStreetMaps.TILE_SIZE / this.hres;
 
         //rounding errors fixed by recalculating values from scratch (wonder if this glitch also causes the oddly strait terrain that sometimes appears)
         double Ob = Math.floor(lon / oshift) * oshift;
@@ -74,10 +74,10 @@ public class Water {
         float u = (float) ((lon - Ob) / oshift);
         float v = (float) ((lat - Ab) / ashift);
 
-        float ll = getState(Ob, Ab);
-        float lr = getState(Ot, Ab);
-        float ur = getState(Ot, At);
-        float ul = getState(Ob, At);
+        float ll = this.getState(Ob, Ab);
+        float lr = this.getState(Ot, Ab);
+        float ur = this.getState(Ot, At);
+        float ul = this.getState(Ob, At);
 
         //all is ocean
         if (ll == 2 || lr == 2 || ur == 2 || ul == 2) {

@@ -32,7 +32,7 @@ public class TerraTeleport extends CommandBase {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-        if (isOp(sender)) {
+        if (this.isOp(sender)) {
 
             World world = sender.getEntityWorld();
             IChunkProvider cp = world.getChunkProvider();
@@ -50,7 +50,7 @@ public class TerraTeleport extends CommandBase {
             EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
 
             if (args.length == 0) {
-                throw new WrongUsageException(getUsage(sender), new Object[0]);
+                throw new WrongUsageException(this.getUsage(sender), new Object[0]);
             }
 
             String[] splitCoords = args[0].split(",");
@@ -70,10 +70,11 @@ public class TerraTeleport extends CommandBase {
                 args[1] = args[1].substring(0, args[1].length() - 1);
             }
             if (args.length != 2 && args.length != 3) {
-                throw new WrongUsageException(getUsage(sender), new Object[0]);
+                throw new WrongUsageException(this.getUsage(sender), new Object[0]);
             }
 
-            double lon, lat;
+            double lon;
+            double lat;
 
             try {
                 lat = Double.parseDouble(args[0]);
@@ -85,7 +86,7 @@ public class TerraTeleport extends CommandBase {
                 throw new CommandException("terra121.error.numbers", new Object[0]);
             }
 
-            double proj[] = terrain.projection.fromGeo(lon, lat);
+            double[] proj = terrain.projection.fromGeo(lon, lat);
 
             if (alt == null) {
                 alt = String.valueOf(terrain.heights.estimateLocal(lon, lat, false) + 1);

@@ -48,7 +48,7 @@ public class RoadGenerator implements ICubicPopulator {
     public RoadGenerator(OpenStreetMaps osm, Heights heights, GeographicProjection proj) {
         this.osm = osm;
         this.heights = heights;
-        projection = proj;
+        this.projection = proj;
     }
 
     public RoadGenerator(OpenStreetMaps osm, Heights heights, Heights[] heightsLidar, byte[] zooms, GeographicProjection proj) {
@@ -56,8 +56,8 @@ public class RoadGenerator implements ICubicPopulator {
         this.heights = heights;
         this.heightsLidar = heightsLidar;
         this.zooms = zooms;
-        projection = proj;
-        lidar = true;
+        this.projection = proj;
+        this.lidar = true;
     }
 
     // only use for roads with markings
@@ -67,16 +67,18 @@ public class RoadGenerator implements ICubicPopulator {
 
     public void generate(World world, Random rand, CubePos pos, Biome biome) {
 
-        int cubeX = pos.getX(), cubeY = pos.getY(), cubeZ = pos.getZ();
+        int cubeX = pos.getX();
+        int cubeY = pos.getY();
+        int cubeZ = pos.getZ();
 
-        Set<OpenStreetMaps.Edge> edges = osm.chunkStructures(cubeX, cubeZ);
+        Set<OpenStreetMaps.Edge> edges = this.osm.chunkStructures(cubeX, cubeZ);
 
         if (edges != null) {
 
             // rivers done before roads
             for (OpenStreetMaps.Edge e : edges) {
                 if (e.type == OpenStreetMaps.Type.RIVER) {
-                    placeEdge(e, world, cubeX, cubeY, cubeZ, 5, (dis, bpos) -> riverState(world, dis, bpos));
+                    this.placeEdge(e, world, cubeX, cubeY, cubeZ, 5, (dis, bpos) -> this.riverState(world, dis, bpos));
                 }
             }
 
@@ -95,20 +97,20 @@ public class RoadGenerator implements ICubicPopulator {
                 if (e.attribute != OpenStreetMaps.Attributes.ISTUNNEL) {
                     switch (e.type) {
                         case MINOR:
-                            placeEdge(e, world, cubeX, cubeY, cubeZ, Math.ceil((2 * e.lanes) / 2), (dis, bpos) -> ASPHALT);
+                            this.placeEdge(e, world, cubeX, cubeY, cubeZ, Math.ceil((2 * e.lanes) / 2), (dis, bpos) -> ASPHALT);
                             break;
                         case SIDE:
-                            placeEdge(e, world, cubeX, cubeY, cubeZ, Math.ceil((3 * e.lanes + 1) / 2), (dis, bpos) -> ASPHALT);
+                            this.placeEdge(e, world, cubeX, cubeY, cubeZ, Math.ceil((3 * e.lanes + 1) / 2), (dis, bpos) -> ASPHALT);
                             break;
                         case MAIN:
-                            placeEdge(e, world, cubeX, cubeY, cubeZ, calculateRoadWidth(2, e.lanes), (dis, bpos) -> ASPHALT);
+                            this.placeEdge(e, world, cubeX, cubeY, cubeZ, this.calculateRoadWidth(2, e.lanes), (dis, bpos) -> ASPHALT);
                             break;
                         case FREEWAY:
                         case LIMITEDACCESS:
-                            placeEdge(e, world, cubeX, cubeY, cubeZ, calculateRoadWidth(4, e.lanes) + 2, (dis, bpos) -> ASPHALT);
+                            this.placeEdge(e, world, cubeX, cubeY, cubeZ, this.calculateRoadWidth(4, e.lanes) + 2, (dis, bpos) -> ASPHALT);
                             break;
                         case INTERCHANGE:
-                            placeEdge(e, world, cubeX, cubeY, cubeZ, Math.ceil((3 * e.lanes) / 2), (dis, bpos) -> ASPHALT);
+                            this.placeEdge(e, world, cubeX, cubeY, cubeZ, Math.ceil((3 * e.lanes) / 2), (dis, bpos) -> ASPHALT);
                             break;
                         default:
                             // might be a tunnel or a bridge, mainly for debugging purposes
@@ -169,11 +171,10 @@ public class RoadGenerator implements ICubicPopulator {
         int ie = (int) Math.floor(ik);
 
         for (int x = is; x <= ie; x++) {
-            double X = x;
-            double ul = bound(X, e.slope, j, k, r, x0, b, 1) + off; //TODO: save these repeated values
-            double ur = bound(X + 1, e.slope, j, k, r, x0, b, 1) + off;
-            double ll = bound(X, e.slope, j, k, r, x0, b, -1) + off;
-            double lr = bound(X + 1, e.slope, j, k, r, x0, b, -1) + off;
+            double ul = bound(x, e.slope, j, k, r, x0, b, 1) + off; //TODO: save these repeated values
+            double ur = bound((double) x + 1, e.slope, j, k, r, x0, b, 1) + off;
+            double ll = bound(x, e.slope, j, k, r, x0, b, -1) + off;
+            double lr = bound((double) x + 1, e.slope, j, k, r, x0, b, -1) + off;
 
             double from = Math.min(Math.min(ul, ur), Math.min(ll, lr));
             double to = Math.max(Math.max(ul, ur), Math.max(ll, lr));
@@ -191,10 +192,9 @@ public class RoadGenerator implements ICubicPopulator {
 
                 for (int z = ifrom; z <= ito; z++) {
                     //get the part of the center line i am tangent to (i hate high school algebra!!!)
-                    double Z = z;
-                    double mainX = X;
+                    double mainX = x;
                     if (Math.abs(e.slope) >= 0.000001) {
-                        mainX = (Z + X / e.slope - off) / (e.slope + 1 / e.slope);
+                        mainX = ((double) z + (double) x / e.slope - off) / (e.slope + 1 / e.slope);
                     }
 
                     /*if(mainX<j) mainX = j;
@@ -203,26 +203,26 @@ public class RoadGenerator implements ICubicPopulator {
                     double mainZ = e.slope * mainX + off;
 
                     //get distance to closest point
-                    double distance = mainX - X;
+                    double distance = mainX - (double) x;
                     distance *= distance;
-                    double t = mainZ - Z;
+                    double t = mainZ - (double) z;
                     distance += t * t;
                     distance = Math.sqrt(distance);
 
-                    double[] geo = projection.toGeo(mainX + cubeX * (16), mainZ + cubeZ * (16));
+                    double[] geo = this.projection.toGeo(mainX + cubeX * (16), mainZ + cubeZ * (16));
 
                     int y = -100000000;
 
-                    if (lidar) { //Let's hope this works properly
+                    if (this.lidar) { //Let's hope this works properly
                         String file_prefix = EarthTerrainProcessor.localTerrain;
 
-                        if (heightsLidar != null) {
+                        if (this.heightsLidar != null) {
 
-                            for (int i = 0; i < heightsLidar.length; i++) {
+                            for (int i = 0; i < this.heightsLidar.length; i++) {
 
-                                if (new File(file_prefix + zooms[i] + "/" + (int) Math.floor((geo[0] + 180) / 360 * (1 << zooms[i])) + "/" + (int) Math.floor((1 - Math.log(Math.tan(Math.toRadians(geo[1])) + 1 / Math.cos(Math.toRadians(geo[1]))) / Math.PI) / 2 * (1 << zooms[i])) + ".png").exists()) {
-                                    if (heightsLidar[i].estimateLocal(geo[0], geo[1], true) != -10000000) {
-                                        y = (int) Math.floor(heightsLidar[i].estimateLocal(geo[0], geo[1], true) - cubeY * 16);
+                                if (new File(file_prefix + this.zooms[i] + '/' + (int) Math.floor((geo[0] + 180) / 360 * (1 << this.zooms[i])) + '/' + (int) Math.floor((1 - Math.log(Math.tan(Math.toRadians(geo[1])) + 1 / Math.cos(Math.toRadians(geo[1]))) / Math.PI) / 2 * (1 << this.zooms[i])) + ".png").exists()) {
+                                    if (this.heightsLidar[i].estimateLocal(geo[0], geo[1], true) != -10000000) {
+                                        y = (int) Math.floor(this.heightsLidar[i].estimateLocal(geo[0], geo[1], true) - cubeY * 16);
                                     }
                                 }
                             }
@@ -230,7 +230,7 @@ public class RoadGenerator implements ICubicPopulator {
                     }
 
                     if (y == -100000000) {
-                        y = (int) Math.floor(heights.estimateLocal(geo[0], geo[1], false) - cubeY * 16);
+                        y = (int) Math.floor(this.heights.estimateLocal(geo[0], geo[1], false) - cubeY * 16);
                     }
 
                     if (y >= 0 && y < 16) { //if not in this range, someone else will handle it

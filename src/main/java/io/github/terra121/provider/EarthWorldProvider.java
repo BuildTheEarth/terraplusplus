@@ -12,15 +12,15 @@ public class EarthWorldProvider extends WorldProviderSurface {
     @Override
     public void init() {
         super.init();
-        isEarth = world.getWorldInfo().getTerrainType() instanceof EarthWorldType;
+        this.isEarth = this.world.getWorldInfo().getTerrainType() instanceof EarthWorldType;
     }
 
     @Override
     public boolean canSnowAt(BlockPos pos, boolean checkLight) {
-        if (!isEarth) {
+        if (!this.isEarth) {
             return super.canSnowAt(pos, checkLight);
         }
 
-        return SnowPopulator.canSnow(pos, world, false);
+        return SnowPopulator.canSnow(pos, this.world, false);
     }
 }

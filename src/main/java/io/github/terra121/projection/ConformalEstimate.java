@@ -22,7 +22,7 @@ public class ConformalEstimate extends Airocean {
 
         try {
             //is = new FileInputStream("../resources/assets/terra121/data/conformal.txt");
-            is = getClass().getClassLoader().getResourceAsStream("assets/terra121/data/conformal.txt");
+            is = this.getClass().getClassLoader().getResourceAsStream("assets/terra121/data/conformal.txt");
             Scanner sc = new Scanner(is);
 
             for (int u = 0; u < xs.length; u++) {
@@ -37,8 +37,8 @@ public class ConformalEstimate extends Airocean {
                     String line = sc.nextLine();
                     line = line.substring(1, line.length() - 3);
                     String[] split = line.split(", ");
-                    xs[u][v] = Double.parseDouble(split[0]) * VECTOR_SCALE_FACTOR;
-                    ys[u][v] = Double.parseDouble(split[1]) * VECTOR_SCALE_FACTOR;
+                    xs[u][v] = Double.parseDouble(split[0]) * this.VECTOR_SCALE_FACTOR;
+                    ys[u][v] = Double.parseDouble(split[1]) * this.VECTOR_SCALE_FACTOR;
                 }
             }
 
@@ -47,7 +47,7 @@ public class ConformalEstimate extends Airocean {
             System.err.println("Can't load conformal: " + e);
         }
 
-        inverse = new InvertableVectorField(xs, ys);
+        this.inverse = new InvertableVectorField(xs, ys);
     }
 
     /*public ConformalEstimate () {
@@ -144,7 +144,7 @@ public class ConformalEstimate extends Airocean {
         //c = inverse.applyNewtonsMethod(x, y, c[0]/ARC + 0.5, c[1]/ARC + ROOT3/6, 1);
 
         //just use newtons method: slower
-        c = inverse.applyNewtonsMethod(x, y, c[0], c[1], 5);//c[0]/ARC + 0.5, c[1]/ARC + ROOT3/6
+        c = this.inverse.applyNewtonsMethod(x, y, c[0], c[1], 5);//c[0]/ARC + 0.5, c[1]/ARC + ROOT3/6
 
         c[0] -= 0.5;
         c[1] -= ROOT3 / 6;
@@ -174,7 +174,7 @@ public class ConformalEstimate extends Airocean {
         x += 0.5;
         y += ROOT3 / 6;
 
-        double[] c = inverse.getInterpolatedVector(x, y);
+        double[] c = this.inverse.getInterpolatedVector(x, y);
 
         /*double[] c = new double[] {x,y};
 
@@ -190,6 +190,6 @@ public class ConformalEstimate extends Airocean {
     }
 
     public double metersPerUnit() {
-        return (40075017 / (2 * Math.PI)) / VECTOR_SCALE_FACTOR;
+        return (40075017 / (2 * Math.PI)) / this.VECTOR_SCALE_FACTOR;
     }
 }

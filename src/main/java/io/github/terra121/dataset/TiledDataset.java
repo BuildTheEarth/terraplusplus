@@ -20,7 +20,7 @@ public abstract class TiledDataset {
     public boolean smooth;
 
     public TiledDataset(int width, int height, int numcache, GeographicProjection proj, double projScaleX, double projScaleY, boolean smooth) {
-        cache = new LinkedHashMap<Coord, int[]>();
+        this.cache = new LinkedHashMap<>();
         this.numcache = numcache;
         this.width = width;
         this.height = height;
@@ -29,11 +29,11 @@ public abstract class TiledDataset {
         this.scaleY = projScaleY;
         this.smooth = smooth;
 
-        bounds = proj.bounds();
-        bounds[0] *= scaleX;
-        bounds[1] *= scaleY;
-        bounds[2] *= scaleX;
-        bounds[3] *= scaleY;
+        this.bounds = proj.bounds();
+        this.bounds[0] *= this.scaleX;
+        this.bounds[1] *= this.scaleY;
+        this.bounds[2] *= this.scaleX;
+        this.bounds[3] *= this.scaleY;
     }
 
     public TiledDataset(int width, int height, int numcache, GeographicProjection proj, double projScaleX, double projScaleY) {
@@ -52,19 +52,19 @@ public abstract class TiledDataset {
         }
 
         //project coords
-        double[] floatCoords = projection.fromGeo(lon, lat);
+        double[] floatCoords = this.projection.fromGeo(lon, lat);
 
-        if (smooth) {
-            return estimateSmooth(floatCoords, lidar);
+        if (this.smooth) {
+            return this.estimateSmooth(floatCoords, lidar);
         }
-        return estimateBasic(floatCoords, lidar);
+        return this.estimateBasic(floatCoords, lidar);
     }
 
     //new style
     protected double estimateSmooth(double[] floatCoords, boolean lidar) {
 
-        double X = floatCoords[0] * scaleX - 0.5;
-        double Y = floatCoords[1] * scaleY - 0.5;
+        double X = floatCoords[0] * this.scaleX - 0.5;
+        double Y = floatCoords[1] * this.scaleY - 0.5;
 
         //get the corners surrounding this block
         Coord coord = new Coord((int) X, (int) Y);
@@ -72,23 +72,23 @@ public abstract class TiledDataset {
         double u = X - coord.x;
         double v = Y - coord.y;
 
-        double v00 = getOfficialHeight(coord, lidar);
+        double v00 = this.getOfficialHeight(coord, lidar);
         coord.x++;
-        double v10 = getOfficialHeight(coord, lidar);
+        double v10 = this.getOfficialHeight(coord, lidar);
         coord.x++;
-        double v20 = getOfficialHeight(coord, lidar);
+        double v20 = this.getOfficialHeight(coord, lidar);
         coord.y++;
-        double v21 = getOfficialHeight(coord, lidar);
+        double v21 = this.getOfficialHeight(coord, lidar);
         coord.x--;
-        double v11 = getOfficialHeight(coord, lidar);
+        double v11 = this.getOfficialHeight(coord, lidar);
         coord.x--;
-        double v01 = getOfficialHeight(coord, lidar);
+        double v01 = this.getOfficialHeight(coord, lidar);
         coord.y++;
-        double v02 = getOfficialHeight(coord, lidar);
+        double v02 = this.getOfficialHeight(coord, lidar);
         coord.x++;
-        double v12 = getOfficialHeight(coord, lidar);
+        double v12 = this.getOfficialHeight(coord, lidar);
         coord.x++;
-        double v22 = getOfficialHeight(coord, lidar);
+        double v22 = this.getOfficialHeight(coord, lidar);
 
         if (v00 == -10000000 || v10 == -10000000 || v20 == -10000000 || v21 == -10000000 || v11 == -10000000 || v01 == -10000000 || v02 == -10000000 || v12 == -10000000 || v22 == -10000000) {
             return -10000000; //return error code
@@ -106,8 +106,8 @@ public abstract class TiledDataset {
 
     //old style
     protected double estimateBasic(double[] floatCoords, boolean lidar) {
-        double X = floatCoords[0] * scaleX;
-        double Y = floatCoords[1] * scaleY;
+        double X = floatCoords[0] * this.scaleX;
+        double Y = floatCoords[1] * this.scaleY;
 
         //get the corners surrounding this block
         Coord coord = new Coord((int) X, (int) Y);
@@ -115,13 +115,13 @@ public abstract class TiledDataset {
         double u = X - coord.x;
         double v = Y - coord.y;
 
-        double ll = getOfficialHeight(coord, lidar);
+        double ll = this.getOfficialHeight(coord, lidar);
         coord.x++;
-        double lr = getOfficialHeight(coord, lidar);
+        double lr = this.getOfficialHeight(coord, lidar);
         coord.y++;
-        double ur = getOfficialHeight(coord, lidar);
+        double ur = this.getOfficialHeight(coord, lidar);
         coord.x--;
-        double ul = getOfficialHeight(coord, lidar);
+        double ul = this.getOfficialHeight(coord, lidar);
 
         if (ll == -10000000 || lr == -10000000 || ur == -10000000 || ul == -10000000) {
             return -10000000;
@@ -136,28 +136,28 @@ public abstract class TiledDataset {
         Coord tile = coord.tile();
 
         //proper bound check for x
-        if (coord.x <= bounds[0] || coord.x >= bounds[2]) {
+        if (coord.x <= this.bounds[0] || coord.x >= this.bounds[2]) {
             return 0;
         }
 
         //is the tile that this coord lies on already downloaded?
-        int[] img = cache.get(tile);
+        int[] img = this.cache.get(tile);
 
         if (img == null) {
             //download tile
-            img = request(tile, lidar);
-            cache.put(tile, img); //save to cache cause chances are it will be needed again soon
+            img = this.request(tile, lidar);
+            this.cache.put(tile, img); //save to cache cause chances are it will be needed again soon
 
             //cache is too large, remove the least recent element
-            if (cache.size() > numcache) {
-                Iterator<?> it = cache.values().iterator();
+            if (this.cache.size() > this.numcache) {
+                Iterator<?> it = this.cache.values().iterator();
                 it.next();
                 it.remove();
             }
         }
 
         //get coord from tile and convert to meters (divide by 256.0)
-        double heightreturn = dataToDouble(img[width * (coord.y % height) + coord.x % width]);
+        double heightreturn = this.dataToDouble(img[this.width * (coord.y % this.height) + coord.x % this.width]);
         if (heightreturn != -10000000) {
             return heightreturn; //return height if not transparent
         }
@@ -175,20 +175,20 @@ public abstract class TiledDataset {
         }
 
         private Coord tile() {
-            return new Coord(x / width, y / height);
+            return new Coord(this.x / TiledDataset.this.width, this.y / TiledDataset.this.height);
         }
 
         public int hashCode() {
-            return (x * 79399) + (y * 100000);
+            return (this.x * 79399) + (this.y * 100000);
         }
 
         public boolean equals(Object o) {
             Coord c = (Coord) o;
-            return c.x == x && c.y == y;
+            return c.x == this.x && c.y == this.y;
         }
 
         public String toString() {
-            return "(" + x + ", " + y + ")";
+            return "(" + this.x + ", " + this.y + ')';
         }
 
     }

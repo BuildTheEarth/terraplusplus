@@ -18,9 +18,10 @@ public class ModifiedAirocean extends ConformalEstimate {
 
     public double[] fromGeo(double lon, double lat) {
         double[] c = super.fromGeo(lon, lat);
-        double x = c[0], y = c[1];
+        double x = c[0];
+        double y = c[1];
 
-        boolean easia = isEurasianPart(x, y);
+        boolean easia = this.isEurasianPart(x, y);
 
         y -= 0.75 * ARC * ROOT3;
 
@@ -67,7 +68,7 @@ public class ModifiedAirocean extends ConformalEstimate {
         y += 0.75 * ARC * ROOT3;
 
         //check to make sure still in right part
-        if (easia != isEurasianPart(x, y)) {
+        if (easia != this.isEurasianPart(x, y)) {
             return OUT_OF_BOUNDS;
         }
 

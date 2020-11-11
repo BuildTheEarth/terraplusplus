@@ -25,17 +25,17 @@ public class EarthTreePopulator implements ICubicPopulator {
     private GeographicProjection projection;
 
     public EarthTreePopulator(GeographicProjection proj) {
-        trees = new Trees();
-        extraSurface = new HashSet<Block>();
-        extraSurface.add(Blocks.CLAY);
-        extraSurface.add(Blocks.RED_SANDSTONE);
-        extraSurface.add(Blocks.SANDSTONE);
-        extraSurface.add(Blocks.STAINED_HARDENED_CLAY);
-        extraSurface.add(Blocks.HARDENED_CLAY);
-        extraSurface.add(Blocks.SAND);
-        extraSurface.add(Blocks.SNOW);
-        extraSurface.add(Blocks.MYCELIUM);
-        projection = proj;
+        this.trees = new Trees();
+        this.extraSurface = new HashSet<>();
+        this.extraSurface.add(Blocks.CLAY);
+        this.extraSurface.add(Blocks.RED_SANDSTONE);
+        this.extraSurface.add(Blocks.SANDSTONE);
+        this.extraSurface.add(Blocks.STAINED_HARDENED_CLAY);
+        this.extraSurface.add(Blocks.HARDENED_CLAY);
+        this.extraSurface.add(Blocks.SAND);
+        this.extraSurface.add(Blocks.SNOW);
+        this.extraSurface.add(Blocks.MYCELIUM);
+        this.projection = proj;
     }
 
     private double atanh(double x) {
@@ -45,14 +45,14 @@ public class EarthTreePopulator implements ICubicPopulator {
     @Override
     public void generate(World world, Random random, CubePos pos, Biome biome) {
 
-        double[] projected = projection.toGeo(pos.getX() * 16, pos.getZ() * 16);
+        double[] projected = this.projection.toGeo(pos.getX() * 16, pos.getZ() * 16);
 
-        double canopy = trees.estimateLocal(projected[0], projected[1], false);
+        double canopy = this.trees.estimateLocal(projected[0], projected[1], false);
 
         //got this fun formula messing around with data on desmos, estimate of tree cover -> number
         int treeCount = 30; //max so it doesn't go to infinity (which would technically be required to guarantee full coverage, but no)
         if (canopy < 0.95) {
-            treeCount = (int) (20 * atanh(Math.pow(canopy, 1.5)));
+            treeCount = (int) (20 * this.atanh(Math.pow(canopy, 1.5)));
         }
 
         //null island
@@ -75,7 +75,7 @@ public class EarthTreePopulator implements ICubicPopulator {
 
             int actualX = xOffset + pos.getMinBlockX();
             int actualZ = zOffset + pos.getMinBlockZ();
-            BlockPos top1 = new BlockPos(actualX, quickElev(world, actualX, actualZ, pos.getMinBlockY() - 1, pos.getMaxBlockY()) + 1, actualZ);
+            BlockPos top1 = new BlockPos(actualX, this.quickElev(world, actualX, actualZ, pos.getMinBlockY() - 1, pos.getMaxBlockY()) + 1, actualZ);
 
             if (top1 != null && pos.getMinBlockY() <= top1.getY() && top1.getY() <= pos.getMaxBlockY() && world.getBlockState(top1).getBlock() == Blocks.AIR) {
                 IBlockState topstate = world.getBlockState(top1.down());
@@ -83,7 +83,7 @@ public class EarthTreePopulator implements ICubicPopulator {
 
                 if (topstate.getBlock() != Blocks.GRASS && topstate.getBlock() != Blocks.DIRT) {
                     //plant a bit of dirt to make sure trees spawn when they are supposed to even in certain hostile environments
-                    if (extraSurface.contains(topstate.getBlock())) {
+                    if (this.extraSurface.contains(topstate.getBlock())) {
                         world.setBlockState(top1.down(), Blocks.GRASS.getDefaultState());
                     } else {
                         spawn = false;

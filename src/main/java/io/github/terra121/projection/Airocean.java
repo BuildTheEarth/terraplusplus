@@ -13,7 +13,7 @@ public class Airocean extends GeographicProjection {
 
     protected static final double TO_RADIANS = Math.PI / 180.0;
     protected static final double ROOT3 = Math.sqrt(3);
-    protected static double[] VERT = new double[]{
+    protected static double[] VERT = {
             10.536199, 64.700000,
             -5.245390, 2.300882,
             58.157706, 10.447378,
@@ -27,7 +27,7 @@ public class Airocean extends GeographicProjection {
             -57.700000, -39.100000,
             -169.463800, -64.700000,
     };
-    protected static final int[] ISO = new int[]{
+    protected static final int[] ISO = {
             2, 1, 6,
             1, 0, 2,
             0, 1, 5,
@@ -51,7 +51,7 @@ public class Airocean extends GeographicProjection {
             11, 6, 7, //child of 14
             3, 7, 8, //child of 15
     };
-    public static double[] CENTER_MAP = new double[]{
+    public static double[] CENTER_MAP = {
             -3, 7,
             -2, 5,
             -1, 7,
@@ -75,7 +75,7 @@ public class Airocean extends GeographicProjection {
             -5, -5, //20, pseudo triangle, child of 14
             -2, -7, //21 , pseudo triangle, child of 15
     };
-    public static byte[] FLIP_TRIANGLE = new byte[]{
+    public static byte[] FLIP_TRIANGLE = {
             1, 0, 1, 0, 0,
             1, 0, 1, 0, 1, 0, 1, 0, 1, 0,
             1, 1, 1, 0, 0,
@@ -84,7 +84,7 @@ public class Airocean extends GeographicProjection {
     protected static final double[] CENTROID = new double[66];
     protected static final double[] ROTATION_MATRIX = new double[198];
     protected static final double[] INVERSE_ROTATION_MATRIX = new double[198];
-    protected static final int[] FACE_ON_GRID = new int[]{
+    protected static final int[] FACE_ON_GRID = {
             -1, -1, 0, 1, 2, -1, -1, 3, -1, 4, -1,
             -1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
             20, 19, 15, 21, 16, -1, 17, 18, -1, -1, -1,
@@ -94,7 +94,7 @@ public class Airocean extends GeographicProjection {
     protected static final double EL6 = EL / 6;
     protected static final double DVE = Math.sqrt(3 + Math.sqrt(5)) / Math.sqrt(5 + Math.sqrt(5));
     protected static final double R = -3 * EL6 / DVE;
-    public static double[] OUT_OF_BOUNDS = new double[]{ 0.0 / 0, 0.0 / 0 };
+    public static double[] OUT_OF_BOUNDS = { 0.0 / 0, 0.0 / 0 };
 
     static {
 
@@ -131,7 +131,7 @@ public class Airocean extends GeographicProjection {
             double clon = Math.atan2(ysum, xsum);
             double clat = Math.atan2(Math.sqrt(xsum * xsum + ysum * ysum), zsum);
 
-            double v[] = new double[]{ VERT[2 * ISO[i * 3]], VERT[2 * ISO[i * 3] + 1] };
+            double[] v = { VERT[2 * ISO[i * 3]], VERT[2 * ISO[i * 3] + 1] };
             v = yRot(v[0] - clon, v[1], -clat);
 
             produceZYZRotationMatrix(ROTATION_MATRIX, i * 9, -clon, -clat, (Math.PI / 2) - v[0]);
@@ -141,7 +141,12 @@ public class Airocean extends GeographicProjection {
 
     public static void produceZYZRotationMatrix(double[] out, int offset, double a, double b, double c) {
 
-        double sina = Math.sin(a), cosa = Math.cos(a), sinb = Math.sin(b), cosb = Math.cos(b), sinc = Math.sin(c), cosc = Math.cos(c);
+        double sina = Math.sin(a);
+        double cosa = Math.cos(a);
+        double sinb = Math.sin(b);
+        double cosb = Math.cos(b);
+        double sinc = Math.sin(c);
+        double cosc = Math.cos(c);
 
         out[offset + 0] = cosa * cosb * cosc - sinc * sina;
         out[offset + 1] = -sina * cosb * cosc - sinc * cosa;
@@ -250,7 +255,7 @@ public class Airocean extends GeographicProjection {
     }
 
     static double[] yRot(double lambda, double phi, double rot) {
-        double c[] = cart(lambda, phi);
+        double[] c = cart(lambda, phi);
 
         double x = c[0];
         c[0] = c[2] * Math.sin(rot) + x * Math.cos(rot);
@@ -317,7 +322,7 @@ public class Airocean extends GeographicProjection {
                 //not out of bounds
                 if (bounds[0] <= X && X <= bounds[2] && bounds[1] <= Y && Y <= bounds[3]) {
 
-                    double proj[] = projection.toGeo(X, Y); //projection coords to lon lat
+                    double[] proj = projection.toGeo(X, Y); //projection coords to lon lat
 
                     //lat lon to reference image coords
                     int lon = (int) ((proj[0] / 360 + 0.5) * base.getWidth());
@@ -368,14 +373,17 @@ public class Airocean extends GeographicProjection {
         double bnumer = tanboff * tanboff + 1;
 
         //we will be solving for tanc, starting at t=0, tan(0) = 0
-        double tana = tanaoff, tanb = tanboff, tanc = 0;
+        double tana = tanaoff;
+        double tanb = tanboff;
+        double tanc = 0;
 
-        double adenom = 1, bdenom = 1;
+        double adenom = 1;
+        double bdenom = 1;
 
         //double fp = anumer + bnumer + 1; //derivative relative to tanc
 
         //int i = newton;
-        for (int i = 0; i < newton; i++) {
+        for (int i = 0; i < this.newton; i++) {
             double f = tana + tanb + tanc - R; //R = tana + tanb + tanc
             double fp = anumer * adenom * adenom + bnumer * bdenom * bdenom + 1; //derivative relative to tanc
 
@@ -454,11 +462,12 @@ public class Airocean extends GeographicProjection {
         double n = 3 + R * sumtmp - 2 * l;
         double o = sumtmp - R;
 
-        double l3 = 3 * l, m2 = 2 * m;
+        double l3 = 3 * l;
+        double m2 = 2 * m;
 
         double x = -o / n; //x = tanc
 
-        for (int i = 0; i < newton; i++) {
+        for (int i = 0; i < this.newton; i++) {
             double x2 = x * x;
 
             double f = l * x2 * x + m * x2 + n * x + o;
@@ -484,7 +493,7 @@ public class Airocean extends GeographicProjection {
     }
 
     protected double[] inverseTriangleTransform(double x, double y) {
-        return inverseTriangleTransformNewton(x, y);
+        return this.inverseTriangleTransformNewton(x, y);
     }
 
     public double[] fromGeo(double lon, double lat) {
@@ -507,7 +516,7 @@ public class Airocean extends GeographicProjection {
         double yp = x * ROTATION_MATRIX[off + 3] + y * ROTATION_MATRIX[off + 4] + z * ROTATION_MATRIX[off + 5];
         double zp = x * ROTATION_MATRIX[off + 6] + y * ROTATION_MATRIX[off + 7] + z * ROTATION_MATRIX[off + 8];
 
-        double[] out = triangleTransform(xp, yp, zp);
+        double[] out = this.triangleTransform(xp, yp, zp);
 
         //flip triangle to correct orientation
         if (FLIP_TRIANGLE[face] != 0) {
@@ -573,7 +582,7 @@ public class Airocean extends GeographicProjection {
         }
 
         //invert triangle transform
-        double[] c = inverseTriangleTransform(x, y);
+        double[] c = this.inverseTriangleTransform(x, y);
         x = c[0];
         y = c[1];
         double z = c[2];

@@ -18,18 +18,18 @@ public class Soil {
 
         //save in a random access run lenth to save ram at the slight cost of efficiency
         //this works because one soil type tends to stretch more than 4km
-        data = new RandomAccessRunlength<Byte>();
+        this.data = new RandomAccessRunlength<>();
 
         BufferedInputStream is = new BufferedInputStream(input);
 
         int i;
         while ((i = is.read()) >= 0) {
-            data.add(bytes[i]);
+            this.data.add(bytes[i]);
         }
 
 
-        if (data.size() != COLS * ROWS) {
-            throw new IOException("Soil data invalid, " + data.size());
+        if (this.data.size() != COLS * ROWS) {
+            throw new IOException("Soil data invalid, " + this.data.size());
         }
     }
 
@@ -37,13 +37,13 @@ public class Soil {
         if (x >= COLS || x < 0 || y >= ROWS || y < 0) {
             return 0;
         }
-        return data.get(x + y * COLS);
+        return this.data.get(x + y * COLS);
     }
 
     public byte getPoint(double x, double y) {
         int X = (int) (COLS * (x + 180) / 360);
         int Y = (int) (ROWS * (90 - y) / 180);
 
-        return getOfficial(X, Y);
+        return this.getOfficial(X, Y);
     }
 }

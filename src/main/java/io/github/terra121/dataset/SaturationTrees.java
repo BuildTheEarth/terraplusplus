@@ -17,14 +17,14 @@ public class SaturationTrees extends Trees {
     public String URL_PREFIX = TerraConfig.serverTree + "ForestCover_last/ImageServer/exportImage?f=image&bbox=";
 
     protected int[] request(Coord place) {
-        int out[] = new int[256 * 256];
+        int[] out = new int[256 * 256];
 
         for (int i = 0; i < 5; i++) {
 
             InputStream is = null;
 
             try {
-                String urlText = URL_PREFIX + (place.x * REGION_SIZE - 180) + "," + (90 - place.y * REGION_SIZE) + "," + ((place.x + 1) * REGION_SIZE - 180) + "," + (90 - (place.y + 1) * REGION_SIZE) + URL_SUFFIX;
+                String urlText = this.URL_PREFIX + (place.x * REGION_SIZE - 180) + ',' + (90 - place.y * REGION_SIZE) + ',' + ((place.x + 1) * REGION_SIZE - 180) + ',' + (90 - (place.y + 1) * REGION_SIZE) + this.URL_SUFFIX;
                 if (!TerraConfig.reducedConsoleMessages) {
                     TerraMod.LOGGER.info(urlText);
                 }
@@ -32,7 +32,7 @@ public class SaturationTrees extends Trees {
                 is = url.openStream();
                 ByteSourceInputStream by = new ByteSourceInputStream(is, "shits and giggles");
                 TiffImageParser p = new TiffImageParser();
-                BufferedImage img = p.getBufferedImage(by, new HashMap<String, Object>());
+                BufferedImage img = p.getBufferedImage(by, new HashMap<>());
                 is.close();
                 is = null;
 

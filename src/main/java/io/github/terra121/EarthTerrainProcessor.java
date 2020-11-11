@@ -67,25 +67,25 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
     public EarthTerrainProcessor(World world) {
         super(world);
 
-        cfg = new EarthGeneratorSettings(world.getWorldInfo().getGeneratorOptions());
-        projection = cfg.getProjection();
-        if (!cfg.settings.customdataset.equals("")) {
-            localTerrain = cfg.settings.customdataset;
+        this.cfg = new EarthGeneratorSettings(world.getWorldInfo().getGeneratorOptions());
+        this.projection = this.cfg.getProjection();
+        if (!cfg.settings.customdataset.isEmpty()) {
+            localTerrain = this.cfg.settings.customdataset;
         } else {
-            localTerrain = FMLCommonHandler.instance().getSavesDirectory().getPath() + "/" + FMLCommonHandler.instance().getMinecraftServerInstance().getFolderName() + "/lidardata/";
+            localTerrain = FMLCommonHandler.instance().getSavesDirectory().getPath() + '/' + FMLCommonHandler.instance().getMinecraftServerInstance().getFolderName() + "/lidardata/";
         }
 
-        doRoads = cfg.settings.roads && world.getWorldInfo().isMapFeaturesEnabled();
-        doBuildings = cfg.settings.buildings && world.getWorldInfo().isMapFeaturesEnabled();
+        this.doRoads = this.cfg.settings.roads && world.getWorldInfo().isMapFeaturesEnabled();
+        this.doBuildings = this.cfg.settings.buildings && world.getWorldInfo().isMapFeaturesEnabled();
 
-        biomes = world.getBiomeProvider(); //TODO: make this not order dependent
+        this.biomes = world.getBiomeProvider(); //TODO: make this not order dependent
 
-        osm = new OpenStreetMaps(projection, doRoads, cfg.settings.osmwater, doBuildings);
-        heights = new Heights(13, false, cfg.settings.smoothblend, cfg.settings.osmwater ? osm.water : null);
-        depths = new Heights(10, cfg.settings.osmwater ? osm.water : null); //below sea level only generates a level 10, this shouldn't lag too bad cause a zoom 10 tile is frickin massive (64x zoom 13)
+        this.osm = new OpenStreetMaps(this.projection, this.doRoads, this.cfg.settings.osmwater, this.doBuildings);
+        this.heights = new Heights(13, false, this.cfg.settings.smoothblend, this.cfg.settings.osmwater ? this.osm.water : null);
+        this.depths = new Heights(10, this.cfg.settings.osmwater ? this.osm.water : null); //below sea level only generates a level 10, this shouldn't lag too bad cause a zoom 10 tile is frickin massive (64x zoom 13)
 
         //Trying to allow for multiple zoom levels
-        if (cfg.settings.lidar) {
+        if (this.cfg.settings.lidar) {
 
             String file_prefix = localTerrain;
 
@@ -99,52 +99,52 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
             int zoomL = zoomdirs.length;
 
             if (zoomL != 0) {
-                zooms = new byte[zoomL];
-                heightsLidar = new Heights[zoomL];
+                this.zooms = new byte[zoomL];
+                this.heightsLidar = new Heights[zoomL];
 
                 for (int i = 0; i < zoomL; i++) {
-                    zooms[i] = Byte.parseByte(zoomdirs[i].getName());
-                    heightsLidar[i] = new Heights(zooms[i], true, cfg.settings.smoothblend, cfg.settings.osmwater ? osm.water : null);
+                    this.zooms[i] = Byte.parseByte(zoomdirs[i].getName());
+                    this.heightsLidar[i] = new Heights(this.zooms[i], true, this.cfg.settings.smoothblend, this.cfg.settings.osmwater ? this.osm.water : null);
                 }
 
             }
 
         }
 
-        unnaturals = new HashSet<Block>();
-        unnaturals.add(Blocks.STONEBRICK);
-        unnaturals.add(Blocks.CONCRETE);
-        unnaturals.add(Blocks.BRICK_BLOCK);
+        this.unnaturals = new HashSet<>();
+        this.unnaturals.add(Blocks.STONEBRICK);
+        this.unnaturals.add(Blocks.CONCRETE);
+        this.unnaturals.add(Blocks.BRICK_BLOCK);
 
-        surfacePopulators = new HashSet<ICubicPopulator>();
+        this.surfacePopulators = new HashSet<>();
 
-        if (cfg.settings.lidar) {
-            if (doRoads || cfg.settings.osmwater) {
-                surfacePopulators.add(new RoadGenerator(osm, heights, heightsLidar, zooms, projection));
-            } else if (doRoads || cfg.settings.osmwater) {
-                surfacePopulators.add(new RoadGenerator(osm, heights, projection));
+        if (this.cfg.settings.lidar) {
+            if (this.doRoads || this.cfg.settings.osmwater) {
+                this.surfacePopulators.add(new RoadGenerator(this.osm, this.heights, this.heightsLidar, this.zooms, this.projection));
+            } else if (this.doRoads || this.cfg.settings.osmwater) {
+                this.surfacePopulators.add(new RoadGenerator(this.osm, this.heights, this.projection));
             }
         }
 
         if (!TerraConfig.serverTree.isEmpty()) {
-            surfacePopulators.add(new EarthTreePopulator(projection));
+            this.surfacePopulators.add(new EarthTreePopulator(this.projection));
         }
-        snow = new SnowPopulator(); //this will go after the rest
+        this.snow = new SnowPopulator(); //this will go after the rest
 
-        cubiccfg = cfg.getCustomCubic();
+        this.cubiccfg = this.cfg.getCustomCubic();
 
         //InitCubicStructureGeneratorEvent caveEvent = new InitCubicStructureGeneratorEvent(EventType.CAVE, new CubicCaveGenerator());
-        caveGenerator = new CubicCaveGenerator();
+        this.caveGenerator = new CubicCaveGenerator();
 
-        biomePopulators = new HashMap<Biome, ICubicPopulator>();
+        this.biomePopulators = new HashMap<>();
 
         for (Biome biome : ForgeRegistries.BIOMES) {
             CubicBiome cubicBiome = CubicBiome.getCubic(biome);
-            biomePopulators.put(biome, cubicBiome.getDecorator(cubiccfg));
+            this.biomePopulators.put(biome, cubicBiome.getDecorator(this.cubiccfg));
         }
 
-        biomeBlockReplacers = new HashMap<Biome, List<IBiomeBlockReplacer>>();
-        BiomeBlockReplacerConfig conf = cubiccfg.replacerConfig;
+        this.biomeBlockReplacers = new HashMap<>();
+        BiomeBlockReplacerConfig conf = this.cubiccfg.replacerConfig;
         CliffReplacer cliffs = new CliffReplacer();
 
         for (Biome biome : ForgeRegistries.BIOMES) {
@@ -156,7 +156,7 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
             }
             replacers.add(cliffs);
 
-            biomeBlockReplacers.put(biome, replacers);
+            this.biomeBlockReplacers.put(biome, replacers);
         }
 
     }
@@ -182,19 +182,19 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
 
-                    double[] projected = projection.toGeo((cubeX * 16 + x), (cubeZ * 16 + z));
+                    double[] projected = this.projection.toGeo((cubeX * 16 + x), (cubeZ * 16 + z));
                     double Y = -100000000;
 
                     //Check to see if the data is in the local directory and save which zoom level it is in
-                    if (cfg.settings.lidar) {
+                    if (this.cfg.settings.lidar) {
                         String file_prefix = localTerrain;
 
-                        if (heightsLidar != null) {
+                        if (this.heightsLidar != null) {
 
-                            for (int i = 0; i < heightsLidar.length; i++) {
+                            for (int i = 0; i < this.heightsLidar.length; i++) {
 
-                                if (new File(file_prefix + zooms[i] + "/" + (int) Math.floor((projected[0] + 180) / 360 * (1 << zooms[i])) + "/" + (int) Math.floor((1 - Math.log(Math.tan(Math.toRadians(projected[1])) + 1 / Math.cos(Math.toRadians(projected[1]))) / Math.PI) / 2 * (1 << zooms[i])) + ".png").exists()) {
-                                    double heightreturn = heightsLidar[i].estimateLocal(projected[0], projected[1], true);
+                                if (new File(file_prefix + this.zooms[i] + '/' + (int) Math.floor((projected[0] + 180) / 360 * (1 << this.zooms[i])) + '/' + (int) Math.floor((1 - Math.log(Math.tan(Math.toRadians(projected[1])) + 1 / Math.cos(Math.toRadians(projected[1]))) / Math.PI) / 2 * (1 << this.zooms[i])) + ".png").exists()) {
+                                    double heightreturn = this.heightsLidar[i].estimateLocal(projected[0], projected[1], true);
                                     if (heightreturn != -10000000) {
                                         Y = heightreturn;
                                     }
@@ -205,7 +205,7 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
                     }
 
                     if (Y == -100000000) {
-                        Y = heights.estimateLocal(projected[0], projected[1], false);
+                        Y = this.heights.estimateLocal(projected[0], projected[1], false);
                     }
                     heightarr[x][z] = Y;
 
@@ -223,14 +223,14 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
                 double depth = -100000000;
                 double depthreturn = -10000000;
 
-                double[] projected = projection.toGeo((cubeX * 16 + x), (cubeZ * 16 + z));
+                double[] projected = this.projection.toGeo((cubeX * 16 + x), (cubeZ * 16 + z));
                 double wateroff = 0;
-                if (cfg.settings.osmwater) {
-                    wateroff = osm.water.estimateLocal(projected[0], projected[1]);
+                if (this.cfg.settings.osmwater) {
+                    wateroff = this.osm.water.estimateLocal(projected[0], projected[1]);
                 }
 
                 if (zind != -1) {
-                    depthreturn = heightsLidar[zind].estimateLocal(projected[0], projected[1], true);
+                    depthreturn = this.heightsLidar[zind].estimateLocal(projected[0], projected[1], true);
                 }
                 if (depthreturn != -10000000) {
                     depth = depthreturn;  //Get bathymetric data from local directory if available
@@ -239,7 +239,7 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
                 //ocean?
                 if (-0.001 < Y && Y < 0.001) {
                     if (depth == -100000000) {
-                        depth = depths.estimateLocal(projected[0], projected[1], false);
+                        depth = this.depths.estimateLocal(projected[0], projected[1], false);
                     }
 
                     if (depth < 0) {
@@ -253,7 +253,8 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
             	}*/
 
                 //estimate slopes
-                double dx, dz;
+                double dx;
+                double dz;
                 if (x == 16 - 1) {
                     dx = heightarr[x][z] - heightarr[x - 1][z];
                 } else {
@@ -267,7 +268,7 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
                 }
 
                 //get biome (thanks to 	z3nth10n for spoting this one)
-                List<IBiomeBlockReplacer> reps = biomeBlockReplacers.get(biomes.getBiome(new BlockPos(cubeX * 16 + x, 0, cubeZ * 16 + z)));
+                List<IBiomeBlockReplacer> reps = this.biomeBlockReplacers.get(this.biomes.getBiome(new BlockPos(cubeX * 16 + x, 0, cubeZ * 16 + z)));
 
                 for (int y = 0; y < 16 && y < Y - Coords.cubeToMinBlock(cubeY); y++) {
                     IBlockState block = Blocks.STONE.getDefaultState();
@@ -281,8 +282,8 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
                 int minblock = Coords.cubeToMinBlock(cubeY);
 
                 if (-5 < cubeX && cubeX < 5 && -5 < cubeZ && cubeZ < 5) {
-                    ;//NULL ISLAND
-                } else if (cfg.settings.osmwater) {
+                    //NULL ISLAND
+                } else if (this.cfg.settings.osmwater) {
                     if (wateroff > 1) {
                         int start = (int) (Y);
                         if (start == 0) {
@@ -313,13 +314,13 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
             }
         }
 
-        if (cfg.settings.caves) {
-            caveGenerator.generate(world, primer, new CubePos(cubeX, cubeY, cubeZ));
+        if (this.cfg.settings.caves) {
+            this.caveGenerator.generate(this.world, primer, new CubePos(cubeX, cubeY, cubeZ));
         }
 
         //spawn roads
-        if ((doRoads || doBuildings || cfg.settings.osmwater) && surface) {
-            Set<OpenStreetMaps.Edge> edges = osm.chunkStructures(cubeX, cubeZ);
+        if ((this.doRoads || this.doBuildings || this.cfg.settings.osmwater) && surface) {
+            Set<OpenStreetMaps.Edge> edges = this.osm.chunkStructures(cubeX, cubeZ);
 
             if (edges != null) {
 
@@ -403,35 +404,35 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
         /**
          * If event is not canceled we will use cube populators from registry.
          **/
-        if (!MinecraftForge.EVENT_BUS.post(new CubePopulatorEvent(world, cube))) {
-            Random rand = Coords.coordsSeedRandom(world.getSeed(), cube.getX(), cube.getY(), cube.getZ());
+        if (!MinecraftForge.EVENT_BUS.post(new CubePopulatorEvent(this.world, cube))) {
+            Random rand = Coords.coordsSeedRandom(this.world.getSeed(), cube.getX(), cube.getY(), cube.getZ());
 
             Biome biome = cube.getBiome(Coords.getCubeCenter(cube));
 
-            if (cfg.settings.dynamicbaseheight) {
-                double[] proj = projection.toGeo((cube.getX() * 16 + 8), (cube.getZ() * 16 + 8));
-                cubiccfg.expectedBaseHeight = (float) heights.estimateLocal(proj[0], proj[1], false);
+            if (this.cfg.settings.dynamicbaseheight) {
+                double[] proj = this.projection.toGeo((cube.getX() * 16 + 8), (cube.getZ() * 16 + 8));
+                this.cubiccfg.expectedBaseHeight = (float) this.heights.estimateLocal(proj[0], proj[1], false);
             }
 
-            MinecraftForge.EVENT_BUS.post(new PopulateCubeEvent.Pre(world, rand, cube.getX(), cube.getY(), cube.getZ(), false));
+            MinecraftForge.EVENT_BUS.post(new PopulateCubeEvent.Pre(this.world, rand, cube.getX(), cube.getY(), cube.getZ(), false));
 
             CubePos pos = cube.getCoords();
 
-            int surf = isSurface(world, cube);
+            int surf = this.isSurface(this.world, cube);
             if (surf == 0) {
-                for (ICubicPopulator pop : surfacePopulators) {
-                    pop.generate(world, rand, pos, biome);
+                for (ICubicPopulator pop : this.surfacePopulators) {
+                    pop.generate(this.world, rand, pos, biome);
                 }
             }
 
-            biomePopulators.get(biome).generate(world, rand, pos, biome);
+            this.biomePopulators.get(biome).generate(this.world, rand, pos, biome);
 
             if (surf == 1) {
-                snow.generate(world, rand, pos, biome);
+                this.snow.generate(this.world, rand, pos, biome);
             }
 
-            MinecraftForge.EVENT_BUS.post(new PopulateCubeEvent.Post(world, rand, cube.getX(), cube.getY(), cube.getZ(), false));
-            CubeGeneratorsRegistry.generateWorld(world, rand, pos, biome);
+            MinecraftForge.EVENT_BUS.post(new PopulateCubeEvent.Post(this.world, rand, cube.getX(), cube.getY(), cube.getZ(), false));
+            CubeGeneratorsRegistry.generateWorld(this.world, rand, pos, biome);
         }
     }
 
@@ -444,7 +445,7 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
             for (int z = 0; z < 16; z++) {
                 type = world.getBlockState(new BlockPos(x + cube.getX() * 16, 16 + cube.getY() * 16, z + cube.getZ() * 16));
                 if (type == defState &&
-                    cube.getBlockState(x, 0, z) != defState && !unnaturals.contains(cube.getBlockState(x, 0, z).getBlock())) {
+                    cube.getBlockState(x, 0, z) != defState && !this.unnaturals.contains(cube.getBlockState(x, 0, z).getBlock())) {
                     return 0;
                 }
             }
@@ -455,8 +456,8 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
     @Override
     public BlockPos getClosestStructure(String name, BlockPos pos, boolean findUnexplored) {
         // eyes of ender are now compasses
-        if (name.equals("Stronghold")) {
-            double[] vec = projection.vector(pos.getX(), pos.getZ(), 1, 0); //direction's to one meter north of here
+        if ("Stronghold".equals(name)) {
+            double[] vec = this.projection.vector(pos.getX(), pos.getZ(), 1, 0); //direction's to one meter north of here
 
             //normalize vector
             double mag = Math.sqrt(vec[0] * vec[0] + vec[1] * vec[1]);

@@ -19,13 +19,13 @@ public class DynamicOptions extends GuiSlot {
 
     public DynamicOptions(Minecraft mcIn, int width, int height, int top, int bottom, int slotsize, Handler handler, Element[] elems) {
         super(mcIn, width, height, top, bottom, slotsize);
-        elements = elems;
+        this.elements = elems;
         this.handler = handler;
     }
 
     @Override
     protected int getSize() {
-        return elements.length;
+        return this.elements.length;
     }
 
     /**
@@ -42,9 +42,9 @@ public class DynamicOptions extends GuiSlot {
             int i = this.getSlotIndexFromScreenCoords(mouseX, mouseY);
 
             if (i >= 0) {
-                elements[i].click(mc, mouseX, mouseY, mouseButton);
-                if (handler != null) {
-                    handler.onDynOptClick(elements[i]);
+                this.elements[i].click(this.mc, mouseX, mouseY, mouseButton);
+                if (this.handler != null) {
+                    this.handler.onDynOptClick(this.elements[i]);
                 }
             }
         }
@@ -77,11 +77,11 @@ public class DynamicOptions extends GuiSlot {
 
     @Override
     protected void drawSlot(int slotIndex, int xPos, int yPos, int heightIn, int mouseXIn, int mouseYIn, float partialTicks) {
-        elements[slotIndex].draw(mc, xPos, yPos, heightIn, mouseXIn, mouseYIn, partialTicks);
+        this.elements[slotIndex].draw(this.mc, xPos, yPos, heightIn, mouseXIn, mouseYIn, partialTicks);
     }
 
-    public static interface Handler {
-        public void onDynOptClick(Element elem);
+    public interface Handler {
+        void onDynOptClick(Element elem);
     }
 
     public abstract static class Element {
@@ -117,27 +117,27 @@ public class DynamicOptions extends GuiSlot {
 
         @Override
         public void click(Minecraft mc, int mouseX, int mouseY, int mouseEvent) {
-            gui.mouseClicked(mouseX, mouseY, mouseEvent);
+            this.gui.mouseClicked(mouseX, mouseY, mouseEvent);
         }
 
         @Override
         public void draw(Minecraft mc, int x, int y, int height, int mouseX, int mouseY, float partialTicks) {
-            gui.x = x;
-            gui.y = y;
-            gui.height = height > 20 ? 20 : height;
-            gui.width = 200;
-            gui.drawTextBox();
+            this.gui.x = x;
+            this.gui.y = y;
+            this.gui.height = height > 20 ? 20 : height;
+            this.gui.width = 200;
+            this.gui.drawTextBox();
         }
 
         public String getText() {
-            return (gui.getText());
+            return (this.gui.getText());
         }
 
         @Override
         public void update() {
-            gui.updateCursorCounter();
+            this.gui.updateCursorCounter();
             try {
-                outf.set(this.outO, this.gui.getText());
+                this.outf.set(this.outO, this.gui.getText());
             } catch (IllegalAccessException e) {
                 TerraMod.LOGGER.error("This should never happen, but set reflection error");
                 e.printStackTrace();
@@ -146,7 +146,7 @@ public class DynamicOptions extends GuiSlot {
 
         @Override
         public void keyTyped(char typedChar, int keyCode) {
-            gui.textboxKeyTyped(typedChar, keyCode);
+            this.gui.textboxKeyTyped(typedChar, keyCode);
         }
 
     }
@@ -166,38 +166,38 @@ public class DynamicOptions extends GuiSlot {
             this.tostring = tostring;
 
             try {
-                current = Arrays.asList(options).indexOf(outfield.get(outobject));
+                this.current = Arrays.asList(options).indexOf(outfield.get(outobject));
             } catch (IllegalAccessException e) {
                 TerraMod.LOGGER.error("This should never happen, but get reflection error");
                 e.printStackTrace();
             }
 
-            gui = new GuiButton(id, 0, 0, tostring.apply(options[current]));
+            this.gui = new GuiButton(id, 0, 0, tostring.apply(options[this.current]));
         }
 
         @Override
         public void click(Minecraft mc, int mouseX, int mouseY, int mouseEvent) {
-            current++;
-            if (current >= options.length) {
-                current = 0;
+            this.current++;
+            if (this.current >= this.options.length) {
+                this.current = 0;
             }
 
             try {
-                outf.set(outo, options[current]);
+                this.outf.set(this.outo, this.options[this.current]);
             } catch (IllegalAccessException e) {
                 TerraMod.LOGGER.error("This should never happen, but set reflection error");
                 e.printStackTrace();
             }
 
-            gui.displayString = tostring.apply(options[current]);
+            this.gui.displayString = this.tostring.apply(this.options[this.current]);
         }
 
         @Override
         public void draw(Minecraft mc, int x, int y, int height, int mouseX, int mouseY, float partialTicks) {
-            gui.height = height > 20 ? 20 : height;
-            gui.x = x;
-            gui.y = y;
-            gui.drawButton(mc, mouseX, mouseY, partialTicks);
+            this.gui.height = height > 20 ? 20 : height;
+            this.gui.x = x;
+            this.gui.y = y;
+            this.gui.drawButton(mc, mouseX, mouseY, partialTicks);
         }
     }
 

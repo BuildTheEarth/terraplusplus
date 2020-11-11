@@ -28,7 +28,9 @@ public class SnowPopulator implements ICubicPopulator {
 
     @Override
     public void generate(World world, Random random, CubePos pos, Biome biome) {
-        int baseX = pos.getX() * 16, baseY = pos.getY() * 16, baseZ = pos.getZ() * 16;
+        int baseX = pos.getX() * 16;
+        int baseY = pos.getY() * 16;
+        int baseZ = pos.getZ() * 16;
 		
 		/*EarthBiomeProvider ebp = (EarthBiomeProvider) world.getBiomeProvider();
 		double[] proj = ebp.projection.toGeo(pos.getX()/100000.0, pos.getY()/100000.0);
@@ -39,7 +41,7 @@ public class SnowPopulator implements ICubicPopulator {
 
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
-                    int y = quickElev(world, baseX, baseZ, baseY, baseY + 16 - 1);
+                    int y = this.quickElev(world, baseX, baseZ, baseY, baseY + 16 - 1);
                     BlockPos bpos = new BlockPos(baseX + x, y, baseZ + z);
 
                     if (canSnow(bpos, world, false)) {

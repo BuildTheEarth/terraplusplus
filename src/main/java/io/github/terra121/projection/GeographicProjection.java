@@ -14,7 +14,7 @@ public class GeographicProjection {
     public static Map<String, GeographicProjection> projections;
 
     static {
-        projections = new HashMap<String, GeographicProjection>();
+        projections = new HashMap<>();
         projections.put("web_mercator", new CenteredMapsProjection());
         projections.put("equirectangular", new GeographicProjection());
         projections.put("sinusoidal", new SinusoidalProjection());
@@ -43,8 +43,6 @@ public class GeographicProjection {
         return base;
     }
 
-    ;
-
     public double[] toGeo(double x, double y) {
         return new double[]{ x, y };
     }
@@ -60,11 +58,11 @@ public class GeographicProjection {
     public double[] bounds() {
 
         //get max in by using extreme coordinates
-        double[] b = new double[]{
-                fromGeo(-180, 0)[0],
-                fromGeo(0, -90)[1],
-                fromGeo(180, 0)[0],
-                fromGeo(0, 90)[1]
+        double[] b = {
+                this.fromGeo(-180, 0)[0],
+                this.fromGeo(0, -90)[1],
+                this.fromGeo(180, 0)[0],
+                this.fromGeo(0, 90)[1]
         };
 
         if (b[0] > b[2]) {
@@ -83,14 +81,14 @@ public class GeographicProjection {
     }
 
     public boolean upright() {
-        return fromGeo(0, 90)[1] <= fromGeo(0, -90)[1];
+        return this.fromGeo(0, 90)[1] <= this.fromGeo(0, -90)[1];
     }
 
     public double[] vector(double x, double y, double north, double east) {
-        double geo[] = toGeo(x, y);
+        double[] geo = this.toGeo(x, y);
 
         //TODO: east may be slightly off because earth not a sphere
-        double off[] = fromGeo(geo[0] + east * 360.0 / (Math.cos(geo[1] * Math.PI / 180.0) * EARTH_CIRCUMFERENCE),
+        double[] off = this.fromGeo(geo[0] + east * 360.0 / (Math.cos(geo[1] * Math.PI / 180.0) * EARTH_CIRCUMFERENCE),
                 geo[1] + north * 360.0 / EARTH_POLAR_CIRCUMFERENCE);
 
         return new double[]{ off[0] - x, off[1] - y };
@@ -102,9 +100,9 @@ public class GeographicProjection {
 
         double ddeg = d * 180.0 / Math.PI;
 
-        double[] base = fromGeo(lon, lat);
-        double[] lonoff = fromGeo(lon + ddeg, lat);
-        double[] latoff = fromGeo(lon, lat + ddeg);
+        double[] base = this.fromGeo(lon, lat);
+        double[] lonoff = this.fromGeo(lon + ddeg, lat);
+        double[] latoff = this.fromGeo(lon, lat + ddeg);
 
         double dxdl = (lonoff[0] - base[0]) / d;
         double dxdp = (latoff[0] - base[0]) / d;
@@ -126,7 +124,7 @@ public class GeographicProjection {
         return new double[]{ h * k * sint, 2 * Math.asin(bp / ap), a, b };
     }
 
-    public static enum Orientation {
+    public enum Orientation {
         none, upright, swapped
     }
 }
