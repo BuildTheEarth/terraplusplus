@@ -1,7 +1,7 @@
 ![Logo](Pictures/TerraTextIconnocompress.png)
 
 # Terra 1 to 1 Minecraft Earth Project
-**Current build status:**
+**Current build status:**![Java CI with Gradle](https://github.com/BuildTheEarth/terraplusplus/workflows/Java%20CI%20with%20Gradle/badge.svg)
 
 ### Developed by orangeadam3
 ### Co-Developed and images by shejan0 
