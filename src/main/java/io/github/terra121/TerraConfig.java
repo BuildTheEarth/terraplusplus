@@ -11,6 +11,8 @@ import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+import java.util.Map;
+
 @Config(modid = TerraMod.MODID)
 public class TerraConfig {
     @Name("overpass_interpreter")

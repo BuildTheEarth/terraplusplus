@@ -53,6 +53,9 @@ dependencies {
     }
 
     shade "org.apache.commons:commons-imaging:1.0-alpha2"
+
+    compileOnly "org.projectlombok:lombok:1.18.0"
+    annotationProcessor "org.projectlombok:lombok:1.18.0"
 }
 
 processResources {

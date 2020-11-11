@@ -1,9 +1,11 @@
-package io.github.terra121.projection;
+package io.github.terra121.projection.transform;
 
-public abstract class ProjectionTransform extends GeographicProjection {
-    protected GeographicProjection input;
+import io.github.terra121.projection.GeographicProjection;
 
-    public ProjectionTransform(GeographicProjection input) {
+public abstract class AbstractTransformation extends GeographicProjection {
+    protected final GeographicProjection input;
+
+    public AbstractTransformation(GeographicProjection input) {
         this.input = input;
     }
 

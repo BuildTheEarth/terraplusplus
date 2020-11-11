@@ -1,6 +1,8 @@
-package io.github.terra121.projection;
+package io.github.terra121.projection.transform;
 
-public class UprightOrientation extends ProjectionTransform {
+import io.github.terra121.projection.GeographicProjection;
+
+public class UprightOrientation extends AbstractTransformation {
 
     public UprightOrientation(GeographicProjection input) {
         super(input);

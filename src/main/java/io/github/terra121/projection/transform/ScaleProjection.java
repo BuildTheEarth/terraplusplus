@@ -1,6 +1,8 @@
-package io.github.terra121.projection;
+package io.github.terra121.projection.transform;
 
-public class ScaleProjection extends ProjectionTransform {
+import io.github.terra121.projection.GeographicProjection;
+
+public class ScaleProjection extends AbstractTransformation {
 
     double scaleX;
     double scaleY;

@@ -9,7 +9,7 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGenerato
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.CustomGenSettingsSerialization;
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.fixer.PresetLoadError;
 import io.github.terra121.projection.GeographicProjection;
-import io.github.terra121.projection.ScaleProjection;
+import io.github.terra121.projection.transform.ScaleProjection;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public class EarthGeneratorSettings {
