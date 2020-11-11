@@ -39,22 +39,19 @@ configurations {
 
 repositories {
     maven {
-        name = "Sonatype"
-        url = "https://oss.sonatype.org/content/repositories/public"
-    }
-    maven { //contains Mixin, used by both Cubic Chunks and CubicWorldGen
-        name = "SpongePowered"
-        url = "http://repo.spongepowered.org/maven/"
-    }
-    maven { //contains Jankson, used by CubicWorldGen
-        name = "elytradev"
-        url = "https://repo.elytradev.com"
+        name = "JitPack"
+        url = "https://jitpack.io/"
     }
 }
 
 dependencies {
-    deobfProvided "io.github.opencubicchunks:cubicchunks:1.12.2-0.0-SNAPSHOT"
-    deobfProvided "io.github.opencubicchunks:cubicworldgen:1.12.2-0.0-SNAPSHOT"
+    deobfProvided ("com.github.OpenCubicChunks.CubicChunks:cubicchunks:0d61d787ed052ad53391c3ebe9799e4ed2da3659") {
+        transitive = false
+    }
+    deobfProvided ("com.github.OpenCubicChunks:CubicWorldGen:27de56d2f792513873584b2f8fd9f3082fb259ec") {
+        transitive = false
+    }
+
     shade "org.apache.commons:commons-imaging:1.0-alpha1"
 }
 
