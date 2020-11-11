@@ -33,13 +33,17 @@ public class Trees extends TiledDataset {
 	protected int[] request(Coord place, boolean lidar) { //TODO: custom tree data
 		int out[] = new int[256 * 256];
 
+        if (TerraConfig.serverTree.isEmpty()) {
+            return out;
+        }
+
         for(int i=0; i<5; i++) {
 
             InputStream is = null;
 
             try {
                 String urlText = URL_PREFIX + (place.x*REGION_SIZE - 180) + "," + (90-place.y*REGION_SIZE) + "," + ((place.x+1)*REGION_SIZE - 180) + "," + (90 - (place.y+1)*REGION_SIZE) +URL_SUFFIX;
-                TerraMod.LOGGER.info(urlText);
+                if (!TerraConfig.reducedConsoleMessages) TerraMod.LOGGER.info(urlText);
 
                 URL url = new URL(urlText);
                 URLConnection con = url.openConnection();
@@ -75,12 +79,12 @@ public class Trees extends TiledDataset {
                     } catch (IOException e) {}
                 }
 
-                TerraMod.LOGGER.error("Failed to get tree cover data " + place.x + " " + place.y + " : " + ioe);
+                if (!TerraConfig.reducedConsoleMessages) TerraMod.LOGGER.error("Failed to get tree cover data " + place.x + " " + place.y + " : " + ioe);
             }
         }
 
-        TerraMod.LOGGER.error("Failed too many times, trees will not spawn. ");
-        return out;
+        TerraMod.LOGGER.error("Tree cover has failed too many times, trees will not spawn. " +
+                "If this is a recurring issue then disable the tree cover in the config by leaving it blank.");        return out;
 	}
 
 }

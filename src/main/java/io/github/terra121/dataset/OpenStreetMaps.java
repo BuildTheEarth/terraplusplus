@@ -166,8 +166,8 @@ public class OpenStreetMaps {
 
             String urltext = overpassInstance + URL_PREFACE + bbox + URL_A + bbox + URL_B;
             if (doWater) urltext += URL_C + bottomleft + URL_SUFFIX;
-            
-        	TerraMod.LOGGER.info(urltext);
+
+            if (!TerraConfig.reducedConsoleMessages) TerraMod.LOGGER.info(urltext);
 
             //kumi systems request a meaningful user-agent
             URL url = new URL(urltext);

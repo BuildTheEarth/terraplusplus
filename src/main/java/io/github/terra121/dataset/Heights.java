@@ -64,7 +64,7 @@ public class Heights extends TiledDataset{
 	        	if(img == null) { //Catches if LIDAR data is disabled or if there is no LIDAR data for that coord.
 		        	
 		            String urlText = url_prefix + place.x + "/" + place.y + ".png";
-		            TerraMod.LOGGER.info(urlText);
+					if (!TerraConfig.reducedConsoleMessages) TerraMod.LOGGER.info(urlText);
 		            
 		            URL url = new URL(urlText);
 		            URLConnection con = url.openConnection();
@@ -121,8 +121,8 @@ public class Heights extends TiledDataset{
 	                    is.close();
 	                } catch (IOException e) {}
 	            }
-	
-	            TerraMod.LOGGER.error("Failed to get elevation " + place.x + " " + place.y + " : " + ioe);
+
+				if (!TerraConfig.reducedConsoleMessages) TerraMod.LOGGER.error("Failed to get elevation " + place.x + " " + place.y + " : " + ioe);
 	        }
 	    }
 	        

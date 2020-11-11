@@ -8,12 +8,14 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.api.D
 import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.api.SyntaxError;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGeneratorSettings;
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.CustomGenSettingsSerialization;
+import io.github.opencubicchunks.cubicchunks.cubicgen.preset.fixer.CustomGeneratorSettingsFixer;
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.fixer.PresetLoadError;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.ScaleProjection;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public class EarthGeneratorSettings {
-	
+
 	//json template to be filled by Gson
 	public static class JsonSettings {
 		public String projection = "equirectangular";
@@ -26,20 +28,20 @@ public class EarthGeneratorSettings {
 		public Boolean dynamicbaseheight = true;
 		public Boolean osmwater = false;
 		public Boolean buildings = false;
+		public Boolean caves = false;
 		public Boolean lidar = false; // Experimental LIDAR data
-		public Boolean caves = true;
 		public String customdataset = "";
 	}
 	public JsonSettings settings;
-	
+
 	private Gson gson;
-	
+
 	public EarthGeneratorSettings(String generatorSettings) {
-		
-		System.out.println(generatorSettings);
-		
+
+		if (!TerraConfig.reducedConsoleMessages) TerraMod.LOGGER.info(generatorSettings);
+
 		gson = new GsonBuilder().create();
-		
+
 		if(generatorSettings.length()==0) { //blank string means default
 			settings = new JsonSettings();
 		}
@@ -50,55 +52,60 @@ public class EarthGeneratorSettings {
 			settings = new JsonSettings();
 		}
 	}
-	
-	@Override
+
 	public String toString() {
 		return gson.toJson(settings, JsonSettings.class);
 	}
-	
+
 	public CustomGeneratorSettings getCustomCubic() {
-		if(settings.customcubic.length()==0) {
+		if (settings.customcubic.length() == 0) {
 			CustomGeneratorSettings cfg = CustomGeneratorSettings.defaults();
-	        cfg.ravines = false;
-	        cfg.dungeonCount = 3; //there are way too many of these by default (in my humble opinion)
-	        
-	        //no surface lakes by default
-	        for(CustomGeneratorSettings.LakeConfig lake: cfg.lakes)
-	        	lake.surfaceProbability = new CustomGeneratorSettings.UserFunction();
-	        
-	        return cfg;
+			cfg.ravines = false;
+			if (settings.caves) {
+				cfg.dungeonCount = 3;
+			} else {
+				cfg.dungeonCount = 0;
+			}
+			//no surface lakes by default
+			for (CustomGeneratorSettings.LakeConfig lake: cfg.lakes)
+				lake.surfaceProbability = new CustomGeneratorSettings.UserFunction();
+			if (!settings.caves) {
+				for (CustomGeneratorSettings.LakeConfig lake: cfg.lakes)
+					lake.mainProbability = new CustomGeneratorSettings.UserFunction();
+			}
+			return cfg;
 		}
-		
+
 		return customCubicFromJson(settings.customcubic);
 	}
-	
+
 	//Crappy attempt to coerce custom cubic settings
 	private CustomGeneratorSettings customCubicFromJson(String jsonString) {
 		try {
-            return CustomGenSettingsSerialization.jankson().fromJsonCarefully(jsonString, CustomGeneratorSettings.class);
-        } catch (PresetLoadError | DeserializationException err) {
-            throw new RuntimeException(err);
-        } catch (SyntaxError err) {
-            String message = err.getMessage() + "\n" + err.getLineMessage();
-            throw new RuntimeException(message, err);
-        }
+			return CustomGenSettingsSerialization.jankson().fromJsonCarefully(jsonString, CustomGeneratorSettings.class);
+		} catch (PresetLoadError | DeserializationException err) {
+			throw new RuntimeException(err);
+		} catch (SyntaxError err) {
+			String message = err.getMessage() + "\n" + err.getLineMessage();
+			throw new RuntimeException(message, err);
+		}
 	}
-	
+
 	public GeographicProjection getProjection() {
 		GeographicProjection p = GeographicProjection.orientProjection(
-			GeographicProjection.projections.get(settings.projection),settings.orentation);
-		
+				GeographicProjection.projections.get(settings.projection),settings.orentation);
+
 		if(settings.scaleX==null||settings.scaleY==null) {
 			return new ScaleProjection(p, 100000, 100000); //TODO: better default
 		}
-		
-		if(settings.scaleX==1&&settings.scaleY==1) System.exit(-1);
-		
+
+		if (settings.scaleX==1&&settings.scaleY==1) FMLCommonHandler.instance().exitJava(-1, false);
+
 		return new ScaleProjection(p, settings.scaleX, settings.scaleY);
 	}
-	
+
 	public GeographicProjection getNormalizedProjection() {
 		return GeographicProjection.orientProjection(
-			GeographicProjection.projections.get(settings.projection),GeographicProjection.Orientation.upright);
+				GeographicProjection.projections.get(settings.projection),GeographicProjection.Orientation.upright);
 	}
 }

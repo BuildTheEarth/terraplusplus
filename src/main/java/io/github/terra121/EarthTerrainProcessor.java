@@ -118,8 +118,8 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
         
         if(cfg.settings.lidar) if(doRoads || cfg.settings.osmwater)surfacePopulators.add(new RoadGenerator(osm, heights, heightsLidar, zooms, projection));
         else if(doRoads || cfg.settings.osmwater)surfacePopulators.add(new RoadGenerator(osm, heights, projection));
-        
-        surfacePopulators.add(new EarthTreePopulator(projection));
+
+        if (!TerraConfig.serverTree.isEmpty()) surfacePopulators.add(new EarthTreePopulator(projection));
         snow = new SnowPopulator(); //this will go after the rest
 
         cubiccfg = cfg.getCustomCubic();
@@ -272,8 +272,8 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
             	else for (int y = (int)Math.max(Y - minblock,0); y < 16 && y < 0 - minblock; y++) primer.setBlockState(x, y, z, Blocks.WATER.getDefaultState());
             }
         }
-        
-        if(cfg.settings.caves)caveGenerator.generate(world, primer, new CubePos(cubeX, cubeY, cubeZ));
+
+        if (cfg.settings.caves) caveGenerator.generate(world, primer, new CubePos(cubeX, cubeY, cubeZ));
 
         //spawn roads
         if((doRoads || doBuildings || cfg.settings.osmwater) && surface) {
