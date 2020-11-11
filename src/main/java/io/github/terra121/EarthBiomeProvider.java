@@ -59,6 +59,7 @@ public class EarthBiomeProvider extends BiomeProvider {
     /**
      * Returns the biome generator based on soil and climate (mostly soil)
      */
+    @Override
     public Biome getBiome(BlockPos pos) {
         //null island
         if (-80 < pos.getX() && pos.getX() < 80 && -80 < pos.getZ() && pos.getZ() < 80) {
@@ -224,6 +225,7 @@ public class EarthBiomeProvider extends BiomeProvider {
     /**
      * Returns an array of biomes for the location input.
      */
+    @Override
     public Biome[] getBiomesForGeneration(Biome[] biomes, int x, int z, int width, int height) {
         if (biomes == null || biomes.length < width * height) {
             biomes = new Biome[width * height];
@@ -237,6 +239,7 @@ public class EarthBiomeProvider extends BiomeProvider {
      * Gets biomes to use for the blocks and loads the other data like temperature and humidity onto the
      * WorldChunkManager.
      */
+    @Override
     public Biome[] getBiomes(@Nullable Biome[] oldBiomeList, int x, int z, int width, int depth) {
         if (oldBiomeList == null || oldBiomeList.length < width * depth) {
             oldBiomeList = new Biome[width * depth];
@@ -253,10 +256,12 @@ public class EarthBiomeProvider extends BiomeProvider {
     /**
      * Gets a list of biomes for the specified blocks.
      */
+    @Override
     public Biome[] getBiomes(@Nullable Biome[] listToReuse, int x, int z, int width, int length, boolean cacheFlag) {
         return this.getBiomes(listToReuse, x, z, width, length);
     }
 
+    @Override
     @Nullable
     public BlockPos findBiomePosition(int x, int z, int range, List<Biome> biomes, Random random) {
         return null;
@@ -265,6 +270,7 @@ public class EarthBiomeProvider extends BiomeProvider {
     /**
      * checks given Chunk's Biomes against List of allowed ones
      */
+    @Override
     public boolean areBiomesViable(int x, int z, int radius, List<Biome> allowed) {
         return true;
     }

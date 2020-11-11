@@ -34,6 +34,7 @@ public class Heights extends TiledDataset {
 
     //request a mapzen tile from amazon, this should only be needed every 2 thousand blocks or so if the cache is large enough
     //TODO: better error handle
+    @Override
     protected int[] request(Coord place, boolean lidar) {
 
         int[] out = new int[256 * 256];
@@ -129,6 +130,7 @@ public class Heights extends TiledDataset {
         return out;
     }
 
+    @Override
     protected double getOfficialHeight(Coord coord, boolean lidar) {
         double ret = super.getOfficialHeight(coord, lidar);
 
@@ -147,6 +149,7 @@ public class Heights extends TiledDataset {
         return ret;
     }
 
+    @Override
     protected double dataToDouble(int data) {
         if (data >> 24 != 0) { //check for alpha value
             data = (data & 0x00ffffff) - 8388608;

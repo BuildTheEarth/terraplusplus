@@ -26,6 +26,7 @@ public class TerraTeleport extends CommandBase {
         return "terra121.commands.tpll.usage";
     }
 
+    @Override
     public int getRequiredPermissionLevel() {
         return 2;
     }

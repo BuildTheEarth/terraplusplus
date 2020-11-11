@@ -162,6 +162,7 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
     }
 
     //TODO: more efficient
+    @Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
         CubePrimer primer = new CubePrimer();
 

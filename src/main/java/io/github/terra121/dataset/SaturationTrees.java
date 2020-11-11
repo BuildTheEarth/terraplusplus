@@ -80,6 +80,7 @@ public class SaturationTrees extends Trees {
         return out;
     }
 
+    @Override
     protected double dataToDouble(int data) {
         return data / 256.0;
     }

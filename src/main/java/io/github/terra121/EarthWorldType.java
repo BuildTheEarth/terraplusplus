@@ -24,6 +24,7 @@ public class EarthWorldType extends WorldType implements ICubicWorldType {
         super("EarthCubic");
     }
 
+    @Override
     public ICubeGenerator createCubeGenerator(World world) {
         return new EarthTerrainProcessor(world);
     }
@@ -43,18 +44,22 @@ public class EarthWorldType extends WorldType implements ICubicWorldType {
         return w.provider instanceof WorldProviderSurface; // an even more general way to check if it's overworld (need custom providers)
     }
 
+    @Override
     public boolean isCustomizable() {
         return true;
     }
 
+    @Override
     public float getCloudHeight() {
         return 5000;
     }
 
+    @Override
     public double voidFadeMagnitude() {
         return 0;
     }
 
+    @Override
     @SideOnly(Side.CLIENT)
     public void onCustomizeButton(Minecraft mc, GuiCreateWorld guiCreateWorld) {
         mc.displayGuiScreen(new EarthGui(guiCreateWorld, mc));
