@@ -1,5 +1,12 @@
 package io.github.terra121.dataset;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import io.github.terra121.TerraConfig;
+import io.github.terra121.TerraMod;
+import io.github.terra121.projection.GeographicProjection;
+import org.apache.commons.io.IOUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -15,15 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import io.github.terra121.TerraConfig;
-import io.github.terra121.TerraMod;
-import io.github.terra121.projection.GeographicProjection;
-
 public class OpenStreetMaps {
 
     private static final double CHUNK_SIZE = 16;
@@ -32,41 +30,38 @@ public class OpenStreetMaps {
 
     private static String overpassInstance = TerraConfig.serverOverpassDefault;
     private static final String URL_PREFACE = "/?data=[out:json];way(";
-    private String URL_A = ")";
     private static final String URL_B = ")%20tags%20qt;(._<;);out%20body%20qt;";
     private static final String URL_C = "is_in(";
-    private String URL_SUFFIX = ");area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;";
+    private static Thread fallbackCancellerThread;
 
+    public static void main(String[] args) {
+    }
+
+    public static String getOverpassEndpoint() {
+        return overpassInstance;
+    }
+
+    public static void setOverpassEndpoint(String urlBase) {
+        OpenStreetMaps.overpassInstance = urlBase;
+    }
+
+    public static void cancelFallbackThread() {
+        if (fallbackCancellerThread != null && fallbackCancellerThread.isAlive()) {
+            fallbackCancellerThread.interrupt();
+        }
+        fallbackCancellerThread = null;
+    }
+    private String URL_A = ")";
+    private String URL_SUFFIX = ");area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;";
     private HashMap<Coord, Set<Edge>> chunks;
     public LinkedHashMap<Coord, Region> regions;
     public Water water;
-
     private int numcache = TerraConfig.osmCacheSize;
-
     private ArrayList<Edge> allEdges;
-
     private Gson gson;
-
     private GeographicProjection projection;
-    
-    private static Thread fallbackCancellerThread;
-
-    public static enum Type {
-        IGNORE, ROAD, MINOR, SIDE, MAIN, INTERCHANGE, LIMITEDACCESS, FREEWAY, STREAM, RIVER, BUILDING, RAIL
-        // ranges from minor to freeway for roads, use road if not known
-    }
-
-    public static enum Attributes {
-        ISBRIDGE, ISTUNNEL, NONE
-    }
-
-    public static class noneBoolAttributes {
-        public static String layer;
-    }
-
     Type wayType;
     byte wayLanes;
-
     boolean doRoad;
     boolean doWater;
     boolean doBuildings;
@@ -88,9 +83,15 @@ public class OpenStreetMaps {
         this.doWater = doWater;
         this.doBuildings = doBuildings;
 
-        if (!doBuildings) URL_A += "[!\"building\"]";
-        if (!doRoad) URL_A += "[!\"highway\"]";
-        if (!doWater) URL_A += "[!\"water\"][!\"natural\"][!\"waterway\"]";
+        if (!doBuildings) {
+            URL_A += "[!\"building\"]";
+        }
+        if (!doRoad) {
+            URL_A += "[!\"highway\"]";
+        }
+        if (!doWater) {
+            URL_A += "[!\"water\"][!\"natural\"][!\"waterway\"]";
+        }
         URL_A += ";out%20geom(";
     }
 
@@ -101,17 +102,21 @@ public class OpenStreetMaps {
     public Set<Edge> chunkStructures(int x, int z) {
         Coord coord = new Coord(x, z);
 
-        if (regionCache(projection.toGeo(x * CHUNK_SIZE, z * CHUNK_SIZE)) == null)
+        if (regionCache(projection.toGeo(x * CHUNK_SIZE, z * CHUNK_SIZE)) == null) {
             return null;
+        }
 
-        if (regionCache(projection.toGeo((x + 1) * CHUNK_SIZE, z * CHUNK_SIZE)) == null)
+        if (regionCache(projection.toGeo((x + 1) * CHUNK_SIZE, z * CHUNK_SIZE)) == null) {
             return null;
+        }
 
-        if (regionCache(projection.toGeo((x + 1) * CHUNK_SIZE, (z + 1) * CHUNK_SIZE)) == null)
+        if (regionCache(projection.toGeo((x + 1) * CHUNK_SIZE, (z + 1) * CHUNK_SIZE)) == null) {
             return null;
+        }
 
-        if (regionCache(projection.toGeo(x * CHUNK_SIZE, (z + 1) * CHUNK_SIZE)) == null)
+        if (regionCache(projection.toGeo(x * CHUNK_SIZE, (z + 1) * CHUNK_SIZE)) == null) {
             return null;
+        }
 
         return chunks.get(coord);
     }
@@ -119,8 +124,9 @@ public class OpenStreetMaps {
     public Region regionCache(double[] corner) {
 
         //bound check
-        if(!(corner[0]>=-180 && corner[0]<=180 && corner[1]>=-80 && corner[1]<=80))
+        if (!(corner[0] >= -180 && corner[0] <= 180 && corner[1] >= -80 && corner[1] <= 80)) {
             return null;
+        }
 
         Coord coord = getRegion(corner[0], corner[1]);
         Region region;
@@ -128,7 +134,9 @@ public class OpenStreetMaps {
         if ((region = regions.get(coord)) == null) {
             region = new Region(coord, water);
             int i;
-            for (i = 0; i < 5 && !regiondownload(region); i++) ;
+            for (i = 0; i < 5 && !regiondownload(region); i++) {
+                ;
+            }
             regions.put(coord, region);
             if (regions.size() > numcache) {
                 //TODO: delete beter
@@ -143,7 +151,9 @@ public class OpenStreetMaps {
                 TerraMod.LOGGER.error("OSM region" + region.coord.x + " " + region.coord.y + " failed to download several times, no structures will spawn");
                 return null;
             }
-        } else if (region.failedDownload) return null; //don't return dummy regions
+        } else if (region.failedDownload) {
+            return null; //don't return dummy regions
+        }
         return region;
     }
 
@@ -158,16 +168,19 @@ public class OpenStreetMaps {
         }
 
 
-        
         try {
-        	
+
             String bottomleft = Y + "," + X;
             String bbox = bottomleft + "," + (Y + TILE_SIZE) + "," + (X + TILE_SIZE);
 
             String urltext = overpassInstance + URL_PREFACE + bbox + URL_A + bbox + URL_B;
-            if (doWater) urltext += URL_C + bottomleft + URL_SUFFIX;
+            if (doWater) {
+                urltext += URL_C + bottomleft + URL_SUFFIX;
+            }
 
-            if (!TerraConfig.reducedConsoleMessages) TerraMod.LOGGER.info(urltext);
+            if (!TerraConfig.reducedConsoleMessages) {
+                TerraMod.LOGGER.info(urltext);
+            }
 
             //kumi systems request a meaningful user-agent
             URL url = new URL(urltext);
@@ -178,33 +191,33 @@ public class OpenStreetMaps {
             doGson(is, region);
 
             is.close();
-            
+
         } catch (Exception e) {
-        	TerraMod.LOGGER.error("Osm region download failed, " + e);
+            TerraMod.LOGGER.error("Osm region download failed, " + e);
             e.printStackTrace();
-        	if(!TerraConfig.serverOverpassFallback.equals("") && !TerraConfig.serverOverpassFallback.equals(overpassInstance)) {
-        		TerraMod.LOGGER.error("We were using the main overpass instance (" + TerraConfig.serverOverpassDefault
-        				+ "), switching to the backup one (" + TerraConfig.serverOverpassFallback + ")");
-        		overpassInstance = TerraConfig.serverOverpassFallback;
-        		cancelFallbackThread();
-        		fallbackCancellerThread = new Thread(() -> {
-        			try {
-        				TerraMod.LOGGER.info("Started fallback thread, it will try to switch back to the main endpoint in " + TerraConfig.overpassCheckDelay + "mn");
-						Thread.sleep(TerraConfig.overpassCheckDelay * 60000);
-						TerraMod.LOGGER.info("Trying to switch back to the main overpass endpoint");
-	        			overpassInstance = TerraConfig.serverOverpassDefault;
-					} catch (InterruptedException e1) {
-						TerraMod.LOGGER.info("Stopping fallback sleeping thread");
-					}
-        			
-        		});
-        		fallbackCancellerThread.setName("Overpass fallback check thread");
-        		fallbackCancellerThread.start();
-        		return this.regiondownload(region);
-        	} else {
-        		TerraMod.LOGGER.error("We were already using the backup Overpass endpoint or no backup endpoint is set, no structures will spawn");
-        	}
-            
+            if (!TerraConfig.serverOverpassFallback.equals("") && !TerraConfig.serverOverpassFallback.equals(overpassInstance)) {
+                TerraMod.LOGGER.error("We were using the main overpass instance (" + TerraConfig.serverOverpassDefault
+                                      + "), switching to the backup one (" + TerraConfig.serverOverpassFallback + ")");
+                overpassInstance = TerraConfig.serverOverpassFallback;
+                cancelFallbackThread();
+                fallbackCancellerThread = new Thread(() -> {
+                    try {
+                        TerraMod.LOGGER.info("Started fallback thread, it will try to switch back to the main endpoint in " + TerraConfig.overpassCheckDelay + "mn");
+                        Thread.sleep(TerraConfig.overpassCheckDelay * 60000);
+                        TerraMod.LOGGER.info("Trying to switch back to the main overpass endpoint");
+                        overpassInstance = TerraConfig.serverOverpassDefault;
+                    } catch (InterruptedException e1) {
+                        TerraMod.LOGGER.info("Stopping fallback sleeping thread");
+                    }
+
+                });
+                fallbackCancellerThread.setName("Overpass fallback check thread");
+                fallbackCancellerThread.start();
+                return this.regiondownload(region);
+            } else {
+                TerraMod.LOGGER.error("We were already using the backup Overpass endpoint or no backup endpoint is set, no structures will spawn");
+            }
+
             return false;
         }
 
@@ -219,8 +232,9 @@ public class OpenStreetMaps {
         int lowZ = (int) Math.floor(Math.min(Math.min(ll[1], ul[1]), Math.min(lr[1], ur[1])) / CHUNK_SIZE);
         int highZ = (int) Math.ceil(Math.max(Math.max(ll[1], ul[1]), Math.max(lr[1], ur[1])) / CHUNK_SIZE);
 
-        for (Edge e : allEdges)
+        for (Edge e : allEdges) {
             relevantChunks(lowX, lowZ, highX, highZ, e);
+        }
         allEdges.clear();
 
         return true;
@@ -269,18 +283,21 @@ public class OpenStreetMaps {
                 if (naturalv != null && naturalv.equals("coastline")) {
                     waterway(elem, -1, region, null);
                 } else if (highway != null || (waterway != null && (waterway.equals("river") ||
-                        waterway.equals("canal") || waterway.equals("stream"))) || building != null) { //TODO: fewer equals
+                                                                    waterway.equals("canal") || waterway.equals("stream"))) || building != null) { //TODO: fewer equals
 
                     Type type = Type.ROAD;
 
                     if (waterway != null) {
                         type = Type.STREAM;
-                        if (waterway.equals("river") || waterway.equals("canal"))
+                        if (waterway.equals("river") || waterway.equals("canal")) {
                             type = Type.RIVER;
+                        }
 
                     }
 
-                    if (building != null) type = Type.BUILDING;
+                    if (building != null) {
+                        type = Type.BUILDING;
+                    }
 
                     if (istunnel != null && istunnel.equals("yes")) {
 
@@ -318,12 +335,13 @@ public class OpenStreetMaps {
                                     break;
                                 default:
                                     if (highway.equals("primary_link") ||
-                                            highway.equals("secondary_link") ||
-                                            highway.equals("living_street") ||
-                                            highway.equals("bus_guideway") ||
-                                            highway.equals("service") ||
-                                            highway.equals("unclassified"))
+                                        highway.equals("secondary_link") ||
+                                        highway.equals("living_street") ||
+                                        highway.equals("bus_guideway") ||
+                                        highway.equals("service") ||
+                                        highway.equals("unclassified")) {
                                         type = Type.SIDE;
+                                    }
                                     break;
                             }
                         }
@@ -360,8 +378,9 @@ public class OpenStreetMaps {
                     }
 
                     //prevent super high # of lanes to prevent ridiculous results (prly a mistake if its this high anyways)
-                    if (lanes > 8)
+                    if (lanes > 8) {
                         lanes = 8;
+                    }
 
                     // an interchange that doesn't have any lane tag should be defaulted to 2 lanes
                     if (lanes < 2 && type == Type.INTERCHANGE) {
@@ -369,14 +388,17 @@ public class OpenStreetMaps {
                     }
 
                     // upgrade road type if many lanes (and the road was important enough to include a lanes tag)
-                    if (lanes > 2 && type == Type.MINOR)
+                    if (lanes > 2 && type == Type.MINOR) {
                         type = Type.MAIN;
+                    }
 
                     addWay(elem, type, lanes, region, attributes, layer);
-                } else unusedWays.add(elem);
+                } else {
+                    unusedWays.add(elem);
+                }
             } else if (elem.type == EType.relation && elem.members != null && elem.tags != null) {
 
-                if(doWater) {
+                if (doWater) {
                     String naturalv = elem.tags.get("natural");
                     String waterv = elem.tags.get("water");
                     String wway = elem.tags.get("waterway");
@@ -394,7 +416,7 @@ public class OpenStreetMaps {
                         continue;
                     }
                 }
-                if(doBuildings && elem.tags.get("building")!=null) {
+                if (doBuildings && elem.tags.get("building") != null) {
                     for (Member member : elem.members) {
                         if (member.type == EType.way) {
                             Element way = allWays.get(member.ref);
@@ -419,8 +441,9 @@ public class OpenStreetMaps {
                     String waterv = way.tags.get("water");
                     String wway = way.tags.get("waterway");
 
-                    if (waterv != null || (naturalv != null && naturalv.equals("water")) || (wway != null && wway.equals("riverbank")))
+                    if (waterv != null || (naturalv != null && naturalv.equals("water")) || (wway != null && wway.equals("riverbank"))) {
                         waterway(way, way.id + 2400000000L, region, null);
+                    }
                 }
             }
 
@@ -434,29 +457,32 @@ public class OpenStreetMaps {
 
     void addWay(Element elem, Type type, byte lanes, Region region, Attributes attributes, byte layer) {
         double[] lastProj = null;
-        if(elem.geometry != null)
-        for (Geometry geom : elem.geometry) {
-            if (geom == null) lastProj = null;
-            else {
-                double[] proj = projection.fromGeo(geom.lon, geom.lat);
+        if (elem.geometry != null) {
+            for (Geometry geom : elem.geometry) {
+                if (geom == null) {
+                    lastProj = null;
+                } else {
+                    double[] proj = projection.fromGeo(geom.lon, geom.lat);
 
-                if (lastProj != null) { //register as a road edge
-                    allEdges.add(new Edge(lastProj[0], lastProj[1], proj[0], proj[1], type, lanes, region, attributes, layer));
+                    if (lastProj != null) { //register as a road edge
+                        allEdges.add(new Edge(lastProj[0], lastProj[1], proj[0], proj[1], type, lanes, region, attributes, layer));
+                    }
+
+                    lastProj = proj;
                 }
-
-                lastProj = proj;
             }
         }
     }
 
     Geometry waterway(Element way, long id, Region region, Geometry last) {
-        if (way.geometry != null)
+        if (way.geometry != null) {
             for (Geometry geom : way.geometry) {
                 if (geom != null && last != null) {
                     region.addWaterEdge(last.lon, last.lat, geom.lon, geom.lat, id);
                 }
                 last = geom;
             }
+        }
 
         return last;
     }
@@ -524,15 +550,35 @@ public class OpenStreetMaps {
                 Set<Edge> edges = chunks.get(new Coord(x, z));
                 if (edges != null) {
                     Iterator<Edge> it = edges.iterator();
-                    while (it.hasNext())
-                        if (it.next().region.equals(delete))
+                    while (it.hasNext()) {
+                        if (it.next().region.equals(delete)) {
                             it.remove();
+                        }
+                    }
 
-                    if (edges.size() <= 0)
+                    if (edges.size() <= 0) {
                         chunks.remove(new Coord(x, z));
+                    }
                 }
             }
         }
+    }
+
+    public static enum Type {
+        IGNORE, ROAD, MINOR, SIDE, MAIN, INTERCHANGE, LIMITEDACCESS, FREEWAY, STREAM, RIVER, BUILDING, RAIL
+        // ranges from minor to freeway for roads, use road if not known
+    }
+
+    public static enum Attributes {
+        ISBRIDGE, ISTUNNEL, NONE
+    }
+
+    public static enum EType {
+        invalid, node, way, relation, area
+    }
+
+    public static class noneBoolAttributes {
+        public static String layer;
     }
 
     //integer coordinate class
@@ -574,12 +620,6 @@ public class OpenStreetMaps {
 
         Region region;
 
-        private double squareLength() {
-            double dlat = elat - slat;
-            double dlon = elon - slon;
-            return dlat * dlat + dlon * dlon;
-        }
-
         private Edge(double slon, double slat, double elon, double elat, Type type, byte lanes, Region region, Attributes att, byte ly) {
             //slope must not be infinity, slight inaccuracy shouldn't even be noticible unless you go looking for it
             double dif = elon - slon;
@@ -605,6 +645,12 @@ public class OpenStreetMaps {
             offset = slat - slope * slon;
         }
 
+        private double squareLength() {
+            double dlat = elat - slat;
+            double dlon = elon - slon;
+            return dlat * dlat + dlon * dlon;
+        }
+
         public int hashCode() {
             return (int) ((slon * 79399) + (slat * 100000) + (elat * 13467) + (elon * 103466));
         }
@@ -617,10 +663,6 @@ public class OpenStreetMaps {
         public String toString() {
             return "(" + slat + ", " + slon + "," + elat + "," + elon + ")";
         }
-    }
-
-    public static enum EType {
-        invalid, node, way, relation, area
     }
 
     public static class Member {
@@ -648,22 +690,5 @@ public class OpenStreetMaps {
         String generator;
         Map<String, String> osm3s;
         List<Element> elements;
-    }
-
-    public static void main(String[] args) {
-    }
-    
-    public static String getOverpassEndpoint() {
-    	return overpassInstance;
-    }
-    
-    public static void setOverpassEndpoint(String urlBase) {
-    	OpenStreetMaps.overpassInstance = urlBase;
-    }
-    
-    public static void cancelFallbackThread() {
-    	if(fallbackCancellerThread != null && fallbackCancellerThread.isAlive())
-    		fallbackCancellerThread.interrupt();
-    	fallbackCancellerThread = null;
     }
 }

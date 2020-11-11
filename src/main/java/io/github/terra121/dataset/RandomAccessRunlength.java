@@ -17,35 +17,37 @@ public class RandomAccessRunlength<E> {
     }
 
     public void add(E point) {
-        if(data.size()==0 || !point.equals(data.get(data.size()-1).value)) {
+        if (data.size() == 0 || !point.equals(data.get(data.size() - 1).value)) {
             data.add(new Run(point, size));
         }
         size++;
     }
 
     public void addRun(E point, int num) {
-        if(data.size()==0 || !point.equals(data.get(data.size()-1).value)) {
+        if (data.size() == 0 || !point.equals(data.get(data.size() - 1).value)) {
             data.add(new Run(point, size));
         }
         size += num;
     }
 
     private int getIdx(int idx) {
-        if(idx >= size) {
+        if (idx >= size) {
             throw new IndexOutOfBoundsException(idx + " >= " + size);
         }
 
         int low = 0;
         int high = data.size();
 
-        while(low < high-1) {
+        while (low < high - 1) {
             int mid = low + (high - low) / 2;
             int val = data.get(mid).index;
-            if(idx < val)
+            if (idx < val) {
                 high = mid;
-            else if(val < idx)
+            } else if (val < idx) {
                 low = mid;
-            else return mid;
+            } else {
+                return mid;
+            }
         }
 
         return low;
@@ -86,6 +88,7 @@ public class RandomAccessRunlength<E> {
     private class Run {
         public E value;
         public int index;
+
         public Run(E val, int idx) {
             value = val;
             index = idx;

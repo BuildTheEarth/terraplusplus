@@ -1,10 +1,10 @@
 package io.github.terra121.control;
 
 import io.github.terra121.EarthBiomeProvider;
+import net.minecraft.init.Biomes;
+import net.minecraft.world.biome.Biome;
 
 import java.util.HashMap;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.init.Biomes;
 
 class BiomeMap {
     EarthBiomeProvider biomes;
@@ -35,7 +35,9 @@ class BiomeMap {
 
     public int getColor(double[] coords) {
         Integer out = map.get(biomes.classify(coords));
-        if(out==null)return 0;
+        if (out == null) {
+            return 0;
+        }
         return out;
     }
 }

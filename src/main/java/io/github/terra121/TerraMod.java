@@ -1,7 +1,5 @@
 package io.github.terra121;
 
-import org.apache.logging.log4j.Logger;
-
 import io.github.terra121.control.TerraCommand;
 import io.github.terra121.control.TerraOverpassCommand;
 import io.github.terra121.control.TerraTeleport;
@@ -22,61 +20,60 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.server.permission.DefaultPermissionLevel;
 import net.minecraftforge.server.permission.PermissionAPI;
+import org.apache.logging.log4j.Logger;
 
-@Mod(modid = TerraMod.MODID, name = TerraMod.NAME, version = TerraMod.VERSION, dependencies = "required-after:cubicchunks; required-after:cubicgen", acceptableRemoteVersions="*")
-public class TerraMod implements ILetsEncryptMod
-{
+@Mod(modid = TerraMod.MODID, name = TerraMod.NAME, version = TerraMod.VERSION, dependencies = "required-after:cubicchunks; required-after:cubicgen", acceptableRemoteVersions = "*")
+public class TerraMod implements ILetsEncryptMod {
     public static final String MODID = "terra121";
     public static final String NAME = "Terra 1 to 1";
     public static final String VERSION = "0.1";
-    public static final String USERAGENT = TerraMod.MODID+"/"+TerraMod.VERSION;
+    public static final String USERAGENT = TerraMod.MODID + "/" + TerraMod.VERSION;
     public static final boolean CUSTOM_PROVIDER = false; //could potentially interfere with other mods and is relatively untested, leaving off for now
 
     public static Logger LOGGER;
 
+    //set custom provider
+    private static void setupProvider() {
+        DimensionType type = DimensionType.register("earth", "_earth", 0, EarthWorldProvider.class, true);
+        DimensionManager.init();
+        DimensionManager.unregisterDimension(0);
+        DimensionManager.registerDimension(0, type);
+    }
+
     @EventHandler
-    public void preInit(FMLPreInitializationEvent event)
-    {
+    public void preInit(FMLPreInitializationEvent event) {
         LOGGER = event.getModLog();
         EarthWorldType.create();
-        
-        if(CUSTOM_PROVIDER) {
-	        setupProvider();
+
+        if (CUSTOM_PROVIDER) {
+            setupProvider();
         }
     }
 
     @EventHandler
-    public void init(FMLInitializationEvent event)
-    {
-    	MinecraftForge.TERRAIN_GEN_BUS.register(GenerationEventDenier.class);
-    	MinecraftForge.EVENT_BUS.register(WaterDenier.class);
+    public void init(FMLInitializationEvent event) {
+        MinecraftForge.TERRAIN_GEN_BUS.register(GenerationEventDenier.class);
+        MinecraftForge.EVENT_BUS.register(WaterDenier.class);
         MinecraftForge.EVENT_BUS.register(TerraConfig.class);
-	PermissionAPI.registerNode("terra121.commands.tpll", DefaultPermissionLevel.OP, "Allows a player to do /tpll");
-	PermissionAPI.registerNode(TerraOverpassCommand.PERMISSION_NODE, DefaultPermissionLevel.OP, "Allows a player to do manage the overpass endpoint used");
+        PermissionAPI.registerNode("terra121.commands.tpll", DefaultPermissionLevel.OP, "Allows a player to do /tpll");
+        PermissionAPI.registerNode(TerraOverpassCommand.PERMISSION_NODE, DefaultPermissionLevel.OP, "Allows a player to do manage the overpass endpoint used");
     }
-    
+
     @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
-        if(!Loader.isModLoaded("letsencryptcraft"))
+        if (!Loader.isModLoaded("letsencryptcraft")) {
             LetsEncryptAdder.doStuff(this);
+        }
     }
-    
+
     @EventHandler
     public void serverLoad(FMLServerStartingEvent event) {
         event.registerServerCommand(new TerraTeleport());
         event.registerServerCommand(new TerraCommand());
         event.registerServerCommand(new TerraOverpassCommand());
     }
-    
-    //set custom provider
-    private static void setupProvider() {
-		DimensionType type = DimensionType.register("earth", "_earth", 0, EarthWorldProvider.class, true);
-        DimensionManager.init();
-        DimensionManager.unregisterDimension(0);
-        DimensionManager.registerDimension(0, type);
-	}
 
-	//stuff to implement ILetsEncryptMod
+    //stuff to implement ILetsEncryptMod
     public void info(String log) {
         LOGGER.info(log);
     }

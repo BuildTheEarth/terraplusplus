@@ -1,6 +1,7 @@
 package io.github.terra121.projection;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Scanner;
 
 public class ConformalEstimate extends Airocean {
@@ -8,9 +9,9 @@ public class ConformalEstimate extends Airocean {
     InvertableVectorField forward;
     InvertableVectorField inverse;
 
-    double VECTOR_SCALE_FACTOR = 1/1.1473979730192934;
+    double VECTOR_SCALE_FACTOR = 1 / 1.1473979730192934;
 
-    public ConformalEstimate () {
+    public ConformalEstimate() {
         InputStream is = null;
 
 
@@ -42,8 +43,8 @@ public class ConformalEstimate extends Airocean {
             }
 
             is.close();
-        }catch (IOException e) {
-            System.err.println("Can't load conformal: "+e);
+        } catch (IOException e) {
+            System.err.println("Can't load conformal: " + e);
         }
 
         inverse = new InvertableVectorField(xs, ys);
@@ -127,7 +128,7 @@ public class ConformalEstimate extends Airocean {
     }*/
 
     protected double[] triangleTransform(double x, double y, double z) {
-        double[] c = super.triangleTransform(x,y,z);
+        double[] c = super.triangleTransform(x, y, z);
 
         x = c[0];
         y = c[1];
@@ -136,7 +137,7 @@ public class ConformalEstimate extends Airocean {
         c[1] /= ARC;
 
         c[0] += 0.5;
-        c[1] += ROOT3/6;
+        c[1] += ROOT3 / 6;
 
         //use another interpolated vector to have a really good guess before using newtons method
         //c = forward.getInterpolatedVector(c[0], c[1]);
@@ -146,7 +147,7 @@ public class ConformalEstimate extends Airocean {
         c = inverse.applyNewtonsMethod(x, y, c[0], c[1], 5);//c[0]/ARC + 0.5, c[1]/ARC + ROOT3/6
 
         c[0] -= 0.5;
-        c[1] -= ROOT3/6;
+        c[1] -= ROOT3 / 6;
 
         c[0] *= ARC;
         c[1] *= ARC;
@@ -171,7 +172,7 @@ public class ConformalEstimate extends Airocean {
         y /= ARC;
 
         x += 0.5;
-        y += ROOT3/6;
+        y += ROOT3 / 6;
 
         double[] c = inverse.getInterpolatedVector(x, y);
 
@@ -185,10 +186,10 @@ public class ConformalEstimate extends Airocean {
 
         //System.out.println(c[0]+" "+c[1]);
 
-        return  super.inverseTriangleTransform(c[0],c[1]);
+        return super.inverseTriangleTransform(c[0], c[1]);
     }
 
     public double metersPerUnit() {
-        return (40075017/(2*Math.PI))/VECTOR_SCALE_FACTOR;
+        return (40075017 / (2 * Math.PI)) / VECTOR_SCALE_FACTOR;
     }
 }
