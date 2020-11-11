@@ -1,7 +1,7 @@
 ![Logo](Pictures/TerraTextIconnocompress.png)
 
 # Terra 1 to 1 Minecraft Earth Project
-**Current build status:** [![Build](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fjenkins.altillimity.com%2Fjob%2FTerra%2F)](https://jenkins.altillimity.com/job/Terra/)
+**Current build status:**
 
 ### Developed by orangeadam3
 ### Co-Developed and images by shejan0 
