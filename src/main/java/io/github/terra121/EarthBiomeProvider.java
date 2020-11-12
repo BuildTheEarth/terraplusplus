@@ -66,7 +66,7 @@ public class EarthBiomeProvider extends BiomeProvider {
             if (-16 < pos.getX() && pos.getX() < 16 && -16 < pos.getZ() && pos.getZ() < 16) {
                 return Biomes.FOREST;
             }
-            return Biomes.MUSHROOM_ISLAND;
+            return Biomes.PLAINS;
         }
 
         return this.classify(this.projection.toGeo(pos.getX(), pos.getZ()));
@@ -219,7 +219,7 @@ public class EarthBiomeProvider extends BiomeProvider {
                 return Biomes.DESERT;
         }
 
-        return Biomes.MUSHROOM_ISLAND;
+        return Biomes.PLAINS;
     }
 
     /**

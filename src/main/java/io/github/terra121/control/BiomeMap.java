@@ -13,7 +13,7 @@ class BiomeMap {
 
     public BiomeMap() {
         //I don't like this but BiomeMap was always gonna be slow anyways
-        this.biomes = new EarthBiomeProvider(Biomes.MUSHROOM_ISLAND);
+        this.biomes = new EarthBiomeProvider(Biomes.PLAINS);
         this.map = new HashMap<>();
 
         //Full credit to Amidst for these colors
