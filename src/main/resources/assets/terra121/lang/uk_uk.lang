@@ -24,7 +24,7 @@ terra121.orientation.none=Без орієнтації
 terra121.orientation.swapped=Перевернута вісь
 
 ## command messages
-terra121.commands.tpll.usage=/tpll шир дов [висота]
+terra121.commands.tpll.usage=/tpll шир дов [висота] [гравець]
 
 terra121.commands.terra.usage=/terra [where:ou] [гравець]\n/terra world\n/terra osm\n/terra conv[ert] [x z]:[шир дов]
 

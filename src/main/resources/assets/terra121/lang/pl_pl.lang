@@ -28,7 +28,7 @@ terra121.orientation.none=Brak
 terra121.orientation.swapped=Odwrócona oś
 
 ## command messages
-terra121.commands.tpll.usage=/tpll szerokość długość [wysokość]
+terra121.commands.tpll.usage=/tpll szerokość długość [wysokość] [gracz]
 
 terra121.commands.terra.usage=/terra [where:ou] [gracz]\n/terra world\n/terra osm\n/terra conv[ert] [x z]:[szerokość długość]
 

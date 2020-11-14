@@ -9,6 +9,7 @@ import net.minecraft.command.CommandTP;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
@@ -33,9 +34,8 @@ public class TerraTeleport extends CommandBase {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-        if (this.isOp(sender)) {
-
-            World world = sender.getEntityWorld();
+        if (this.isOp(sender) || !(sender instanceof EntityPlayer)) {
+            World world = server.getEntityWorld();
             IChunkProvider cp = world.getChunkProvider();
 
             if (!(cp instanceof CubeProviderServer)) {
@@ -56,12 +56,29 @@ public class TerraTeleport extends CommandBase {
 
             String[] splitCoords = args[0].split(",");
             String alt = null;
-            if (splitCoords.length == 2 && args.length < 3) { // lat and long in single arg
+            if (splitCoords.length == 2 && args.length < 4) { // lat and long in single arg
                 if (args.length > 1) {
                     alt = args[1];
                 }
+                if (args.length > 2) {
+                    EntityPlayerMP player = server.getPlayerList().getPlayerByUsername(args[2]);
+                    if (player != null) {
+                        sender = player;
+                    }
+                }
                 args = splitCoords;
             } else if (args.length == 3) {
+                EntityPlayerMP player = server.getPlayerList().getPlayerByUsername(args[2]);
+                if (player != null) {
+                    sender = player;
+                } else {
+                    alt = args[2];
+                }
+            } else if (args.length == 4) {
+                EntityPlayerMP player = server.getPlayerList().getPlayerByUsername(args[3]);
+                if (player != null) {
+                    sender = player;
+                }
                 alt = args[2];
             }
             if (args[0].endsWith(",")) {
@@ -70,7 +87,7 @@ public class TerraTeleport extends CommandBase {
             if (args.length > 1 && args[1].endsWith(",")) {
                 args[1] = args[1].substring(0, args[1].length() - 1);
             }
-            if (args.length != 2 && args.length != 3) {
+            if (args.length != 2 && args.length != 3 && args.length != 4) {
                 throw new WrongUsageException(this.getUsage(sender), new Object[0]);
             }
 
