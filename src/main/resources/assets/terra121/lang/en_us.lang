@@ -54,18 +54,29 @@ terra121.commands.overpass.set.fallback=Now using the fallback endpoint
 terra121.commands.overpass.status.default=Currently using default Overpass endpoint: %s
 terra121.commands.overpass.status.fallback=Currently using fallback Overpass endpoint: %s
 
-terra121.commands.terra.title=Terra121 Commands
+terra121.commands.terra.title=Terra++ Commands
 
 ## fragment messages
 terra121.fragment.terra.where.purpose=Shows where player is in the world
+terra121.fragment.terra.where.notproj=Location is not within the projection!
+terra121.fragment.terra.world.purpose=Shows projection settings of world
+terra121.fragment.terra.osm.purpose=Show current location on maps
+terra121.fragment.terra.info.purpose=Info about Terra++
+terra121.fragment.terra.convert.purpose=Convert [x,z] to [lat,lon], and [lat,lon] to [x,z]
+terra121.fragment.terra.environment.purpose=Show data about the environment
+terra121.fragment.terra.distortion.purpose=Show distortion in current world
+terra121.fragment.terra.winvert.purpose=Fix inverted water
+
+terra121.fragment.terra.world.header=World Projection Settings:
 
 ## command errors
 terra121.error.notcc=Must be in a Cubic Chunks world!
 terra121.error.notterra=Must be in a Terra 1 to 1 world!
+terra121.error.playeronly=Please specify a player or execute from a player!
 terra121.error.numbers=All arguments must be numbers!
 terra121.error.getcoords=Failed to get Coordinates!
 terra121.error.notplayer=You are not a player, please specify one!
-terra121.error.unknownplayer=Unknown player!
+terra121.error.unknownplayer=That player could not be found on the server!
 terra121.error.notopothers=OP required for info on other players!
 terra121.error.notop=Permissions or OP required to use this command!
 terra121.error.nowtr=This world does not use Advanced Water!

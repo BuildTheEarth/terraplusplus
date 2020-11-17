@@ -8,27 +8,21 @@ import io.github.terra121.TerraConstants;
 import io.github.terra121.chat.ChatHelper;
 import io.github.terra121.chat.TextElement;
 import io.github.terra121.control.fragments.CommandFragment;
-import io.github.terra121.control.fragments.ICommandFragment;
+import io.github.terra121.dataset.OpenStreetMaps;
+import io.github.terra121.dataset.Water;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
 
-public class TerraWhereFragment extends CommandFragment {
+public class TerraInvertWaterFragment extends CommandFragment {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-        if(sender instanceof MinecraftServer && args.length < 1) {
-            sender.sendMessage(TerraConstants.TextConstants.playerOnly);
-            return;
-        }
-
         World world = sender.getEntityWorld();
         IChunkProvider cp = world.getChunkProvider();
 
@@ -44,53 +38,60 @@ public class TerraWhereFragment extends CommandFragment {
             return;
         }
 
-        Vec3d pos = sender.getPositionVector();
-        Entity e = sender.getCommandSenderEntity();
-        String senderName = sender.getName();
-        if (args.length > 0) {
-            if(hasAdminPermission(sender)) e = sender.getEntityWorld().getPlayerEntityByName(args[0]);
-            if (e == null) {
-                sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.unknownplayer"), TextFormatting.RED)));
-                return;
-            }
-
-            pos = e.getPositionVector();
-            senderName = e.getName();
-        }
-
         EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
         GeographicProjection projection = terrain.projection;
 
+        if (!terrain.cfg.settings.osmwater || terrain.osm == null || terrain.osm.water == null) {
+            sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.nowtr"), TextFormatting.RED)));
+            return;
+        }
 
+        double[] c = projection.toGeo(sender.getPositionVector().x, sender.getPositionVector().z);
 
-        double[] result = projection.toGeo(pos.x, pos.z);
-        sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Location of ", TextFormatting.GRAY), new TextElement(senderName, TextFormatting.BLUE)));
-        if(Double.isNaN(result[0])) {
+        if(c == null || Double.isNaN(c[0])) {
             sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(TranslateUtil.translate("terra121.fragment.terra.where.notproj"), TextFormatting.RED)));
             return;
         }
 
-        sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Location: ", TextFormatting.GRAY), new TextElement("" + result[1], TextFormatting.BLUE),
-                new TextElement(", ", TextFormatting.GRAY), new TextElement("" + result[0], TextFormatting.BLUE)));
+        OpenStreetMaps.Coord region = terrain.osm.getRegion(c[0], c[1]);
+
+        Water water = terrain.osm.water;
+        water.doingInverts = true;
+
+        boolean restore = false;
+        if(args.length > 0)
+            if(!(args[0].equalsIgnoreCase("true") || args[0].equalsIgnoreCase("false"))) {
+                sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Usage: /terra invertwater [restore:<true/false>]", TextFormatting.RED)));
+                return;
+            } else {
+                if(args[0].equalsIgnoreCase("true")) restore = true;
+            }
+
+        if (restore ? water.inverts.remove(region) : water.inverts.add(region)) {
+            sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.format(restore ? "terra121.commands.terra.rstwtr" : "terra121.commands.terra.invwtr", region.x, region.y), TextFormatting.GRAY)));
+            return;
+        }
+
+        sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.format("terra121.error.invwtr", region.x, region.y), TextFormatting.RED)));
     }
 
     @Override
     public String[] getName() {
-        return new String[]{"where", "ou"};
+        return new String[]{"invertwater", "invwtr", "restorewater", "rstwtr"};
     }
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate("terra121.fragment.terra.where.purpose");
+        return TranslateUtil.translate("terra121.fragment.terra.winvert.purpose");
     }
 
     @Override
     public String[] getArguments() {
-        return new String[]{"[player]"};
+        return new String[]{"[restore:<true/false>]"};
     }
 
     @Override
     public String getPermission() {
-        return "terra121.commands.terra";
+        return "terra121.commands.terra.utility";
     }
 }

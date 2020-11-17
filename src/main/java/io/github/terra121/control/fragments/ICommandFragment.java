@@ -11,4 +11,6 @@ public interface ICommandFragment {
     String getPurpose();
 
     String[] getArguments();
+
+    String getPermission();
 }

@@ -8,27 +8,19 @@ import io.github.terra121.TerraConstants;
 import io.github.terra121.chat.ChatHelper;
 import io.github.terra121.chat.TextElement;
 import io.github.terra121.control.fragments.CommandFragment;
-import io.github.terra121.control.fragments.ICommandFragment;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
 
-public class TerraWhereFragment extends CommandFragment {
+public class TerraConvertFragment extends CommandFragment{
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-        if(sender instanceof MinecraftServer && args.length < 1) {
-            sender.sendMessage(TerraConstants.TextConstants.playerOnly);
-            return;
-        }
-
         World world = sender.getEntityWorld();
         IChunkProvider cp = world.getChunkProvider();
 
@@ -44,53 +36,55 @@ public class TerraWhereFragment extends CommandFragment {
             return;
         }
 
-        Vec3d pos = sender.getPositionVector();
-        Entity e = sender.getCommandSenderEntity();
-        String senderName = sender.getName();
-        if (args.length > 0) {
-            if(hasAdminPermission(sender)) e = sender.getEntityWorld().getPlayerEntityByName(args[0]);
-            if (e == null) {
-                sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.unknownplayer"), TextFormatting.RED)));
-                return;
-            }
-
-            pos = e.getPositionVector();
-            senderName = e.getName();
-        }
-
         EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
         GeographicProjection projection = terrain.projection;
 
-
-
-        double[] result = projection.toGeo(pos.x, pos.z);
-        sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Location of ", TextFormatting.GRAY), new TextElement(senderName, TextFormatting.BLUE)));
-        if(Double.isNaN(result[0])) {
-            sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(TranslateUtil.translate("terra121.fragment.terra.where.notproj"), TextFormatting.RED)));
+        if(args.length < 2) {
+            sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Usage: /terra convert <x/lat> <z/lon>", TextFormatting.RED)));
             return;
         }
 
-        sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Location: ", TextFormatting.GRAY), new TextElement("" + result[1], TextFormatting.BLUE),
-                new TextElement(", ", TextFormatting.GRAY), new TextElement("" + result[0], TextFormatting.BLUE)));
+        double x;
+        double y;
+        try {
+            x = Double.parseDouble(args[0]);
+            y = Double.parseDouble(args[1]);
+        } catch (Exception e) {
+            sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.numbers"), TextFormatting.RED)));
+            return;
+        }
+
+
+        double[] c = new double[]{x, y};
+
+        if (-180 <= c[1] && c[1] <= 180 && -90 <= c[0] && c[0] <= 90) {
+            c = projection.fromGeo(c[1], c[0]);
+            sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Result: ", TextFormatting.GRAY), new TextElement("" + c[0], TextFormatting.BLUE),
+                    new TextElement(", ", TextFormatting.GRAY), new TextElement("" + c[1], TextFormatting.BLUE)));
+        } else {
+            c = projection.toGeo(c[0], c[1]);
+            sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Result: ", TextFormatting.GRAY), new TextElement("" + c[1], TextFormatting.BLUE),
+                    new TextElement(", ", TextFormatting.GRAY), new TextElement("" + c[0], TextFormatting.BLUE)));
+        }
     }
 
     @Override
     public String[] getName() {
-        return new String[]{"where", "ou"};
+        return new String[]{"convert", "conv"};
     }
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate("terra121.fragment.terra.where.purpose");
+        return TranslateUtil.translate("terra121.fragment.terra.convert.purpose");
     }
 
     @Override
     public String[] getArguments() {
-        return new String[]{"[player]"};
+        return new String[]{"<x/lat>", "<z/lon>"};
     }
 
     @Override
     public String getPermission() {
-        return "terra121.commands.terra";
+        return null;
     }
 }
