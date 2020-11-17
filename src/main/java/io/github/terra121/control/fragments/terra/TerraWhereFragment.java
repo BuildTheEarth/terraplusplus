@@ -1,6 +1,7 @@
 package io.github.terra121.control.fragments.terra;
 
 import io.github.terra121.control.fragments.ICommandFragment;
+import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 
@@ -17,11 +18,11 @@ public class TerraWhereFragment implements ICommandFragment {
 
     @Override
     public String getPurpose() {
-        return null;
+        return TranslateUtil.translate("terra121.fragment.terra.where.purpose");
     }
 
     @Override
     public String[] getArguments() {
-        return null;
+        return new String[]{"[player]"};
     }
 }

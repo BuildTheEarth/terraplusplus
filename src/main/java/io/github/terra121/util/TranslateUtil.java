@@ -9,4 +9,8 @@ public class TranslateUtil {
         if(FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT) return key;
         return new TextComponentTranslation(key).getFormattedText();
     }
+
+    public static String format(String key, Object[]... args) {
+        return String.format(translate(key), args);
+    }
 }

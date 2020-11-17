@@ -56,6 +56,9 @@ terra121.commands.overpass.status.fallback=Currently using fallback Overpass end
 
 terra121.commands.terra.title=Terra121 Commands
 
+## fragment messages
+terra121.fragment.terra.where.purpose=Shows where player is in the world
+
 ## command errors
 terra121.error.notcc=Must be in a Cubic Chunks world!
 terra121.error.notterra=Must be in a Terra 1 to 1 world!
