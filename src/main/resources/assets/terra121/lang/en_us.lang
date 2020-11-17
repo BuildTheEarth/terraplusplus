@@ -54,6 +54,8 @@ terra121.commands.overpass.set.fallback=Now using the fallback endpoint
 terra121.commands.overpass.status.default=Currently using default Overpass endpoint: %s
 terra121.commands.overpass.status.fallback=Currently using fallback Overpass endpoint: %s
 
+terra121.commands.terra.title=Terra121 Commands
+
 ## command errors
 terra121.error.notcc=Must be in a Cubic Chunks world!
 terra121.error.notterra=Must be in a Terra 1 to 1 world!
