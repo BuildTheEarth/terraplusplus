@@ -1,10 +1,14 @@
 package io.github.terra121.dataset;
 
 import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import io.github.terra121.TerraConfig;
 import io.github.terra121.TerraMod;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.util.Vec2i;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import lombok.AllArgsConstructor;
@@ -21,7 +25,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class TiledDataset<T> {
+public abstract class TiledDataset<T> extends CacheLoader<Vec2i, T> {
     public static ByteBuf get(int tileX, int tileZ, @NonNull Map<String, String> properties, @NonNull String[] urls) throws IOException {
         IOException cause = null;
         for (String url : urls) {
@@ -59,7 +63,7 @@ public abstract class TiledDataset<T> {
                     } while (buf.writeBytes(in, 1024) > 0);
                 }
                 return buf;
-            } catch (IOException e){
+            } catch (IOException e) {
                 if (cause == null) {
                     cause = new IOException("Unable to GET " + url);
                 }
@@ -89,35 +93,27 @@ public abstract class TiledDataset<T> {
         return out.toString();
     }
 
-    //TODO: better datatypes
-    protected LinkedHashMap<Coord, int[]> cache;
-    protected int numcache;
-    protected final int width;
-    protected final int height;
-    protected GeographicProjection projection;
+    protected final LoadingCache<Vec2i, T> cache = CacheBuilder.newBuilder()
+            .softValues()
+            .build(this);
+    protected final int numcache;
+    protected final int tileSize;
+    protected final GeographicProjection projection;
     //TODO: scales are obsolete with new ScaleProjection type
-    protected double scaleX;
-    protected double scaleY;
-    protected double[] bounds;
+    protected final double scale;
+    protected final double[] bounds;
 
-    public TiledDataset(int width, int height, int numcache, GeographicProjection proj, double projScaleX, double projScaleY, boolean smooth) {
-        this.cache = new LinkedHashMap<>();
+    public TiledDataset(int tileSize, int numcache, GeographicProjection proj, double scale) {
         this.numcache = numcache;
-        this.width = width;
-        this.height = height;
+        this.tileSize = tileSize;
         this.projection = proj;
-        this.scaleX = projScaleX;
-        this.scaleY = projScaleY;
+        this.scale = scale;
 
         this.bounds = proj.bounds();
-        this.bounds[0] *= this.scaleX;
-        this.bounds[1] *= this.scaleY;
-        this.bounds[2] *= this.scaleX;
-        this.bounds[3] *= this.scaleY;
-    }
-
-    public TiledDataset(int width, int height, int numcache, GeographicProjection proj, double projScaleX, double projScaleY) {
-        this(width, height, numcache, proj, projScaleX, projScaleY, false);
+        this.bounds[0] *= this.scale;
+        this.bounds[1] *= this.scale;
+        this.bounds[2] *= this.scale;
+        this.bounds[3] *= this.scale;
     }
 
     protected abstract String[] urls();
@@ -127,17 +123,20 @@ public abstract class TiledDataset<T> {
     protected abstract T decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception;
 
     public T getTile(int tileX, int tileZ) {
-        //TODO: in-memory and persistent cache
+        return this.cache.getUnchecked(new Vec2i(tileX, tileZ));
+    }
 
+    /**
+     * internal API, don't call this method directly!
+     */
+    @Deprecated
+    @Override
+    public T load(Vec2i tile) throws Exception {
+        ByteBuf data = this.fetchTile(tile.x, tile.z);
         try {
-            ByteBuf data = this.fetchTile(tileX, tileZ);
-            try {
-                return this.decode(tileX, tileZ, data);
-            } finally { //avoid memory leak in the case of failure by always releasing the data
-                data.release();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            return this.decode(tile.x, tile.z, data);
+        } finally { //avoid memory leak in the case of failure by always releasing the data
+            data.release();
         }
     }
 
@@ -150,16 +149,7 @@ public abstract class TiledDataset<T> {
         return get(tileX, tileZ, builder.build(), this.urls());
     }
 
-    //integer coordinate class for tile coords and pixel coords
-    @AllArgsConstructor
-    @ToString
-    @EqualsAndHashCode
-    protected class Coord {
-        public int x;
-        public int y;
-
-        protected Coord tile() {
-            return new Coord(this.x / TiledDataset.this.width, this.y / TiledDataset.this.height);
-        }
+    public Vec2i sample2tile(int sampleX, int sampleZ) {
+        return new Vec2i(Math.floorDiv(sampleX, this.tileSize), Math.floorDiv(sampleZ, this.tileSize));
     }
 }

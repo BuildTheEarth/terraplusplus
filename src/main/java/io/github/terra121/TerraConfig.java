@@ -81,7 +81,7 @@ public class TerraConfig {
         };
 
         public String[] heights = {
-                "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${tile.x}/${tile.z}.png"
+                "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${tile.zoom}/${tile.x}/${tile.z}.png"
         };
 
         @Comment({

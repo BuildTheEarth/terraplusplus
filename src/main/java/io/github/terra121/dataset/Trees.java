@@ -24,7 +24,7 @@ public class Trees extends DoubleTiledDataset {
     public static final double REGION_SIZE = BLOCK_SIZE * 256;
 
     public Trees() {
-        super(256, 256, TerraConfig.cacheSize, new ImageProjection(), 1.0 / BLOCK_SIZE, 1.0 / BLOCK_SIZE);
+        super(256, TerraConfig.cacheSize, new ImageProjection(), 1.0d / BLOCK_SIZE, false);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class Trees extends DoubleTiledDataset {
 
         double[] out = new double[TILE_SIZE * TILE_SIZE];
 
-        for (int i = 0; i < iData.length; i++) { //this loop can probably be vectorized
+        for (int i = 0; i < iData.length; i++) { //this loop will probably be vectorized
             out[i] = (iData[i] & 0xFF) / 100.0d;
         }
         return out;

@@ -2,7 +2,7 @@ package io.github.terra121.dataset;
 
 import io.github.terra121.projection.GeographicProjection;
 
-import java.util.Iterator;
+import static io.github.opencubicchunks.cubicchunks.api.util.MathUtil.*;
 
 /**
  * A {@link TiledDataset} which operates on a grid of interpolated {@code double}s.
@@ -10,136 +10,91 @@ import java.util.Iterator;
  * @author DaPorkchop_
  */
 public abstract class DoubleTiledDataset extends TiledDataset<double[]> {
-    protected static final int TILE_SIZE = 256;
+    protected static final int TILE_SHIFT = 8;
+    protected static final int TILE_SIZE = 1 << TILE_SHIFT; //256
+    protected static final int TILE_MASK = (1 << TILE_SHIFT) - 1; //0xFF
 
     public final boolean smooth;
 
-    public DoubleTiledDataset(int width, int height, int numcache, GeographicProjection proj, double projScaleX, double projScaleY, boolean smooth) {
-        super(width, height, numcache, proj, projScaleX, projScaleY);
+    public DoubleTiledDataset(int tileSize, int numcache, GeographicProjection proj, double scale, boolean smooth) {
+        super(tileSize, numcache, proj, scale);
 
         this.smooth = smooth;
     }
 
-    public DoubleTiledDataset(int width, int height, int numcache, GeographicProjection proj, double projScaleX, double projScaleY) {
-        this(width, height, numcache, proj, projScaleX, projScaleY, false);
-    }
-
     public double estimateLocal(double lon, double lat, boolean lidar) {
         //basic bound check
-        if (!(lon <= 180 && lon >= -180 && lat <= 85 && lat >= -85)) {
-            return -2;
+        if (!(lon <= 180.0d && lon >= -180.0d && lat <= 85.0d && lat >= -85.0d)) {
+            return -2.0d;
         }
 
         //project coords
         double[] floatCoords = this.projection.fromGeo(lon, lat);
 
-        if (this.smooth) {
-            return this.estimateSmooth(floatCoords, lidar);
-        }
-        return this.estimateBasic(floatCoords, lidar);
+        return this.smooth ? this.estimateSmooth(floatCoords) : this.estimateBasic(floatCoords);
     }
 
     //new style
-    protected double estimateSmooth(double[] floatCoords, boolean lidar) {
-
-        double X = floatCoords[0] * this.scaleX - 0.5;
-        double Y = floatCoords[1] * this.scaleY - 0.5;
+    protected double estimateSmooth(double[] floatCoords) {
+        double x = floatCoords[0] * this.scale - 0.5d;
+        double z = floatCoords[1] * this.scale - 0.5d;
 
         //get the corners surrounding this block
-        Coord coord = new Coord((int) X, (int) Y);
+        //explicitly flooring the value because only casting would round to 0 instead of negative infinity
+        int sampleX = (int) Math.floor(x);
+        int sampleZ = (int) Math.floor(z);
 
-        double u = X - coord.x;
-        double v = Y - coord.y;
+        double fx = x - sampleX;
+        double fz = z - sampleZ;
 
-        double v00 = this.getOfficialHeight(coord, lidar);
-        coord.x++;
-        double v10 = this.getOfficialHeight(coord, lidar);
-        coord.x++;
-        double v20 = this.getOfficialHeight(coord, lidar);
-        coord.y++;
-        double v21 = this.getOfficialHeight(coord, lidar);
-        coord.x--;
-        double v11 = this.getOfficialHeight(coord, lidar);
-        coord.x--;
-        double v01 = this.getOfficialHeight(coord, lidar);
-        coord.y++;
-        double v02 = this.getOfficialHeight(coord, lidar);
-        coord.x++;
-        double v12 = this.getOfficialHeight(coord, lidar);
-        coord.x++;
-        double v22 = this.getOfficialHeight(coord, lidar);
-
-        if (v00 == -10000000 || v10 == -10000000 || v20 == -10000000 || v21 == -10000000 || v11 == -10000000 || v01 == -10000000 || v02 == -10000000 || v12 == -10000000 || v22 == -10000000) {
-            return -10000000; //return error code
-        }
+        double v00 = this.getRawSample(sampleX, sampleZ);
+        double v01 = this.getRawSample(sampleX, sampleZ + 1);
+        double v02 = this.getRawSample(sampleX, sampleZ + 2);
+        double v10 = this.getRawSample(sampleX + 1, sampleZ);
+        double v11 = this.getRawSample(sampleX + 1, sampleZ + 1);
+        double v12 = this.getRawSample(sampleX + 1, sampleZ + 2);
+        double v20 = this.getRawSample(sampleX + 2, sampleZ);
+        double v21 = this.getRawSample(sampleX + 2, sampleZ) + 1;
+        double v22 = this.getRawSample(sampleX + 2, sampleZ + 2);
 
         //Compute smooth 9-point interpolation on this block
-        double result = SmoothBlend.compute(u, v, v00, v01, v02, v10, v11, v12, v20, v21, v22);
+        double result = SmoothBlend.compute(fx, fz, v00, v01, v02, v10, v11, v12, v20, v21, v22);
 
-        if (result > 0 && v00 <= 0 && v10 <= 0 && v20 <= 0 && v21 <= 0 && v11 <= 0 && v01 <= 0 && v02 <= 0 && v12 <= 0 && v22 <= 0) {
-            return 0; //anti ocean ridges
+        if (result > 0.0d && v00 <= 0.0d && v10 <= 0.0d && v20 <= 0.0d && v21 <= 0.0d && v11 <= 0.0d && v01 <= 0.0d && v02 <= 0.0d && v12 <= 0.0d && v22 <= 0) {
+            return 0.0d; //anti ocean ridges
         }
 
         return result;
     }
 
     //old style
-    protected double estimateBasic(double[] floatCoords, boolean lidar) {
-        double X = floatCoords[0] * this.scaleX;
-        double Y = floatCoords[1] * this.scaleY;
+    protected double estimateBasic(double[] floatCoords) {
+        double x = floatCoords[0] * this.scale;
+        double z = floatCoords[1] * this.scale;
 
         //get the corners surrounding this block
-        Coord coord = new Coord((int) X, (int) Y);
+        //explicitly flooring the value because only casting would round to 0 instead of negative infinity
+        int sampleX = (int) Math.floor(x);
+        int sampleZ = (int) Math.floor(z);
 
-        double u = X - coord.x;
-        double v = Y - coord.y;
+        double fx = x - sampleX;
+        double fz = z - sampleZ;
 
-        double ll = this.getOfficialHeight(coord, lidar);
-        coord.x++;
-        double lr = this.getOfficialHeight(coord, lidar);
-        coord.y++;
-        double ur = this.getOfficialHeight(coord, lidar);
-        coord.x--;
-        double ul = this.getOfficialHeight(coord, lidar);
-
-        if (ll == -10000000 || lr == -10000000 || ur == -10000000 || ul == -10000000) {
-            return -10000000;
-        }
+        double v00 = this.getRawSample(sampleX, sampleZ);
+        double v01 = this.getRawSample(sampleX, sampleZ + 1);
+        double v10 = this.getRawSample(sampleX + 1, sampleZ);
+        double v11 = this.getRawSample(sampleX + 1, sampleZ + 1);
 
         //get perlin style interpolation on this block
-        return (1 - v) * (ll * (1 - u) + lr * u) + (ul * (1 - u) + ur * u) * v;
+        return lerp(lerp(v00, v01, fz), lerp(v10, v11, fz), fx);
     }
 
-    protected double getOfficialHeight(Coord coord, boolean lidar) {
-
-        Coord tile = coord.tile();
-
-        //proper bound check for x
-        if (coord.x <= this.bounds[0] || coord.x >= this.bounds[2]) {
-            return 0;
+    protected double getRawSample(int sampleX, int sampleZ) {
+        if (sampleX <= this.bounds[0] || sampleZ >= this.bounds[2]) {
+            return 0.0d;
         }
 
-        //is the tile that this coord lies on already downloaded?
-        int[] img = this.cache.get(tile);
-
-        if (img == null) {
-            //download tile
-            img = this.request(tile, lidar);
-            this.cache.put(tile, img); //save to cache cause chances are it will be needed again soon
-
-            //cache is too large, remove the least recent element
-            if (this.cache.size() > this.numcache) {
-                Iterator<?> it = this.cache.values().iterator();
-                it.next();
-                it.remove();
-            }
-        }
-
-        //get coord from tile and convert to meters (divide by 256.0)
-        double heightreturn = this.dataToDouble(img[this.width * (coord.y % this.height) + coord.x % this.width]);
-        if (heightreturn != -10000000) {
-            return heightreturn; //return height if not transparent
-        }
-        return -10000000; //best I can think of, returns error code
+        double[] tileData = this.getTile(sampleX >> TILE_SHIFT, sampleZ >> TILE_SHIFT);
+        return tileData[((sampleZ & TILE_MASK) << TILE_SHIFT) | (sampleX & TILE_MASK)];
     }
 }

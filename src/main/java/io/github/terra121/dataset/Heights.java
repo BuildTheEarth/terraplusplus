@@ -11,22 +11,17 @@ import lombok.NonNull;
 import javax.imageio.ImageIO;
 
 public class Heights extends DoubleTiledDataset {
-    private int zoom;
-    private String url_prefix = TerraConfig.serverTerrain;
-    private String file_prefix = EarthTerrainProcessor.localTerrain;
+    private final Water water;
+    private final int zoom;
 
-    private Water water;
-
-    public Heights(int zoom, boolean lidar, boolean smooth, Water water) {
-        super(256, 256, TerraConfig.cacheSize, new MapsProjection(), 1 << (zoom + 8), 1 << (zoom + 8), smooth);
+    public Heights(int zoom, boolean smooth, Water water) {
+        super(256, TerraConfig.cacheSize, new MapsProjection(), 1 << (zoom + 8), smooth);
         this.zoom = zoom;
-        this.url_prefix += zoom + "/";
-        this.file_prefix += zoom + "/";
         this.water = water;
     }
 
     public Heights(int zoom, Water water) {
-        this(zoom, false, false, water);
+        this(zoom, false, water);
     }
 
     @Override
@@ -36,7 +31,7 @@ public class Heights extends DoubleTiledDataset {
 
     @Override
     protected void addProperties(int tileX, int tileZ, @NonNull ImmutableMap.Builder<String, String> builder) {
-        //no-op
+        builder.put("tile.zoom", String.valueOf(this.zoom));
     }
 
     @Override
