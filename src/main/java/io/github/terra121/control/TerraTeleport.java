@@ -121,8 +121,8 @@ public class TerraTeleport extends CommandBase {
                 alt = String.valueOf(terrain.heights.estimateLocal(lon, lat, false) + 1);
             }
 
-            sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Teleported to ", TextFormatting.GRAY), new TextElement(new DecimalFormat("##.#####").format(lon), TextFormatting.BLUE),
-                    new TextElement(", ", TextFormatting.GRAY), new TextElement(new DecimalFormat("##.#####").format(lat), TextFormatting.BLUE)));
+            sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Teleported to ", TextFormatting.GRAY), new TextElement(new DecimalFormat("##.#####").format(lat), TextFormatting.BLUE),
+                    new TextElement(", ", TextFormatting.GRAY), new TextElement(new DecimalFormat("##.#####").format(lon), TextFormatting.BLUE)));
 
             FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager().executeCommand(
                     FMLCommonHandler.instance().getMinecraftServerInstance(), String.format("tp %s %s %s %s", sender.getName(), proj[0], alt, proj[1]));

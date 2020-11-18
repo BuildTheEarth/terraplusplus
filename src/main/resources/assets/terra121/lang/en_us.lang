@@ -35,9 +35,10 @@ terra121.orientation.swapped=Flipped Axis
 terra121.commands.tpll.usage=/tpll <latitude> <longitude> [altitude] [player]
 terra121.commands.dataset.usage=/dataset [dataset folder path]
 
-terra121.commands.terra.usage=/terra [where:ou] [player]\n/terra world\n/terra osm\n/terra conv[ert] [x z]:[lat lon]
+terra121.commands.terra.usage=/terra
+terra121.commands.terraadmin.usage=/terraadmin
 
-terra121.commands.terra.gensettings=Generator Settings: 
+terra121.commands.terra.gensettings=Generator Settings:
 terra121.commands.terra.latlon=lat lon: %.7f %.7f
 terra121.commands.terra.xy=x y: %.7f %.7f
 terra121.commands.terra.environment=%.1f °C; %.1f mm/yr; soil id: %d
@@ -45,7 +46,7 @@ terra121.commands.terra.tissot= ~%.5f blocks/meter ± %.5f°
 terra121.commands.terra.rstwtr=Water generation of Region ( %d, %d ) restored to default (This will only show up on newly generated chunks)
 terra121.commands.terra.invwtr=Water generation of Region ( %d, %d ) inverted (This will only show up on newly generated chunks)
 
-terra121.commands.overpass.usage=/overpass [status:list:default:fallback]"
+terra121.commands.overpass.usage=/terraadmin overpass <status|list|default|fallback>
 terra121.commands.overpass.list.default=Default:  %s
 terra121.commands.overpass.list.fallback=Fallback: %s
 terra121.commands.overpass.list.nofallback=No fallback endpoint is set in the config
@@ -55,6 +56,7 @@ terra121.commands.overpass.status.default=Currently using default Overpass endpo
 terra121.commands.overpass.status.fallback=Currently using fallback Overpass endpoint: %s
 
 terra121.commands.terra.title=Terra++ Commands
+terra121.commands.terraadmin.title=Terra++ Admin Commands
 
 ## fragment messages
 terra121.fragment.help.purpose=List all commands
@@ -68,6 +70,7 @@ terra121.fragment.terra.convert.purpose=Convert [x,z] to [lat,lon], and [lat,lon
 terra121.fragment.terra.environment.purpose=Show data about the environment
 terra121.fragment.terra.distortion.purpose=Show distortion in current world
 terra121.fragment.terra.winvert.purpose=Fix inverted water
+terra121.fragment.admin.overpass.purpose=Change OSM Overpass API Settings
 
 terra121.fragment.terra.world.header=World Projection Settings:
 

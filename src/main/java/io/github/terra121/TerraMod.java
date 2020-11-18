@@ -1,7 +1,7 @@
 package io.github.terra121;
 
+import io.github.terra121.control.TerraAdminCommand;
 import io.github.terra121.control.TerraCommand;
-import io.github.terra121.control.TerraOverpassCommand;
 import io.github.terra121.control.TerraTeleport;
 import io.github.terra121.letsencryptcraft.ILetsEncryptMod;
 import io.github.terra121.letsencryptcraft.LetsEncryptAdder;
@@ -56,8 +56,9 @@ public class TerraMod implements ILetsEncryptMod {
         MinecraftForge.EVENT_BUS.register(WaterDenier.class);
         MinecraftForge.EVENT_BUS.register(TerraConfig.class);
         PermissionAPI.registerNode("terra121.commands.tpll", DefaultPermissionLevel.OP, "Allows a player to do /tpll");
-        PermissionAPI.registerNode("terra121.commands.terra", DefaultPermissionLevel.OP, "Allows access to terra++'s utilities");
-        PermissionAPI.registerNode(TerraOverpassCommand.PERMISSION_NODE, DefaultPermissionLevel.OP, "Allows a player to do manage the overpass endpoint used");
+        PermissionAPI.registerNode("terra121.commands.terra", DefaultPermissionLevel.OP, "Allows access to terra commands");
+        PermissionAPI.registerNode("terra121.commands.terra.utility", DefaultPermissionLevel.OP, "Allows access to terra++'s utilities");
+        PermissionAPI.registerNode("terra121.admin", DefaultPermissionLevel.OP, "Allows access to terra++'s admin commands");
     }
 
     @EventHandler
@@ -71,7 +72,7 @@ public class TerraMod implements ILetsEncryptMod {
     public void serverLoad(FMLServerStartingEvent event) {
         event.registerServerCommand(new TerraTeleport());
         event.registerServerCommand(new TerraCommand());
-        event.registerServerCommand(new TerraOverpassCommand());
+        event.registerServerCommand(new TerraAdminCommand());
     }
 
     //stuff to implement ILetsEncryptMod
