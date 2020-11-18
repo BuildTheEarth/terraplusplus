@@ -2,6 +2,7 @@ package io.github.terra121.control.fragments;
 
 import io.github.terra121.chat.ChatHelper;
 import io.github.terra121.chat.TextElement;
+import io.github.terra121.control.Command;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -16,7 +17,7 @@ import scala.Int;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class FragmentManager extends CommandBase {
+public abstract class FragmentManager extends Command {
 
     public FragmentManager() {
         registerCommandFragment(new CommandFragment() {

@@ -12,7 +12,7 @@ public class TerraConstants {
     public static class TextConstants {
         public static final ITextComponent notCC = ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.notcc"), TextFormatting.RED));
         public static final ITextComponent notTerra = ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.notterra"), TextFormatting.RED));
-        public static final ITextComponent noPermission = ChatHelper.makeTextComponent(new TextElement("You don't have permissions to run this command", TextFormatting.DARK_RED));
+        public static final ITextComponent noPermission = ChatHelper.makeTextComponent(new TextElement("You do not have permission to use this command", TextFormatting.RED));
         public static final ITextComponent playerOnly = ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.playeronly"), TextFormatting.RED));
     }
 }

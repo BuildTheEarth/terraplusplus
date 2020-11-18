@@ -4,6 +4,7 @@ import com.sun.org.apache.regexp.internal.RE;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.terra121.EarthTerrainProcessor;
+import io.github.terra121.TerraConstants;
 import io.github.terra121.chat.ChatHelper;
 import io.github.terra121.chat.TextElement;
 import io.github.terra121.util.TranslateUtil;
@@ -23,7 +24,7 @@ import net.minecraftforge.server.permission.PermissionAPI;
 
 import java.text.DecimalFormat;
 
-public class TerraTeleport extends CommandBase {
+public class TerraTeleport extends Command {
 
     @Override
     public String getName() {
@@ -42,6 +43,11 @@ public class TerraTeleport extends CommandBase {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+        if(!hasAdminPermission("terra121.commands.tpll", sender)) {
+            sender.sendMessage(TerraConstants.TextConstants.noPermission);
+            return;
+        }
+
         if (this.isOp(sender) || !(sender instanceof EntityPlayer)) {
             World world = server.getEntityWorld();
             IChunkProvider cp = world.getChunkProvider();
@@ -135,5 +141,6 @@ public class TerraTeleport extends CommandBase {
         }
         return sender.canUseCommand(2, "");
     }
+
 
 }
