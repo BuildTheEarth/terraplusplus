@@ -3,7 +3,6 @@ package io.github.terra121.util;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.relauncher.Side;
 
 public class TranslateUtil {
     public static String translate(String key) {

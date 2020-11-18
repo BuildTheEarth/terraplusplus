@@ -6,12 +6,8 @@ import io.github.terra121.chat.TextElement;
 import io.github.terra121.control.fragments.CommandFragment;
 import io.github.terra121.dataset.OpenStreetMaps;
 import io.github.terra121.util.TranslateUtil;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 
 public class AdminOverpassFragment extends CommandFragment {

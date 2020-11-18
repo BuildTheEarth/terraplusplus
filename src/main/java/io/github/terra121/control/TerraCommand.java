@@ -11,11 +11,8 @@ import io.github.terra121.control.fragments.terra.TerraOsmFragment;
 import io.github.terra121.control.fragments.terra.TerraWhereFragment;
 import io.github.terra121.control.fragments.terra.TerraWorldFragment;
 import io.github.terra121.util.TranslateUtil;
-import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.server.permission.PermissionAPI;
 
 import java.util.ArrayList;
 import java.util.List;

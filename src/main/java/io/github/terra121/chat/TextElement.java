@@ -1,6 +1,5 @@
 package io.github.terra121.chat;
 
-import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 
 public class TextElement {
