@@ -11,8 +11,6 @@ import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-import java.util.Map;
-
 @Config(modid = TerraMod.MODID)
 public class TerraConfig {
     @Name("overpass_interpreter")
@@ -36,21 +34,7 @@ public class TerraConfig {
     @Name("reduced_console_messages")
     @Comment({ "Removes all of Terra121's messages which contain various links in the server console",
             "This is just if it seems to spam the console, it is purely for appearance" })
-    public static boolean reducedConsoleMessages = false;
-
-    @Name("rest_tree_services")
-    @Comment({ "An ArcGIS REST API instance with tree cover support",
-            "Should allow all tree data sources used (just TreeCover2000 right now)",
-            "End with a \"/\" e.x. \"https://.../arcgis/rest/services/\"",
-            "If the tree cover is not functioning properly, or has errors, leave the value blank" })
-    @RequiresMcRestart
-    public static String serverTree = "https://gis-treecover.wri.org/arcgis/rest/services/";
-
-    @Name("terrarium_instance")
-    @Comment({ "A Mapzen Terrain Tile terrarium instance allowing x/y.png queries",
-            "End with a \"/\" e.x. \"https://.../terrarium/\"" })
-    @RequiresMcRestart
-    public static String serverTerrain = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/";
+    public static boolean reducedConsoleMessages;
 
     @Name("cache_size")
     @Comment({ "Amount of tiles to keep in memory at once",
@@ -75,7 +59,12 @@ public class TerraConfig {
     @Comment({ "Require 3 water sources in order to form a new source instead of the vanilla 2",
             "This will make generated streams more stable but will disrupt vanilla water mechanics like 2x2 infinite water sources",
             "Highly expiremental, use at your own risk" })
-    public static boolean threeWater = false;
+    public static boolean threeWater;
+
+    @Comment({
+            "Configure the servers that terraplusplus will fetch terrain data from."
+    })
+    public static Data data = new Data();
 
     @SubscribeEvent
     public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
@@ -84,5 +73,21 @@ public class TerraConfig {
             OpenStreetMaps.cancelFallbackThread();
             OpenStreetMaps.setOverpassEndpoint(serverOverpassDefault);
         }
+    }
+
+    public static class Data {
+        public String[] trees = {
+                "https://gis-treecover.wri.org/arcgis/rest/services/TreeCover2000/ImageServer/exportImage?f=image&bbox=${tile.lon.min},${tile.lat.min},${tile.lon.max},${tile.lat.max}&imageSR=4152&bboxSR=4152&format=tiff&adjustAspectRatio=false&&interpolation=RSP_CubicConvolution&size=256,256"
+        };
+
+        public String[] heights = {
+                "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${tile.x}/${tile.z}.png"
+        };
+
+        @Comment({
+                "The number of times to attempt to re-download data tiles in the event of a failure."
+        })
+        @RangeInt(min = 1)
+        public int retryCount = 2;
     }
 }

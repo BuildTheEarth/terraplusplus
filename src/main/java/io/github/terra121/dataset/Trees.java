@@ -1,8 +1,12 @@
 package io.github.terra121.dataset;
 
+import com.google.common.collect.ImmutableMap;
 import io.github.terra121.TerraConfig;
 import io.github.terra121.TerraMod;
 import io.github.terra121.projection.ImageProjection;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import lombok.NonNull;
 import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.common.bytesource.ByteSourceInputStream;
 import org.apache.commons.imaging.formats.tiff.TiffImageParser;
@@ -12,85 +16,41 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Collections;
 import java.util.HashMap;
 
-public class Trees extends TiledDataset {
+public class Trees extends DoubleTiledDataset {
     public static final double BLOCK_SIZE = 16 / 100000.0;
     public static final double REGION_SIZE = BLOCK_SIZE * 256;
-    public String URL_PREFIX = TerraConfig.serverTree + "TreeCover2000/ImageServer/exportImage?f=image&bbox=";
-    public String URL_SUFFIX = "&imageSR=4152&bboxSR=4152&format=tiff&adjustAspectRatio=false&&interpolation=RSP_CubicConvolution&size=256,256";
 
     public Trees() {
         super(256, 256, TerraConfig.cacheSize, new ImageProjection(), 1.0 / BLOCK_SIZE, 1.0 / BLOCK_SIZE);
     }
 
     @Override
-    protected double dataToDouble(int data) {
-        return data / 100.0;
+    protected String[] urls() {
+        return TerraConfig.data.trees;
     }
 
     @Override
-    protected int[] request(Coord place, boolean lidar) { //TODO: custom tree data
-        int[] out = new int[256 * 256];
-
-        if (TerraConfig.serverTree.isEmpty()) {
-            return out;
-        }
-
-        for (int i = 0; i < 5; i++) {
-
-            InputStream is = null;
-
-            try {
-                String urlText = this.URL_PREFIX + (place.x * REGION_SIZE - 180) + ',' + (90 - place.y * REGION_SIZE) + ',' + ((place.x + 1) * REGION_SIZE - 180) + ',' + (90 - (place.y + 1) * REGION_SIZE) + this.URL_SUFFIX;
-                if (!TerraConfig.reducedConsoleMessages) {
-                    TerraMod.LOGGER.info(urlText);
-                }
-
-                URL url = new URL(urlText);
-                URLConnection con = url.openConnection();
-                con.addRequestProperty("User-Agent", TerraMod.USERAGENT);
-                is = con.getInputStream();
-
-                ByteSourceInputStream by = new ByteSourceInputStream(is, "shits and giggles");
-                TiffImageParser p = new TiffImageParser();
-                BufferedImage img = p.getBufferedImage(by, new HashMap<>());
-                is.close();
-                is = null;
-
-                if (img == null) {
-                    throw new IOException("Invalid image file");
-                }
-
-                //compile height data from image, stored in 256ths of a meter units
-                img.getRGB(0, 0, 256, 256, out, 0, 256);
-
-                for (int x = 0; x < img.getWidth(); x++) {
-                    for (int y = 0; y < img.getHeight(); y++) {
-                        int c = y * 256 + x;
-                        out[c] = out[c] & 0xff;
-                    }
-                }
-
-                return out;
-
-            } catch (IOException | ImageReadException ioe) {
-                if (is != null) {
-                    try {
-                        is.close();
-                    } catch (IOException e) {
-                    }
-                }
-
-                if (!TerraConfig.reducedConsoleMessages) {
-                    TerraMod.LOGGER.error("Failed to get tree cover data " + place.x + ' ' + place.y + " : " + ioe);
-                }
-            }
-        }
-
-        TerraMod.LOGGER.error("Tree cover has failed too many times, trees will not spawn. " +
-                              "If this is a recurring issue then disable the tree cover in the config by leaving it blank.");
-        return out;
+    protected void addProperties(int tileX, int tileZ, @NonNull ImmutableMap.Builder<String, String> builder) {
+        builder.put("tile.lon.min", String.format("%.12f", tileX * REGION_SIZE - 180))
+                .put("tile.lon.max", String.format("%.12f", (tileX + 1) * REGION_SIZE - 180))
+                .put("tile.lat.min", String.format("%.12f", 90 - tileZ * REGION_SIZE))
+                .put("tile.lat.max", String.format("%.12f", 90 - (tileZ + 1) * REGION_SIZE));
     }
 
+    @Override
+    protected double[] decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception {
+        int[] iData = new int[TILE_SIZE * TILE_SIZE];
+        new TiffImageParser().getBufferedImage(new ByteSourceInputStream(new ByteBufInputStream(data), ""), Collections.emptyMap())
+                .getRGB(0, 0, TILE_SIZE, TILE_SIZE, iData, 0, TILE_SIZE);
+
+        double[] out = new double[TILE_SIZE * TILE_SIZE];
+
+        for (int i = 0; i < iData.length; i++) { //this loop can probably be vectorized
+            out[i] = (iData[i] & 0xFF) / 100.0d;
+        }
+        return out;
+    }
 }

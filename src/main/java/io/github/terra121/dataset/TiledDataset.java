@@ -1,13 +1,96 @@
 package io.github.terra121.dataset;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import io.github.terra121.TerraConfig;
+import io.github.terra121.TerraMod;
 import io.github.terra121.projection.GeographicProjection;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.NonNull;
+import lombok.ToString;
 
-import java.util.Iterator;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public abstract class TiledDataset {
+public abstract class TiledDataset<T> {
+    public static ByteBuf get(int tileX, int tileZ, @NonNull Map<String, String> properties, @NonNull String[] urls) throws IOException {
+        IOException cause = null;
+        for (String url : urls) {
+            url = formatUrl(properties, url);
+            try {
+                return get(url);
+            } catch (IOException e) {
+                if (cause == null) {
+                    cause = new IOException("Unable to fetch tile at " + tileX + ',' + tileZ + " with properties: " + properties);
+                }
+                cause.addSuppressed(e);
+            }
+        }
+
+        if (cause != null) {
+            throw cause;
+        } else {
+            throw new IllegalStateException("0 urls?!?");
+        }
+    }
+
+    public static ByteBuf get(@NonNull String url) throws IOException {
+        ByteBuf buf = ByteBufAllocator.DEFAULT.buffer();
+
+        IOException cause = null;
+        for (int i = 0; i < TerraConfig.data.retryCount; i++) {
+            try {
+                HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+                conn.setInstanceFollowRedirects(true);
+                conn.addRequestProperty("User-Agent", TerraMod.USERAGENT);
+                try (InputStream in = conn.getInputStream()) {
+                    buf.clear();
+                    do {
+                        buf.ensureWritable(1024);
+                    } while (buf.writeBytes(in, 1024) > 0);
+                }
+                return buf;
+            } catch (IOException e){
+                if (cause == null) {
+                    cause = new IOException("Unable to GET " + url);
+                }
+                cause.addSuppressed(e);
+            }
+        }
+
+        buf.release();
+
+        if (cause != null) {
+            throw cause;
+        } else {
+            throw new IllegalStateException("0 retries?!?");
+        }
+    }
+
+    public static String formatUrl(@NonNull Map<String, String> properties, @NonNull String url) {
+        StringBuffer out = new StringBuffer();
+        Matcher matcher = Pattern.compile("\\$\\{([a-z0-9.]+)}").matcher(url);
+        while (matcher.find()) {
+            String key = matcher.group(1);
+            String value = properties.get(key);
+            Preconditions.checkArgument(value != null, "unknown property: \"%s\"", key);
+            matcher.appendReplacement(out, value);
+        }
+        matcher.appendTail(out);
+        return out.toString();
+    }
+
     //TODO: better datatypes
-    private LinkedHashMap<Coord, int[]> cache;
+    protected LinkedHashMap<Coord, int[]> cache;
     protected int numcache;
     protected final int width;
     protected final int height;
@@ -16,8 +99,6 @@ public abstract class TiledDataset {
     protected double scaleX;
     protected double scaleY;
     protected double[] bounds;
-    //enable smooth interpolation?
-    public boolean smooth;
 
     public TiledDataset(int width, int height, int numcache, GeographicProjection proj, double projScaleX, double projScaleY, boolean smooth) {
         this.cache = new LinkedHashMap<>();
@@ -27,7 +108,6 @@ public abstract class TiledDataset {
         this.projection = proj;
         this.scaleX = projScaleX;
         this.scaleY = projScaleY;
-        this.smooth = smooth;
 
         this.bounds = proj.bounds();
         this.bounds[0] *= this.scaleX;
@@ -40,156 +120,46 @@ public abstract class TiledDataset {
         this(width, height, numcache, proj, projScaleX, projScaleY, false);
     }
 
-    protected abstract double dataToDouble(int data);
+    protected abstract String[] urls();
 
-    protected abstract int[] request(Coord tile, boolean lidar);
+    protected abstract void addProperties(int tileX, int tileZ, @NonNull ImmutableMap.Builder<String, String> builder);
 
-    public double estimateLocal(double lon, double lat, boolean lidar) {
+    protected abstract T decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception;
 
-        //basic bound check
-        if (!(lon <= 180 && lon >= -180 && lat <= 85 && lat >= -85)) {
-            return -2;
-        }
+    public T getTile(int tileX, int tileZ) {
+        //TODO: in-memory and persistent cache
 
-        //project coords
-        double[] floatCoords = this.projection.fromGeo(lon, lat);
-
-        if (this.smooth) {
-            return this.estimateSmooth(floatCoords, lidar);
-        }
-        return this.estimateBasic(floatCoords, lidar);
-    }
-
-    //new style
-    protected double estimateSmooth(double[] floatCoords, boolean lidar) {
-
-        double X = floatCoords[0] * this.scaleX - 0.5;
-        double Y = floatCoords[1] * this.scaleY - 0.5;
-
-        //get the corners surrounding this block
-        Coord coord = new Coord((int) X, (int) Y);
-
-        double u = X - coord.x;
-        double v = Y - coord.y;
-
-        double v00 = this.getOfficialHeight(coord, lidar);
-        coord.x++;
-        double v10 = this.getOfficialHeight(coord, lidar);
-        coord.x++;
-        double v20 = this.getOfficialHeight(coord, lidar);
-        coord.y++;
-        double v21 = this.getOfficialHeight(coord, lidar);
-        coord.x--;
-        double v11 = this.getOfficialHeight(coord, lidar);
-        coord.x--;
-        double v01 = this.getOfficialHeight(coord, lidar);
-        coord.y++;
-        double v02 = this.getOfficialHeight(coord, lidar);
-        coord.x++;
-        double v12 = this.getOfficialHeight(coord, lidar);
-        coord.x++;
-        double v22 = this.getOfficialHeight(coord, lidar);
-
-        if (v00 == -10000000 || v10 == -10000000 || v20 == -10000000 || v21 == -10000000 || v11 == -10000000 || v01 == -10000000 || v02 == -10000000 || v12 == -10000000 || v22 == -10000000) {
-            return -10000000; //return error code
-        }
-
-        //Compute smooth 9-point interpolation on this block
-        double result = SmoothBlend.compute(u, v, v00, v01, v02, v10, v11, v12, v20, v21, v22);
-
-        if (result > 0 && v00 <= 0 && v10 <= 0 && v20 <= 0 && v21 <= 0 && v11 <= 0 && v01 <= 0 && v02 <= 0 && v12 <= 0 && v22 <= 0) {
-            return 0; //anti ocean ridges
-        }
-
-        return result;
-    }
-
-    //old style
-    protected double estimateBasic(double[] floatCoords, boolean lidar) {
-        double X = floatCoords[0] * this.scaleX;
-        double Y = floatCoords[1] * this.scaleY;
-
-        //get the corners surrounding this block
-        Coord coord = new Coord((int) X, (int) Y);
-
-        double u = X - coord.x;
-        double v = Y - coord.y;
-
-        double ll = this.getOfficialHeight(coord, lidar);
-        coord.x++;
-        double lr = this.getOfficialHeight(coord, lidar);
-        coord.y++;
-        double ur = this.getOfficialHeight(coord, lidar);
-        coord.x--;
-        double ul = this.getOfficialHeight(coord, lidar);
-
-        if (ll == -10000000 || lr == -10000000 || ur == -10000000 || ul == -10000000) {
-            return -10000000;
-        }
-
-        //get perlin style interpolation on this block
-        return (1 - v) * (ll * (1 - u) + lr * u) + (ul * (1 - u) + ur * u) * v;
-    }
-
-    protected double getOfficialHeight(Coord coord, boolean lidar) {
-
-        Coord tile = coord.tile();
-
-        //proper bound check for x
-        if (coord.x <= this.bounds[0] || coord.x >= this.bounds[2]) {
-            return 0;
-        }
-
-        //is the tile that this coord lies on already downloaded?
-        int[] img = this.cache.get(tile);
-
-        if (img == null) {
-            //download tile
-            img = this.request(tile, lidar);
-            this.cache.put(tile, img); //save to cache cause chances are it will be needed again soon
-
-            //cache is too large, remove the least recent element
-            if (this.cache.size() > this.numcache) {
-                Iterator<?> it = this.cache.values().iterator();
-                it.next();
-                it.remove();
+        try {
+            ByteBuf data = this.fetchTile(tileX, tileZ);
+            try {
+                return this.decode(tileX, tileZ, data);
+            } finally { //avoid memory leak in the case of failure by always releasing the data
+                data.release();
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
+    }
 
-        //get coord from tile and convert to meters (divide by 256.0)
-        double heightreturn = this.dataToDouble(img[this.width * (coord.y % this.height) + coord.x % this.width]);
-        if (heightreturn != -10000000) {
-            return heightreturn; //return height if not transparent
-        }
-        return -10000000; //best I can think of, returns error code
+    public ByteBuf fetchTile(int tileX, int tileZ) throws IOException {
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder()
+                .put("tile.x", String.valueOf(tileX))
+                .put("tile.z", String.valueOf(tileZ));
+        this.addProperties(tileX, tileZ, builder);
+
+        return get(tileX, tileZ, builder.build(), this.urls());
     }
 
     //integer coordinate class for tile coords and pixel coords
+    @AllArgsConstructor
+    @ToString
+    @EqualsAndHashCode
     protected class Coord {
         public int x;
         public int y;
 
-        private Coord(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        private Coord tile() {
+        protected Coord tile() {
             return new Coord(this.x / TiledDataset.this.width, this.y / TiledDataset.this.height);
         }
-
-        public int hashCode() {
-            return (this.x * 79399) + (this.y * 100000);
-        }
-
-        public boolean equals(Object o) {
-            Coord c = (Coord) o;
-            return c.x == this.x && c.y == this.y;
-        }
-
-        public String toString() {
-            return "(" + this.x + ", " + this.y + ')';
-        }
-
     }
 }
