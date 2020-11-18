@@ -39,8 +39,6 @@ public class LandLine {
 	}*/
 
     public void run(int size, Set<Long> current, BiConsumer<Set<Long>, Integer> consumer) {
-        boolean notstarted = true;
-
         int idx = 0;
 
         for (Entry<Double, Long> e : this.breaks.entrySet()) {

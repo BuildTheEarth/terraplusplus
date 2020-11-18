@@ -192,25 +192,6 @@ public class Airocean extends GeographicProjection {
         return face;
     }
 
-    protected static int findMapTriangle(double x, double y) {
-
-        double min = Double.MAX_VALUE;
-        int face = 0;
-
-        for (int i = 0; i < 20; i++) {
-            double xd = CENTER_MAP[2 * i] - x;
-            double yd = CENTER_MAP[2 * i + 1] - y;
-
-            double dissq = xd * xd + yd * yd;
-            if (dissq < min) {
-                face = i;
-                min = dissq;
-            }
-        }
-
-        return face;
-    }
-
     protected static int findTriangleGrid(double x, double y) {
 
         //cast equiladeral triangles to 45 degreee right triangles (side length of root2)
@@ -397,87 +378,6 @@ public class Airocean extends GeographicProjection {
             tana = (tanc + tanaoff) * adenom;
             tanb = (tanc + tanboff) * bdenom;
         }
-
-        //simple reversal algebra based on tan values
-        double yp = ROOT3 * (DVE * tana + EL6) / 2;
-        double xp = DVE * tanb + yp / ROOT3 + EL6;
-
-        //x = z*xp/Z, y = z*yp/Z, x^2 + y^2 + z^2 = 1
-        double xpoZ = xp / Z;
-        double ypoZ = yp / Z;
-
-        double z = 1 / Math.sqrt(1 + xpoZ * xpoZ + ypoZ * ypoZ);
-
-        return new double[]{ z * xpoZ, z * ypoZ, z };
-    }
-
-    protected double[] inverseTriangleTransformCbrt(double xpp, double ypp) {
-        //a & b are linearly related to c, so using the tan of sum formula we know: tan(c+off) = (tanc + tanoff)/(1-tanc*tanoff)
-        double tanaoff = Math.tan(ROOT3 * ypp + xpp); // a = c + root3*y'' + x''
-        double tanboff = Math.tan(2 * xpp); // b = c + 2x''
-
-        //using a derived cubic equation and cubic formula
-        double l = tanboff * tanaoff;
-        double m = -(R * tanboff * tanaoff + 2 * tanboff + 2 * tanaoff);
-        double n = 3 + R * tanboff + R * tanaoff - 2 * tanboff * tanaoff;
-        double o = tanboff + tanaoff - R;
-
-        double p = -m / (3 * l);
-        double q = p * p * p + (m * n - 3 * l * o) / (6 * l * l);
-        double r = n / (3 * l);
-
-        double rmpp = r - p * p;
-        double imag = Math.sqrt(-(q * q + rmpp * rmpp * rmpp));
-        double mag = Math.sqrt(imag * imag + q * q);
-
-        double b = Math.atan2(imag, q);
-
-        double tanc = 2 * Math.cbrt(mag) * Math.cos((b / 3)) + p;
-
-        double tana = (tanc + tanaoff) / (1 - tanc * tanaoff);
-        double tanb = (tanc + tanboff) / (1 - tanc * tanboff);
-
-        //simple reversal algebra based on tan values
-        double yp = ROOT3 * (DVE * tana + EL6) / 2;
-        double xp = DVE * tanb + yp / ROOT3 + EL6;
-
-        //x = z*xp/Z, y = z*yp/Z, x^2 + y^2 + z^2 = 1
-        double xpoZ = xp / Z;
-        double ypoZ = yp / Z;
-
-        double z = 1 / Math.sqrt(1 + xpoZ * xpoZ + ypoZ * ypoZ);
-
-        return new double[]{ z * xpoZ, z * ypoZ, z };
-    }
-
-    protected double[] inverseTriangleTransformCbrtNewton(double xpp, double ypp) {
-        //a & b are linearly related to c, so using the tan of sum formula we know: tan(c+off) = (tanc + tanoff)/(1-tanc*tanoff)
-        double tanaoff = Math.tan(ROOT3 * ypp + xpp); // a = c + root3*y'' + x''
-        double tanboff = Math.tan(2 * xpp); // b = c + 2x''
-        double sumtmp = tanaoff + tanboff;
-
-        //using a derived cubic equation and cubic formula
-        double l = tanboff * tanaoff;
-        double m = -(R * l + 2 * tanboff + 2 * tanaoff);
-        double n = 3 + R * sumtmp - 2 * l;
-        double o = sumtmp - R;
-
-        double l3 = 3 * l;
-        double m2 = 2 * m;
-
-        double x = -o / n; //x = tanc
-
-        for (int i = 0; i < this.newton; i++) {
-            double x2 = x * x;
-
-            double f = l * x2 * x + m * x2 + n * x + o;
-            double fp = l3 * x2 + m2 * x + n;
-
-            x -= f / fp;
-        }
-
-        double tana = (x + tanaoff) / (1 - x * tanaoff);
-        double tanb = (x + tanboff) / (1 - x * tanboff);
 
         //simple reversal algebra based on tan values
         double yp = ROOT3 * (DVE * tana + EL6) / 2;

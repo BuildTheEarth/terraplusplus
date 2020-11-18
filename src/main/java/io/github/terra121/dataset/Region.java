@@ -130,8 +130,4 @@ public class Region {
     public boolean equals(Object other) {
         return (other instanceof Region) && this.coord.equals(((Region) other).coord);
     }
-
-    public enum BoundaryType {
-        water
-    }
 }
