@@ -52,7 +52,7 @@ dependencies {
         transitive = false
     }
 
-    shade "org.apache.commons:commons-imaging:1.0-alpha1"
+    shade "org.apache.commons:commons-imaging:1.0-alpha2"
 }
 
 processResources {
