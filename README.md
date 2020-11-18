@@ -23,6 +23,13 @@ The latest version can always be compiled from [our Github](https://github.com/B
 - Ore spawning just below surface
 - Caves, Dungeons, and other standard underground features are still available and procedurally generated using CubicWorldGen as a baseline
 
+## Permissions
+- `terra121.admin` - Gives access to all terra++ features and commands
+- `terra121.commands.terra` - Gives access to `/terra`
+- `terra121.commands.terra.utilities` - Gives access to terra++ utilities
+- `terra121.commands.tpll` - Gives access to `/tpll`
+
+**Note: You will need to allow `terra121.command.*` for the other permissions to work in many cases!!**
 ## APIs:
 
 - Elevation data: [AWS Terrain Tiles](https://registry.opendata.aws/terrain-tiles/). (© [Mapzen](https://www.mapzen.com/rights), and [others](https://github.com/tilezen/joerd/blob/master/docs/attribution.md))
