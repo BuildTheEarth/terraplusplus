@@ -32,7 +32,7 @@ terra121.orientation.none=No Orientation
 terra121.orientation.swapped=Flipped Axis
 
 ## command messages
-terra121.commands.tpll.usage=/tpll latitude longitude [altitude] [player]
+terra121.commands.tpll.usage=/tpll <latitude> <longitude> [altitude] [player]
 terra121.commands.dataset.usage=/dataset [dataset folder path]
 
 terra121.commands.terra.usage=/terra [where:ou] [player]\n/terra world\n/terra osm\n/terra conv[ert] [x z]:[lat lon]
@@ -57,6 +57,8 @@ terra121.commands.overpass.status.fallback=Currently using fallback Overpass end
 terra121.commands.terra.title=Terra++ Commands
 
 ## fragment messages
+terra121.fragment.help.purpose=List all commands
+
 terra121.fragment.terra.where.purpose=Shows where player is in the world
 terra121.fragment.terra.where.notproj=Location is not within the projection!
 terra121.fragment.terra.world.purpose=Shows projection settings of world

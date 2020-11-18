@@ -1,8 +1,12 @@
 package io.github.terra121.control;
 
+import com.sun.org.apache.regexp.internal.RE;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.terra121.EarthTerrainProcessor;
+import io.github.terra121.chat.ChatHelper;
+import io.github.terra121.chat.TextElement;
+import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.CommandTP;
@@ -11,9 +15,13 @@ import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.server.permission.PermissionAPI;
+
+import java.text.DecimalFormat;
 
 public class TerraTeleport extends CommandBase {
 
@@ -39,19 +47,20 @@ public class TerraTeleport extends CommandBase {
             IChunkProvider cp = world.getChunkProvider();
 
             if (!(cp instanceof CubeProviderServer)) {
-                throw new CommandException("terra121.error.notcc", new Object[0]);
+                throw new CommandException("terra121.error.notcc");
             }
 
             ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
             if (!(gen instanceof EarthTerrainProcessor)) {
-                throw new CommandException("terra121.error.notterra", new Object[0]);
+                throw new CommandException("terra121.error.notterra");
             }
 
             EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
 
             if (args.length == 0) {
-                throw new WrongUsageException(this.getUsage(sender), new Object[0]);
+                sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(TranslateUtil.translate("terra121.commands.tpll.usage"), TextFormatting.RED)));
+                return;
             }
 
             String[] splitCoords = args[0].split(",");
@@ -88,7 +97,8 @@ public class TerraTeleport extends CommandBase {
                 args[1] = args[1].substring(0, args[1].length() - 1);
             }
             if (args.length != 2 && args.length != 3 && args.length != 4) {
-                throw new WrongUsageException(this.getUsage(sender), new Object[0]);
+                sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(TranslateUtil.translate("terra121.commands.tpll.usage"), TextFormatting.RED)));
+                return;
             }
 
             double lon;
@@ -101,7 +111,8 @@ public class TerraTeleport extends CommandBase {
                     alt = Double.toString(Double.parseDouble(alt));
                 }
             } catch (Exception e) {
-                throw new CommandException("terra121.error.numbers", new Object[0]);
+                sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(TranslateUtil.translate("terra121.error.numbers"), TextFormatting.RED)));
+                return;
             }
 
             double[] proj = terrain.projection.fromGeo(lon, lat);
@@ -110,8 +121,11 @@ public class TerraTeleport extends CommandBase {
                 alt = String.valueOf(terrain.heights.estimateLocal(lon, lat, false) + 1);
             }
 
-            new CommandTP().execute(server, sender, new String[]{
-                    String.valueOf(proj[0]), alt, String.valueOf(proj[1]) });
+            sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Teleported to ", TextFormatting.GRAY), new TextElement(new DecimalFormat("##.#####").format(lon), TextFormatting.BLUE),
+                    new TextElement(", ", TextFormatting.GRAY), new TextElement(new DecimalFormat("##.#####").format(lat), TextFormatting.BLUE)));
+
+            FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager().executeCommand(
+                    FMLCommonHandler.instance().getMinecraftServerInstance(), String.format("tp %s %s %s %s", sender.getName(), proj[0], alt, proj[1]));
         }
     }
 

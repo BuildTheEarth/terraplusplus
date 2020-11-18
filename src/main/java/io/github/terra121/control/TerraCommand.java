@@ -14,6 +14,9 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TerraCommand extends FragmentManager {
 
     public TerraCommand() {
@@ -27,6 +30,13 @@ public class TerraCommand extends FragmentManager {
         registerCommandFragment(new TerraEnvironmentFragment());
         registerCommandFragment(new TerraDistortionFragment());
         registerCommandFragment(new TerraInvertWaterFragment());
+    }
+
+    @Override
+    public List<String> getAliases() {
+        List<String> aliases = new ArrayList<>();
+        aliases.add("t");
+        return aliases;
     }
 
     @Override
