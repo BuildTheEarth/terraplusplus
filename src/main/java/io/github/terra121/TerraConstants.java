@@ -8,6 +8,12 @@ import net.minecraft.util.text.TextFormatting;
 
 public class TerraConstants {
     public static final String prefix = "&9&lTerra++ &8&l> ";
+    public static final String modID = "terra121";
+
+    public static final String defaultCommandNode = modID + ".command.";
+    public static final String controlCommandNode = modID + ".commands.";
+    public static final String adminCommandNode = modID + ".admin";
+
     public static final String version = "1.0";
     public static class TextConstants {
         public static final ITextComponent notCC = ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.notcc"), TextFormatting.RED));

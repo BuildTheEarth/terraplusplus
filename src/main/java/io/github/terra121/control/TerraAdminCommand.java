@@ -31,6 +31,11 @@ public class TerraAdminCommand extends FragmentManager {
     }
 
     @Override
+    public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
+        return true;
+    }
+
+    @Override
     public String getName() {
         return "terraadmin";
     }
@@ -42,7 +47,7 @@ public class TerraAdminCommand extends FragmentManager {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-        if(!hasAdminPermission("terra121.admin", sender)) {
+        if(!hasPermission(null, sender)) {
             sender.sendMessage(TerraConstants.TextConstants.noPermission);
             return;
         }

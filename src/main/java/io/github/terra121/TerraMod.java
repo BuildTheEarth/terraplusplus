@@ -8,6 +8,8 @@ import io.github.terra121.letsencryptcraft.LetsEncryptAdder;
 import io.github.terra121.provider.EarthWorldProvider;
 import io.github.terra121.provider.GenerationEventDenier;
 import io.github.terra121.provider.WaterDenier;
+import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.DimensionType;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
@@ -24,7 +26,7 @@ import org.apache.logging.log4j.Logger;
 
 @Mod(modid = TerraMod.MODID, name = TerraMod.NAME, version = TerraMod.VERSION, dependencies = "required-after:cubicchunks; required-after:cubicgen", acceptableRemoteVersions = "*")
 public class TerraMod implements ILetsEncryptMod {
-    public static final String MODID = "terra121";
+    public static final String MODID = TerraConstants.modID;
     public static final String NAME = "Terra 1 to 1";
     public static final String VERSION = "0.1";
     public static final String USERAGENT = TerraMod.MODID + '/' + TerraMod.VERSION;
@@ -55,10 +57,10 @@ public class TerraMod implements ILetsEncryptMod {
         MinecraftForge.TERRAIN_GEN_BUS.register(GenerationEventDenier.class);
         MinecraftForge.EVENT_BUS.register(WaterDenier.class);
         MinecraftForge.EVENT_BUS.register(TerraConfig.class);
-        PermissionAPI.registerNode("terra121.commands.tpll", DefaultPermissionLevel.OP, "Allows a player to do /tpll");
-        PermissionAPI.registerNode("terra121.commands.terra", DefaultPermissionLevel.OP, "Allows access to terra commands");
-        PermissionAPI.registerNode("terra121.commands.terra.utility", DefaultPermissionLevel.OP, "Allows access to terra++'s utilities");
-        PermissionAPI.registerNode("terra121.admin", DefaultPermissionLevel.OP, "Allows access to terra++'s admin commands");
+        PermissionAPI.registerNode(TerraConstants.controlCommandNode + "tpll", DefaultPermissionLevel.OP, "Allows a player to do /tpll");
+        PermissionAPI.registerNode(TerraConstants.controlCommandNode + "terra", DefaultPermissionLevel.OP, "Allows access to terra commands");
+        PermissionAPI.registerNode(TerraConstants.controlCommandNode + "terra.utility", DefaultPermissionLevel.OP, "Allows access to terra++'s utilities");
+        PermissionAPI.registerNode(TerraConstants.adminCommandNode, DefaultPermissionLevel.OP, "Allows access to terra++'s admin commands");
     }
 
     @EventHandler

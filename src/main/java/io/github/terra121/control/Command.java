@@ -1,26 +1,24 @@
 package io.github.terra121.control;
 
+import io.github.terra121.TerraConstants;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.server.permission.DefaultPermissionLevel;
 import net.minecraftforge.server.permission.PermissionAPI;
 
 public abstract class Command extends CommandBase {
-    protected boolean hasPermission(String perm, ICommandSender sender) {
-        if(FMLCommonHandler.instance().getMinecraftServerInstance().isSinglePlayer() && sender.getEntityWorld().getWorldInfo().areCommandsAllowed()) return true;
-        if (sender instanceof EntityPlayer) {
-            return PermissionAPI.hasPermission((EntityPlayer) sender, perm);
-        }
 
-        return sender.canUseCommand(2, "");
-
+    public Command() {
+        PermissionAPI.registerNode(TerraConstants.defaultCommandNode + getName(), DefaultPermissionLevel.ALL, "");
     }
 
-    protected boolean hasAdminPermission(String perm, ICommandSender sender) {
-        if(hasPermission(perm, sender)) return true;
+    protected boolean hasPermission(String perm, ICommandSender sender) {
+        if(perm == null) perm = TerraConstants.adminCommandNode;
         if (sender instanceof EntityPlayer) {
-            return PermissionAPI.hasPermission((EntityPlayer) sender, "terra121.admin");
+            if(PermissionAPI.hasPermission((EntityPlayer) sender, TerraConstants.adminCommandNode)) return true;
+            return PermissionAPI.hasPermission((EntityPlayer) sender, perm);
         }
 
         return sender.canUseCommand(2, "");
