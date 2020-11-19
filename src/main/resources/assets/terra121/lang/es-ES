@@ -1,46 +1,42 @@
 #PARSE_ESCAPES
 
 ## World Type name
-generator.EarthCubic=Ziemia
+generator.EarthCubic=Планета Земля
 
 ## GUI options
-terra121.gui.projection=Odwzorowanie
-terra121.gui.orientation=Orientacja
-terra121.gui.roads=Drogi
-terra121.gui.smoothblend=Wygładzanie terenu
-terra121.gui.dynamicbaseheight=Wypiętrzone rudy
-terra121.gui.osmwater=Wody śródlądowe (eksperymentalne)
-terra121.gui.buildings=Krawędzie budynków z OSM
+terra121.gui.projection=Проекция
+terra121.gui.orientation=Ориентация
+terra121.gui.roads=Создать дороги
+terra121.gui.smoothblend=Гладкое смешивание
+terra121.gui.dynamicbaseheight=Высота руды
+terra121.gui.osmwater=Продвинутая вода (экспериментально)
+terra121.gui.buildings=Контуры здания OSM
 
 ## Projection types
-terra121.projection.web_mercator=Merkatora
-terra121.projection.equirectangular=Równoodległościowe
-terra121.projection.sinusoidal=Sinusoidalne
-terra121.projection.equal_earth=Equal Earth
-terra121.projection.transverse_mercator=Poprzeczne Merkatora (UTM)
-terra121.projection.airocean=Fullera (nie BTE)
-terra121.projection.conformal=Równokątne Fullera (nie BTE)
-terra121.projection.bteairocean=Build The Earth
+terra121.projection.web_mercator=Меркатор
+terra121.projection.equirectangular=Равнопромежуточно
+terra121.projection.sinusoidal=Синусоидальный
+terra121.projection.equal_earth=Равный Земле
 
 ## Projection orientations
-terra121.orientation.upright=Pionowa
-terra121.orientation.none=Brak
-terra121.orientation.swapped=Odwrócona oś
+terra121.orientation.upright=Прямо
+terra121.orientation.none=Нет ориентации
+terra121.orientation.swapped=Перевернутая ось
 
 ## command messages
-terra121.commands.tpll.usage=/tpll szerokość długość [wysokość] [gracz]
+terra121.commands.tpll.usage=/tpll шир дол [высота] [игрок]
 
-terra121.commands.terra.usage=/terra [where:ou] [gracz]\n/terra world\n/terra osm\n/terra conv[ert] [x z]:[szerokość długość]
+terra121.commands.terra.usage=/terra [where:ou] [игрок]\n/terra world\n/terra osm\n/terra conv[ert] [x z]:[шир дол]
 
-terra121.commands.terra.gensettings=Ustawienia generatora: 
-terra121.commands.terra.latlon=szerokość długość: %.7f %.7f
+terra121.commands.terra.gensettings=Настройки генератора: 
+terra121.commands.terra.latlon=шир дол: %.7f %.7f
 terra121.commands.terra.xy=x y: %.7f %.7f
 
 ## command errors
-terra121.error.notcc=Wymagany świat Cubic Chunks!
-terra121.error.notterra=Wymagany świat Terra 1 to 1!
-terra121.error.numbers=Wszystkie argumenty muszą być liczbami!
-terra121.error.getcoords=Nie udało się uzyskać współrzędnych geograficznych!
-terra121.error.notplayer=Nie jesteś graczem, wymień jakiegoś!
-terra121.error.unknownplayer=Podany gracz nie istnieje!
-terra121.error.notopothers=Tylko OP może uzyskiwać informacje o innych graczach!
+terra121.error.notcc=Должен быть в мире Cubic Chunks!
+terra121.error.notterra=Должен быть в мире Terra 1 to 1!
+terra121.error.numbers=Все аргументы должны быть числами!
+terra121.error.getcoords=Не удалось получить координаты!
+terra121.error.notplayer=Вы не игрок, пожалуйста, укажите одного!
+terra121.error.unknownplayer=Неизвестный игрок!
+terra121.error.notopothers=Требуется OP для информации о других игроках!
