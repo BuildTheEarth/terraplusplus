@@ -1,0 +1,88 @@
+#PARSE_ESCAPES
+
+## World Type name
+generator.EarthCubic=Planet Earth
+
+## GUI options
+terra121.gui.projection=Projection
+terra121.gui.orientation=Orientation
+terra121.gui.roads=Spawn Roads
+terra121.gui.smoothblend=Smooth Blending
+terra121.gui.dynamicbaseheight=Elevation Based Ores
+terra121.gui.osmwater=Advanced Water (experimental)
+terra121.gui.buildings=OSM Building Outlines
+terra121.gui.lidar=Custom Terrain
+terra121.gui.caves=Caves
+
+terra121.gui.biomemap=Debug Map
+
+## Projection types
+terra121.projection.web_mercator=Mercator
+terra121.projection.equirectangular=Equirectangular
+terra121.projection.sinusoidal=Sinusoidal
+terra121.projection.equal_earth=Equal Earth
+terra121.projection.transverse_mercator=Transverse Mercator
+terra121.projection.airocean=Airocean (Not BTE)
+terra121.projection.conformal=Conformal Approx. (Not BTE)
+terra121.projection.bteairocean=Build The Earth
+
+## Projection orientations
+terra121.orientation.upright=Upright
+terra121.orientation.none=No Orientation
+terra121.orientation.swapped=Flipped Axis
+
+## command messages
+terra121.commands.tpll.usage=/tpll <latitude> <longitude> [altitude] [player]
+terra121.commands.dataset.usage=/dataset [dataset folder path]
+
+terra121.commands.terra.usage=/terra
+terra121.commands.terraadmin.usage=/terraadmin
+
+terra121.commands.terra.gensettings=Generator Settings:
+terra121.commands.terra.latlon=lat lon: %.7f %.7f
+terra121.commands.terra.xy=x y: %.7f %.7f
+terra121.commands.terra.environment=%.1f °C; %.1f mm/yr; soil id: %d
+terra121.commands.terra.tissot= ~%.5f blocks/meter ± %.5f°
+terra121.commands.terra.rstwtr=Water generation of Region ( %d, %d ) restored to default (This will only show up on newly generated chunks)
+terra121.commands.terra.invwtr=Water generation of Region ( %d, %d ) inverted (This will only show up on newly generated chunks)
+
+terra121.commands.overpass.usage=/terraadmin overpass <status|list|default|fallback>
+terra121.commands.overpass.list.default=Default:  %s
+terra121.commands.overpass.list.fallback=Fallback: %s
+terra121.commands.overpass.list.nofallback=No fallback endpoint is set in the config
+terra121.commands.overpass.set.default=Now using the default endpoint
+terra121.commands.overpass.set.fallback=Now using the fallback endpoint
+terra121.commands.overpass.status.default=Currently using default Overpass endpoint: %s
+terra121.commands.overpass.status.fallback=Currently using fallback Overpass endpoint: %s
+
+terra121.commands.terra.title=Terra++ Commands
+terra121.commands.terraadmin.title=Terra++ Admin Commands
+
+## fragment messages
+terra121.fragment.help.purpose=List all commands
+
+terra121.fragment.terra.where.purpose=Shows where player is in the world
+terra121.fragment.terra.where.notproj=Location is not within the projection!
+terra121.fragment.terra.world.purpose=Shows projection settings of world
+terra121.fragment.terra.osm.purpose=Show current location on maps
+terra121.fragment.terra.info.purpose=Info about Terra++
+terra121.fragment.terra.convert.purpose=Convert [x,z] to [lat,lon], and [lat,lon] to [x,z]
+terra121.fragment.terra.environment.purpose=Show data about the environment
+terra121.fragment.terra.distortion.purpose=Show distortion in current world
+terra121.fragment.terra.winvert.purpose=Fix inverted water
+terra121.fragment.admin.overpass.purpose=Change OSM Overpass API Settings
+
+terra121.fragment.terra.world.header=World Projection Settings:
+
+## command errors
+terra121.error.notcc=Must be in a Cubic Chunks world!
+terra121.error.notterra=Must be in a Terra 1 to 1 world!
+terra121.error.playeronly=Please specify a player or execute from a player!
+terra121.error.numbers=All arguments must be numbers!
+terra121.error.getcoords=Failed to get Coordinates!
+terra121.error.notplayer=You are not a player, please specify one!
+terra121.error.unknownplayer=That player could not be found on the server!
+terra121.error.notopothers=OP required for info on other players!
+terra121.error.notop=Permissions or OP required to use this command!
+terra121.error.nowtr=This world does not use Advanced Water!
+terra121.error.invwtr=Region ( %d, %d ) is already in that state!
