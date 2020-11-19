@@ -1,3 +1,0 @@
-files:
-  - source: /src/main/resources/assets/terra121/lang/en_us.lang
-    translation: /src/main/resources/assets/terra121/lang/%locale%.lang
