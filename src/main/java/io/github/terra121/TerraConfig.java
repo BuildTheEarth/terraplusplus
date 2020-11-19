@@ -77,7 +77,8 @@ public class TerraConfig {
 
     public static class Data {
         public String[] trees = {
-                "https://gis-treecover.wri.org/arcgis/rest/services/TreeCover2000/ImageServer/exportImage?f=image&bbox=${tile.lon.min},${tile.lat.min},${tile.lon.max},${tile.lat.max}&imageSR=4152&bboxSR=4152&format=tiff&adjustAspectRatio=false&&interpolation=RSP_CubicConvolution&size=256,256"
+                "https://cloud.daporkchop.net/gis/treecover2000/${tile.x}/${tile.z}.tiff",
+                "http://gis-treecover.wri.org/arcgis/rest/services/TreeCover2000/ImageServer/exportImage?f=image&bbox=${tile.lon.min},${tile.lat.min},${tile.lon.max},${tile.lat.max}&imageSR=4152&bboxSR=4152&format=tiff&adjustAspectRatio=false&&interpolation=RSP_CubicConvolution&size=256,256"
         };
 
         public String[] heights = {

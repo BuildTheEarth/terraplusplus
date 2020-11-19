@@ -1,8 +1,7 @@
 package io.github.terra121.dataset;
 
 import io.github.terra121.projection.GeographicProjection;
-
-import static io.github.opencubicchunks.cubicchunks.api.util.MathUtil.*;
+import io.github.terra121.util.TerraMath;
 
 /**
  * A {@link TiledDataset} which operates on a grid of interpolated {@code double}s.
@@ -40,9 +39,9 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> {
         double z = floatCoords[1] * this.scale - 0.5d;
 
         //get the corners surrounding this block
-        //explicitly flooring the value because only casting would round to 0 instead of negative infinity
-        int sampleX = (int) Math.floor(x);
-        int sampleZ = (int) Math.floor(z);
+        //TODO: i think i need to floor() these, not just cast
+        int sampleX = (int) x;
+        int sampleZ = (int) z;
 
         double fx = x - sampleX;
         double fz = z - sampleZ;
@@ -54,7 +53,7 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> {
         double v11 = this.getRawSample(sampleX + 1, sampleZ + 1);
         double v12 = this.getRawSample(sampleX + 1, sampleZ + 2);
         double v20 = this.getRawSample(sampleX + 2, sampleZ);
-        double v21 = this.getRawSample(sampleX + 2, sampleZ) + 1;
+        double v21 = this.getRawSample(sampleX + 2, sampleZ + 1);
         double v22 = this.getRawSample(sampleX + 2, sampleZ + 2);
 
         //Compute smooth 9-point interpolation on this block
@@ -73,9 +72,8 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> {
         double z = floatCoords[1] * this.scale;
 
         //get the corners surrounding this block
-        //explicitly flooring the value because only casting would round to 0 instead of negative infinity
-        int sampleX = (int) Math.floor(x);
-        int sampleZ = (int) Math.floor(z);
+        int sampleX = (int) x;
+        int sampleZ = (int) z;
 
         double fx = x - sampleX;
         double fz = z - sampleZ;
@@ -85,8 +83,7 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> {
         double v10 = this.getRawSample(sampleX + 1, sampleZ);
         double v11 = this.getRawSample(sampleX + 1, sampleZ + 1);
 
-        //get perlin style interpolation on this block
-        return lerp(lerp(v00, v01, fz), lerp(v10, v11, fz), fx);
+        return TerraMath.lerp(TerraMath.lerp(v00, v01, fz), TerraMath.lerp(v10, v11, fz), fx);
     }
 
     protected double getRawSample(int sampleX, int sampleZ) {
@@ -95,6 +92,6 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> {
         }
 
         double[] tileData = this.getTile(sampleX >> TILE_SHIFT, sampleZ >> TILE_SHIFT);
-        return tileData[((sampleZ & TILE_MASK) << TILE_SHIFT) | (sampleX & TILE_MASK)];
+        return tileData[(sampleZ & TILE_MASK) * TILE_SIZE + (sampleX & TILE_MASK)];
     }
 }

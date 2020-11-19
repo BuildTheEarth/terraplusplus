@@ -3,6 +3,7 @@ package io.github.terra121.dataset;
 import com.google.common.collect.ImmutableMap;
 import io.github.terra121.TerraConfig;
 import io.github.terra121.TerraMod;
+import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.ImageProjection;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
@@ -24,7 +25,7 @@ public class Trees extends DoubleTiledDataset {
     public static final double REGION_SIZE = BLOCK_SIZE * 256;
 
     public Trees() {
-        super(256, TerraConfig.cacheSize, new ImageProjection(), 1.0d / BLOCK_SIZE, false);
+        super(256, TerraConfig.cacheSize, new GeographicProjection(), 1.0d / BLOCK_SIZE, false);
     }
 
     @Override
@@ -34,10 +35,10 @@ public class Trees extends DoubleTiledDataset {
 
     @Override
     protected void addProperties(int tileX, int tileZ, @NonNull ImmutableMap.Builder<String, String> builder) {
-        builder.put("tile.lon.min", String.format("%.12f", tileX * REGION_SIZE - 180))
-                .put("tile.lon.max", String.format("%.12f", (tileX + 1) * REGION_SIZE - 180))
-                .put("tile.lat.min", String.format("%.12f", 90 - tileZ * REGION_SIZE))
-                .put("tile.lat.max", String.format("%.12f", 90 - (tileZ + 1) * REGION_SIZE));
+        builder.put("tile.lon.min", String.format("%.12f", tileX * REGION_SIZE))
+                .put("tile.lon.max", String.format("%.12f", (tileX + 1) * REGION_SIZE))
+                .put("tile.lat.min", String.format("%.12f", tileZ * REGION_SIZE))
+                .put("tile.lat.max", String.format("%.12f", (tileZ + 1) * REGION_SIZE));
     }
 
     @Override
@@ -48,8 +49,11 @@ public class Trees extends DoubleTiledDataset {
 
         double[] out = new double[TILE_SIZE * TILE_SIZE];
 
-        for (int i = 0; i < iData.length; i++) { //this loop will probably be vectorized
-            out[i] = (iData[i] & 0xFF) / 100.0d;
+        for (int z = 0; z < TILE_SIZE; z++) {
+            for (int x = 0; x < TILE_SIZE; x++) {
+                //image tiles are reversed along Z axis
+                out[(z ^ TILE_MASK) * TILE_SIZE + x] = (iData[z * TILE_SIZE + x] & 0xFF) / 100.0d;
+            }
         }
         return out;
     }

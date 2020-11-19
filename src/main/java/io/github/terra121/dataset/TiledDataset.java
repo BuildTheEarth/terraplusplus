@@ -52,6 +52,10 @@ public abstract class TiledDataset<T> extends CacheLoader<Vec2i, T> {
 
         IOException cause = null;
         for (int i = 0; i < TerraConfig.data.retryCount; i++) {
+            if (!TerraConfig.reducedConsoleMessages) {
+                TerraMod.LOGGER.info(url);
+            }
+
             try {
                 HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
                 conn.setInstanceFollowRedirects(true);
