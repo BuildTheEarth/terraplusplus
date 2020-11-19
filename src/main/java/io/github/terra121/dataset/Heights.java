@@ -1,7 +1,6 @@
 package io.github.terra121.dataset;
 
 import com.google.common.collect.ImmutableMap;
-import io.github.terra121.EarthTerrainProcessor;
 import io.github.terra121.TerraConfig;
 import io.github.terra121.projection.MapsProjection;
 import io.netty.buffer.ByteBuf;
@@ -40,7 +39,9 @@ public class Heights extends DoubleTiledDataset {
         ImageIO.read(new ByteBufInputStream(data)).getRGB(0, 0, TILE_SIZE, TILE_SIZE, iData, 0, TILE_SIZE);
 
         double[] out = new double[TILE_SIZE * TILE_SIZE];
-        //TODO: process data (see getOfficialHeight below)
+        for (int i = 0; i < iData.length; i++) {
+            out[i] = ((iData[i] & 0x00FFFFFF) - 0x800000) / 256.0d;
+        }
         return out;
     }
 

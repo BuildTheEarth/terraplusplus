@@ -1,5 +1,8 @@
 package io.github.terra121;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
@@ -26,6 +29,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
@@ -81,7 +85,7 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
         this.biomes = world.getBiomeProvider(); //TODO: make this not order dependent
 
         this.osm = new OpenStreetMaps(this.projection, this.doRoads, this.cfg.settings.osmwater, this.doBuildings);
-        this.heights = new Heights(13, false, this.cfg.settings.smoothblend, this.cfg.settings.osmwater ? this.osm.water : null);
+        this.heights = new Heights(13, this.cfg.settings.smoothblend, this.cfg.settings.osmwater ? this.osm.water : null);
         this.depths = new Heights(10, this.cfg.settings.osmwater ? this.osm.water : null); //below sea level only generates a level 10, this shouldn't lag too bad cause a zoom 10 tile is frickin massive (64x zoom 13)
 
         //Trying to allow for multiple zoom levels
@@ -104,7 +108,7 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
 
                 for (int i = 0; i < zoomL; i++) {
                     this.zooms[i] = Byte.parseByte(zoomdirs[i].getName());
-                    this.heightsLidar[i] = new Heights(this.zooms[i], true, this.cfg.settings.smoothblend, this.cfg.settings.osmwater ? this.osm.water : null);
+                    //this.heightsLidar[i] = new Heights(this.zooms[i], true, this.cfg.settings.smoothblend, this.cfg.settings.osmwater ? this.osm.water : null);
                 }
 
             }
@@ -126,9 +130,7 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
             }
         }
 
-        if (!TerraConfig.serverTree.isEmpty()) {
-            this.surfacePopulators.add(new EarthTreePopulator(this.projection));
-        }
+        this.surfacePopulators.add(new EarthTreePopulator(this.projection));
         this.snow = new SnowPopulator(); //this will go after the rest
 
         this.cubiccfg = this.cfg.getCustomCubic();
@@ -158,7 +160,6 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
 
             this.biomeBlockReplacers.put(biome, replacers);
         }
-
     }
 
     //TODO: more efficient
