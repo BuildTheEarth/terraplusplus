@@ -29,7 +29,7 @@ minecraft {
     runDir = "run"
 
     mappings = "stable_39"
-    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+    makeObfSourceJar = false
 }
 
 configurations {
