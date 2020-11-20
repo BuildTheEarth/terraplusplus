@@ -6,12 +6,14 @@ import io.github.terra121.control.Command;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public abstract class FragmentManager extends Command {
@@ -118,4 +120,17 @@ public abstract class FragmentManager extends Command {
         sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(end, TextFormatting.GOLD)));
     }
 
+    @Override
+    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos targetPos) {
+        List<String> tabCompletions = new ArrayList<>();
+
+        for(ICommandFragment fragment : commandFragments)
+            for(String s : fragment.getName())
+                if(args.length == 0)
+                    tabCompletions.add(s);
+                else if(s.startsWith(args[0].toLowerCase()))
+                    tabCompletions.add(s);
+
+        return tabCompletions;
+    }
 }
