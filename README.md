@@ -1,6 +1,6 @@
 # Terra++
 
-### Developed by the BTE Development team
+### Developed by the BuildTheEarth Development Team
 
 ### Fork of the [Terra 1 to 1](https://github.com/orangeadam3/terra121) project and submod of [CubicChunks](https://github.com/OpenCubicChunks/CubicChunks) and [CubicWorldGen](https://github.com/OpenCubicChunks/CubicWorldGen/).
 
@@ -19,9 +19,9 @@ The latest version can always be compiled from [our Github](https://github.com/B
 - Procedural Tree placement
 - Oceans based on elevation with depth data
 - "Customize World" GUI that does not require MalisisCore
-- Teleport by latitude and longitude using `/tpll latitude longitude \[elevation\]`
+- Teleport by latitude and longitude using `/tpll latitude longitude [elevation]`
 - Ore spawning just below surface
-- Caves, Dungeons, and other standard underground features are still available and procedurally generated using CubicWorldGen as a baseline
+- Caves, Dungeons, and other standard underground features are still available and procedurally generated using CubicWorldGen as a baseline. Though, they are left disabled by default unless modified in the generator settings.
 
 ## Permissions
 - `terra121.admin` - Gives access to all terra++ features and commands
@@ -29,7 +29,6 @@ The latest version can always be compiled from [our Github](https://github.com/B
 - `terra121.commands.terra.utilities` - Gives access to terra++ utilities
 - `terra121.commands.tpll` - Gives access to `/tpll`
 
-**Note: You will need to allow `terra121.command.*` for the other permissions to work in many cases!!**
 ## APIs:
 
 - Elevation data: [AWS Terrain Tiles](https://registry.opendata.aws/terrain-tiles/). (© [Mapzen](https://www.mapzen.com/rights), and [others](https://github.com/tilezen/joerd/blob/master/docs/attribution.md))
@@ -48,6 +47,7 @@ The latest version can always be compiled from [our Github](https://github.com/B
 - Recommended: [Malisis Core](https://www.curseforge.com/minecraft/mc-mods/malisiscore)
 
 ## Obtaining
+Releases will not be found from within GitHub, but rather on our [Jenkins Continuous Integration server](https://jenkins.daporkchop.net/job/BuildTheEarth) kindly provided by DaPorkchop. Everything is automatically built and compiled for every single commit, so you can always snag the latest release.
+### [Latest Release Download Link](https://jenkins.daporkchop.net/job/BuildTheEarth/job/terraplusplus/job/master/lastSuccessfulBuild/artifact/build/libs/terra121-0.1.jar)
 
-We have compiled releases both on our [releases page](https://github.com/orangeadam3/terra121/releases)
-Here are the [building instructions](BUILD_INSTRUCTIONS.md) if you want to build it yourself.
+If you want to build it yourself manually, even though Jenkins does it for you, here are the [building instructions](BUILD_INSTRUCTIONS.md).
