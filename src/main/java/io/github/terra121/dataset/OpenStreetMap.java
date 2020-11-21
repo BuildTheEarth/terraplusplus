@@ -1,105 +1,94 @@
 package io.github.terra121.dataset;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import io.github.terra121.TerraConfig;
-import io.github.terra121.TerraMod;
 import io.github.terra121.projection.GeographicProjection;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import lombok.NonNull;
+import net.minecraft.util.math.ChunkPos;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.net.URL;
-import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class OpenStreetMaps {
-
+public class OpenStreetMap extends TiledDataset<Region> {
     private static final double CHUNK_SIZE = 16;
     public static final double TILE_SIZE = 1 / 60.0;//250*(360.0/40075000.0);
     private static final double NOTHING = 0.01;
 
-    private static String overpassInstance = TerraConfig.serverOverpassDefault;
-    private static final String URL_PREFACE = "/?data=[out:json];way(";
-    private static final String URL_B = ")%20tags%20qt;(._<;);out%20body%20qt;";
-    private static final String URL_C = "is_in(";
-    private static Thread fallbackCancellerThread;
+    private final Map<ChunkPos, Set<Edge>> chunks = new LinkedHashMap<>(); //TODO: this leaks memory (it's never drained)
+    public final Water water;
+    private final List<Edge> allEdges = new ArrayList<>();
+    private final Gson gson = new Gson();
+    private final boolean doRoad;
+    private final boolean doWater;
+    private final boolean doBuildings;
 
-    public static void main(String[] args) {
-    }
+    public OpenStreetMap(GeographicProjection proj, boolean doRoad, boolean doWater, boolean doBuildings) {
+        super(proj, TILE_SIZE, 1.0d);
 
-    public static String getOverpassEndpoint() {
-        return overpassInstance;
-    }
-
-    public static void setOverpassEndpoint(String urlBase) {
-        OpenStreetMaps.overpassInstance = urlBase;
-    }
-
-    public static void cancelFallbackThread() {
-        if (fallbackCancellerThread != null && fallbackCancellerThread.isAlive()) {
-            fallbackCancellerThread.interrupt();
-        }
-        fallbackCancellerThread = null;
-    }
-    private String URL_A = ")";
-    private HashMap<Coord, Set<Edge>> chunks;
-    public LinkedHashMap<Coord, Region> regions;
-    public Water water;
-    private int numcache = TerraConfig.osmCacheSize;
-    private ArrayList<Edge> allEdges;
-    private Gson gson;
-    private GeographicProjection projection;
-    Type wayType;
-    byte wayLanes;
-    boolean doRoad;
-    boolean doWater;
-    boolean doBuildings;
-
-    public OpenStreetMaps(GeographicProjection proj, boolean doRoad, boolean doWater, boolean doBuildings) {
-        this.gson = new GsonBuilder().create();
-        this.chunks = new LinkedHashMap<>();
-        this.allEdges = new ArrayList<>();
-        this.regions = new LinkedHashMap<>();
-        this.projection = proj;
         try {
             this.water = new Water(this, 256);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         this.doRoad = doRoad;
         this.doWater = doWater;
         this.doBuildings = doBuildings;
-
-        if (!doBuildings) {
-            this.URL_A += "[!\"building\"]";
-        }
-        if (!doRoad) {
-            this.URL_A += "[!\"highway\"]";
-        }
-        if (!doWater) {
-            this.URL_A += "[!\"water\"][!\"natural\"][!\"waterway\"]";
-        }
-        this.URL_A += ";out%20geom(";
     }
 
-    public Coord getRegion(double lon, double lat) {
-        return new Coord((int) Math.floor(lon / TILE_SIZE), (int) Math.floor(lat / TILE_SIZE));
+    @Override
+    protected String[] urls() {
+        return TerraConfig.data.overpass;
+    }
+
+    @Override
+    protected Region decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception {
+        Region region = new Region(new ChunkPos(tileX, tileZ), this.water);
+        this.doGson(new ByteBufInputStream(data), region);
+
+        //TODO: this is ugly and should be implemented better
+        {
+            double X = tileX * TILE_SIZE;
+            double Y = tileZ * TILE_SIZE;
+
+            double[] ll = this.projection.fromGeo(X, Y);
+            double[] lr = this.projection.fromGeo(X + TILE_SIZE, Y);
+            double[] ur = this.projection.fromGeo(X + TILE_SIZE, Y + TILE_SIZE);
+            double[] ul = this.projection.fromGeo(X, Y + TILE_SIZE);
+
+            //estimate bounds of region in terms of chunks
+            int lowX = (int) Math.floor(Math.min(Math.min(ll[0], ul[0]), Math.min(lr[0], ur[0])) / CHUNK_SIZE);
+            int highX = (int) Math.ceil(Math.max(Math.max(ll[0], ul[0]), Math.max(lr[0], ur[0])) / CHUNK_SIZE);
+            int lowZ = (int) Math.floor(Math.min(Math.min(ll[1], ul[1]), Math.min(lr[1], ur[1])) / CHUNK_SIZE);
+            int highZ = (int) Math.ceil(Math.max(Math.max(ll[1], ul[1]), Math.max(lr[1], ur[1])) / CHUNK_SIZE);
+
+            for (Edge e : this.allEdges) {
+                this.relevantChunks(lowX, lowZ, highX, highZ, e);
+            }
+            this.allEdges.clear();
+        }
+
+        return region;
+    }
+
+    public ChunkPos getRegion(double lon, double lat) {
+        return new ChunkPos((int) Math.floor(lon / TILE_SIZE), (int) Math.floor(lat / TILE_SIZE));
     }
 
     public Set<Edge> chunkStructures(int x, int z) {
-        Coord coord = new Coord(x, z);
+        ChunkPos coord = new ChunkPos(x, z);
 
         if (this.regionCache(this.projection.toGeo(x * CHUNK_SIZE, z * CHUNK_SIZE)) == null) {
             return null;
@@ -121,131 +110,20 @@ public class OpenStreetMaps {
     }
 
     public Region regionCache(double[] corner) {
-
         //bound check
         if (!(corner[0] >= -180 && corner[0] <= 180 && corner[1] >= -80 && corner[1] <= 80)) {
             return null;
         }
 
-        Coord coord = this.getRegion(corner[0], corner[1]);
-        Region region;
-
-        if ((region = this.regions.get(coord)) == null) {
-            region = new Region(coord, this.water);
-            int i;
-            for (i = 0; i < 5 && !this.regiondownload(region); i++) {
-            }
-            this.regions.put(coord, region);
-            if (this.regions.size() > this.numcache) {
-                //TODO: delete beter
-                Iterator<Region> it = this.regions.values().iterator();
-                Region delete = it.next();
-                it.remove();
-                this.removeRegion(delete);
-            }
-
-            if (i == 5) {
-                region.failedDownload = true;
-                TerraMod.LOGGER.error("OSM region" + region.coord.x + ' ' + region.coord.y + " failed to download several times, no structures will spawn");
-                return null;
-            }
-        } else if (region.failedDownload) {
-            return null; //don't return dummy regions
-        }
-        return region;
-    }
-
-    public boolean regiondownload(Region region) {
-        double X = region.coord.x * TILE_SIZE;
-        double Y = region.coord.y * TILE_SIZE;
-
-        //limit extreme (a.k.a. way too clustered on some projections) requests and out of bounds requests
-        if (Y > 80 || Y < -80 || X < -180 || X > 180 - TILE_SIZE) {
-            region.failedDownload = true;
-            return false;
-        }
-
-
-        try {
-
-            String bottomleft = Y + "," + X;
-            String bbox = bottomleft + ',' + (Y + TILE_SIZE) + ',' + (X + TILE_SIZE);
-
-            String urltext = overpassInstance + URL_PREFACE + bbox + this.URL_A + bbox + URL_B;
-            if (this.doWater) {
-                String URL_SUFFIX = ");area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;";
-                urltext += URL_C + bottomleft + URL_SUFFIX;
-            }
-
-            if (!TerraConfig.reducedConsoleMessages) {
-                TerraMod.LOGGER.info(urltext);
-            }
-
-            //kumi systems request a meaningful user-agent
-            URL url = new URL(urltext);
-            URLConnection c = url.openConnection();
-            c.addRequestProperty("User-Agent", TerraMod.USERAGENT);
-            InputStream is = c.getInputStream();
-
-            this.doGson(is, region);
-
-            is.close();
-
-        } catch (Exception e) {
-            TerraMod.LOGGER.error("Osm region download failed, " + e);
-            e.printStackTrace();
-            if (!TerraConfig.serverOverpassFallback.isEmpty() && !TerraConfig.serverOverpassFallback.equals(overpassInstance)) {
-                TerraMod.LOGGER.error("We were using the main overpass instance (" + TerraConfig.serverOverpassDefault
-                                      + "), switching to the backup one (" + TerraConfig.serverOverpassFallback + ')');
-                overpassInstance = TerraConfig.serverOverpassFallback;
-                cancelFallbackThread();
-                fallbackCancellerThread = new Thread(() -> {
-                    try {
-                        TerraMod.LOGGER.info("Started fallback thread, it will try to switch back to the main endpoint in " + TerraConfig.overpassCheckDelay + "mn");
-                        Thread.sleep(TerraConfig.overpassCheckDelay * 60000);
-                        TerraMod.LOGGER.info("Trying to switch back to the main overpass endpoint");
-                        overpassInstance = TerraConfig.serverOverpassDefault;
-                    } catch (InterruptedException e1) {
-                        TerraMod.LOGGER.info("Stopping fallback sleeping thread");
-                    }
-
-                });
-                fallbackCancellerThread.setName("Overpass fallback check thread");
-                fallbackCancellerThread.start();
-                return this.regiondownload(region);
-            } else {
-                TerraMod.LOGGER.error("We were already using the backup Overpass endpoint or no backup endpoint is set, no structures will spawn");
-            }
-
-            return false;
-        }
-
-        double[] ll = this.projection.fromGeo(X, Y);
-        double[] lr = this.projection.fromGeo(X + TILE_SIZE, Y);
-        double[] ur = this.projection.fromGeo(X + TILE_SIZE, Y + TILE_SIZE);
-        double[] ul = this.projection.fromGeo(X, Y + TILE_SIZE);
-
-        //estimate bounds of region in terms of chunks
-        int lowX = (int) Math.floor(Math.min(Math.min(ll[0], ul[0]), Math.min(lr[0], ur[0])) / CHUNK_SIZE);
-        int highX = (int) Math.ceil(Math.max(Math.max(ll[0], ul[0]), Math.max(lr[0], ur[0])) / CHUNK_SIZE);
-        int lowZ = (int) Math.floor(Math.min(Math.min(ll[1], ul[1]), Math.min(lr[1], ur[1])) / CHUNK_SIZE);
-        int highZ = (int) Math.ceil(Math.max(Math.max(ll[1], ul[1]), Math.max(lr[1], ur[1])) / CHUNK_SIZE);
-
-        for (Edge e : this.allEdges) {
-            this.relevantChunks(lowX, lowZ, highX, highZ, e);
-        }
-        this.allEdges.clear();
-
-        return true;
+        ChunkPos coord = this.getRegion(corner[0], corner[1]);
+        return this.getTile(coord.x, coord.z);
     }
 
     private void doGson(InputStream is, Region region) throws IOException {
-
         StringWriter writer = new StringWriter();
         IOUtils.copy(is, writer, StandardCharsets.UTF_8);
-        String str = writer.toString();
 
-        Data data = this.gson.fromJson(str.toString(), Data.class);
+        Data data = this.gson.fromJson(writer.toString(), Data.class);
 
         Map<Long, Element> allWays = new HashMap<>();
         Set<Element> unusedWays = new HashSet<>();
@@ -284,11 +162,9 @@ public class OpenStreetMaps {
                     building = elem.tags.get("building");
                 }
 
-                if (naturalv != null && "coastline".equals(naturalv)) {
+                if ("coastline".equals(naturalv)) {
                     this.waterway(elem, -1, region, null);
-                } else if (highway != null || (waterway != null && ("river".equals(waterway) ||
-                                                                    "canal".equals(waterway) || "stream".equals(waterway))) || building != null) { //TODO: fewer equals
-
+                } else if (highway != null || building != null || ("river".equals(waterway) || "canal".equals(waterway) || "stream".equals(waterway))) { //TODO: fewer equals
                     Type type = Type.ROAD;
 
                     if (waterway != null) {
@@ -303,16 +179,11 @@ public class OpenStreetMaps {
                         type = Type.BUILDING;
                     }
 
-                    if (istunnel != null && "yes".equals(istunnel)) {
-
+                    if ("yes".equals(istunnel)) {
                         attributes = Attributes.ISTUNNEL;
-
-                    } else if (isbridge != null && "yes".equals(isbridge)) {
-
+                    } else if ("yes".equals(isbridge)) {
                         attributes = Attributes.ISBRIDGE;
-
                     } else {
-
                         // totally skip classification if it's a tunnel or bridge. this should make it more efficient.
                         if (highway != null && attributes == Attributes.NONE) {
                             switch (highway) {
@@ -357,27 +228,17 @@ public class OpenStreetMaps {
                     byte layer = 1;
 
                     if (slayer != null) {
-
                         try {
-
                             layer = Byte.parseByte(slayer);
-
                         } catch (NumberFormatException e) {
-
                             // default to layer 1 if bad format
-
                         }
-
                     }
 
                     if (slanes != null) {
-
                         try {
-
                             lanes = Byte.parseByte(slanes);
-
                         } catch (NumberFormatException e) {
-
                         } //default to 2, if bad format
                     }
 
@@ -407,7 +268,7 @@ public class OpenStreetMaps {
                     String waterv = elem.tags.get("water");
                     String wway = elem.tags.get("waterway");
 
-                    if (waterv != null || (naturalv != null && "water".equals(naturalv)) || (wway != null && "riverbank".equals(wway))) {
+                    if (waterv != null || "water".equals(naturalv) || "riverbank".equals(wway)) {
                         for (Member member : elem.members) {
                             if (member.type == EType.way) {
                                 Element way = allWays.get(member.ref);
@@ -438,20 +299,19 @@ public class OpenStreetMaps {
         }
 
         if (this.doWater) {
-
             for (Element way : unusedWays) {
                 if (way.tags != null) {
                     String naturalv = way.tags.get("natural");
                     String waterv = way.tags.get("water");
                     String wway = way.tags.get("waterway");
 
-                    if (waterv != null || (naturalv != null && "water".equals(naturalv)) || (wway != null && "riverbank".equals(wway))) {
+                    if (waterv != null || "water".equals(naturalv) || "riverbank".equals(wway)) {
                         this.waterway(way, way.id + 2400000000L, region, null);
                     }
                 }
             }
 
-            if (this.water.grounding.state(region.coord.x, region.coord.y) == 0) {
+            if (this.water.grounding.state(region.coord.x, region.coord.z) == 0) {
                 ground.add(-1L);
             }
 
@@ -492,14 +352,14 @@ public class OpenStreetMaps {
     }
 
     private void relevantChunks(int lowX, int lowZ, int highX, int highZ, Edge edge) {
-        Coord start = new Coord((int) Math.floor(edge.slon / CHUNK_SIZE), (int) Math.floor(edge.slat / CHUNK_SIZE));
-        Coord end = new Coord((int) Math.floor(edge.elon / CHUNK_SIZE), (int) Math.floor(edge.elat / CHUNK_SIZE));
+        ChunkPos start = new ChunkPos((int) Math.floor(edge.slon / CHUNK_SIZE), (int) Math.floor(edge.slat / CHUNK_SIZE));
+        ChunkPos end = new ChunkPos((int) Math.floor(edge.elon / CHUNK_SIZE), (int) Math.floor(edge.elat / CHUNK_SIZE));
 
         double startx = edge.slon;
         double endx = edge.elon;
 
         if (startx > endx) {
-            Coord tmp = start;
+            ChunkPos tmp = start;
             start = end;
             end = tmp;
             startx = endx;
@@ -519,48 +379,18 @@ public class OpenStreetMaps {
             }
 
             for (int y = Math.max(from, lowZ); y <= to && y < highZ; y++) {
-                this.assoiateWithChunk(new Coord(x, y), edge);
+                this.assoiateWithChunk(new ChunkPos(x, y), edge);
             }
         }
     }
 
-    private void assoiateWithChunk(Coord c, Edge edge) {
+    private void assoiateWithChunk(ChunkPos c, Edge edge) {
         Set<Edge> list = this.chunks.get(c);
         if (list == null) {
             list = new HashSet<>();
             this.chunks.put(c, list);
         }
         list.add(edge);
-    }
-
-    //TODO: this algorithm is untested and may have some memory leak issues and also strait up copies code from earlier
-    private void removeRegion(Region delete) {
-        double X = delete.coord.x * TILE_SIZE;
-        double Y = delete.coord.y * TILE_SIZE;
-
-        double[] ll = this.projection.fromGeo(X, Y);
-        double[] lr = this.projection.fromGeo(X + TILE_SIZE, Y);
-        double[] ur = this.projection.fromGeo(X + TILE_SIZE, Y + TILE_SIZE);
-        double[] ul = this.projection.fromGeo(X, Y + TILE_SIZE);
-
-        //estimate bounds of region in terms of chunks
-        int lowX = (int) Math.floor(Math.min(Math.min(ll[0], ul[0]), Math.min(lr[0], ur[0])) / CHUNK_SIZE);
-        int highX = (int) Math.ceil(Math.max(Math.max(ll[0], ul[0]), Math.max(lr[0], ur[0])) / CHUNK_SIZE);
-        int lowZ = (int) Math.floor(Math.min(Math.min(ll[1], ul[1]), Math.min(lr[1], ur[1])) / CHUNK_SIZE);
-        int highZ = (int) Math.ceil(Math.max(Math.max(ll[1], ul[1]), Math.max(lr[1], ur[1])) / CHUNK_SIZE);
-
-        for (int x = lowX; x < highX; x++) {
-            for (int z = lowZ; z < highZ; z++) {
-                Set<Edge> edges = this.chunks.get(new Coord(x, z));
-                if (edges != null) {
-                    edges.removeIf(edge -> edge.region.equals(delete));
-
-                    if (edges.size() <= 0) {
-                        this.chunks.remove(new Coord(x, z));
-                    }
-                }
-            }
-        }
     }
 
     public enum Type {
@@ -574,34 +404,6 @@ public class OpenStreetMaps {
 
     public enum EType {
         invalid, node, way, relation, area
-    }
-
-    public static class noneBoolAttributes {
-        public static String layer;
-    }
-
-    //integer coordinate class
-    public static class Coord {
-        public int x;
-        public int y;
-
-        private Coord(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        public int hashCode() {
-            return (this.x * 79399) + (this.y * 100000);
-        }
-
-        public boolean equals(Object o) {
-            Coord c = (Coord) o;
-            return c.x == this.x && c.y == this.y;
-        }
-
-        public String toString() {
-            return "(" + this.x + ", " + this.y + ')';
-        }
     }
 
     public static class Edge {
@@ -642,12 +444,6 @@ public class OpenStreetMaps {
 
             this.slope = (elat - slat) / (elon - slon);
             this.offset = slat - this.slope * slon;
-        }
-
-        private double squareLength() {
-            double dlat = this.elat - this.slat;
-            double dlon = this.elon - this.slon;
-            return dlat * dlat + dlon * dlon;
         }
 
         public int hashCode() {

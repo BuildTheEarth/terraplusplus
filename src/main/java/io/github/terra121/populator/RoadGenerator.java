@@ -3,8 +3,7 @@ package io.github.terra121.populator;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import io.github.terra121.EarthTerrainProcessor;
-import io.github.terra121.dataset.Heights;
-import io.github.terra121.dataset.OpenStreetMaps;
+import io.github.terra121.dataset.OpenStreetMap;
 import io.github.terra121.dataset.ScalarDataset;
 import io.github.terra121.projection.GeographicProjection;
 import net.minecraft.block.BlockColored;
@@ -39,20 +38,20 @@ public class RoadGenerator implements ICubicPopulator {
         }
         return slope * x + sign * b;
     }
-    private OpenStreetMaps osm;
+    private OpenStreetMap osm;
     private ScalarDataset heights;
     private ScalarDataset[] heightsLidar;
     private byte[] zooms;
     private GeographicProjection projection;
     private boolean lidar = false;
 
-    public RoadGenerator(OpenStreetMaps osm, ScalarDataset heights, GeographicProjection proj) {
+    public RoadGenerator(OpenStreetMap osm, ScalarDataset heights, GeographicProjection proj) {
         this.osm = osm;
         this.heights = heights;
         this.projection = proj;
     }
 
-    public RoadGenerator(OpenStreetMaps osm, ScalarDataset heights, ScalarDataset[] heightsLidar, byte[] zooms, GeographicProjection proj) {
+    public RoadGenerator(OpenStreetMap osm, ScalarDataset heights, ScalarDataset[] heightsLidar, byte[] zooms, GeographicProjection proj) {
         this.osm = osm;
         this.heights = heights;
         this.heightsLidar = heightsLidar;
@@ -73,13 +72,13 @@ public class RoadGenerator implements ICubicPopulator {
         int cubeY = pos.getY();
         int cubeZ = pos.getZ();
 
-        Set<OpenStreetMaps.Edge> edges = this.osm.chunkStructures(cubeX, cubeZ);
+        Set<OpenStreetMap.Edge> edges = this.osm.chunkStructures(cubeX, cubeZ);
 
         if (edges != null) {
 
             // rivers done before roads
-            for (OpenStreetMaps.Edge e : edges) {
-                if (e.type == OpenStreetMaps.Type.RIVER) {
+            for (OpenStreetMap.Edge e : edges) {
+                if (e.type == OpenStreetMap.Type.RIVER) {
                     this.placeEdge(e, world, cubeX, cubeY, cubeZ, 5, (dis, bpos) -> this.riverState(world, dis, bpos));
                 }
             }
@@ -93,10 +92,10 @@ public class RoadGenerator implements ICubicPopulator {
 
             // TODO simplify road width
 
-            for (OpenStreetMaps.Edge e : edges) {
+            for (OpenStreetMap.Edge e : edges) {
                 // this will obviously be deleted once the levels actually do something
                 // System.out.println("Generating road on level: " + e.layer_number);
-                if (e.attribute != OpenStreetMaps.Attributes.ISTUNNEL) {
+                if (e.attribute != OpenStreetMap.Attributes.ISTUNNEL) {
                     switch (e.type) {
                         case MINOR:
                             this.placeEdge(e, world, cubeX, cubeY, cubeZ, Math.ceil((2 * e.lanes) / 2), (dis, bpos) -> ASPHALT);
@@ -139,7 +138,7 @@ public class RoadGenerator implements ICubicPopulator {
         }
     }
 
-    private void placeEdge(OpenStreetMaps.Edge e, World world, int cubeX, int cubeY, int cubeZ, double r, BiFunction<Double, BlockPos, IBlockState> state) {
+    private void placeEdge(OpenStreetMap.Edge e, World world, int cubeX, int cubeY, int cubeZ, double r, BiFunction<Double, BlockPos, IBlockState> state) {
         double x0 = 0;
         double b = r;
         if (Math.abs(e.slope) >= 0.000001) {

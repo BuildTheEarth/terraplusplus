@@ -7,12 +7,12 @@ import io.github.terra121.TerraConstants;
 import io.github.terra121.chat.ChatHelper;
 import io.github.terra121.chat.TextElement;
 import io.github.terra121.control.fragments.CommandFragment;
-import io.github.terra121.dataset.OpenStreetMaps;
 import io.github.terra121.dataset.Water;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
@@ -50,7 +50,7 @@ public class TerraInvertWaterFragment extends CommandFragment {
             return;
         }
 
-        OpenStreetMaps.Coord region = terrain.osm.getRegion(c[0], c[1]);
+        ChunkPos region = terrain.osm.getRegion(c[0], c[1]);
 
         Water water = terrain.osm.water;
         water.doingInverts = true;
@@ -65,11 +65,11 @@ public class TerraInvertWaterFragment extends CommandFragment {
             }
 
         if (restore ? water.inverts.remove(region) : water.inverts.add(region)) {
-            sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.format(restore ? "terra121.commands.terra.rstwtr" : "terra121.commands.terra.invwtr", region.x, region.y), TextFormatting.GRAY)));
+            sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.format(restore ? "terra121.commands.terra.rstwtr" : "terra121.commands.terra.invwtr", region.x, region.z), TextFormatting.GRAY)));
             return;
         }
 
-        sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.format("terra121.error.invwtr", region.x, region.y), TextFormatting.RED)));
+        sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.format("terra121.error.invwtr", region.x, region.z), TextFormatting.RED)));
     }
 
     @Override

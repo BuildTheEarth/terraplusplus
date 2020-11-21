@@ -8,10 +8,10 @@ import com.google.common.collect.ImmutableMap;
 import io.github.terra121.TerraConfig;
 import io.github.terra121.TerraMod;
 import io.github.terra121.projection.GeographicProjection;
-import io.github.terra121.util.Vec2i;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import lombok.NonNull;
+import net.minecraft.util.math.ChunkPos;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class TiledDataset<T> extends CacheLoader<Vec2i, T> {
+public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, T> {
     public static ByteBuf get(int tileX, int tileZ, @NonNull Map<String, String> properties, @NonNull String[] urls) throws IOException {
         IOException cause = null;
         boolean found404 = false;
@@ -107,22 +107,20 @@ public abstract class TiledDataset<T> extends CacheLoader<Vec2i, T> {
         return out.toString();
     }
 
-    protected final LoadingCache<Vec2i, T> cache = CacheBuilder.newBuilder()
+    protected final LoadingCache<ChunkPos, T> cache = CacheBuilder.newBuilder()
             .softValues()
             .build(this);
 
-    protected final int tileSamples;
     protected final double tileSize;
+    protected final double scale;
 
     protected final GeographicProjection projection;
     //TODO: scales are obsolete with new ScaleProjection type
-    protected final double scale;
     protected final double[] bounds;
 
-    public TiledDataset(GeographicProjection proj, int tileSamples, double scale) {
+    public TiledDataset(GeographicProjection proj, double tileSize, double scale) {
         this.projection = proj;
-        this.tileSamples = tileSamples;
-        this.tileSize = 1.0d / scale * tileSamples;
+        this.tileSize = tileSize;
         this.scale = scale;
 
         this.bounds = proj.bounds();
@@ -146,7 +144,7 @@ public abstract class TiledDataset<T> extends CacheLoader<Vec2i, T> {
     protected abstract T decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception;
 
     public T getTile(int tileX, int tileZ) {
-        return this.cache.getUnchecked(new Vec2i(tileX, tileZ));
+        return this.cache.getUnchecked(new ChunkPos(tileX, tileZ));
     }
 
     /**
@@ -154,23 +152,19 @@ public abstract class TiledDataset<T> extends CacheLoader<Vec2i, T> {
      */
     @Deprecated
     @Override
-    public T load(Vec2i tile) throws Exception {
-        ByteBuf data = this.fetchTile(tile.x, tile.z);
+    public T load(ChunkPos pos) throws Exception {
+        ByteBuf data = this.fetchTile(pos.x, pos.z);
         try {
-            return this.decode(tile.x, tile.z, data);
+            return this.decode(pos.x, pos.z, data);
         } finally { //avoid memory leak in the case of failure by always releasing the data
             data.release();
         }
     }
 
     public ByteBuf fetchTile(int tileX, int tileZ) throws IOException {
-        ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder();
+        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
         this.addProperties(tileX, tileZ, builder);
 
         return get(tileX, tileZ, builder.build(), this.urls());
-    }
-
-    public Vec2i sample2tile(int sampleX, int sampleZ) {
-        return new Vec2i(Math.floorDiv(sampleX, this.tileSamples), Math.floorDiv(sampleZ, this.tileSamples));
     }
 }

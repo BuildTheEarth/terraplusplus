@@ -16,7 +16,7 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
     public final boolean smooth;
 
     public DoubleTiledDataset(GeographicProjection proj, double scale, boolean smooth) {
-        super(proj, TILE_SIZE, scale);
+        super(proj, 1.0d / scale * TILE_SIZE, scale);
 
         this.smooth = smooth;
     }

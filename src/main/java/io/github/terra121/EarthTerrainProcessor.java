@@ -20,7 +20,7 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGenerato
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicCaveGenerator;
 import io.github.terra121.dataset.Heights;
 import io.github.terra121.dataset.HeightsWaterMix;
-import io.github.terra121.dataset.OpenStreetMaps;
+import io.github.terra121.dataset.OpenStreetMap;
 import io.github.terra121.dataset.ScalarDataset;
 import io.github.terra121.populator.CliffReplacer;
 import io.github.terra121.populator.EarthTreePopulator;
@@ -58,7 +58,7 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
     public ScalarDataset heights;
     public ScalarDataset depths;
     public ScalarDataset[] heightsLidar;
-    public OpenStreetMaps osm;
+    public OpenStreetMap osm;
     public HashMap<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers;
     public BiomeProvider biomes;
     public GeographicProjection projection;
@@ -91,7 +91,7 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
 
         this.biomes = world.getBiomeProvider(); //TODO: make this not order dependent
 
-        this.osm = new OpenStreetMaps(this.projection, this.doRoads, this.cfg.settings.osmwater, this.doBuildings);
+        this.osm = new OpenStreetMap(this.projection, this.doRoads, this.cfg.settings.osmwater, this.doBuildings);
         this.heights = this.cfg.settings.osmwater
                 ? new HeightsWaterMix(new Heights(13, this.cfg.settings.smoothblend), this.osm.water)
                 : new Heights(13, this.cfg.settings.smoothblend);
@@ -314,13 +314,13 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
 
         //spawn roads
         if ((this.doRoads || this.doBuildings || this.cfg.settings.osmwater) && surface) {
-            Set<OpenStreetMaps.Edge> edges = this.osm.chunkStructures(cubeX, cubeZ);
+            Set<OpenStreetMap.Edge> edges = this.osm.chunkStructures(cubeX, cubeZ);
 
             if (edges != null) {
                 //minor one block wide roads get plastered first
-                for (OpenStreetMaps.Edge e : edges) {
-                    if (e.type == OpenStreetMaps.Type.ROAD || e.type == OpenStreetMaps.Type.MINOR
-                        || e.type == OpenStreetMaps.Type.STREAM || e.type == OpenStreetMaps.Type.BUILDING) {
+                for (OpenStreetMap.Edge e : edges) {
+                    if (e.type == OpenStreetMap.Type.ROAD || e.type == OpenStreetMap.Type.MINOR
+                        || e.type == OpenStreetMap.Type.STREAM || e.type == OpenStreetMap.Type.BUILDING) {
                         double start = e.slon;
                         double end = e.elon;
 
@@ -365,12 +365,12 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
                                 int y = (int) Math.floor(heights[x * 16 + z]) - Coords.cubeToMinBlock(cubeY);
 
                                 if (y >= 0 && y < 16) {
-                                    if (e.type == OpenStreetMaps.Type.STREAM) {
+                                    if (e.type == OpenStreetMap.Type.STREAM) {
                                         if (primer.getBlockState(x, y, z).getBlock() != Blocks.WATER) {
                                             primer.setBlockState(x, y, z, Blocks.WATER.getDefaultState());
                                         }
                                     } else {
-                                        primer.setBlockState(x, y, z, (e.type == OpenStreetMaps.Type.ROAD ? Blocks.GRASS_PATH : e.type == OpenStreetMaps.Type.BUILDING ? Blocks.BRICK_BLOCK : Blocks.STONEBRICK).getDefaultState());
+                                        primer.setBlockState(x, y, z, (e.type == OpenStreetMap.Type.ROAD ? Blocks.GRASS_PATH : e.type == OpenStreetMap.Type.BUILDING ? Blocks.BRICK_BLOCK : Blocks.STONEBRICK).getDefaultState());
                                     }
                                 }
                             }

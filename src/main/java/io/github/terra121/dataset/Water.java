@@ -1,18 +1,20 @@
 package io.github.terra121.dataset;
 
+import net.minecraft.util.math.ChunkPos;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 
 public class Water {
     public WaterGround grounding;
-    public OpenStreetMaps osm;
+    public OpenStreetMap osm;
     public int hres;
 
-    public HashSet<OpenStreetMaps.Coord> inverts;
+    public HashSet<ChunkPos> inverts;
     public boolean doingInverts;
 
-    public Water(OpenStreetMaps osm, int horizontalres) throws IOException {
+    public Water(OpenStreetMap osm, int horizontalres) throws IOException {
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("assets/terra121/data/ground.dat");
         this.grounding = new WaterGround(is);
         this.osm = osm;
@@ -22,7 +24,6 @@ public class Water {
     }
 
     public byte getState(double lon, double lat) {
-
         Region region = this.osm.regionCache(new double[]{ lon, lat });
 
         //default if download failed
@@ -33,8 +34,8 @@ public class Water {
         //transform to water render res
         lon -= region.west;
         lat -= region.south;
-        lon /= OpenStreetMaps.TILE_SIZE / this.hres;
-        lat /= OpenStreetMaps.TILE_SIZE / this.hres;
+        lon /= OpenStreetMap.TILE_SIZE / this.hres;
+        lat /= OpenStreetMap.TILE_SIZE / this.hres;
 
         //System.out.println(lon + " " + lat);
 
@@ -61,8 +62,8 @@ public class Water {
             return 2; //all other out of bounds is water
         }
 
-        double oshift = OpenStreetMaps.TILE_SIZE / this.hres;
-        double ashift = OpenStreetMaps.TILE_SIZE / this.hres;
+        double oshift = OpenStreetMap.TILE_SIZE / this.hres;
+        double ashift = OpenStreetMap.TILE_SIZE / this.hres;
 
         //rounding errors fixed by recalculating values from scratch (wonder if this glitch also causes the oddly strait terrain that sometimes appears)
         double Ob = Math.floor(lon / oshift) * oshift;

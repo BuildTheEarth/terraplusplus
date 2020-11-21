@@ -1,11 +1,12 @@
 package io.github.terra121.dataset;
 
+import net.minecraft.util.math.ChunkPos;
+
 import java.util.HashSet;
 import java.util.Set;
 
 public class Region {
-    public boolean failedDownload = false;
-    public OpenStreetMaps.Coord coord;
+    public ChunkPos coord;
     public Water water;
     public LandLine southLine;
     public LandLine[] lines;
@@ -15,7 +16,7 @@ public class Region {
     public short[][] indexes;
     public byte[][] states;
 
-    public Region(OpenStreetMaps.Coord coord, Water water) {
+    public Region(ChunkPos coord, Water water) {
         this.coord = coord;
         this.water = water;
 
@@ -26,8 +27,8 @@ public class Region {
 
         this.southLine = new LandLine();
 
-        this.south = coord.y * OpenStreetMaps.TILE_SIZE;
-        this.west = coord.x * OpenStreetMaps.TILE_SIZE;
+        this.south = coord.z * OpenStreetMap.TILE_SIZE;
+        this.west = coord.x * OpenStreetMap.TILE_SIZE;
     }
 
     public void addWaterEdge(double slon, double slat, double elon, double elat, long type) {
@@ -37,11 +38,11 @@ public class Region {
         slon -= this.west;
         elon -= this.west;
 
-        slon /= OpenStreetMaps.TILE_SIZE / this.water.hres;
-        elon /= OpenStreetMaps.TILE_SIZE / this.water.hres;
+        slon /= OpenStreetMap.TILE_SIZE / this.water.hres;
+        elon /= OpenStreetMap.TILE_SIZE / this.water.hres;
 
-        slat /= OpenStreetMaps.TILE_SIZE / this.water.hres;
-        elat /= OpenStreetMaps.TILE_SIZE / this.water.hres;
+        slat /= OpenStreetMap.TILE_SIZE / this.water.hres;
+        elat /= OpenStreetMap.TILE_SIZE / this.water.hres;
 
         if (slat <= 0 || elat <= 0 && (slat >= 0 || elat >= 0)) {
             if (slat == 0) {
@@ -82,8 +83,8 @@ public class Region {
     }
 
     public void renderWater(Set<Long> ground) {
-        double size = OpenStreetMaps.TILE_SIZE;
-        double ressize = OpenStreetMaps.TILE_SIZE / this.water.hres;
+        double size = OpenStreetMap.TILE_SIZE;
+        double ressize = OpenStreetMap.TILE_SIZE / this.water.hres;
 
         this.indexes = new short[this.water.hres][];
         this.states = new byte[this.water.hres][];
