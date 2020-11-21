@@ -5,6 +5,7 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopula
 import io.github.terra121.EarthTerrainProcessor;
 import io.github.terra121.dataset.Heights;
 import io.github.terra121.dataset.OpenStreetMaps;
+import io.github.terra121.dataset.ScalarDataset;
 import io.github.terra121.projection.GeographicProjection;
 import net.minecraft.block.BlockColored;
 import net.minecraft.block.BlockLiquid;
@@ -39,19 +40,19 @@ public class RoadGenerator implements ICubicPopulator {
         return slope * x + sign * b;
     }
     private OpenStreetMaps osm;
-    private Heights heights;
-    private Heights[] heightsLidar;
+    private ScalarDataset heights;
+    private ScalarDataset[] heightsLidar;
     private byte[] zooms;
     private GeographicProjection projection;
     private boolean lidar = false;
 
-    public RoadGenerator(OpenStreetMaps osm, Heights heights, GeographicProjection proj) {
+    public RoadGenerator(OpenStreetMaps osm, ScalarDataset heights, GeographicProjection proj) {
         this.osm = osm;
         this.heights = heights;
         this.projection = proj;
     }
 
-    public RoadGenerator(OpenStreetMaps osm, Heights heights, Heights[] heightsLidar, byte[] zooms, GeographicProjection proj) {
+    public RoadGenerator(OpenStreetMaps osm, ScalarDataset heights, ScalarDataset[] heightsLidar, byte[] zooms, GeographicProjection proj) {
         this.osm = osm;
         this.heights = heights;
         this.heightsLidar = heightsLidar;

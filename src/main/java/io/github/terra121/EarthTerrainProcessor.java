@@ -19,7 +19,9 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.IBiomeBlockRe
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGeneratorSettings;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicCaveGenerator;
 import io.github.terra121.dataset.Heights;
+import io.github.terra121.dataset.HeightsWaterMix;
 import io.github.terra121.dataset.OpenStreetMaps;
+import io.github.terra121.dataset.ScalarDataset;
 import io.github.terra121.populator.CliffReplacer;
 import io.github.terra121.populator.EarthTreePopulator;
 import io.github.terra121.populator.RoadGenerator;
@@ -53,9 +55,9 @@ import static java.lang.Math.*;
 public class EarthTerrainProcessor extends BasicCubeGenerator {
 
     public static String localTerrain;
-    public Heights heights;
-    public Heights depths;
-    public Heights[] heightsLidar;
+    public ScalarDataset heights;
+    public ScalarDataset depths;
+    public ScalarDataset[] heightsLidar;
     public OpenStreetMaps osm;
     public HashMap<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers;
     public BiomeProvider biomes;
@@ -90,8 +92,10 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
         this.biomes = world.getBiomeProvider(); //TODO: make this not order dependent
 
         this.osm = new OpenStreetMaps(this.projection, this.doRoads, this.cfg.settings.osmwater, this.doBuildings);
-        this.heights = new Heights(13, this.cfg.settings.smoothblend, this.cfg.settings.osmwater ? this.osm.water : null);
-        this.depths = new Heights(10, this.cfg.settings.osmwater ? this.osm.water : null); //below sea level only generates a level 10, this shouldn't lag too bad cause a zoom 10 tile is frickin massive (64x zoom 13)
+        this.heights = this.cfg.settings.osmwater
+                ? new HeightsWaterMix(new Heights(13, this.cfg.settings.smoothblend), this.osm.water)
+                : new Heights(13, this.cfg.settings.smoothblend);
+        this.depths = this.cfg.settings.osmwater ? new HeightsWaterMix(new Heights(10), this.osm.water) : new Heights(10);
 
         //Trying to allow for multiple zoom levels
         if (this.cfg.settings.lidar) {
@@ -130,9 +134,9 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
         if (this.cfg.settings.lidar) {
             if (this.doRoads || this.cfg.settings.osmwater) {
                 this.surfacePopulators.add(new RoadGenerator(this.osm, this.heights, this.heightsLidar, this.zooms, this.projection));
-            } else if (this.doRoads || this.cfg.settings.osmwater) {
-                this.surfacePopulators.add(new RoadGenerator(this.osm, this.heights, this.projection));
             }
+        } else if (this.doRoads || this.cfg.settings.osmwater) {
+            this.surfacePopulators.add(new RoadGenerator(this.osm, this.heights, this.projection));
         }
 
         this.surfacePopulators.add(new EarthTreePopulator(this.projection));

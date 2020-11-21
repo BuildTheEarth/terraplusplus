@@ -8,7 +8,7 @@ import io.github.terra121.util.TerraMath;
  *
  * @author DaPorkchop_
  */
-public abstract class DoubleTiledDataset extends TiledDataset<double[]> {
+public abstract class DoubleTiledDataset extends TiledDataset<double[]> implements ScalarDataset {
     protected static final int TILE_SHIFT = 8;
     protected static final int TILE_SIZE = 1 << TILE_SHIFT; //256
     protected static final int TILE_MASK = (1 << TILE_SHIFT) - 1; //0xFF
@@ -21,6 +21,7 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> {
         this.smooth = smooth;
     }
 
+    @Override
     public double estimateLocal(double lon, double lat) {
         //basic bound check
         if (!(lon <= 180.0d && lon >= -180.0d && lat <= 85.0d && lat >= -85.0d)) {

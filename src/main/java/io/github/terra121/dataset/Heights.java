@@ -10,17 +10,15 @@ import lombok.NonNull;
 import javax.imageio.ImageIO;
 
 public class Heights extends DoubleTiledDataset {
-    private final Water water;
     private final int zoom;
 
-    public Heights(int zoom, boolean smooth, Water water) {
+    public Heights(int zoom, boolean smooth) {
         super(new MapsProjection(), 1 << (zoom + 8), smooth);
         this.zoom = zoom;
-        this.water = water;
     }
 
-    public Heights(int zoom, Water water) {
-        this(zoom, false, water);
+    public Heights(int zoom) {
+        this(zoom, false);
     }
 
     @Override
