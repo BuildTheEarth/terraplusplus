@@ -16,9 +16,21 @@ public class TerraConstants {
 
     public static final String version = "1.0";
     public static class TextConstants {
-        public static final ITextComponent notCC = ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.notcc"), TextFormatting.RED));
-        public static final ITextComponent notTerra = ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.notterra"), TextFormatting.RED));
-        public static final ITextComponent noPermission = ChatHelper.makeTextComponent(new TextElement("You do not have permission to use this command", TextFormatting.RED));
-        public static final ITextComponent playerOnly = ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.playeronly"), TextFormatting.RED));
+        // Live update not final
+        public static ITextComponent getNotCC() {
+            return ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.notcc"), TextFormatting.RED));
+        }
+
+        public static ITextComponent getNotTerra() {
+            return ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.notterra"), TextFormatting.RED));
+        }
+
+        public static ITextComponent getNoPermission() {
+            return ChatHelper.makeTextComponent(new TextElement("You do not have permission to use this command", TextFormatting.RED));
+        }
+
+        public static ITextComponent getPlayerOnly() {
+            return ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.playeronly"), TextFormatting.RED));
+        }
     }
 }

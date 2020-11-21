@@ -22,14 +22,14 @@ public class TerraDistortionFragment extends CommandFragment {
         IChunkProvider cp = world.getChunkProvider();
 
         if (!(cp instanceof CubeProviderServer)) {
-            sender.sendMessage(TerraConstants.TextConstants.notCC);
+            sender.sendMessage(TerraConstants.TextConstants.getNotCC());
             return;
         }
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
         if (!(gen instanceof EarthTerrainProcessor)) {
-            sender.sendMessage(TerraConstants.TextConstants.notTerra);
+            sender.sendMessage(TerraConstants.TextConstants.getNotTerra());
             return;
         }
 
