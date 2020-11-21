@@ -3,30 +3,26 @@ package io.github.terra121.populator;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import io.github.terra121.EarthTerrainProcessor;
-import io.github.terra121.dataset.OpenStreetMap;
 import io.github.terra121.dataset.ScalarDataset;
+import io.github.terra121.dataset.osm.OpenStreetMap;
+import io.github.terra121.dataset.osm.segment.SegmentType;
+import io.github.terra121.dataset.osm.segment.Segment;
 import io.github.terra121.projection.GeographicProjection;
-import net.minecraft.block.BlockColored;
-import net.minecraft.block.BlockLiquid;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.EnumDyeColor;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 
-import java.io.File;
 import java.util.Random;
 import java.util.Set;
-import java.util.function.BiFunction;
 
+import static java.lang.Math.*;
+
+@RequiredArgsConstructor
 public class RoadGenerator implements ICubicPopulator {
-
-    private static final IBlockState ASPHALT = Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.GRAY);
-    private static final IBlockState WATER_SOURCE = Blocks.WATER.getDefaultState();
-    //private static final IBlockState WATER_RAMP = Blocks.WATER.getDefaultState().withProperty(BlockLiquid.LEVEL, );
-    private static final IBlockState WATER_BEACH = Blocks.DIRT.getDefaultState();
-
     private static double bound(double x, double slope, double j, double k, double r, double x0, double b, double sign) {
         double slopesign = sign * (slope < 0 ? -1 : 1);
 
@@ -38,50 +34,30 @@ public class RoadGenerator implements ICubicPopulator {
         }
         return slope * x + sign * b;
     }
-    private OpenStreetMap osm;
-    private ScalarDataset heights;
-    private ScalarDataset[] heightsLidar;
-    private byte[] zooms;
-    private GeographicProjection projection;
-    private boolean lidar = false;
 
-    public RoadGenerator(OpenStreetMap osm, ScalarDataset heights, GeographicProjection proj) {
-        this.osm = osm;
-        this.heights = heights;
-        this.projection = proj;
-    }
-
-    public RoadGenerator(OpenStreetMap osm, ScalarDataset heights, ScalarDataset[] heightsLidar, byte[] zooms, GeographicProjection proj) {
-        this.osm = osm;
-        this.heights = heights;
-        this.heightsLidar = heightsLidar;
-        this.zooms = zooms;
-        this.projection = proj;
-        this.lidar = true;
-    }
-
-    // only use for roads with markings
-    public double calculateRoadWidth(int w, int l) {
-        return Math.ceil(((1 + w) * l + l) / 2);
-    }
+    @NonNull
+    protected final EarthTerrainProcessor gen;
 
     @Override
     public void generate(World world, Random rand, CubePos pos, Biome biome) {
-
         int cubeX = pos.getX();
         int cubeY = pos.getY();
         int cubeZ = pos.getZ();
 
-        Set<OpenStreetMap.Edge> edges = this.osm.chunkStructures(cubeX, cubeZ);
+        Set<Segment> segments = this.gen.osm.chunkStructures(cubeX, cubeZ);
 
-        if (edges != null) {
-
+        if (segments != null) {
             // rivers done before roads
-            for (OpenStreetMap.Edge e : edges) {
-                if (e.type == OpenStreetMap.Type.RIVER) {
-                    this.placeEdge(e, world, cubeX, cubeY, cubeZ, 5, (dis, bpos) -> this.riverState(world, dis, bpos));
+            /*for (OpenStreetMap.Edge e : edges) {
+                switch (e.type) {
+                    case RIVER:
+                        this.placeEdge(e, world, cubeX, cubeY, cubeZ, 5, (dis, bpos) -> this.riverState(world, dis, bpos));
+                        break;
+                    case STREAM:
+                        this.placeEdge(e, world, cubeX, cubeY, cubeZ, 1, (dis, bpos) -> this.riverState(world, dis, bpos));
+                        break;
                 }
-            }
+            }*/
 
             // (1+w)l+l is the equation to calculate road width, where "w" is the width and "l" is the amount of lanes
 
@@ -90,55 +66,21 @@ public class RoadGenerator implements ICubicPopulator {
 
             // TODO add generation of road markings
 
-            // TODO simplify road width
-
-            for (OpenStreetMap.Edge e : edges) {
-                // this will obviously be deleted once the levels actually do something
-                // System.out.println("Generating road on level: " + e.layer_number);
-                if (e.attribute != OpenStreetMap.Attributes.ISTUNNEL) {
-                    switch (e.type) {
-                        case MINOR:
-                            this.placeEdge(e, world, cubeX, cubeY, cubeZ, Math.ceil((2 * e.lanes) / 2), (dis, bpos) -> ASPHALT);
-                            break;
-                        case SIDE:
-                            this.placeEdge(e, world, cubeX, cubeY, cubeZ, Math.ceil((3 * e.lanes + 1) / 2), (dis, bpos) -> ASPHALT);
-                            break;
-                        case MAIN:
-                            this.placeEdge(e, world, cubeX, cubeY, cubeZ, this.calculateRoadWidth(2, e.lanes), (dis, bpos) -> ASPHALT);
-                            break;
-                        case FREEWAY:
-                        case LIMITEDACCESS:
-                            this.placeEdge(e, world, cubeX, cubeY, cubeZ, this.calculateRoadWidth(4, e.lanes) + 2, (dis, bpos) -> ASPHALT);
-                            break;
-                        case INTERCHANGE:
-                            this.placeEdge(e, world, cubeX, cubeY, cubeZ, Math.ceil((3 * e.lanes) / 2), (dis, bpos) -> ASPHALT);
-                            break;
-                        default:
-                            // might be a tunnel or a bridge, mainly for debugging purposes
-                            break;
-                    }
+            for (Segment s : segments) {
+                /*if (e.attribute != OpenStreetMap.Attributes.ISTUNNEL && !e.type.skipRoadGen()) {
+                    this.placeEdge(e, world, cubeX, cubeY,cubeZ);
+                }*/
+                if (s.attribute != OpenStreetMap.Attributes.ISTUNNEL) {
+                    s.type.fill().fill(this.gen, s, world, cubeX, cubeY, cubeZ);
                 }
             }
         }
     }
 
-    private IBlockState riverState(World world, double dis, BlockPos pos) {
-        IBlockState prev = world.getBlockState(pos);
-        if (dis > 2) {
-            if (!prev.getBlock().equals(Blocks.AIR)) {
-                return null;
-            }
-            IBlockState under = world.getBlockState(pos.down());
-            if (under.getBlock() instanceof BlockLiquid) {
-                return null;
-            }
-            return WATER_BEACH;
-        } else {
-            return WATER_SOURCE;
-        }
-    }
+    /*private void placeEdge(Segment e, World world, int cubeX, int cubeY, int cubeZ) {
+        SegmentType type = e.type;
+        double r = type.computeRadius(e.lanes);
 
-    private void placeEdge(OpenStreetMap.Edge e, World world, int cubeX, int cubeY, int cubeZ, double r, BiFunction<Double, BlockPos, IBlockState> state) {
         double x0 = 0;
         double b = r;
         if (Math.abs(e.slope) >= 0.000001) {
@@ -146,60 +88,44 @@ public class RoadGenerator implements ICubicPopulator {
             b = (e.slope < 0 ? -1 : 1) * x0 * (e.slope + 1.0 / e.slope);
         }
 
-        double j = e.slon - (cubeX * 16);
-        double k = e.elon - (cubeX * 16);
+        double minLon = e.lon0 - (cubeX * 16);
+        double maxLon = e.lon1 - (cubeX * 16);
         double off = e.offset - (cubeZ * 16) + e.slope * (cubeX * 16);
 
-        if (j > k) {
-            double t = j;
-            j = k;
-            k = t;
+        if (minLon > maxLon) {
+            double t = minLon;
+            minLon = maxLon;
+            maxLon = t;
         }
 
-        double ij = j - r;
-        double ik = k + r;
+        double ij = minLon - r;
+        double ik = maxLon + r;
 
-        if (j <= 0) {
-            j = 0;
-            //ij=0;
-        }
-        if (k >= 16) {
-            k = 16;
-            //ik = 16;
-        }
+        minLon = max(minLon, 0.0d);
+        maxLon = min(maxLon, 16.0d);
 
-        int is = (int) Math.floor(ij);
-        int ie = (int) Math.floor(ik);
+        int is = (int) floor(ij);
+        int ie = (int) floor(ik);
 
         for (int x = is; x <= ie; x++) {
-            double ul = bound(x, e.slope, j, k, r, x0, b, 1) + off; //TODO: save these repeated values
-            double ur = bound((double) x + 1, e.slope, j, k, r, x0, b, 1) + off;
-            double ll = bound(x, e.slope, j, k, r, x0, b, -1) + off;
-            double lr = bound((double) x + 1, e.slope, j, k, r, x0, b, -1) + off;
+            double ul = bound(x, e.slope, minLon, maxLon, r, x0, b, 1) + off; //TODO: save these repeated values
+            double ur = bound((double) x + 1, e.slope, minLon, maxLon, r, x0, b, 1) + off;
+            double ll = bound(x, e.slope, minLon, maxLon, r, x0, b, -1) + off;
+            double lr = bound((double) x + 1, e.slope, minLon, maxLon, r, x0, b, -1) + off;
 
-            double from = Math.min(Math.min(ul, ur), Math.min(ll, lr));
-            double to = Math.max(Math.max(ul, ur), Math.max(ll, lr));
+            double from = min(min(ul, ur), min(ll, lr));
+            double to = max(max(ul, ur), max(ll, lr));
 
-            if (from == from) {
-                int ifrom = (int) Math.floor(from);
-                int ito = (int) Math.floor(to);
-
-                if (ifrom <= -1 * 16) {
-                    ifrom = 1 - 16;
-                }
-                if (ito >= 16 * 2) {
-                    ito = 16 * 2 - 1;
-                }
+            if (!Double.isNaN(from)) {
+                int ifrom = max((int) floor(from), -15);
+                int ito = min((int) floor(to), 31);
 
                 for (int z = ifrom; z <= ito; z++) {
                     //get the part of the center line i am tangent to (i hate high school algebra!!!)
                     double mainX = x;
-                    if (Math.abs(e.slope) >= 0.000001) {
+                    if (Math.abs(e.slope) >= 0.000001d) {
                         mainX = ((double) z + (double) x / e.slope - off) / (e.slope + 1 / e.slope);
                     }
-
-                    /*if(mainX<j) mainX = j;
-                    else if(mainX>k) mainX = k;*/
 
                     double mainZ = e.slope * mainX + off;
 
@@ -210,34 +136,13 @@ public class RoadGenerator implements ICubicPopulator {
                     distance += t * t;
                     distance = Math.sqrt(distance);
 
-                    double[] geo = this.projection.toGeo(mainX + cubeX * (16), mainZ + cubeZ * (16));
+                    double[] geo = this.projection.toGeo(mainX + cubeX * 16, mainZ + cubeZ * 16);
 
-                    int y = -100000000;
-
-                    if (this.lidar) { //Let's hope this works properly
-                        String file_prefix = EarthTerrainProcessor.localTerrain;
-
-                        if (this.heightsLidar != null) {
-
-                            for (int i = 0; i < this.heightsLidar.length; i++) {
-
-                                if (new File(file_prefix + this.zooms[i] + '/' + (int) Math.floor((geo[0] + 180) / 360 * (1 << this.zooms[i])) + '/' + (int) Math.floor((1 - Math.log(Math.tan(Math.toRadians(geo[1])) + 1 / Math.cos(Math.toRadians(geo[1]))) / Math.PI) / 2 * (1 << this.zooms[i])) + ".png").exists()) {
-                                    if (this.heightsLidar[i].estimateLocal(geo[0], geo[1]) != -10000000) {
-                                        y = (int) Math.floor(this.heightsLidar[i].estimateLocal(geo[0], geo[1]) - cubeY * 16);
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if (y == -100000000) {
-                        y = (int) Math.floor(this.heights.estimateLocal(geo[0], geo[1]) - cubeY * 16);
-                    }
+                    int y = (int) floor(this.heights.estimateLocal(geo[0], geo[1]) - cubeY * 16);
 
                     if (y >= 0 && y < 16) { //if not in this range, someone else will handle it
-
                         BlockPos surf = new BlockPos(x + cubeX * 16, y + cubeY * 16, z + cubeZ * 16);
-                        IBlockState bstate = state.apply(distance, surf);
+                        IBlockState bstate = state.selectRoadState(distance, surf);
 
                         if (bstate != null) {
                             world.setBlockState(surf, bstate);
@@ -252,5 +157,5 @@ public class RoadGenerator implements ICubicPopulator {
                 }
             }
         }
-    }
+    }*/
 }

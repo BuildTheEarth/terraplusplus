@@ -1,12 +1,9 @@
 package io.github.terra121;
 
-import io.github.terra121.dataset.OpenStreetMap;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.Config.Comment;
 import net.minecraftforge.common.config.Config.Name;
 import net.minecraftforge.common.config.Config.RangeInt;
-import net.minecraftforge.common.config.Config.RequiresMcRestart;
-import net.minecraftforge.common.config.Config.RequiresWorldRestart;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;

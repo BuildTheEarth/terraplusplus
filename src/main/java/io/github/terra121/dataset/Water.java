@@ -1,5 +1,7 @@
 package io.github.terra121.dataset;
 
+import io.github.terra121.dataset.osm.OpenStreetMap;
+import io.github.terra121.dataset.osm.OSMRegion;
 import net.minecraft.util.math.ChunkPos;
 
 import java.io.IOException;
@@ -24,7 +26,7 @@ public class Water {
     }
 
     public byte getState(double lon, double lat) {
-        Region region = this.osm.regionCache(new double[]{ lon, lat });
+        OSMRegion region = this.osm.regionCache(new double[]{ lon, lat });
 
         //default if download failed
         if (region == null) {
@@ -36,8 +38,6 @@ public class Water {
         lat -= region.south;
         lon /= OpenStreetMap.TILE_SIZE / this.hres;
         lat /= OpenStreetMap.TILE_SIZE / this.hres;
-
-        //System.out.println(lon + " " + lat);
 
         //TODO: range check
         int idx = region.getStateIdx((short) lon, (short) lat);

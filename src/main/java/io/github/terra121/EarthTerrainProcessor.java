@@ -20,8 +20,10 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGenerato
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicCaveGenerator;
 import io.github.terra121.dataset.Heights;
 import io.github.terra121.dataset.HeightsWaterMix;
-import io.github.terra121.dataset.OpenStreetMap;
+import io.github.terra121.dataset.osm.OpenStreetMap;
 import io.github.terra121.dataset.ScalarDataset;
+import io.github.terra121.dataset.osm.segment.SegmentType;
+import io.github.terra121.dataset.osm.segment.Segment;
 import io.github.terra121.populator.CliffReplacer;
 import io.github.terra121.populator.EarthTreePopulator;
 import io.github.terra121.populator.RoadGenerator;
@@ -73,7 +75,7 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
     private final boolean doBuildings;
     private byte[] zooms;
 
-    protected final LoadingCache<ChunkPos, double[]> heightsCache;
+    public final LoadingCache<ChunkPos, double[]> heightsCache;
 
     public EarthTerrainProcessor(World world) {
         super(world);
@@ -131,12 +133,8 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
 
         this.surfacePopulators = new HashSet<>();
 
-        if (this.cfg.settings.lidar) {
-            if (this.doRoads || this.cfg.settings.osmwater) {
-                this.surfacePopulators.add(new RoadGenerator(this.osm, this.heights, this.heightsLidar, this.zooms, this.projection));
-            }
-        } else if (this.doRoads || this.cfg.settings.osmwater) {
-            this.surfacePopulators.add(new RoadGenerator(this.osm, this.heights, this.projection));
+        if (this.doRoads || this.cfg.settings.osmwater) {
+            this.surfacePopulators.add(new RoadGenerator(this));
         }
 
         this.surfacePopulators.add(new EarthTreePopulator(this.projection));
@@ -313,72 +311,7 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
         }
 
         //spawn roads
-        if ((this.doRoads || this.doBuildings || this.cfg.settings.osmwater) && surface) {
-            Set<OpenStreetMap.Edge> edges = this.osm.chunkStructures(cubeX, cubeZ);
-
-            if (edges != null) {
-                //minor one block wide roads get plastered first
-                for (OpenStreetMap.Edge e : edges) {
-                    if (e.type == OpenStreetMap.Type.ROAD || e.type == OpenStreetMap.Type.MINOR
-                        || e.type == OpenStreetMap.Type.STREAM || e.type == OpenStreetMap.Type.BUILDING) {
-                        double start = e.slon;
-                        double end = e.elon;
-
-                        if (start > end) {
-                            double tmp = start;
-                            start = end;
-                            end = tmp;
-                        }
-
-                        int sx = (int) Math.floor(start) - cubeX * 16;
-                        int ex = (int) Math.floor(end) - cubeX * 16;
-
-                        if (ex >= 16) {
-                            ex = 16 - 1;
-                        }
-
-                        for (int x = max(sx, 0); x <= ex; x++) {
-                            double realx = (x + cubeX * 16);
-                            if (realx < start) {
-                                realx = start;
-                            }
-
-                            double nextx = realx + 1;
-                            if (nextx > end) {
-                                nextx = end;
-                            }
-
-                            int from = (int) Math.floor((e.slope * realx + e.offset)) - cubeZ * 16;
-                            int to = (int) Math.floor((e.slope * nextx + e.offset)) - cubeZ * 16;
-
-                            if (from > to) {
-                                int tmp = from;
-                                from = to;
-                                to = tmp;
-                            }
-
-                            if (to >= 16) {
-                                to = 16 - 1;
-                            }
-
-                            for (int z = max(0, from); z <= to; z++) {
-                                int y = (int) Math.floor(heights[x * 16 + z]) - Coords.cubeToMinBlock(cubeY);
-
-                                if (y >= 0 && y < 16) {
-                                    if (e.type == OpenStreetMap.Type.STREAM) {
-                                        if (primer.getBlockState(x, y, z).getBlock() != Blocks.WATER) {
-                                            primer.setBlockState(x, y, z, Blocks.WATER.getDefaultState());
-                                        }
-                                    } else {
-                                        primer.setBlockState(x, y, z, (e.type == OpenStreetMap.Type.ROAD ? Blocks.GRASS_PATH : e.type == OpenStreetMap.Type.BUILDING ? Blocks.BRICK_BLOCK : Blocks.STONEBRICK).getDefaultState());
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        //TODO: roads are currently being spawned in the populator
 
         return primer;
     }

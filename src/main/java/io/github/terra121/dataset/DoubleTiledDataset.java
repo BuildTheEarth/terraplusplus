@@ -3,6 +3,8 @@ package io.github.terra121.dataset;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.util.TerraMath;
 
+import static java.lang.Math.*;
+
 /**
  * A {@link TiledDataset} which operates on a grid of interpolated {@code double}s.
  *
@@ -41,8 +43,8 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
 
         //get the corners surrounding this block
         //TODO: i think i need to floor() these, not just cast
-        int sampleX = (int) x;
-        int sampleZ = (int) z;
+        int sampleX = (int) floor(x);
+        int sampleZ = (int) floor(z);
 
         double fx = x - sampleX;
         double fz = z - sampleZ;
@@ -73,8 +75,8 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
         double z = floatCoords[1] * this.scale;
 
         //get the corners surrounding this block
-        int sampleX = (int) x;
-        int sampleZ = (int) z;
+        int sampleX = (int) floor(x);
+        int sampleZ = (int) floor(z);
 
         double fx = x - sampleX;
         double fz = z - sampleZ;

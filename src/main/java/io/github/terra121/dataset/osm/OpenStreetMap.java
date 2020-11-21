@@ -1,7 +1,11 @@
-package io.github.terra121.dataset;
+package io.github.terra121.dataset.osm;
 
 import com.google.gson.Gson;
 import io.github.terra121.TerraConfig;
+import io.github.terra121.dataset.TiledDataset;
+import io.github.terra121.dataset.Water;
+import io.github.terra121.dataset.osm.segment.Segment;
+import io.github.terra121.dataset.osm.segment.SegmentType;
 import io.github.terra121.projection.GeographicProjection;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
@@ -21,14 +25,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class OpenStreetMap extends TiledDataset<Region> {
+public class OpenStreetMap extends TiledDataset<OSMRegion> {
     private static final double CHUNK_SIZE = 16;
     public static final double TILE_SIZE = 1 / 60.0;//250*(360.0/40075000.0);
-    private static final double NOTHING = 0.01;
 
-    private final Map<ChunkPos, Set<Edge>> chunks = new LinkedHashMap<>(); //TODO: this leaks memory (it's never drained)
+    private final Map<ChunkPos, Set<Segment>> chunks = new LinkedHashMap<>(); //TODO: this leaks memory (it's never drained)
     public final Water water;
-    private final List<Edge> allEdges = new ArrayList<>();
+    private final List<Segment> allEdges = new ArrayList<>();
     private final Gson gson = new Gson();
     private final boolean doRoad;
     private final boolean doWater;
@@ -54,8 +57,8 @@ public class OpenStreetMap extends TiledDataset<Region> {
     }
 
     @Override
-    protected Region decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception {
-        Region region = new Region(new ChunkPos(tileX, tileZ), this.water);
+    protected OSMRegion decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception {
+        OSMRegion region = new OSMRegion(new ChunkPos(tileX, tileZ), this.water);
         this.doGson(new ByteBufInputStream(data), region);
 
         //TODO: this is ugly and should be implemented better
@@ -74,7 +77,7 @@ public class OpenStreetMap extends TiledDataset<Region> {
             int lowZ = (int) Math.floor(Math.min(Math.min(ll[1], ul[1]), Math.min(lr[1], ur[1])) / CHUNK_SIZE);
             int highZ = (int) Math.ceil(Math.max(Math.max(ll[1], ul[1]), Math.max(lr[1], ur[1])) / CHUNK_SIZE);
 
-            for (Edge e : this.allEdges) {
+            for (Segment e : this.allEdges) {
                 this.relevantChunks(lowX, lowZ, highX, highZ, e);
             }
             this.allEdges.clear();
@@ -87,7 +90,7 @@ public class OpenStreetMap extends TiledDataset<Region> {
         return new ChunkPos((int) Math.floor(lon / TILE_SIZE), (int) Math.floor(lat / TILE_SIZE));
     }
 
-    public Set<Edge> chunkStructures(int x, int z) {
+    public Set<Segment> chunkStructures(int x, int z) {
         ChunkPos coord = new ChunkPos(x, z);
 
         if (this.regionCache(this.projection.toGeo(x * CHUNK_SIZE, z * CHUNK_SIZE)) == null) {
@@ -109,7 +112,7 @@ public class OpenStreetMap extends TiledDataset<Region> {
         return this.chunks.get(coord);
     }
 
-    public Region regionCache(double[] corner) {
+    public OSMRegion regionCache(double[] corner) {
         //bound check
         if (!(corner[0] >= -180 && corner[0] <= 180 && corner[1] >= -80 && corner[1] <= 80)) {
             return null;
@@ -119,7 +122,7 @@ public class OpenStreetMap extends TiledDataset<Region> {
         return this.getTile(coord.x, coord.z);
     }
 
-    private void doGson(InputStream is, Region region) throws IOException {
+    private void doGson(InputStream is, OSMRegion region) throws IOException {
         StringWriter writer = new StringWriter();
         IOUtils.copy(is, writer, StandardCharsets.UTF_8);
 
@@ -165,62 +168,57 @@ public class OpenStreetMap extends TiledDataset<Region> {
                 if ("coastline".equals(naturalv)) {
                     this.waterway(elem, -1, region, null);
                 } else if (highway != null || building != null || ("river".equals(waterway) || "canal".equals(waterway) || "stream".equals(waterway))) { //TODO: fewer equals
-                    Type type = Type.ROAD;
+                    SegmentType type = SegmentType.ROAD;
 
                     if (waterway != null) {
-                        type = Type.STREAM;
+                        type = SegmentType.STREAM;
                         if ("river".equals(waterway) || "canal".equals(waterway)) {
-                            type = Type.RIVER;
+                            type = SegmentType.RIVER;
                         }
-
                     }
 
                     if (building != null) {
-                        type = Type.BUILDING;
+                        type = SegmentType.BUILDING;
                     }
 
                     if ("yes".equals(istunnel)) {
                         attributes = Attributes.ISTUNNEL;
                     } else if ("yes".equals(isbridge)) {
                         attributes = Attributes.ISBRIDGE;
-                    } else {
-                        // totally skip classification if it's a tunnel or bridge. this should make it more efficient.
-                        if (highway != null && attributes == Attributes.NONE) {
-                            switch (highway) {
-                                case "motorway":
-                                    type = Type.FREEWAY;
-                                    break;
-                                case "trunk":
-                                    type = Type.LIMITEDACCESS;
-                                    break;
-                                case "motorway_link":
-                                case "trunk_link":
-                                    type = Type.INTERCHANGE;
-                                    break;
-                                case "secondary":
-                                    type = Type.SIDE;
-                                    break;
-                                case "primary":
-                                case "raceway":
-                                    type = Type.MAIN;
-                                    break;
-                                case "tertiary":
-                                case "residential":
-                                    type = Type.MINOR;
-                                    break;
-                                default:
-                                    if ("primary_link".equals(highway) ||
-                                        "secondary_link".equals(highway) ||
-                                        "living_street".equals(highway) ||
-                                        "bus_guideway".equals(highway) ||
-                                        "service".equals(highway) ||
-                                        "unclassified".equals(highway)) {
-                                        type = Type.SIDE;
-                                    }
-                                    break;
-                            }
+                    }
+
+                    if (highway != null) {
+                        switch (highway) {
+                            case "motorway":
+                                type = SegmentType.FREEWAY;
+                                break;
+                            case "trunk":
+                                type = SegmentType.LIMITEDACCESS;
+                                break;
+                            case "motorway_link":
+                            case "trunk_link":
+                                type = SegmentType.INTERCHANGE;
+                                break;
+                            case "primary":
+                            case "raceway":
+                                type = SegmentType.MAIN;
+                                break;
+                            case "tertiary":
+                            case "residential":
+                                type = SegmentType.MINOR;
+                                break;
+                            case "secondary":
+                            case "primary_link":
+                            case "secondary_link":
+                            case "living_street":
+                            case "bus_guideway":
+                            case "service":
+                            case "unclassified":
+                                type = SegmentType.SIDE;
+                                break;
                         }
                     }
+
                     //get lane number (default is 2)
                     String slanes = elem.tags.get("lanes");
                     String slayer = elem.tags.get("layers");
@@ -248,13 +246,13 @@ public class OpenStreetMap extends TiledDataset<Region> {
                     }
 
                     // an interchange that doesn't have any lane tag should be defaulted to 2 lanes
-                    if (lanes < 2 && type == Type.INTERCHANGE) {
+                    if (lanes < 2 && type == SegmentType.INTERCHANGE) {
                         lanes = 2;
                     }
 
                     // upgrade road type if many lanes (and the road was important enough to include a lanes tag)
-                    if (lanes > 2 && type == Type.MINOR) {
-                        type = Type.MAIN;
+                    if (lanes > 2 && type == SegmentType.MINOR) {
+                        type = SegmentType.MAIN;
                     }
 
                     this.addWay(elem, type, lanes, region, attributes, layer);
@@ -286,7 +284,7 @@ public class OpenStreetMap extends TiledDataset<Region> {
                         if (member.type == EType.way) {
                             Element way = allWays.get(member.ref);
                             if (way != null) {
-                                this.addWay(way, Type.BUILDING, (byte) 1, region, Attributes.NONE, (byte) 0);
+                                this.addWay(way, SegmentType.BUILDING, (byte) 1, region, Attributes.NONE, (byte) 0);
                                 unusedWays.remove(way);
                             }
                         }
@@ -319,7 +317,7 @@ public class OpenStreetMap extends TiledDataset<Region> {
         }
     }
 
-    void addWay(Element elem, Type type, byte lanes, Region region, Attributes attributes, byte layer) {
+    void addWay(Element elem, SegmentType type, byte lanes, OSMRegion region, Attributes attributes, byte layer) {
         double[] lastProj = null;
         if (elem.geometry != null) {
             for (Geometry geom : elem.geometry) {
@@ -329,7 +327,7 @@ public class OpenStreetMap extends TiledDataset<Region> {
                     double[] proj = this.projection.fromGeo(geom.lon, geom.lat);
 
                     if (lastProj != null) { //register as a road edge
-                        this.allEdges.add(new Edge(lastProj[0], lastProj[1], proj[0], proj[1], type, lanes, region, attributes, layer));
+                        this.allEdges.add(new Segment(lastProj[0], lastProj[1], proj[0], proj[1], type, lanes, region, attributes, layer));
                     }
 
                     lastProj = proj;
@@ -338,7 +336,7 @@ public class OpenStreetMap extends TiledDataset<Region> {
         }
     }
 
-    Geometry waterway(Element way, long id, Region region, Geometry last) {
+    Geometry waterway(Element way, long id, OSMRegion region, Geometry last) {
         if (way.geometry != null) {
             for (Geometry geom : way.geometry) {
                 if (geom != null && last != null) {
@@ -351,19 +349,19 @@ public class OpenStreetMap extends TiledDataset<Region> {
         return last;
     }
 
-    private void relevantChunks(int lowX, int lowZ, int highX, int highZ, Edge edge) {
-        ChunkPos start = new ChunkPos((int) Math.floor(edge.slon / CHUNK_SIZE), (int) Math.floor(edge.slat / CHUNK_SIZE));
-        ChunkPos end = new ChunkPos((int) Math.floor(edge.elon / CHUNK_SIZE), (int) Math.floor(edge.elat / CHUNK_SIZE));
+    private void relevantChunks(int lowX, int lowZ, int highX, int highZ, Segment edge) {
+        ChunkPos start = new ChunkPos((int) Math.floor(edge.lon0 / CHUNK_SIZE), (int) Math.floor(edge.lat0 / CHUNK_SIZE));
+        ChunkPos end = new ChunkPos((int) Math.floor(edge.lon1 / CHUNK_SIZE), (int) Math.floor(edge.lat1 / CHUNK_SIZE));
 
-        double startx = edge.slon;
-        double endx = edge.elon;
+        double startx = edge.lon0;
+        double endx = edge.lon1;
 
         if (startx > endx) {
             ChunkPos tmp = start;
             start = end;
             end = tmp;
             startx = endx;
-            endx = edge.slon;
+            endx = edge.lon0;
         }
 
         highX = Math.min(highX, end.x + 1);
@@ -384,18 +382,13 @@ public class OpenStreetMap extends TiledDataset<Region> {
         }
     }
 
-    private void assoiateWithChunk(ChunkPos c, Edge edge) {
-        Set<Edge> list = this.chunks.get(c);
+    private void assoiateWithChunk(ChunkPos c, Segment edge) {
+        Set<Segment> list = this.chunks.get(c);
         if (list == null) {
             list = new HashSet<>();
             this.chunks.put(c, list);
         }
         list.add(edge);
-    }
-
-    public enum Type {
-        IGNORE, ROAD, MINOR, SIDE, MAIN, INTERCHANGE, LIMITEDACCESS, FREEWAY, STREAM, RIVER, BUILDING, RAIL
-        // ranges from minor to freeway for roads, use road if not known
     }
 
     public enum Attributes {
@@ -404,60 +397,6 @@ public class OpenStreetMap extends TiledDataset<Region> {
 
     public enum EType {
         invalid, node, way, relation, area
-    }
-
-    public static class Edge {
-        public Type type;
-        public double slat;
-        public double slon;
-        public double elat;
-        public double elon;
-        public Attributes attribute;
-        public byte layer_number;
-        public double slope;
-        public double offset;
-
-        public byte lanes;
-
-        Region region;
-
-        private Edge(double slon, double slat, double elon, double elat, Type type, byte lanes, Region region, Attributes att, byte ly) {
-            //slope must not be infinity, slight inaccuracy shouldn't even be noticible unless you go looking for it
-            double dif = elon - slon;
-            if (-NOTHING <= dif && dif <= NOTHING) {
-                if (dif < 0) {
-                    elon -= NOTHING;
-                } else {
-                    elon += NOTHING;
-                }
-            }
-
-            this.slat = slat;
-            this.slon = slon;
-            this.elat = elat;
-            this.elon = elon;
-            this.type = type;
-            this.attribute = att;
-            this.lanes = lanes;
-            this.region = region;
-            this.layer_number = ly;
-
-            this.slope = (elat - slat) / (elon - slon);
-            this.offset = slat - this.slope * slon;
-        }
-
-        public int hashCode() {
-            return (int) ((this.slon * 79399) + (this.slat * 100000) + (this.elat * 13467) + (this.elon * 103466));
-        }
-
-        public boolean equals(Object o) {
-            Edge e = (Edge) o;
-            return e.slat == this.slat && e.slon == this.slon && e.elat == this.elat && e.elon == e.elon;
-        }
-
-        public String toString() {
-            return "(" + this.slat + ", " + this.slon + ',' + this.elat + ',' + this.elon + ')';
-        }
     }
 
     public static class Member {

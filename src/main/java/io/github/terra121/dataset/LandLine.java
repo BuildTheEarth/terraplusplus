@@ -19,24 +19,6 @@ public class LandLine {
 
         this.breaks.put(pos, type);
     }
-	
-	/*public void convert(double lower, double upper) {
-		boolean notstarted = true;
-		
-		ArrayList<Double> poses;
-		ArrayList<Byte> codes;
-		
-		for(Entry<Double, Byte> e: breaks.entrySet()) {
-			double pos = e.getKey();
-			if(pos>=lower) {
-				if(pos>upper)
-					break;
-			}
-		}
-		
-		double[] outp;
-		byte[] outc;
-	}*/
 
     public void run(int size, Set<Long> current, BiConsumer<Set<Long>, Integer> consumer) {
         int idx = 0;
