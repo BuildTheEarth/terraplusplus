@@ -1,4 +1,6 @@
-package io.github.terra121.projection;
+package io.github.terra121.projection.airocean;
+
+import io.github.terra121.projection.GeographicProjection;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;

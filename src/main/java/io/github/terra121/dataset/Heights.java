@@ -14,7 +14,7 @@ public class Heights extends DoubleTiledDataset {
     private final int zoom;
 
     public Heights(int zoom, boolean smooth, Water water) {
-        super(256, TerraConfig.cacheSize, new MapsProjection(), 1 << (zoom + 8), smooth);
+        super(new MapsProjection(), 1 << (zoom + 8), smooth);
         this.zoom = zoom;
         this.water = water;
     }
@@ -30,7 +30,9 @@ public class Heights extends DoubleTiledDataset {
 
     @Override
     protected void addProperties(int tileX, int tileZ, @NonNull ImmutableMap.Builder<String, String> builder) {
-        builder.put("tile.zoom", String.valueOf(this.zoom));
+        super.addProperties(tileX, tileZ, builder);
+
+        builder.put("zoom", String.valueOf(this.zoom));
     }
 
     @Override

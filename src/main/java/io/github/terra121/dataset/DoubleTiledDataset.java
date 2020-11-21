@@ -15,13 +15,13 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> {
 
     public final boolean smooth;
 
-    public DoubleTiledDataset(int tileSize, int numcache, GeographicProjection proj, double scale, boolean smooth) {
-        super(tileSize, numcache, proj, scale);
+    public DoubleTiledDataset(GeographicProjection proj, double scale, boolean smooth) {
+        super(proj, TILE_SIZE, scale);
 
         this.smooth = smooth;
     }
 
-    public double estimateLocal(double lon, double lat, boolean lidar) {
+    public double estimateLocal(double lon, double lat) {
         //basic bound check
         if (!(lon <= 180.0d && lon >= -180.0d && lat <= 85.0d && lat >= -85.0d)) {
             return -2.0d;

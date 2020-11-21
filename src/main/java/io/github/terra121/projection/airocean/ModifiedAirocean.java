@@ -1,4 +1,4 @@
-package io.github.terra121.projection;
+package io.github.terra121.projection.airocean;
 
 public class ModifiedAirocean extends ConformalEstimate {
 

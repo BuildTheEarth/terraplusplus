@@ -222,8 +222,8 @@ public class RoadGenerator implements ICubicPopulator {
                             for (int i = 0; i < this.heightsLidar.length; i++) {
 
                                 if (new File(file_prefix + this.zooms[i] + '/' + (int) Math.floor((geo[0] + 180) / 360 * (1 << this.zooms[i])) + '/' + (int) Math.floor((1 - Math.log(Math.tan(Math.toRadians(geo[1])) + 1 / Math.cos(Math.toRadians(geo[1]))) / Math.PI) / 2 * (1 << this.zooms[i])) + ".png").exists()) {
-                                    if (this.heightsLidar[i].estimateLocal(geo[0], geo[1], true) != -10000000) {
-                                        y = (int) Math.floor(this.heightsLidar[i].estimateLocal(geo[0], geo[1], true) - cubeY * 16);
+                                    if (this.heightsLidar[i].estimateLocal(geo[0], geo[1]) != -10000000) {
+                                        y = (int) Math.floor(this.heightsLidar[i].estimateLocal(geo[0], geo[1]) - cubeY * 16);
                                     }
                                 }
                             }
@@ -231,7 +231,7 @@ public class RoadGenerator implements ICubicPopulator {
                     }
 
                     if (y == -100000000) {
-                        y = (int) Math.floor(this.heights.estimateLocal(geo[0], geo[1], false) - cubeY * 16);
+                        y = (int) Math.floor(this.heights.estimateLocal(geo[0], geo[1]) - cubeY * 16);
                     }
 
                     if (y >= 0 && y < 16) { //if not in this range, someone else will handle it

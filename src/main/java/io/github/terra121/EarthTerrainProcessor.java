@@ -39,13 +39,16 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-//import io.github.opencubicchunks.cubicchunks.api.worldgen.structure.event.InitCubicStructureGeneratorEvent;
+import java.util.concurrent.TimeUnit;
+
+import static java.lang.Math.*;
 
 public class EarthTerrainProcessor extends BasicCubeGenerator {
 
@@ -67,6 +70,8 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
     private final boolean doRoads;
     private final boolean doBuildings;
     private byte[] zooms;
+
+    protected final LoadingCache<ChunkPos, double[]> heightsCache;
 
     public EarthTerrainProcessor(World world) {
         super(world);
@@ -160,134 +165,117 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
 
             this.biomeBlockReplacers.put(biome, replacers);
         }
+
+        this.heightsCache = CacheBuilder.newBuilder()
+                .expireAfterAccess(5L, TimeUnit.MINUTES)
+                .softValues()
+                .build(CacheLoader.from(pos -> {
+                    double[] heights = new double[16 * 16];
+
+                    if (abs(pos.x) < 5 && abs(pos.z) < 5) { //null island
+                        Arrays.fill(heights, 1.0d);
+                    } else {
+                        //get heights beforehand
+                        for (int x = 0; x < 16; x++) {
+                            for (int z = 0; z < 16; z++) {
+                                double[] projected = this.projection.toGeo(pos.x * 16 + x, pos.z * 16 + z);
+                                /*double Y = Double.NaN;
+
+                                if (this.cfg.settings.lidar) {
+                                    String file_prefix = localTerrain;
+                                    if (this.heightsLidar != null) {
+                                        for (int i = 0; i < this.heightsLidar.length; i++) {
+                                            if (new File(file_prefix + this.zooms[i] + '/' + (int) Math.floor((projected[0] + 180) / 360 * (1 << this.zooms[i])) + '/' + (int) Math.floor((1 - Math.log(Math.tan(Math.toRadians(projected[1])) + 1 / Math.cos(Math.toRadians(projected[1]))) / Math.PI) / 2 * (1 << this.zooms[i])) + ".png").exists()) {
+                                                double heightreturn = this.heightsLidar[i].estimateLocal(projected[0], projected[1]);
+                                                if (heightreturn != -10000000) {
+                                                    Y = heightreturn;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (Double.isNaN(Y)) {
+                                    Y = this.heights.estimateLocal(projected[0], projected[1]);
+                                }
+
+                                heightarr[x][z] = Y;*/
+                                heights[x * 16 + z] = this.heights.estimateLocal(projected[0], projected[1]);
+                            }
+                        }
+                    }
+                    return heights;
+                }));
+    }
+
+    @Override
+    public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) { //legacy compat method
+        return this.generateCube(cubeX, cubeY, cubeZ, new CubePrimer());
     }
 
     //TODO: more efficient
     @Override
-    public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) {
-        CubePrimer primer = new CubePrimer();
-
-        double[][] heightarr = new double[16][16];
+    public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer) {
+        double[] heights = this.heightsCache.getUnchecked(new ChunkPos(cubeX, cubeZ));
         boolean surface = false;
-        int zind = -1;
 
-        //null island
-        if (-5 < cubeX && cubeX < 5 && -5 < cubeZ && cubeZ < 5) {
-            for (int x = 0; x < 16; x++) {
-                for (int z = 0; z < 16; z++) {
-                    heightarr[x][z] = 1;
-                }
-            }
-        } else {
-
-            //get heights beforehand
-            for (int x = 0; x < 16; x++) {
-                for (int z = 0; z < 16; z++) {
-
-                    double[] projected = this.projection.toGeo((cubeX * 16 + x), (cubeZ * 16 + z));
-                    double Y = -100000000;
-
-                    //Check to see if the data is in the local directory and save which zoom level it is in
-                    if (this.cfg.settings.lidar) {
-                        String file_prefix = localTerrain;
-
-                        if (this.heightsLidar != null) {
-
-                            for (int i = 0; i < this.heightsLidar.length; i++) {
-
-                                if (new File(file_prefix + this.zooms[i] + '/' + (int) Math.floor((projected[0] + 180) / 360 * (1 << this.zooms[i])) + '/' + (int) Math.floor((1 - Math.log(Math.tan(Math.toRadians(projected[1])) + 1 / Math.cos(Math.toRadians(projected[1]))) / Math.PI) / 2 * (1 << this.zooms[i])) + ".png").exists()) {
-                                    double heightreturn = this.heightsLidar[i].estimateLocal(projected[0], projected[1], true);
-                                    if (heightreturn != -10000000) {
-                                        Y = heightreturn;
-                                    }
-                                    zind = i;
-                                }
-                            }
-                        }
-                    }
-
-                    if (Y == -100000000) {
-                        Y = this.heights.estimateLocal(projected[0], projected[1], false);
-                    }
-                    heightarr[x][z] = Y;
-
-                    if (Coords.cubeToMinBlock(cubeY) < Y && Coords.cubeToMinBlock(cubeY) + 16 > Y) {
-                        surface = true;
-                    }
-                }
+        for (double height : heights) { //check if the current cube contains the surface
+            if (Coords.cubeToMinBlock(cubeY) < height && Coords.cubeToMinBlock(cubeY + 1) > height) {
+                surface = true;
+                break;
             }
         }
 
         //fill in the world
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
-                double Y = heightarr[x][z];
+                double height = heights[x * 16 + z];
                 double depth = -100000000;
-                double depthreturn = -10000000;
 
-                double[] projected = this.projection.toGeo((cubeX * 16 + x), (cubeZ * 16 + z));
+                double[] projected = this.projection.toGeo(cubeX * 16 + x, cubeZ * 16 + z);
                 double wateroff = 0;
                 if (this.cfg.settings.osmwater) {
                     wateroff = this.osm.water.estimateLocal(projected[0], projected[1]);
                 }
 
-                if (zind != -1) {
-                    depthreturn = this.heightsLidar[zind].estimateLocal(projected[0], projected[1], true);
-                }
-                if (depthreturn != -10000000) {
-                    depth = depthreturn;  //Get bathymetric data from local directory if available
-                }
-
                 //ocean?
-                if (-0.001 < Y && Y < 0.001) {
-                    if (depth == -100000000) {
-                        depth = this.depths.estimateLocal(projected[0], projected[1], false);
-                    }
-
-                    if (depth < 0) {
-                        Y = depth;
-                    }
+                if (abs(height) < 0.001) {
+                    height = depth;
                 }
-            	
-            	/*if(-5 < cubeX && cubeX < 5 && -5 < cubeZ && cubeZ < 5);
-            	else if(wateroff>=1.4&&Y>=0) { //drop above sea level areas that are in the ocean
-            		Y = -1;
-            	}*/
 
                 //estimate slopes
                 double dx;
                 double dz;
                 if (x == 16 - 1) {
-                    dx = heightarr[x][z] - heightarr[x - 1][z];
+                    dx = heights[x * 16 + z] - heights[(x - 1) * 16 + z];
                 } else {
-                    dx = heightarr[x + 1][z] - heightarr[x][z];
+                    dx = heights[(x + 1) * 16 + z] - heights[x * 16 + z];
                 }
 
                 if (z == 16 - 1) {
-                    dz = heightarr[x][z] - heightarr[x][z - 1];
+                    dz = heights[x * 16 + z] - heights[x * 16 + z - 1];
                 } else {
-                    dz = heightarr[x][z + 1] - heightarr[x][z];
+                    dz = heights[x * 16 + z + 1] - heights[x * 16 + z];
                 }
 
                 //get biome (thanks to 	z3nth10n for spoting this one)
                 List<IBiomeBlockReplacer> reps = this.biomeBlockReplacers.get(this.biomes.getBiome(new BlockPos(cubeX * 16 + x, 0, cubeZ * 16 + z)));
 
-                for (int y = 0; y < 16 && y < Y - Coords.cubeToMinBlock(cubeY); y++) {
+                for (int y = 0; y < 16 && y < height - Coords.cubeToMinBlock(cubeY); y++) {
                     IBlockState block = Blocks.STONE.getDefaultState();
                     for (IBiomeBlockReplacer rep : reps) {
-                        block = rep.getReplacedBlock(block, cubeX * 16 + x, cubeY * 16 + y + 63, cubeZ * 16 + z, dx, -1, dz, Y - (cubeY * 16 + y));
+                        block = rep.getReplacedBlock(block, cubeX * 16 + x, cubeY * 16 + y + 63, cubeZ * 16 + z, dx, -1, dz, height - (cubeY * 16 + y));
                     }
-
                     primer.setBlockState(x, y, z, block);
                 }
 
                 int minblock = Coords.cubeToMinBlock(cubeY);
 
-                if (-5 < cubeX && cubeX < 5 && -5 < cubeZ && cubeZ < 5) {
+                if (abs(cubeX) < 5 && abs(cubeZ) < 5) {
                     //NULL ISLAND
                 } else if (this.cfg.settings.osmwater) {
                     if (wateroff > 1) {
-                        int start = (int) (Y);
+                        int start = (int) (height);
                         if (start == 0) {
                             start = -1; //elev 0 should still be treated as ocean when in ocean
                         }
@@ -300,16 +288,16 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
                             primer.setBlockState(x, y, z, Blocks.WATER.getDefaultState());
                         }
                     } else if (wateroff > 0.4) {
-                        int start = (int) (Y - (wateroff - 0.4) * 4) - minblock;
+                        int start = (int) (height - (wateroff - 0.4) * 4) - minblock;
                         if (start < 0) {
                             start = 0;
                         }
-                        for (int y = start; y < 16 && y < Y - minblock; y++) {
+                        for (int y = start; y < 16 && y < height - minblock; y++) {
                             primer.setBlockState(x, y, z, Blocks.WATER.getDefaultState());
                         }
                     }
                 } else {
-                    for (int y = (int) Math.max(Y - minblock, 0); y < 16 && y < 0 - minblock; y++) {
+                    for (int y = (int) max(height - minblock, 0); y < 16 && y < -minblock; y++) {
                         primer.setBlockState(x, y, z, Blocks.WATER.getDefaultState());
                     }
                 }
@@ -325,15 +313,6 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
             Set<OpenStreetMaps.Edge> edges = this.osm.chunkStructures(cubeX, cubeZ);
 
             if (edges != null) {
-
-                /*for(int x=0; x<16; x++) {
-                    for(int z=0; z<16; z++) {
-                        int y = heightarr[x][z] - Coords.cubeToMinBlock(cubeY);
-                        if(y >= 0 && y < 16)
-                            primer.setBlockState(x, y, z, Blocks.COBBLESTONE.getDefaultState());
-                    }
-                }*/
-
                 //minor one block wide roads get plastered first
                 for (OpenStreetMaps.Edge e : edges) {
                     if (e.type == OpenStreetMaps.Type.ROAD || e.type == OpenStreetMaps.Type.MINOR
@@ -354,7 +333,7 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
                             ex = 16 - 1;
                         }
 
-                        for (int x = sx > 0 ? sx : 0; x <= ex; x++) {
+                        for (int x = max(sx, 0); x <= ex; x++) {
                             double realx = (x + cubeX * 16);
                             if (realx < start) {
                                 realx = start;
@@ -378,8 +357,8 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
                                 to = 16 - 1;
                             }
 
-                            for (int z = from > 0 ? from : 0; z <= to; z++) {
-                                int y = (int) Math.floor(heightarr[x][z]) - Coords.cubeToMinBlock(cubeY);
+                            for (int z = max(0, from); z <= to; z++) {
+                                int y = (int) Math.floor(heights[x * 16 + z]) - Coords.cubeToMinBlock(cubeY);
 
                                 if (y >= 0 && y < 16) {
                                     if (e.type == OpenStreetMaps.Type.STREAM) {
@@ -402,10 +381,8 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
 
 
     @Override
+    @SuppressWarnings("deprecation")
     public void populate(ICube cube) {
-        /**
-         * If event is not canceled we will use cube populators from registry.
-         **/
         if (!MinecraftForge.EVENT_BUS.post(new CubePopulatorEvent(this.world, cube))) {
             Random rand = Coords.coordsSeedRandom(this.world.getSeed(), cube.getX(), cube.getY(), cube.getZ());
 
@@ -413,7 +390,7 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
 
             if (this.cfg.settings.dynamicbaseheight) {
                 double[] proj = this.projection.toGeo((cube.getX() * 16 + 8), (cube.getZ() * 16 + 8));
-                this.cubiccfg.expectedBaseHeight = (float) this.heights.estimateLocal(proj[0], proj[1], false);
+                this.cubiccfg.expectedBaseHeight = (float) this.heights.estimateLocal(proj[0], proj[1]);
             }
 
             MinecraftForge.EVENT_BUS.post(new PopulateCubeEvent.Pre(this.world, rand, cube.getX(), cube.getY(), cube.getZ(), false));
