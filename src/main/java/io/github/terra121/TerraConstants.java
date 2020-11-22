@@ -21,4 +21,15 @@ public class TerraConstants {
         public static final ITextComponent noPermission = ChatHelper.makeTextComponent(new TextElement("You do not have permission to use this command", TextFormatting.RED));
         public static final ITextComponent playerOnly = ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.playeronly"), TextFormatting.RED));
     }
+    
+	/**
+	 * Earth's circumference around the equator, in meters.
+	 */
+    public static final double EARTH_CIRCUMFERENCE = 40075017;
+    
+    /**
+     * Earth's circumference around the poles, in meters.
+     */
+    public static final double EARTH_POLAR_CIRCUMFERENCE = 40008000;
+    
 }

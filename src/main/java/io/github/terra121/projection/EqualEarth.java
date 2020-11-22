@@ -1,5 +1,7 @@
 package io.github.terra121.projection;
 
+import io.github.terra121.util.MathUtils;
+
 /**
  * Implementation of the Equal Earth projection
  * 
@@ -7,7 +9,6 @@ package io.github.terra121.projection;
  */
 public class EqualEarth extends GeographicProjection {
 
-    private static final double ROOT3 = Math.sqrt(3);
     private static final double A1 = 1.340264;
     private static final double A2 = -0.081106;
     private static final double A3 = 0.000893;
@@ -46,13 +47,13 @@ public class EqualEarth extends GeographicProjection {
         dx += 7 * A3 * (tpow *= thetasquare * thetasquare); //7 A3 t^6
         dx += 9 * A4 * (tpow *= thetasquare); //9 A4 t^8
 
-        return new double[]{ Math.toDegrees(x * dx * 3 / (2 * ROOT3 * Math.cos(theta))),
-                Math.toDegrees(Math.asin(Math.sin(theta) * 2 / ROOT3))};
+        return new double[]{ Math.toDegrees(x * dx * 3 / (2 * MathUtils.ROOT3 * Math.cos(theta))),
+                Math.toDegrees(Math.asin(Math.sin(theta) * 2 / MathUtils.ROOT3))};
     }
 
     @Override
     public double[] fromGeo(double longitude, double latitude) {
-        double sintheta = ROOT3 * Math.sin(Math.toRadians(latitude)) / 2;
+        double sintheta = MathUtils.ROOT3 * Math.sin(Math.toRadians(latitude)) / 2;
         double theta = Math.asin(sintheta);
         double tpow = theta;
 
@@ -67,7 +68,7 @@ public class EqualEarth extends GeographicProjection {
 
         double costheta = Math.sqrt(1 - sintheta * sintheta);
 
-        return new double[]{ (2 * ROOT3 * Math.toRadians(longitude) * costheta / 3) / x, y };
+        return new double[]{ (2 * MathUtils.ROOT3 * Math.toRadians(longitude) * costheta / 3) / x, y };
     }
 
     @Override

@@ -1,11 +1,14 @@
 package io.github.terra121.projection;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
+import javax.imageio.ImageIO;
+
+import io.github.terra121.util.MathUtils;
 
 /**
  * Implementation of the Dynmaxion projection.
@@ -15,8 +18,7 @@ import java.io.InputStream;
  */
 public class Airocean extends GeographicProjection {
 
-    protected static double ARC = 2 * Math.asin(Math.sqrt(5 - Math.sqrt(5)) / Math.sqrt(10));
-    protected static final double ROOT3 = Math.sqrt(3);
+    protected static final double ARC = 2 * Math.asin(Math.sqrt(5 - Math.sqrt(5)) / Math.sqrt(10));
     
 	/**
 	 * This contains the vertices of the icosahedron,
@@ -25,7 +27,7 @@ public class Airocean extends GeographicProjection {
 	 * When the class is loaded, a static block below converts all these coordinates
 	 * to the equivalent spherical coordinates (longitude and colatitude), in radians.
 	 */
-    protected static double[] VERTICES = {
+    protected static final double[] VERTICES = {
             10.536199, 64.700000,
             -5.245390, 2.300882,
             58.157706, 10.447378,
@@ -39,6 +41,7 @@ public class Airocean extends GeographicProjection {
             -57.700000, -39.100000,
             -169.463800, -64.700000,
     };
+    
     protected static final int[] ISO = {
             2, 1, 6,
             1, 0, 2,
@@ -63,7 +66,8 @@ public class Airocean extends GeographicProjection {
             11, 6, 7, //child of 14
             3, 7, 8, //child of 15
     };
-    public static double[] CENTER_MAP = {
+    
+    protected static final double[] CENTER_MAP = {
             -3, 7,
             -2, 5,
             -1, 7,
@@ -91,7 +95,7 @@ public class Airocean extends GeographicProjection {
 	/**
 	 * Indicates for each face if it needs to be flipped after projecting
 	 */
-    public static byte[] FLIP_TRIANGLE = {
+    protected static final byte[] FLIP_TRIANGLE = {
             1, 0, 1, 0, 0,
             1, 0, 1, 0, 1, 0, 1, 0, 1, 0,
             1, 1, 1, 0, 0,
@@ -99,7 +103,7 @@ public class Airocean extends GeographicProjection {
     };
     
 	/**
-	 * This contains the Cartesian coordinates the centroid
+	 * This contains the Cartesian coordinates of the centroid
 	 * of each face of the icosahedron.
 	 */
     protected static final double[] CENTROID = new double[66];
@@ -112,22 +116,24 @@ public class Airocean extends GeographicProjection {
             -1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
             20, 19, 15, 21, 16, -1, 17, 18, -1, -1, -1,
     };
+    
     protected static final double Z = Math.sqrt(5 + 2 * Math.sqrt(5)) / Math.sqrt(15);
     protected static final double EL = Math.sqrt(8) / Math.sqrt(5 + Math.sqrt(5));
     protected static final double EL6 = EL / 6;
     protected static final double DVE = Math.sqrt(3 + Math.sqrt(5)) / Math.sqrt(5 + Math.sqrt(5));
     protected static final double R = -3 * EL6 / DVE;
-    public static double[] OUT_OF_BOUNDS = { 0.0 / 0, 0.0 / 0 };
+    
+    /**
+     * Returned by {@link #toGeo(double, double)} when trying to convert coordinates outside the projection domain.
+     */
+    public static final double[] OUT_OF_BOUNDS = { Double.NaN, Double.NaN };
 
     static {
-
+    	
         for (int i = 0; i < 22; i++) {
             CENTER_MAP[2 * i] *= 0.5 * ARC;
-            CENTER_MAP[2 * i + 1] *= ARC * ROOT3 / 12;
+            CENTER_MAP[2 * i + 1] *= ARC * MathUtils.ROOT3 / 12;
         }
-    }
-
-    static {
 
         for (int i = 0; i < 12; i++) {
             VERTICES[2 * i + 1] = 90 - VERTICES[2 * i + 1];
@@ -247,7 +253,7 @@ public class Airocean extends GeographicProjection {
 
         //cast equiladeral triangles to 45 degreee right triangles (side length of root2)
         double xp = x / ARC;
-        double yp = y / (ARC * ROOT3);
+        double yp = y / (ARC * MathUtils.ROOT3);
 
         int row;
         if (yp > -0.25) {
@@ -335,7 +341,7 @@ public class Airocean extends GeographicProjection {
 
         ConformalEstimate cp = new ConformalEstimate();
 
-        double[] oc = cp.toGeo(0, ARC * ROOT3 / 12);
+        double[] oc = cp.toGeo(0, ARC * MathUtils.ROOT3 / 12);
         f = cp.fromGeo(oc[0], oc[1] + 360.0 * 0.001 / 40075017);
         double[] g = cp.fromGeo(oc[0], oc[1]);
         System.out.println(Math.sqrt((f[0] - g[0]) * (f[0] - g[0]) + (f[1] - g[1]) * (f[1] - g[1])) * cp.metersPerUnit());
@@ -388,17 +394,17 @@ public class Airocean extends GeographicProjection {
         double xp = S * x;
         double yp = S * y;
 
-        double a = Math.atan((2 * yp / ROOT3 - EL6) / DVE); //ARC/2 terms cancel
-        double b = Math.atan((xp - yp / ROOT3 - EL6) / DVE);
-        double c = Math.atan((-xp - yp / ROOT3 - EL6) / DVE);
+        double a = Math.atan((2 * yp / MathUtils.ROOT3 - EL6) / DVE); //ARC/2 terms cancel
+        double b = Math.atan((xp - yp / MathUtils.ROOT3 - EL6) / DVE);
+        double c = Math.atan((-xp - yp / MathUtils.ROOT3 - EL6) / DVE);
 
-        return new double[]{ 0.5 * (b - c), (2 * a - b - c) / (2 * ROOT3) };
+        return new double[]{ 0.5 * (b - c), (2 * a - b - c) / (2 * MathUtils.ROOT3) };
     }
 
     protected double[] inverseTriangleTransformNewton(double xpp, double ypp) {
 
         //a & b are linearly related to c, so using the tan of sum formula we know: tan(c+off) = (tanc + tanoff)/(1-tanc*tanoff)
-        double tanaoff = Math.tan(ROOT3 * ypp + xpp); // a = c + root3*y'' + x''
+        double tanaoff = Math.tan(MathUtils.ROOT3 * ypp + xpp); // a = c + root3*y'' + x''
         double tanboff = Math.tan(2 * xpp); // b = c + 2x''
 
         double anumer = tanaoff * tanaoff + 1;
@@ -431,8 +437,8 @@ public class Airocean extends GeographicProjection {
         }
 
         //simple reversal algebra based on tan values
-        double yp = ROOT3 * (DVE * tana + EL6) / 2;
-        double xp = DVE * tanb + yp / ROOT3 + EL6;
+        double yp = MathUtils.ROOT3 * (DVE * tana + EL6) / 2;
+        double xp = DVE * tanb + yp / MathUtils.ROOT3 + EL6;
 
         //x = z*xp/Z, y = z*yp/Z, x^2 + y^2 + z^2 = 1
         double xpoZ = xp / Z;
@@ -445,7 +451,7 @@ public class Airocean extends GeographicProjection {
 
     protected double[] inverseTriangleTransformCbrt(double xpp, double ypp) {
         //a & b are linearly related to c, so using the tan of sum formula we know: tan(c+off) = (tanc + tanoff)/(1-tanc*tanoff)
-        double tanaoff = Math.tan(ROOT3 * ypp + xpp); // a = c + root3*y'' + x''
+        double tanaoff = Math.tan(MathUtils.ROOT3 * ypp + xpp); // a = c + root3*y'' + x''
         double tanboff = Math.tan(2 * xpp); // b = c + 2x''
 
         //using a derived cubic equation and cubic formula
@@ -470,8 +476,8 @@ public class Airocean extends GeographicProjection {
         double tanb = (tanc + tanboff) / (1 - tanc * tanboff);
 
         //simple reversal algebra based on tan values
-        double yp = ROOT3 * (DVE * tana + EL6) / 2;
-        double xp = DVE * tanb + yp / ROOT3 + EL6;
+        double yp = MathUtils.ROOT3 * (DVE * tana + EL6) / 2;
+        double xp = DVE * tanb + yp / MathUtils.ROOT3 + EL6;
 
         //x = z*xp/Z, y = z*yp/Z, x^2 + y^2 + z^2 = 1
         double xpoZ = xp / Z;
@@ -484,7 +490,7 @@ public class Airocean extends GeographicProjection {
 
     protected double[] inverseTriangleTransformCbrtNewton(double xpp, double ypp) {
         //a & b are linearly related to c, so using the tan of sum formula we know: tan(c+off) = (tanc + tanoff)/(1-tanc*tanoff)
-        double tanaoff = Math.tan(ROOT3 * ypp + xpp); // a = c + root3*y'' + x''
+        double tanaoff = Math.tan(MathUtils.ROOT3 * ypp + xpp); // a = c + root3*y'' + x''
         double tanboff = Math.tan(2 * xpp); // b = c + 2x''
         double sumtmp = tanaoff + tanboff;
 
@@ -512,8 +518,8 @@ public class Airocean extends GeographicProjection {
         double tanb = (x + tanboff) / (1 - x * tanboff);
 
         //simple reversal algebra based on tan values
-        double yp = ROOT3 * (DVE * tana + EL6) / 2;
-        double xp = DVE * tanb + yp / ROOT3 + EL6;
+        double yp = MathUtils.ROOT3 * (DVE * tana + EL6) / 2;
+        double xp = DVE * tanb + yp / MathUtils.ROOT3 + EL6;
 
         //x = z*xp/Z, y = z*yp/Z, x^2 + y^2 + z^2 = 1
         double xpoZ = xp / Z;
@@ -559,9 +565,9 @@ public class Airocean extends GeographicProjection {
 
         x = out[0];
         //deal with special snowflakes (child faces 20, 21)
-        if (((face == 15 && x > out[1] * ROOT3) || face == 14) && x > 0) {
-            out[0] = 0.5 * x - 0.5 * ROOT3 * out[1];
-            out[1] = 0.5 * ROOT3 * x + 0.5 * out[1];
+        if (((face == 15 && x > out[1] * MathUtils.ROOT3) || face == 14) && x > 0) {
+            out[0] = 0.5 * x - 0.5 * MathUtils.ROOT3 * out[1];
+            out[1] = 0.5 * MathUtils.ROOT3 * x + 0.5 * out[1];
             face += 6; //shift 14->20 & 15->21
         }
 
@@ -591,19 +597,19 @@ public class Airocean extends GeographicProjection {
                 break;
 
             case 20:
-                if (-y * ROOT3 > x) {
+                if (-y * MathUtils.ROOT3 > x) {
                     return OUT_OF_BOUNDS;
                 }
                 break;
 
             case 15:
-                if (x > 0 && x > y * ROOT3) {
+                if (x > 0 && x > y * MathUtils.ROOT3) {
                     return OUT_OF_BOUNDS;
                 }
                 break;
 
             case 21:
-                if (x < 0 || -y * ROOT3 > x) {
+                if (x < 0 || -y * MathUtils.ROOT3 > x) {
                     return OUT_OF_BOUNDS;
                 }
                 break;
@@ -633,7 +639,7 @@ public class Airocean extends GeographicProjection {
 
     @Override
     public double[] bounds() {
-        return new double[]{ -3 * ARC, -0.75 * ARC * ROOT3, 2.5 * ARC, 0.75 * ARC * ROOT3 };
+        return new double[]{ -3 * ARC, -0.75 * ARC * MathUtils.ROOT3, 2.5 * ARC, 0.75 * ARC * MathUtils.ROOT3 };
     }
 
     @Override
@@ -693,6 +699,6 @@ public class Airocean extends GeographicProjection {
 
     @Override
     public double metersPerUnit() {
-        return Math.sqrt(510100000000000.0 / (20 * ROOT3 * ARC * ARC / 4));
+        return Math.sqrt(510100000000000.0 / (20 * MathUtils.ROOT3 * ARC * ARC / 4));
     }
 }

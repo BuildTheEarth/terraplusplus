@@ -1,5 +1,7 @@
 package io.github.terra121.projection;
 
+import io.github.terra121.TerraConstants;
+
 /**
  * Implementation of the universal transverse Mercator projection.
  * 
@@ -8,8 +10,14 @@ package io.github.terra121.projection;
  */
 public class TransverseMercatorProjection extends GeographicProjection {
 	
+	/**
+	 * Width of a longitude range in radians.
+	 * The 360 degrees of longitude are divided into chunks of this size,
+	 * and each zone gets its own central meridian to use for the universal projection.
+	 */
     public static final double zoneWidth = Math.toRadians(6.0);
-    private static final double metersPerUnit = EARTH_CIRCUMFERENCE / (2 * Math.PI);
+    
+    private static final double metersPerUnit = TerraConstants.EARTH_CIRCUMFERENCE / (2 * Math.PI);
 
     /**
      * @param longitude - longitude in radians

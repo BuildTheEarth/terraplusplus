@@ -8,7 +8,6 @@ public abstract class ProjectionTransform extends GeographicProjection {
     protected GeographicProjection input;
 
     /**
-     * 
      * @param input - projection to transform
      */
     public ProjectionTransform(GeographicProjection input) {

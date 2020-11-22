@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Scanner;
 
+import io.github.terra121.util.MathUtils;
+
 /**
  * Implementation of the Dynmaxion like conformal projection.
  * Slightly modifies the Dynmaxion projection to make it conformal.
@@ -12,10 +14,9 @@ import java.util.Scanner;
  */
 public class ConformalEstimate extends Airocean {
 
-    InvertableVectorField forward;
-    InvertableVectorField inverse;
+    private InvertableVectorField inverse;
 
-    double VECTOR_SCALE_FACTOR = 1 / 1.1473979730192934;
+    private final double VECTOR_SCALE_FACTOR = 1 / 1.1473979730192934;
 
     public ConformalEstimate() {
         InputStream is = null;
@@ -144,7 +145,7 @@ public class ConformalEstimate extends Airocean {
         c[1] /= ARC;
 
         c[0] += 0.5;
-        c[1] += ROOT3 / 6;
+        c[1] += MathUtils.ROOT3 / 6;
 
         //use another interpolated vector to have a really good guess before using newtons method
         //c = forward.getInterpolatedVector(c[0], c[1]);
@@ -154,7 +155,7 @@ public class ConformalEstimate extends Airocean {
         c = this.inverse.applyNewtonsMethod(x, y, c[0], c[1], 5);//c[0]/ARC + 0.5, c[1]/ARC + ROOT3/6
 
         c[0] -= 0.5;
-        c[1] -= ROOT3 / 6;
+        c[1] -= MathUtils.ROOT3 / 6;
 
         c[0] *= ARC;
         c[1] *= ARC;
@@ -180,7 +181,7 @@ public class ConformalEstimate extends Airocean {
         y /= ARC;
 
         x += 0.5;
-        y += ROOT3 / 6;
+        y += MathUtils.ROOT3 / 6;
 
         double[] c = this.inverse.getInterpolatedVector(x, y);
 

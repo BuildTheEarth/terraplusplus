@@ -3,6 +3,8 @@ package io.github.terra121.projection;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.github.terra121.TerraConstants;
+
 /**
  * Support for various projection types.
  * 
@@ -19,21 +21,14 @@ import java.util.Map;
  */
 public class GeographicProjection {
 
-	/**
-	 * Earth's circumference around the equator, in meters
-	 */
-    public static double EARTH_CIRCUMFERENCE = 40075017;
-    
-    /**
-     * Earth's circumference around the poles, in meters
-     */
-    public static double EARTH_POLAR_CIRCUMFERENCE = 40008000;
+    public static final double EARTH_CIRCUMFERENCE = TerraConstants.EARTH_CIRCUMFERENCE;
+    public static final double EARTH_POLAR_CIRCUMFERENCE = TerraConstants.EARTH_POLAR_CIRCUMFERENCE;
 
     /**
      * Contains the various projections implemented in Terra121,
      * identified by a String key.
      */
-    public static Map<String, GeographicProjection> projections;
+    public static final Map<String, GeographicProjection> projections;
 
     static {
         projections = new HashMap<>();

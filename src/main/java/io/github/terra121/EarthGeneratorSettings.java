@@ -37,7 +37,8 @@ public class EarthGeneratorSettings {
         }
     }
 
-    public String toString() {
+    @Override
+	public String toString() {
         return this.gson.toJson(this.settings, JsonSettings.class);
     }
 

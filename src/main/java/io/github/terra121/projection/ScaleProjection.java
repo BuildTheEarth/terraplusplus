@@ -6,8 +6,8 @@ package io.github.terra121.projection;
  */
 public class ScaleProjection extends ProjectionTransform {
 
-    double scaleX;
-    double scaleY;
+    private double scaleX;
+    private double scaleY;
 
     /**
      * Creates a new ScaleProjection with different scale factor for the x and y axis.
@@ -64,4 +64,13 @@ public class ScaleProjection extends ProjectionTransform {
     public double metersPerUnit() {
         return this.input.metersPerUnit() / Math.sqrt((this.scaleX * this.scaleX + this.scaleY * this.scaleY) / 2); //TODO: better transform
     }
+
+	public double getScaleX() {
+		return scaleX;
+	}
+
+	public double getScaleY() {
+		return scaleY;
+	}
+    
 }
