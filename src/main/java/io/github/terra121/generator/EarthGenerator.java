@@ -1,7 +1,6 @@
-package io.github.terra121;
+package io.github.terra121.generator;
 
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
@@ -19,10 +18,11 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.IBiomeBlockRe
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGeneratorSettings;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicCaveGenerator;
 import io.github.terra121.dataset.Heights;
-import io.github.terra121.dataset.HeightsWaterMix;
 import io.github.terra121.dataset.ScalarDataset;
 import io.github.terra121.dataset.osm.OpenStreetMap;
 import io.github.terra121.dataset.osm.segment.Segment;
+import io.github.terra121.generator.cache.CachedChunkData;
+import io.github.terra121.generator.cache.ChunkDataLoader;
 import io.github.terra121.populator.CliffReplacer;
 import io.github.terra121.populator.EarthTreePopulator;
 import io.github.terra121.populator.SnowPopulator;
@@ -36,15 +36,13 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -53,39 +51,32 @@ import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.*;
 
-public class EarthTerrainProcessor extends BasicCubeGenerator {
-
-    public static String localTerrain;
-    public ScalarDataset heights;
-    public ScalarDataset depths;
-    public ScalarDataset[] heightsLidar;
-    public OpenStreetMap osm;
-    public HashMap<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers;
-    public BiomeProvider biomes;
-    public GeographicProjection projection;
-    public Set<Block> unnaturals;
+public class EarthGenerator extends BasicCubeGenerator {
+    public final ScalarDataset heights;
+    public final OpenStreetMap osm;
+    public final Map<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers = new IdentityHashMap<>();
+    public final BiomeProvider biomes;
+    public final GeographicProjection projection;
+    public final Set<Block> unnaturals = Collections.newSetFromMap(new IdentityHashMap<>());
     private final CustomGeneratorSettings cubiccfg;
     private final Set<ICubicPopulator> surfacePopulators;
-    private final Map<Biome, ICubicPopulator> biomePopulators;
+    private final Map<Biome, ICubicPopulator> biomePopulators = new IdentityHashMap<>();
     private final CubicCaveGenerator caveGenerator;
     private final SnowPopulator snow;
-    public EarthGeneratorSettings cfg;
+    public final EarthGeneratorSettings cfg;
     private final boolean doRoads;
     private final boolean doBuildings;
-    private byte[] zooms;
 
-    public final LoadingCache<ChunkPos, double[]> heightsCache;
+    public final LoadingCache<ChunkPos, CachedChunkData> cache = CacheBuilder.newBuilder()
+            .expireAfterAccess(5L, TimeUnit.MINUTES)
+            .softValues()
+            .build(new ChunkDataLoader(this));
 
-    public EarthTerrainProcessor(World world) {
+    public EarthGenerator(World world) {
         super(world);
 
         this.cfg = new EarthGeneratorSettings(world.getWorldInfo().getGeneratorOptions());
         this.projection = this.cfg.getProjection();
-        if (!cfg.settings.customdataset.isEmpty()) {
-            localTerrain = this.cfg.settings.customdataset;
-        } else {
-            localTerrain = FMLCommonHandler.instance().getSavesDirectory().getPath() + '/' + FMLCommonHandler.instance().getMinecraftServerInstance().getFolderName() + "/lidardata/";
-        }
 
         this.doRoads = this.cfg.settings.roads && world.getWorldInfo().isMapFeaturesEnabled();
         this.doBuildings = this.cfg.settings.buildings && world.getWorldInfo().isMapFeaturesEnabled();
@@ -93,39 +84,8 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
         this.biomes = world.getBiomeProvider(); //TODO: make this not order dependent
 
         this.osm = new OpenStreetMap(this.projection, this.doRoads, this.cfg.settings.osmwater, this.doBuildings);
-        this.heights = this.cfg.settings.osmwater
-                ? new HeightsWaterMix(new Heights(13, this.cfg.settings.smoothblend), this.osm.water)
-                : new Heights(13, this.cfg.settings.smoothblend);
-        this.depths = this.cfg.settings.osmwater ? new HeightsWaterMix(new Heights(10), this.osm.water) : new Heights(10);
+        this.heights = new Heights(this.cfg.settings.osmwater ? this.osm.water : null, 13, this.cfg.settings.smoothblend);
 
-        //Trying to allow for multiple zoom levels
-        if (this.cfg.settings.lidar) {
-
-            String file_prefix = localTerrain;
-
-
-            if (!(new File(file_prefix)).exists()) {
-                (new File(file_prefix)).mkdir();
-            }
-
-            File[] zoomdirs = {};
-            zoomdirs = (new File(file_prefix)).listFiles();
-            int zoomL = zoomdirs.length;
-
-            if (zoomL != 0) {
-                this.zooms = new byte[zoomL];
-                this.heightsLidar = new Heights[zoomL];
-
-                for (int i = 0; i < zoomL; i++) {
-                    this.zooms[i] = Byte.parseByte(zoomdirs[i].getName());
-                    //this.heightsLidar[i] = new Heights(this.zooms[i], true, this.cfg.settings.smoothblend, this.cfg.settings.osmwater ? this.osm.water : null);
-                }
-
-            }
-
-        }
-
-        this.unnaturals = new HashSet<>();
         this.unnaturals.add(Blocks.STONEBRICK);
         this.unnaturals.add(Blocks.CONCRETE);
         this.unnaturals.add(Blocks.BRICK_BLOCK);
@@ -139,14 +99,11 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
 
         this.caveGenerator = new CubicCaveGenerator();
 
-        this.biomePopulators = new HashMap<>();
-
         for (Biome biome : ForgeRegistries.BIOMES) {
             CubicBiome cubicBiome = CubicBiome.getCubic(biome);
             this.biomePopulators.put(biome, cubicBiome.getDecorator(this.cubiccfg));
         }
 
-        this.biomeBlockReplacers = new HashMap<>();
         BiomeBlockReplacerConfig conf = this.cubiccfg.replacerConfig;
         CliffReplacer cliffs = new CliffReplacer();
 
@@ -161,26 +118,6 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
 
             this.biomeBlockReplacers.put(biome, replacers);
         }
-
-        this.heightsCache = CacheBuilder.newBuilder()
-                .expireAfterAccess(5L, TimeUnit.MINUTES)
-                .softValues()
-                .build(CacheLoader.from(pos -> {
-                    double[] heights = new double[16 * 16];
-
-                    if (abs(pos.x) < 5 && abs(pos.z) < 5) { //null island
-                        Arrays.fill(heights, 1.0d);
-                    } else {
-                        //get heights beforehand
-                        for (int x = 0; x < 16; x++) {
-                            for (int z = 0; z < 16; z++) {
-                                double[] projected = this.projection.toGeo(pos.x * 16 + x, pos.z * 16 + z);
-                                heights[x * 16 + z] = this.heights.estimateLocal(projected[0], projected[1]);
-                            }
-                        }
-                    }
-                    return heights;
-                }));
     }
 
     @Override
@@ -191,50 +128,33 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
     //TODO: more efficient
     @Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer) {
-        double[] heights = this.heightsCache.getUnchecked(new ChunkPos(cubeX, cubeZ));
-        boolean surface = false;
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 
-        for (double height : heights) { //check if the current cube contains the surface
-            if (Coords.cubeToMinBlock(cubeY) < height && Coords.cubeToMinBlock(cubeY + 1) > height) {
-                surface = true;
-                break;
-            }
-        }
+        CachedChunkData data = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ));
 
         //fill in the world
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
-                double height = heights[x * 16 + z];
-                double depth = -100000000;
-
-                double[] projected = this.projection.toGeo(cubeX * 16 + x, cubeZ * 16 + z);
-                double wateroff = 0;
-                if (this.cfg.settings.osmwater) {
-                    wateroff = this.osm.water.estimateLocal(projected[0], projected[1]);
-                }
-
-                //ocean?
-                if (abs(height) < 0.001) {
-                    height = depth;
-                }
+                double height = data.heights[x * 16 + z];
+                double wateroff = data.wateroffs[x * 16 + z];
 
                 //estimate slopes
                 double dx;
                 double dz;
                 if (x == 16 - 1) {
-                    dx = heights[x * 16 + z] - heights[(x - 1) * 16 + z];
+                    dx = data.heights[x * 16 + z] - data.heights[(x - 1) * 16 + z];
                 } else {
-                    dx = heights[(x + 1) * 16 + z] - heights[x * 16 + z];
+                    dx = data.heights[(x + 1) * 16 + z] - data.heights[x * 16 + z];
                 }
 
                 if (z == 16 - 1) {
-                    dz = heights[x * 16 + z] - heights[x * 16 + z - 1];
+                    dz = data.heights[x * 16 + z] - data.heights[x * 16 + z - 1];
                 } else {
-                    dz = heights[x * 16 + z + 1] - heights[x * 16 + z];
+                    dz = data.heights[x * 16 + z + 1] - data.heights[x * 16 + z];
                 }
 
                 //get biome (thanks to 	z3nth10n for spoting this one)
-                List<IBiomeBlockReplacer> reps = this.biomeBlockReplacers.get(this.biomes.getBiome(new BlockPos(cubeX * 16 + x, 0, cubeZ * 16 + z)));
+                List<IBiomeBlockReplacer> reps = this.biomeBlockReplacers.get(this.biomes.getBiome(pos.setPos(cubeX * 16 + x, 0, cubeZ * 16 + z)));
 
                 for (int y = 0; y < 16 && y < height - Coords.cubeToMinBlock(cubeY); y++) {
                     IBlockState block = Blocks.STONE.getDefaultState();
@@ -283,18 +203,17 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
             this.caveGenerator.generate(this.world, primer, new CubePos(cubeX, cubeY, cubeZ));
         }
 
-        if (surface) { //spawn roads
+        if (cubeY >= data.surfaceMinCube && cubeY < data.surfaceMaxCube) { //spawn roads
             Set<Segment> segments = this.osm.segmentsForChunk(cubeX, cubeZ, 8.0d);
             if (segments != null) {
                 segments.stream()
                         .sorted(Comparator.<Segment>comparingInt(s -> s.layer_number).thenComparing(s -> s.type))
-                        .forEach(s -> s.type.fillType().fill(heights, primer, s, cubeX, cubeY, cubeZ));
+                        .forEach(s -> s.type.fillType().fill(data.heights, primer, s, cubeX, cubeY, cubeZ));
             }
         }
 
         return primer;
     }
-
 
     @Override
     @SuppressWarnings("deprecation")

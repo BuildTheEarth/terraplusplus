@@ -1,6 +1,6 @@
 package io.github.terra121.control;
 
-import io.github.terra121.EarthGeneratorSettings;
+import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.TerraMod;
 import io.github.terra121.control.DynamicOptions.Element;
 import io.github.terra121.projection.GeographicProjection;

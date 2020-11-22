@@ -32,11 +32,6 @@ public class BVH<V extends Bounds2d> {
         return (Node<V>[]) new Node[length];
     }
 
-    @SuppressWarnings("unchecked")
-    protected static <V> V[] createArray(int length) {
-        return (V[]) new Object[length];
-    }
-
     protected final Node<V> root;
     @Getter
     protected final int size;

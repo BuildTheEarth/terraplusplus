@@ -2,8 +2,8 @@ package io.github.terra121.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import io.github.terra121.EarthGeneratorSettings;
-import io.github.terra121.EarthTerrainProcessor;
+import io.github.terra121.generator.EarthGeneratorSettings;
+import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.chat.ChatHelper;
 import io.github.terra121.chat.TextElement;
 import io.github.terra121.control.fragments.CommandFragment;
@@ -29,12 +29,12 @@ public class TerraWorldFragment extends CommandFragment {
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
-        if (!(gen instanceof EarthTerrainProcessor)) {
+        if (!(gen instanceof EarthGenerator)) {
             sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("World Type: ", TextFormatting.BLUE), new TextElement("Not Earth World", TextFormatting.RED)));
             return;
         }
 
-        EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
+        EarthGenerator terrain = (EarthGenerator) gen;
         EarthGeneratorSettings.JsonSettings projectionSettings = terrain.cfg.settings;
 
         sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("World Type: ", TextFormatting.BLUE), new TextElement("Earth World", TextFormatting.GREEN)));
@@ -53,8 +53,6 @@ public class TerraWorldFragment extends CommandFragment {
         sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Smooth Blend: ", TextFormatting.BLUE), projectionSettings.smoothblend ? new TextElement("True", TextFormatting.GREEN) :
                 new TextElement("False", TextFormatting.RED)));
         sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Caves: ", TextFormatting.BLUE), projectionSettings.caves ? new TextElement("True", TextFormatting.GREEN) :
-                new TextElement("False", TextFormatting.RED)));
-        sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Lidar: ", TextFormatting.BLUE), projectionSettings.lidar ? new TextElement("True", TextFormatting.GREEN) :
                 new TextElement("False", TextFormatting.RED)));
     }
 

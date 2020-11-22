@@ -1,4 +1,4 @@
-package io.github.terra121;
+package io.github.terra121.generator;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -8,6 +8,8 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.api.S
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGeneratorSettings;
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.CustomGenSettingsSerialization;
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.fixer.PresetLoadError;
+import io.github.terra121.TerraConfig;
+import io.github.terra121.TerraMod;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.transform.ScaleProjection;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -110,7 +112,5 @@ public class EarthGeneratorSettings {
         public Boolean osmwater = false;
         public Boolean buildings = false;
         public Boolean caves = false;
-        public Boolean lidar = false; // Experimental LIDAR data
-        public String customdataset = "";
     }
 }

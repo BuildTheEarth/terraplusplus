@@ -2,7 +2,7 @@ package io.github.terra121.control;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import io.github.terra121.EarthTerrainProcessor;
+import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.chat.ChatHelper;
 import io.github.terra121.chat.TextElement;
@@ -59,11 +59,11 @@ public class TerraTeleport extends Command {
 
             ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
-            if (!(gen instanceof EarthTerrainProcessor)) {
+            if (!(gen instanceof EarthGenerator)) {
                 throw new CommandException("terra121.error.notterra");
             }
 
-            EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
+            EarthGenerator terrain = (EarthGenerator) gen;
 
             if (args.length == 0) {
                 sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(TranslateUtil.translate("terra121.commands.tpll.usage"), TextFormatting.RED)));
