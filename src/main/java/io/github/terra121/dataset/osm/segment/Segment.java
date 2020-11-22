@@ -2,6 +2,7 @@ package io.github.terra121.dataset.osm.segment;
 
 import io.github.terra121.dataset.osm.OSMRegion;
 import io.github.terra121.dataset.osm.OpenStreetMap;
+import io.github.terra121.util.bvh.Bounds2d;
 import lombok.ToString;
 
 import static java.lang.Math.*;
@@ -10,7 +11,7 @@ import static java.lang.Math.*;
  * @author DaPorkchop_
  */
 @ToString(exclude = "region")
-public class Segment {
+public class Segment implements Bounds2d {
     public SegmentType type;
     public double lat0;
     public double lon0;
@@ -55,5 +56,25 @@ public class Segment {
     public boolean equals(Object o) {
         Segment e = (Segment) o;
         return e.lat0 == this.lat0 && e.lon0 == this.lon0 && e.lat1 == this.lat1 && e.lon1 == e.lon1;
+    }
+
+    @Override
+    public double minX() {
+        return min(this.lon0, this.lon1);
+    }
+
+    @Override
+    public double maxX() {
+        return max(this.lon0, this.lon1);
+    }
+
+    @Override
+    public double minZ() {
+        return min(this.lat0, this.lat1);
+    }
+
+    @Override
+    public double maxZ() {
+        return max(this.lat0, this.lat1);
     }
 }

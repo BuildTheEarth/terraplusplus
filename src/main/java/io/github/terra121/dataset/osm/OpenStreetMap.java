@@ -1,12 +1,15 @@
 package io.github.terra121.dataset.osm;
 
 import com.google.gson.Gson;
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.terra121.TerraConfig;
 import io.github.terra121.dataset.TiledDataset;
 import io.github.terra121.dataset.Water;
 import io.github.terra121.dataset.osm.segment.Segment;
 import io.github.terra121.dataset.osm.segment.SegmentType;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.util.bvh.BVH;
+import io.github.terra121.util.bvh.Bounds2d;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import lombok.NonNull;
@@ -20,18 +23,18 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static java.lang.Math.*;
 
 public class OpenStreetMap extends TiledDataset<OSMRegion> {
     private static final double CHUNK_SIZE = 16;
     public static final double TILE_SIZE = 1 / 60.0;//250*(360.0/40075000.0);
 
-    private final Map<ChunkPos, Set<Segment>> chunks = new LinkedHashMap<>(); //TODO: this leaks memory (it's never drained)
     public final Water water;
-    private final List<Segment> allEdges = new ArrayList<>();
+    private final List<Segment> allSegments = new ArrayList<>();
     private final Gson gson = new Gson();
     private final boolean doRoad;
     private final boolean doWater;
@@ -61,27 +64,8 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         OSMRegion region = new OSMRegion(new ChunkPos(tileX, tileZ), this.water);
         this.doGson(new ByteBufInputStream(data), region);
 
-        //TODO: this is ugly and should be implemented better
-        {
-            double X = tileX * TILE_SIZE;
-            double Y = tileZ * TILE_SIZE;
-
-            double[] ll = this.projection.fromGeo(X, Y);
-            double[] lr = this.projection.fromGeo(X + TILE_SIZE, Y);
-            double[] ur = this.projection.fromGeo(X + TILE_SIZE, Y + TILE_SIZE);
-            double[] ul = this.projection.fromGeo(X, Y + TILE_SIZE);
-
-            //estimate bounds of region in terms of chunks
-            int lowX = (int) Math.floor(Math.min(Math.min(ll[0], ul[0]), Math.min(lr[0], ur[0])) / CHUNK_SIZE);
-            int highX = (int) Math.ceil(Math.max(Math.max(ll[0], ul[0]), Math.max(lr[0], ur[0])) / CHUNK_SIZE);
-            int lowZ = (int) Math.floor(Math.min(Math.min(ll[1], ul[1]), Math.min(lr[1], ur[1])) / CHUNK_SIZE);
-            int highZ = (int) Math.ceil(Math.max(Math.max(ll[1], ul[1]), Math.max(lr[1], ur[1])) / CHUNK_SIZE);
-
-            for (Segment e : this.allEdges) {
-                this.relevantChunks(lowX, lowZ, highX, highZ, e);
-            }
-            this.allEdges.clear();
-        }
+        region.segments = new BVH<>(this.allSegments);
+        this.allSegments.clear();
 
         return region;
     }
@@ -90,26 +74,26 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         return new ChunkPos((int) Math.floor(lon / TILE_SIZE), (int) Math.floor(lat / TILE_SIZE));
     }
 
-    public Set<Segment> chunkStructures(int x, int z) {
-        ChunkPos coord = new ChunkPos(x, z);
+    public Set<Segment> segmentsForChunk(int chunkX, int chunkZ, double padding) {
+        Set<Segment> segments = new HashSet<>();
+        Set<ChunkPos> processedSegments = new HashSet<>();
 
-        if (this.regionCache(this.projection.toGeo(x * CHUNK_SIZE, z * CHUNK_SIZE)) == null) {
-            return null;
+        Bounds2d bb = Bounds2d.of(
+                Coords.cubeToMinBlock(chunkX) - padding, Coords.cubeToMinBlock(chunkX + 1) + padding,
+                Coords.cubeToMinBlock(chunkZ) - padding, Coords.cubeToMinBlock(chunkZ + 1) + padding);
+
+        //it's unfortunate that i have to do it like this rather than simply getting the corners, but there are no guarantees that the
+        // projection is linear or almost linear
+        for (int dx = -1; dx <= 1; dx += 2) {
+            for (int dz = -1; dz <= 1; dz += 2) {
+                OSMRegion region = this.regionCache(this.projection.toGeo(Coords.cubeToMinBlock(chunkX + max(dx, 0)) + copySign(padding, dx), Coords.cubeToMinBlock(chunkZ + max(dz, 0)) + copySign(padding, dz)));
+                if (region != null && processedSegments.add(region.coord)) {
+                    region.segments.forEachIntersecting(bb, segments::add);
+                }
+            }
         }
 
-        if (this.regionCache(this.projection.toGeo((x + 1) * CHUNK_SIZE, z * CHUNK_SIZE)) == null) {
-            return null;
-        }
-
-        if (this.regionCache(this.projection.toGeo((x + 1) * CHUNK_SIZE, (z + 1) * CHUNK_SIZE)) == null) {
-            return null;
-        }
-
-        if (this.regionCache(this.projection.toGeo(x * CHUNK_SIZE, (z + 1) * CHUNK_SIZE)) == null) {
-            return null;
-        }
-
-        return this.chunks.get(coord);
+        return segments;
     }
 
     public OSMRegion regionCache(double[] corner) {
@@ -326,7 +310,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                     double[] proj = this.projection.fromGeo(geom.lon, geom.lat);
 
                     if (lastProj != null) { //register as a road edge
-                        this.allEdges.add(new Segment(lastProj[0], lastProj[1], proj[0], proj[1], type, lanes, region, attributes, layer));
+                        this.allSegments.add(new Segment(lastProj[0], lastProj[1], proj[0], proj[1], type, lanes, region, attributes, layer));
                     }
 
                     lastProj = proj;
@@ -346,53 +330,6 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         }
 
         return last;
-    }
-
-    private void relevantChunks(int lowX, int lowZ, int highX, int highZ, Segment edge) {
-        ChunkPos start = new ChunkPos((int) Math.floor(edge.lon0 / CHUNK_SIZE), (int) Math.floor(edge.lat0 / CHUNK_SIZE));
-        ChunkPos end = new ChunkPos((int) Math.floor(edge.lon1 / CHUNK_SIZE), (int) Math.floor(edge.lat1 / CHUNK_SIZE));
-
-        double startx = edge.lon0;
-        double endx = edge.lon1;
-
-        if (startx > endx) {
-            ChunkPos tmp = start;
-            start = end;
-            end = tmp;
-            startx = endx;
-            endx = edge.lon0;
-        }
-
-        highX = Math.min(highX, end.x + 1);
-        for (int x = Math.max(lowX, start.x); x < highX; x++) {
-            double X = x * CHUNK_SIZE;
-            int from = (int) Math.floor((edge.slope * Math.max(X, startx) + edge.offset) / CHUNK_SIZE);
-            int to = (int) Math.floor((edge.slope * Math.min(X + CHUNK_SIZE, endx) + edge.offset) / CHUNK_SIZE);
-
-            if (from > to) {
-                int tmp = from;
-                from = to;
-                to = tmp;
-            }
-
-            for (int z = Math.max(from, lowZ); z <= to && z < highZ; z++) {
-                for (int dx = -1; dx <= 1; dx++) {
-                    for (int dz = -1; dz <= 1; dz++) {
-                        this.assoiateWithChunk(new ChunkPos(x + dx, z + dz), edge);
-                    }
-                }
-                //this.assoiateWithChunk(new ChunkPos(x, z), edge);
-            }
-        }
-    }
-
-    private void assoiateWithChunk(ChunkPos c, Segment edge) {
-        Set<Segment> list = this.chunks.get(c);
-        if (list == null) {
-            list = new HashSet<>();
-            this.chunks.put(c, list);
-        }
-        list.add(edge);
     }
 
     public enum Attributes {

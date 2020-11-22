@@ -284,7 +284,7 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
         }
 
         if (surface) { //spawn roads
-            Set<Segment> segments = this.osm.chunkStructures(cubeX, cubeZ);
+            Set<Segment> segments = this.osm.segmentsForChunk(cubeX, cubeZ, 8.0d);
             if (segments != null) {
                 segments.stream()
                         .sorted(Comparator.<Segment>comparingInt(s -> s.layer_number).thenComparing(s -> s.type))
