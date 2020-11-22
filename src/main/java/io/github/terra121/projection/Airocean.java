@@ -16,8 +16,6 @@ import java.io.InputStream;
 public class Airocean extends GeographicProjection {
 
     protected static double ARC = 2 * Math.asin(Math.sqrt(5 - Math.sqrt(5)) / Math.sqrt(10));
-
-    protected static final double TO_RADIANS = Math.PI / 180.0;
     protected static final double ROOT3 = Math.sqrt(3);
     
 	/**
@@ -134,8 +132,8 @@ public class Airocean extends GeographicProjection {
         for (int i = 0; i < 12; i++) {
             VERTICES[2 * i + 1] = 90 - VERTICES[2 * i + 1];
 
-            VERTICES[2 * i] *= TO_RADIANS;
-            VERTICES[2 * i + 1] *= TO_RADIANS;
+            VERTICES[2 * i] = Math.toRadians(VERTICES[2 * i]);
+            VERTICES[2 * i + 1] = Math.toRadians(VERTICES[2 * i + 1]);
         }
 
         for (int i = 0; i < 22; i++) {
@@ -531,17 +529,17 @@ public class Airocean extends GeographicProjection {
     }
 
     @Override
-    public double[] fromGeo(double lon, double lat) {
+    public double[] fromGeo(double longitude, double latitude) {
 
-        lat = 90 - lat;
-        lon *= TO_RADIANS;
-        lat *= TO_RADIANS;
+        latitude = 90 - latitude;
+        longitude = Math.toRadians(longitude);
+        latitude = Math.toRadians(latitude);
 
-        double sinphi = Math.sin(lat);
+        double sinphi = Math.sin(latitude);
 
-        double x = Math.cos(lon) * sinphi;
-        double y = Math.sin(lon) * sinphi;
-        double z = Math.cos(lat);
+        double x = Math.cos(longitude) * sinphi;
+        double y = Math.sin(longitude) * sinphi;
+        double z = Math.cos(latitude);
 
         int face = findTriangle(x, y, z);
 
@@ -630,7 +628,7 @@ public class Airocean extends GeographicProjection {
         double zp = x * INVERSE_ROTATION_MATRIX[off + 6] + y * INVERSE_ROTATION_MATRIX[off + 7] + z * INVERSE_ROTATION_MATRIX[off + 8];
 
         //convert back to spherical coordinates
-        return new double[]{ Math.atan2(yp, xp) / TO_RADIANS, 90 - Math.acos(zp) / TO_RADIANS };
+        return new double[]{ Math.toDegrees(Math.atan2(yp, xp)), 90 - Math.toDegrees(Math.acos(zp)) };
     }
 
     @Override

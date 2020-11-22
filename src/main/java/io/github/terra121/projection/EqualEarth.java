@@ -7,7 +7,6 @@ package io.github.terra121.projection;
  */
 public class EqualEarth extends GeographicProjection {
 
-    private static final double TO_RADIANS = Math.PI / 180.0;
     private static final double ROOT3 = Math.sqrt(3);
     private static final double A1 = 1.340264;
     private static final double A2 = -0.081106;
@@ -47,13 +46,13 @@ public class EqualEarth extends GeographicProjection {
         dx += 7 * A3 * (tpow *= thetasquare * thetasquare); //7 A3 t^6
         dx += 9 * A4 * (tpow *= thetasquare); //9 A4 t^8
 
-        return new double[]{ x * dx * 3 / (TO_RADIANS * 2 * ROOT3 * Math.cos(theta)),
-                Math.asin(Math.sin(theta) * 2 / ROOT3) / TO_RADIANS };
+        return new double[]{ Math.toDegrees(x * dx * 3 / (2 * ROOT3 * Math.cos(theta))),
+                Math.toDegrees(Math.asin(Math.sin(theta) * 2 / ROOT3))};
     }
 
     @Override
     public double[] fromGeo(double longitude, double latitude) {
-        double sintheta = ROOT3 * Math.sin(latitude * TO_RADIANS) / 2;
+        double sintheta = ROOT3 * Math.sin(Math.toRadians(latitude)) / 2;
         double theta = Math.asin(sintheta);
         double tpow = theta;
 
@@ -68,7 +67,7 @@ public class EqualEarth extends GeographicProjection {
 
         double costheta = Math.sqrt(1 - sintheta * sintheta);
 
-        return new double[]{ (2 * ROOT3 * TO_RADIANS * longitude * costheta / 3) / x, y };
+        return new double[]{ (2 * ROOT3 * Math.toRadians(longitude) * costheta / 3) / x, y };
     }
 
     @Override

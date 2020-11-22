@@ -4,6 +4,7 @@ package io.github.terra121.projection;
  * Warps a Geographic projection and applies a transformation to it.
  */
 public abstract class ProjectionTransform extends GeographicProjection {
+	
     protected GeographicProjection input;
 
     /**

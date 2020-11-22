@@ -10,22 +10,21 @@ package io.github.terra121.projection;
  */
 public class MapsProjection extends GeographicProjection {
 
-    private static final double TO_RADIANS = Math.PI / 180.0;
     private static final double TAU = (2 * Math.PI);
 
     @Override
     public double[] toGeo(double x, double y) {
         return new double[]{
-                (x * TAU - Math.PI) / TO_RADIANS,
-                (Math.atan(Math.exp(Math.PI - y * TAU)) * 2 - Math.PI / 2) / TO_RADIANS
+                Math.toDegrees(x * TAU - Math.PI),
+                Math.toDegrees(Math.atan(Math.exp(Math.PI - y * TAU)) * 2 - Math.PI / 2)
         };
     }
 
     @Override
     public double[] fromGeo(double longitude, double latitude) {
         return new double[]{
-                (longitude * TO_RADIANS + Math.PI) / TAU,
-                (Math.PI - Math.log(Math.tan((Math.PI / 2 + latitude * TO_RADIANS) / 2))) / TAU
+                (Math.toRadians(longitude) + Math.PI) / TAU,
+                (Math.PI - Math.log(Math.tan((Math.PI / 2 + Math.toRadians(latitude)) / 2))) / TAU
         };
     }
 

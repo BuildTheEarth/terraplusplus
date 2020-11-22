@@ -8,16 +8,14 @@ package io.github.terra121.projection;
  */
 public class SinusoidalProjection extends GeographicProjection {
 
-    private static final double TO_RADIANS = Math.PI / 180.0;
-
     @Override
     public double[] toGeo(double x, double y) {
-        return new double[]{ x / Math.cos(y * TO_RADIANS), y };
+        return new double[]{ x / Math.cos(Math.toRadians(y)), y };
     }
 
     @Override
     public double[] fromGeo(double longitude, double latitude) {
-        return new double[]{ longitude * Math.cos(latitude * TO_RADIANS), latitude };
+        return new double[]{ longitude * Math.cos(Math.toRadians(latitude)), latitude };
     }
 
     @Override

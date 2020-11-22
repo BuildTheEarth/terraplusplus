@@ -8,7 +8,7 @@ package io.github.terra121.projection;
  */
 public class ModifiedAirocean extends ConformalEstimate {
 
-    protected static double THETA = -150 * TO_RADIANS;
+    protected static double THETA = Math.toRadians(-150);
     protected static double SIN_THETA = Math.sin(THETA);
     protected static double COS_THETA = Math.cos(THETA);
     protected static double BERING_X = -0.3420420960118339;//-0.3282152608138795;
@@ -23,8 +23,8 @@ public class ModifiedAirocean extends ConformalEstimate {
     protected static double ALEUTIAN_B = BERING_Y - ALEUTIAN_M * BERING_X;
 
     @Override
-    public double[] fromGeo(double lon, double lat) {
-        double[] c = super.fromGeo(lon, lat);
+    public double[] fromGeo(double longitude, double latitude) {
+        double[] c = super.fromGeo(longitude, latitude);
         double x = c[0];
         double y = c[1];
 

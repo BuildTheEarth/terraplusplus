@@ -7,13 +7,12 @@ package io.github.terra121.projection;
  * @see <a href="https://en.wikipedia.org/wiki/Mercator_projection"> Wikipedia's article on the Mercator projection</a>
  */
 public class CenteredMapsProjection extends GeographicProjection {
-    private static final double TO_RADIANS = Math.PI / 180.0;
 
     @Override
     public double[] toGeo(double x, double y) {
         return new double[]{
                 x * 180.0,
-                (Math.atan(Math.exp(-y * Math.PI)) * 2 - Math.PI / 2) / TO_RADIANS
+                Math.toDegrees(Math.atan(Math.exp(-y * Math.PI)) * 2 - Math.PI / 2)
         };
     }
 
@@ -21,7 +20,7 @@ public class CenteredMapsProjection extends GeographicProjection {
     public double[] fromGeo(double longitude, double latitude) {
         return new double[]{
                 longitude / 180.0,
-                -(Math.log(Math.tan((Math.PI / 2 + latitude * TO_RADIANS) / 2))) / Math.PI
+                -(Math.log(Math.tan((Math.PI / 2 + Math.toRadians(latitude)) / 2))) / Math.PI
         };
     }
 
@@ -32,7 +31,7 @@ public class CenteredMapsProjection extends GeographicProjection {
 
     @Override
     public double metersPerUnit() {
-        return Math.cos(30 * Math.PI / 180) * EARTH_CIRCUMFERENCE / 2; //Accurate at about 30 degrees
+        return Math.cos(Math.toRadians(30)) * EARTH_CIRCUMFERENCE / 2; //Accurate at about 30 degrees
     }
 
     @Override

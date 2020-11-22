@@ -7,6 +7,7 @@ package io.github.terra121.projection;
  * @see <a href="https://en.wikipedia.org/wiki/Transverse_Mercator_projection">Wikipedia's article on the transverse Mercator projection</a>
  */
 public class TransverseMercatorProjection extends GeographicProjection {
+	
     public static final double zoneWidth = Math.toRadians(6.0);
     private static final double metersPerUnit = EARTH_CIRCUMFERENCE / (2 * Math.PI);
 
