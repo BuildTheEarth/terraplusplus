@@ -20,13 +20,11 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGenerato
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicCaveGenerator;
 import io.github.terra121.dataset.Heights;
 import io.github.terra121.dataset.HeightsWaterMix;
-import io.github.terra121.dataset.osm.OpenStreetMap;
 import io.github.terra121.dataset.ScalarDataset;
-import io.github.terra121.dataset.osm.segment.SegmentType;
+import io.github.terra121.dataset.osm.OpenStreetMap;
 import io.github.terra121.dataset.osm.segment.Segment;
 import io.github.terra121.populator.CliffReplacer;
 import io.github.terra121.populator.EarthTreePopulator;
-import io.github.terra121.populator.RoadGenerator;
 import io.github.terra121.populator.SnowPopulator;
 import io.github.terra121.projection.GeographicProjection;
 import net.minecraft.block.Block;
@@ -44,6 +42,7 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -133,16 +132,11 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
 
         this.surfacePopulators = new HashSet<>();
 
-        if (this.doRoads || this.cfg.settings.osmwater) {
-            this.surfacePopulators.add(new RoadGenerator(this));
-        }
-
         this.surfacePopulators.add(new EarthTreePopulator(this.projection));
         this.snow = new SnowPopulator(); //this will go after the rest
 
         this.cubiccfg = this.cfg.getCustomCubic();
 
-        //InitCubicStructureGeneratorEvent caveEvent = new InitCubicStructureGeneratorEvent(EventType.CAVE, new CubicCaveGenerator());
         this.caveGenerator = new CubicCaveGenerator();
 
         this.biomePopulators = new HashMap<>();
@@ -181,27 +175,6 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
                         for (int x = 0; x < 16; x++) {
                             for (int z = 0; z < 16; z++) {
                                 double[] projected = this.projection.toGeo(pos.x * 16 + x, pos.z * 16 + z);
-                                /*double Y = Double.NaN;
-
-                                if (this.cfg.settings.lidar) {
-                                    String file_prefix = localTerrain;
-                                    if (this.heightsLidar != null) {
-                                        for (int i = 0; i < this.heightsLidar.length; i++) {
-                                            if (new File(file_prefix + this.zooms[i] + '/' + (int) Math.floor((projected[0] + 180) / 360 * (1 << this.zooms[i])) + '/' + (int) Math.floor((1 - Math.log(Math.tan(Math.toRadians(projected[1])) + 1 / Math.cos(Math.toRadians(projected[1]))) / Math.PI) / 2 * (1 << this.zooms[i])) + ".png").exists()) {
-                                                double heightreturn = this.heightsLidar[i].estimateLocal(projected[0], projected[1]);
-                                                if (heightreturn != -10000000) {
-                                                    Y = heightreturn;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                if (Double.isNaN(Y)) {
-                                    Y = this.heights.estimateLocal(projected[0], projected[1]);
-                                }
-
-                                heightarr[x][z] = Y;*/
                                 heights[x * 16 + z] = this.heights.estimateLocal(projected[0], projected[1]);
                             }
                         }
@@ -310,8 +283,14 @@ public class EarthTerrainProcessor extends BasicCubeGenerator {
             this.caveGenerator.generate(this.world, primer, new CubePos(cubeX, cubeY, cubeZ));
         }
 
-        //spawn roads
-        //TODO: roads are currently being spawned in the populator
+        if (surface) { //spawn roads
+            Set<Segment> segments = this.osm.chunkStructures(cubeX, cubeZ);
+            if (segments != null) {
+                segments.stream()
+                        .sorted(Comparator.<Segment>comparingInt(s -> s.layer_number).thenComparing(s -> s.type))
+                        .forEach(s -> s.type.fillType().fill(heights, primer, s, cubeX, cubeY, cubeZ));
+            }
+        }
 
         return primer;
     }

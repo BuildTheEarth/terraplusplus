@@ -183,6 +183,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
 
                     if ("yes".equals(istunnel)) {
                         attributes = Attributes.ISTUNNEL;
+                        continue; //tunnels are never generated, don't bother adding them
                     } else if ("yes".equals(isbridge)) {
                         attributes = Attributes.ISBRIDGE;
                     }
@@ -221,15 +222,14 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
 
                     //get lane number (default is 2)
                     String slanes = elem.tags.get("lanes");
-                    String slayer = elem.tags.get("layers");
+                    String slayer = elem.tags.get("layer");
                     byte lanes = 2;
-                    byte layer = 1;
+                    byte layer = 0;
 
                     if (slayer != null) {
                         try {
                             layer = Byte.parseByte(slayer);
                         } catch (NumberFormatException e) {
-                            // default to layer 1 if bad format
                         }
                     }
 
@@ -237,7 +237,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                         try {
                             lanes = Byte.parseByte(slanes);
                         } catch (NumberFormatException e) {
-                        } //default to 2, if bad format
+                        }
                     }
 
                     //prevent super high # of lanes to prevent ridiculous results (prly a mistake if its this high anyways)
@@ -260,7 +260,6 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                     unusedWays.add(elem);
                 }
             } else if (elem.type == EType.relation && elem.members != null && elem.tags != null) {
-
                 if (this.doWater) {
                     String naturalv = elem.tags.get("natural");
                     String waterv = elem.tags.get("water");
@@ -376,8 +375,13 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                 to = tmp;
             }
 
-            for (int y = Math.max(from, lowZ); y <= to && y < highZ; y++) {
-                this.assoiateWithChunk(new ChunkPos(x, y), edge);
+            for (int z = Math.max(from, lowZ); z <= to && z < highZ; z++) {
+                for (int dx = -1; dx <= 1; dx++) {
+                    for (int dz = -1; dz <= 1; dz++) {
+                        this.assoiateWithChunk(new ChunkPos(x + dx, z + dz), edge);
+                    }
+                }
+                //this.assoiateWithChunk(new ChunkPos(x, z), edge);
             }
         }
     }

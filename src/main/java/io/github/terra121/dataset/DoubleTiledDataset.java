@@ -1,8 +1,8 @@
 package io.github.terra121.dataset;
 
 import io.github.terra121.projection.GeographicProjection;
-import io.github.terra121.util.TerraMath;
 
+import static io.github.opencubicchunks.cubicchunks.api.util.MathUtil.*;
 import static java.lang.Math.*;
 
 /**
@@ -86,7 +86,7 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
         double v10 = this.getRawSample(sampleX + 1, sampleZ);
         double v11 = this.getRawSample(sampleX + 1, sampleZ + 1);
 
-        return TerraMath.lerp(TerraMath.lerp(v00, v01, fz), TerraMath.lerp(v10, v11, fz), fx);
+        return lerp(fx, lerp(fz, v00, v01), lerp(fz, v10, v11));
     }
 
     protected double getRawSample(int sampleX, int sampleZ) {

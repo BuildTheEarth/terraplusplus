@@ -13,6 +13,13 @@ import net.minecraft.util.math.BlockPos;
 @Getter
 public enum SegmentType {
     IGNORE(SegmentFill.NONE, null),
+    STREAM(SegmentFill.NARROW, Blocks.WATER.getDefaultState()),
+    RIVER(SegmentFill.WIDE, Blocks.WATER.getDefaultState()) {
+        @Override
+        public double computeRadius(int lanes) {
+            return 5.0d;
+        }
+    },
     ROAD(SegmentFill.NARROW, Blocks.GRASS_PATH.getDefaultState()),
     MINOR(SegmentFill.WIDE, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.GRAY)) {
         @Override
@@ -50,18 +57,11 @@ public enum SegmentType {
             return ((6 * lanes) >> 1) + 2;
         }
     },
-    STREAM(SegmentFill.NARROW, Blocks.WATER.getDefaultState()),
-    RIVER(SegmentFill.WIDE, Blocks.WATER.getDefaultState()) {
-        @Override
-        public double computeRadius(int lanes) {
-            return 5.0d;
-        }
-    },
     BUILDING(SegmentFill.NARROW, Blocks.BRICK_BLOCK.getDefaultState()),
     RAIL(SegmentFill.NONE, null);
 
     @NonNull
-    private final SegmentFill fill;
+    private final SegmentFill fillType;
     private final IBlockState state;
 
     public double computeRadius(int lanes) {
