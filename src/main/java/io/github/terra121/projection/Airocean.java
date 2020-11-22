@@ -1,13 +1,5 @@
 package io.github.terra121.projection;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-import javax.imageio.ImageIO;
-
 import io.github.terra121.util.MathUtils;
 
 /**
@@ -19,6 +11,21 @@ import io.github.terra121.util.MathUtils;
 public class Airocean extends GeographicProjection {
 
     protected static final double ARC = 2 * Math.asin(Math.sqrt(5 - Math.sqrt(5)) / Math.sqrt(10));
+    protected static final double Z = Math.sqrt(5 + 2 * Math.sqrt(5)) / Math.sqrt(15);
+    protected static final double EL = Math.sqrt(8) / Math.sqrt(5 + Math.sqrt(5));
+    protected static final double EL6 = EL / 6;
+    protected static final double DVE = Math.sqrt(3 + Math.sqrt(5)) / Math.sqrt(5 + Math.sqrt(5));
+    protected static final double R = -3 * EL6 / DVE;
+    
+    /**
+     * Number of iterations for Newton's method
+     */
+    private static final int NEWTON = 5;
+    
+    /**
+     * Returned by {@link #toGeo(double, double)} when trying to convert coordinates outside the projection domain.
+     */
+    public static final double[] OUT_OF_BOUNDS = { Double.NaN, Double.NaN };
     
 	/**
 	 * This contains the vertices of the icosahedron,
@@ -116,17 +123,6 @@ public class Airocean extends GeographicProjection {
             -1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
             20, 19, 15, 21, 16, -1, 17, 18, -1, -1, -1,
     };
-    
-    protected static final double Z = Math.sqrt(5 + 2 * Math.sqrt(5)) / Math.sqrt(15);
-    protected static final double EL = Math.sqrt(8) / Math.sqrt(5 + Math.sqrt(5));
-    protected static final double EL6 = EL / 6;
-    protected static final double DVE = Math.sqrt(3 + Math.sqrt(5)) / Math.sqrt(5 + Math.sqrt(5));
-    protected static final double R = -3 * EL6 / DVE;
-    
-    /**
-     * Returned by {@link #toGeo(double, double)} when trying to convert coordinates outside the projection domain.
-     */
-    public static final double[] OUT_OF_BOUNDS = { Double.NaN, Double.NaN };
 
     static {
     	
@@ -310,83 +306,6 @@ public class Airocean extends GeographicProjection {
         };
     }
 
-    public static void main(String[] args) throws IOException {
-        Airocean projection = new ModifiedAirocean();
-
-        //System.out.println(projection.metersPerUnit());
-        //System.out.println((projection.bounds()[0])*projection.metersPerUnit());
-        //System.out.println((projection.bounds()[2]-projection.bounds()[0])*projection.metersPerUnit());
-        //System.out.println((projection.bounds()[3]-projection.bounds()[1])*projection.metersPerUnit());
-
-        double[] f = (new ConformalEstimate()).fromGeo(-169.245937, 65.865726);
-        f = projection.toGeo(f[0], f[1]);
-
-        //System.out.println(f[0] + " " + f[1]);
-
-        BufferedImage base;
-
-        InputStream is = new FileInputStream("../resources/assets/terra121/data/map.png");
-        base = ImageIO.read(is);
-
-        BufferedImage img = new BufferedImage(4096, 4096, BufferedImage.TYPE_INT_ARGB);
-
-        //scale should be able to fit whole earth inside texture
-        double[] bounds = projection.bounds();
-        double scale = Math.max(Math.abs(bounds[2] - bounds[0]), Math.abs(bounds[3] - bounds[1]));
-
-        int w = img.getWidth();
-        int h = img.getHeight();
-
-        long og = System.nanoTime();
-
-        ConformalEstimate cp = new ConformalEstimate();
-
-        double[] oc = cp.toGeo(0, ARC * MathUtils.ROOT3 / 12);
-        f = cp.fromGeo(oc[0], oc[1] + 360.0 * 0.001 / 40075017);
-        double[] g = cp.fromGeo(oc[0], oc[1]);
-        System.out.println(Math.sqrt((f[0] - g[0]) * (f[0] - g[0]) + (f[1] - g[1]) * (f[1] - g[1])) * cp.metersPerUnit());
-
-        System.out.println(cp.metersPerUnit() / 40075017);
-        System.out.println(ARC);
-
-        System.out.println((System.nanoTime() - og) / 1000000000.0);
-
-        for (int x = 0; x < w; x++) {
-            for (int y = 0; y < h; y++) {
-                //image coords to projection coords
-                double X = (x / (double) w) * scale + bounds[0];
-                double Y = (y / (double) h) * scale + bounds[1];
-
-                //not out of bounds
-                if (bounds[0] <= X && X <= bounds[2] && bounds[1] <= Y && Y <= bounds[3]) {
-
-                    double[] proj = projection.toGeo(X, Y); //projection coords to lon lat
-
-                    //lat lon to reference image coords
-                    int lon = (int) ((proj[0] / 360 + 0.5) * base.getWidth());
-                    int lat = (int) ((0.5 + proj[1] / 180) * base.getHeight());
-
-                    if (proj[0] != proj[0] || proj[1] != proj[1]) {
-                        lon = 0;
-                        lat = 0;
-                    }
-
-                    //get pixel from reference image if possible
-                    if (lon >= 0 && lat >= 0 && lat < base.getHeight() && lon < base.getWidth()) {
-                        //if(lon!=1024 || lat!=512)
-                        //System.out.println(lon+" "+lat);
-                        img.setRGB(x, h - y - 1, base.getRGB(lon, base.getHeight() - lat - 1));
-                    } //else System.out.println(proj[0]+" "+proj[1]+" "+lon+" "+lat);
-                }
-            }
-        }
-
-        System.out.println((System.nanoTime() - og) / 1000000000.0);
-
-        ImageIO.write(img, "png", new File("out.png"));
-    }
-    private int newton = 5;
-
     protected double[] triangleTransform(double x, double y, double z) {
 
         double S = Z / z;
@@ -421,7 +340,7 @@ public class Airocean extends GeographicProjection {
         //double fp = anumer + bnumer + 1; //derivative relative to tanc
 
         //int i = newton;
-        for (int i = 0; i < this.newton; i++) {
+        for (int i = 0; i < NEWTON; i++) {
             double f = tana + tanb + tanc - R; //R = tana + tanb + tanc
             double fp = anumer * adenom * adenom + bnumer * bdenom * bdenom + 1; //derivative relative to tanc
 
@@ -505,7 +424,7 @@ public class Airocean extends GeographicProjection {
 
         double x = -o / n; //x = tanc
 
-        for (int i = 0; i < this.newton; i++) {
+        for (int i = 0; i < NEWTON; i++) {
             double x2 = x * x;
 
             double f = l * x2 * x + m * x2 + n * x + o;
@@ -646,56 +565,6 @@ public class Airocean extends GeographicProjection {
     public boolean upright() {
         return false;
     }
-
-    /*public static void main(String[] args) throws IOException {
-        Airocean projection = new ModifiedAirocean();
-
-        double[] c = projection.fromGeo(12.4900422, 41.8902102);//-73.985821, 40.723241);
-        System.out.println(c[0] + " " + c[1]);
-        c = projection.toGeo(c[0], c[1]);
-        System.out.println(c[0] + " " + c[1]);
-
-
-        System.out.println((new ConformalEstimate()).fromGeo(170.185772, 53.611924)[0]);
-        System.out.println((new ConformalEstimate()).fromGeo(170.185772, 53.611924)[1]);
-
-        System.out.println(ARC);
-
-        BufferedImage base;
-
-        InputStream is = new FileInputStream("../../../../../resources/assets/terra121/data/map.png");
-        base = ImageIO.read(is);
-
-        BufferedImage img = new BufferedImage(1024, 1024, BufferedImage.TYPE_INT_ARGB);
-
-        //scale should be able to fit whole earth inside texture
-        double[] bounds = projection.bounds();
-        double scale = Math.max(Math.abs(bounds[2] - bounds[0]), Math.abs(bounds[3] - bounds[1]));
-
-        int w = img.getWidth();
-        int h = img.getHeight();
-
-        for (int lon = 0; lon < base.getWidth(); lon++) {
-            for (int lat = 0; lat < base.getHeight(); lat++) {
-
-                //lat lon to reference image coords
-                double Lon = (lon / (double) base.getWidth() - 0.5) * 360;
-                double Lat = (lat / (double) base.getHeight() - 0.5) * 180;
-
-                double proj[] = projection.fromGeo(Lon, Lat); //projection coords to x y
-
-                int x = (int) (w * (proj[0] - bounds[0]) / scale);
-                int y = (int) (h * (proj[1] - bounds[1]) / scale);
-
-                //get pixel from reference image if possible
-                if (x >= 0 && y >= 0 && x < img.getHeight() && y < img.getWidth()) {
-                    img.setRGB(x, h - y - 1, base.getRGB(lon, base.getHeight() - lat - 1));
-                }
-            }
-        }
-
-        ImageIO.write(img, "png", new File("out.png"));
-    }*/
 
     @Override
     public double metersPerUnit() {

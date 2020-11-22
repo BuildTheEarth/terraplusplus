@@ -1,5 +1,7 @@
 package io.github.terra121.projection;
 
+import io.github.terra121.TerraConstants;
+
 /**
  * Implementation of the Sinusoidal projection.
  * 
@@ -20,6 +22,6 @@ public class SinusoidalProjection extends GeographicProjection {
 
     @Override
     public double metersPerUnit() {
-        return EARTH_CIRCUMFERENCE / 360.0; //gotta make good on that exact area
+        return TerraConstants.EARTH_CIRCUMFERENCE / 360.0; //gotta make good on that exact area
     }
 }

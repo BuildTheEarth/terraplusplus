@@ -1,5 +1,6 @@
 package io.github.terra121.projection;
 
+import io.github.terra121.TerraConstants;
 import io.github.terra121.util.MathUtils;
 
 /**
@@ -73,6 +74,6 @@ public class EqualEarth extends GeographicProjection {
 
     @Override
     public double metersPerUnit() {
-        return EARTH_CIRCUMFERENCE / (2 * this.bounds()[2]);
+        return TerraConstants.EARTH_CIRCUMFERENCE / (2 * this.bounds()[2]);
     }
 }
