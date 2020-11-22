@@ -1,5 +1,11 @@
 package io.github.terra121.projection;
 
+/**
+ * Implementation of the BTE modified Dynmaxion projection.
+ * 
+ * @see io.github.terra121.projection.Airocean
+ * @see io.github.terra121.projection.ConformalEstimate
+ */
 public class ModifiedAirocean extends ConformalEstimate {
 
     protected static double THETA = -150 * TO_RADIANS;

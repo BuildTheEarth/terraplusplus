@@ -1,7 +1,13 @@
 package io.github.terra121.projection;
 
+/**
+ * Inverses the warped projection such that x becomes y and y becomes x.
+ */
 public class InvertedOrientation extends ProjectionTransform {
 
+	/**
+	 * @param input - projection to transform
+	 */
     public InvertedOrientation(GeographicProjection input) {
         super(input);
     }

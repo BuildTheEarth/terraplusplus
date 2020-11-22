@@ -7,13 +7,27 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Implementation of the Dynmaxion projection.
+ * Also known as Airocean or Fuller projection.
+ * 
+ * @see <a href="https://en.wikipedia.org/wiki/Dymaxion_map">Wikipedia's article on the Dynmaxion projection</a>
+ */
 public class Airocean extends GeographicProjection {
 
     protected static double ARC = 2 * Math.asin(Math.sqrt(5 - Math.sqrt(5)) / Math.sqrt(10));
 
     protected static final double TO_RADIANS = Math.PI / 180.0;
     protected static final double ROOT3 = Math.sqrt(3);
-    protected static double[] VERT = {
+    
+	/**
+	 * This contains the vertices of the icosahedron,
+	 * identified by their geographic longitude and latitude in degrees.
+	 * https://en.wikipedia.org/wiki/Regular_icosahedron#Spherical_coordinates
+	 * When the class is loaded, a static block below converts all these coordinates
+	 * to the equivalent spherical coordinates (longitude and colatitude), in radians.
+	 */
+    protected static double[] VERTICES = {
             10.536199, 64.700000,
             -5.245390, 2.300882,
             58.157706, 10.447378,
@@ -75,15 +89,26 @@ public class Airocean extends GeographicProjection {
             -5, -5, //20, pseudo triangle, child of 14
             -2, -7, //21 , pseudo triangle, child of 15
     };
+    
+	/**
+	 * Indicates for each face if it needs to be flipped after projecting
+	 */
     public static byte[] FLIP_TRIANGLE = {
             1, 0, 1, 0, 0,
             1, 0, 1, 0, 1, 0, 1, 0, 1, 0,
             1, 1, 1, 0, 0,
             1, 0,
     };
+    
+	/**
+	 * This contains the Cartesian coordinates the centroid
+	 * of each face of the icosahedron.
+	 */
     protected static final double[] CENTROID = new double[66];
+    
     protected static final double[] ROTATION_MATRIX = new double[198];
     protected static final double[] INVERSE_ROTATION_MATRIX = new double[198];
+    
     protected static final int[] FACE_ON_GRID = {
             -1, -1, 0, 1, 2, -1, -1, 3, -1, 4, -1,
             -1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
@@ -107,16 +132,16 @@ public class Airocean extends GeographicProjection {
     static {
 
         for (int i = 0; i < 12; i++) {
-            VERT[2 * i + 1] = 90 - VERT[2 * i + 1];
+            VERTICES[2 * i + 1] = 90 - VERTICES[2 * i + 1];
 
-            VERT[2 * i] *= TO_RADIANS;
-            VERT[2 * i + 1] *= TO_RADIANS;
+            VERTICES[2 * i] *= TO_RADIANS;
+            VERTICES[2 * i + 1] *= TO_RADIANS;
         }
 
         for (int i = 0; i < 22; i++) {
-            double[] a = cart(VERT[2 * ISO[i * 3]], VERT[2 * ISO[i * 3] + 1]);
-            double[] b = cart(VERT[2 * ISO[i * 3 + 1]], VERT[2 * ISO[i * 3 + 1] + 1]);
-            double[] c = cart(VERT[2 * ISO[i * 3 + 2]], VERT[2 * ISO[i * 3 + 2] + 1]);
+            double[] a = cart(VERTICES[2 * ISO[i * 3]], VERTICES[2 * ISO[i * 3] + 1]);
+            double[] b = cart(VERTICES[2 * ISO[i * 3 + 1]], VERTICES[2 * ISO[i * 3 + 1] + 1]);
+            double[] c = cart(VERTICES[2 * ISO[i * 3 + 2]], VERTICES[2 * ISO[i * 3 + 2] + 1]);
 
             double xsum = a[0] + b[0] + c[0];
             double ysum = a[1] + b[1] + c[1];
@@ -131,7 +156,7 @@ public class Airocean extends GeographicProjection {
             double clon = Math.atan2(ysum, xsum);
             double clat = Math.atan2(Math.sqrt(xsum * xsum + ysum * ysum), zsum);
 
-            double[] v = { VERT[2 * ISO[i * 3]], VERT[2 * ISO[i * 3] + 1] };
+            double[] v = { VERTICES[2 * ISO[i * 3]], VERTICES[2 * ISO[i * 3] + 1] };
             v = yRot(v[0] - clon, v[1], -clat);
 
             produceZYZRotationMatrix(ROTATION_MATRIX, i * 9, -clon, -clat, (Math.PI / 2) - v[0]);
@@ -161,6 +186,15 @@ public class Airocean extends GeographicProjection {
         out[offset + 8] = cosb;
     }
 
+    /**
+	 * Computes the Cartesian position vector of a vertex using it's spherical coordinates.
+	 * It is assumed that the sphere is of radius 1.
+	 * 
+     * @param lambda - longitude in radians
+     * @param phi - colatitude in radians
+     * 
+     * @return {x, y, z} coordinates in the Cartesian coordinate system
+     */
     protected static double[] cart(double lambda, double phi) {
         double sinphi = Math.sin(phi);
         return new double[]{ sinphi * Math.cos(lambda), sinphi * Math.sin(lambda), Math.cos(phi) };

@@ -1,17 +1,28 @@
 package io.github.terra121.projection;
 
+/**
+ * Implementation of the universal transverse Mercator projection.
+ * 
+ * @see <a href="https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system">Wikipedia's article on the universal transverse Mercator projection</a>
+ * @see <a href="https://en.wikipedia.org/wiki/Transverse_Mercator_projection">Wikipedia's article on the transverse Mercator projection</a>
+ */
 public class TransverseMercatorProjection extends GeographicProjection {
     public static final double zoneWidth = Math.toRadians(6.0);
     private static final double metersPerUnit = EARTH_CIRCUMFERENCE / (2 * Math.PI);
 
+    /**
+     * @param longitude - longitude in radians
+     * @return the central meridian to use when projecting at the given longitude, in radians
+     */
     public static double getCentralMeridian(double longitude) {
+    	//TODO Why is there a Math.floor here? It seems to work a lot better without it
         return (Math.floor(longitude / zoneWidth) + 0.5) * zoneWidth;
     }
 
     @Override
-    public double[] fromGeo(double lon, double lat) {
-        double lam = Math.toRadians(lon);
-        double phi = Math.toRadians(lat);
+    public double[] fromGeo(double longitude, double latitude) {
+        double lam = Math.toRadians(longitude);
+        double phi = Math.toRadians(latitude);
         double centralMeridian = getCentralMeridian(lam);
         lam -= centralMeridian;
 

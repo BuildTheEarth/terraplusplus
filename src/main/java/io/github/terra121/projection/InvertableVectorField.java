@@ -1,6 +1,7 @@
 package io.github.terra121.projection;
 
 public class InvertableVectorField {
+	
     protected static double ROOT3 = Math.sqrt(3);
     protected double[][] VECTOR_X;
     protected double[][] VECTOR_Y;

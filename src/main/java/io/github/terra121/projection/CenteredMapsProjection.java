@@ -1,5 +1,11 @@
 package io.github.terra121.projection;
 
+/**
+ * Implementation of the Mercator projection, normalized between -1 and 1.
+ * 
+ * @see io.github.terra121.projection.MapsProjection
+ * @see <a href="https://en.wikipedia.org/wiki/Mercator_projection"> Wikipedia's article on the Mercator projection</a>
+ */
 public class CenteredMapsProjection extends GeographicProjection {
     private static final double TO_RADIANS = Math.PI / 180.0;
 
@@ -12,10 +18,10 @@ public class CenteredMapsProjection extends GeographicProjection {
     }
 
     @Override
-    public double[] fromGeo(double lon, double lat) {
+    public double[] fromGeo(double longitude, double latitude) {
         return new double[]{
-                lon / 180.0,
-                -(Math.log(Math.tan((Math.PI / 2 + lat * TO_RADIANS) / 2))) / Math.PI
+                longitude / 180.0,
+                -(Math.log(Math.tan((Math.PI / 2 + latitude * TO_RADIANS) / 2))) / Math.PI
         };
     }
 

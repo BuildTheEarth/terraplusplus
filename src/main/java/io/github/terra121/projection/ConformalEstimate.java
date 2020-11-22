@@ -4,6 +4,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Scanner;
 
+/**
+ * Implementation of the Dynmaxion like conformal projection.
+ * Slightly modifies the Dynmaxion projection to make it conformal.
+ * 
+ * @see io.github.terra121.projection.Airocean
+ */
 public class ConformalEstimate extends Airocean {
 
     InvertableVectorField forward;

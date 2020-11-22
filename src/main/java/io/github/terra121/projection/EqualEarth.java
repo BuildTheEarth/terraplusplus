@@ -1,5 +1,10 @@
 package io.github.terra121.projection;
 
+/**
+ * Implementation of the Equal Earth projection
+ * 
+ * @see <a href="https://en.wikipedia.org/wiki/Equal_Earth_projection"> Wikipedia's article on the Equal Earth projection</a>
+ */
 public class EqualEarth extends GeographicProjection {
 
     private static final double TO_RADIANS = Math.PI / 180.0;
@@ -47,8 +52,8 @@ public class EqualEarth extends GeographicProjection {
     }
 
     @Override
-    public double[] fromGeo(double lon, double lat) {
-        double sintheta = ROOT3 * Math.sin(lat * TO_RADIANS) / 2;
+    public double[] fromGeo(double longitude, double latitude) {
+        double sintheta = ROOT3 * Math.sin(latitude * TO_RADIANS) / 2;
         double theta = Math.asin(sintheta);
         double tpow = theta;
 
@@ -63,7 +68,7 @@ public class EqualEarth extends GeographicProjection {
 
         double costheta = Math.sqrt(1 - sintheta * sintheta);
 
-        return new double[]{ (2 * ROOT3 * TO_RADIANS * lon * costheta / 3) / x, y };
+        return new double[]{ (2 * ROOT3 * TO_RADIANS * longitude * costheta / 3) / x, y };
     }
 
     @Override

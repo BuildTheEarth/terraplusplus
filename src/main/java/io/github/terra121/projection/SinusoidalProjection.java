@@ -1,5 +1,11 @@
 package io.github.terra121.projection;
 
+/**
+ * Implementation of the Sinusoidal projection.
+ * 
+ * @see <a href="https://en.wikipedia.org/wiki/Sinusoidal_projection"> Wikipedia's article on the sinusoidal projection</a>
+ *
+ */
 public class SinusoidalProjection extends GeographicProjection {
 
     private static final double TO_RADIANS = Math.PI / 180.0;
@@ -10,8 +16,8 @@ public class SinusoidalProjection extends GeographicProjection {
     }
 
     @Override
-    public double[] fromGeo(double lon, double lat) {
-        return new double[]{ lon * Math.cos(lat * TO_RADIANS), lat };
+    public double[] fromGeo(double longitude, double latitude) {
+        return new double[]{ longitude * Math.cos(latitude * TO_RADIANS), latitude };
     }
 
     @Override
