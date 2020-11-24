@@ -45,7 +45,7 @@ public class TerraTeleport extends Command {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
         if(!hasPermission(TerraConstants.controlCommandNode + "tpll", sender)) {
-            sender.sendMessage(TerraConstants.TextConstants.noPermission);
+            sender.sendMessage(TerraConstants.TextConstants.getNoPermission());
             return;
         }
 

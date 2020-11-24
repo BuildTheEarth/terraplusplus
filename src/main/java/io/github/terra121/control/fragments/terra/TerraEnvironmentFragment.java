@@ -24,21 +24,21 @@ public class TerraEnvironmentFragment extends CommandFragment {
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         BiomeProvider bp = sender.getEntityWorld().getBiomeProvider();
         if (!(bp instanceof EarthBiomeProvider)) { //must have normal biome provider
-            sender.sendMessage(TerraConstants.TextConstants.notTerra);
+            sender.sendMessage(TerraConstants.TextConstants.getNotTerra());
         }
 
         World world = sender.getEntityWorld();
         IChunkProvider cp = world.getChunkProvider();
 
         if (!(cp instanceof CubeProviderServer)) {
-            sender.sendMessage(TerraConstants.TextConstants.notCC);
+            sender.sendMessage(TerraConstants.TextConstants.getNotCC());
             return;
         }
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
         if (!(gen instanceof EarthGenerator)) {
-            sender.sendMessage(TerraConstants.TextConstants.notTerra);
+            sender.sendMessage(TerraConstants.TextConstants.getNotTerra());
             return;
         }
 

@@ -21,7 +21,7 @@ public class TerraWhereFragment extends CommandFragment {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         if(sender instanceof MinecraftServer && args.length < 1) {
-            sender.sendMessage(TerraConstants.TextConstants.playerOnly);
+            sender.sendMessage(TerraConstants.TextConstants.getPlayerOnly());
             return;
         }
 
@@ -29,14 +29,14 @@ public class TerraWhereFragment extends CommandFragment {
         IChunkProvider cp = world.getChunkProvider();
 
         if (!(cp instanceof CubeProviderServer)) {
-            sender.sendMessage(TerraConstants.TextConstants.notCC);
+            sender.sendMessage(TerraConstants.TextConstants.getNotCC());
             return;
         }
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
         if (!(gen instanceof EarthGenerator)) {
-            sender.sendMessage(TerraConstants.TextConstants.notTerra);
+            sender.sendMessage(TerraConstants.TextConstants.getNotTerra());
             return;
         }
 

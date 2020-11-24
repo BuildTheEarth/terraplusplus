@@ -46,7 +46,7 @@ public class TerraAdminCommand extends FragmentManager {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         if(!hasPermission(null, sender)) {
-            sender.sendMessage(TerraConstants.TextConstants.noPermission);
+            sender.sendMessage(TerraConstants.TextConstants.getNoPermission());
             return;
         }
         executeFragment(server, sender, args);
