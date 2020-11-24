@@ -1,30 +1,38 @@
 package io.github.terra121.projection.airocean;
 
+import io.github.terra121.util.MathUtils;
+
+/**
+ * Implementation of the BTE modified Dynmaxion projection.
+ * 
+ * @see io.github.terra121.projection.Airocean
+ * @see io.github.terra121.projection.ConformalEstimate
+ */
 public class ModifiedAirocean extends ConformalEstimate {
 
-    protected static double THETA = -150 * TO_RADIANS;
-    protected static double SIN_THETA = Math.sin(THETA);
-    protected static double COS_THETA = Math.cos(THETA);
-    protected static double BERING_X = -0.3420420960118339;//-0.3282152608138795;
-    protected static double BERING_Y = -0.322211064085279;//-0.3281491467713469;
-    protected static double ARCTIC_Y = -0.2;//-0.3281491467713469;
-    protected static double ARCTIC_M = (ARCTIC_Y - ROOT3 * ARC / 4) / (BERING_X - -0.5 * ARC);
-    protected static double ARCTIC_B = ARCTIC_Y - ARCTIC_M * BERING_X;
-    protected static double ALEUTIAN_Y = -0.5000446805492526;//-0.5127463765943157;
-    protected static double ALEUTIAN_XL = -0.5149231279757507;//-0.4957832938238718;
-    protected static double ALEUTIAN_XR = -0.45;
-    protected static double ALEUTIAN_M = (BERING_Y - ALEUTIAN_Y) / (BERING_X - ALEUTIAN_XR);
-    protected static double ALEUTIAN_B = BERING_Y - ALEUTIAN_M * BERING_X;
+    protected static final double THETA = Math.toRadians(-150);
+    protected static final double SIN_THETA = Math.sin(THETA);
+    protected static final double COS_THETA = Math.cos(THETA);
+    protected static final double BERING_X = -0.3420420960118339;//-0.3282152608138795;
+    protected static final double BERING_Y = -0.322211064085279;//-0.3281491467713469;
+    protected static final double ARCTIC_Y = -0.2;//-0.3281491467713469;
+    protected static final double ARCTIC_M = (ARCTIC_Y - MathUtils.ROOT3 * ARC / 4) / (BERING_X - -0.5 * ARC);
+    protected static final double ARCTIC_B = ARCTIC_Y - ARCTIC_M * BERING_X;
+    protected static final double ALEUTIAN_Y = -0.5000446805492526;//-0.5127463765943157;
+    protected static final double ALEUTIAN_XL = -0.5149231279757507;//-0.4957832938238718;
+    protected static final double ALEUTIAN_XR = -0.45;
+    protected static final double ALEUTIAN_M = (BERING_Y - ALEUTIAN_Y) / (BERING_X - ALEUTIAN_XR);
+    protected static final double ALEUTIAN_B = BERING_Y - ALEUTIAN_M * BERING_X;
 
     @Override
-    public double[] fromGeo(double lon, double lat) {
-        double[] c = super.fromGeo(lon, lat);
+    public double[] fromGeo(double longitude, double latitude) {
+        double[] c = super.fromGeo(longitude, latitude);
         double x = c[0];
         double y = c[1];
 
         boolean easia = this.isEurasianPart(x, y);
 
-        y -= 0.75 * ARC * ROOT3;
+        y -= 0.75 * ARC * MathUtils.ROOT3;
 
         if (easia) {
             x += ARC;
@@ -48,9 +56,9 @@ public class ModifiedAirocean extends ConformalEstimate {
         if (y < 0) {
             easia = x > 0;
         } else if (y > ARC / 2) {
-            easia = x > -ROOT3 * ARC / 2;
+            easia = x > -MathUtils.ROOT3 * ARC / 2;
         } else {
-            easia = y * -ROOT3 < x;
+            easia = y * -MathUtils.ROOT3 < x;
         }
 
         double t = x;
@@ -67,7 +75,7 @@ public class ModifiedAirocean extends ConformalEstimate {
             x += ARC;
         }
 
-        y += 0.75 * ARC * ROOT3;
+        y += 0.75 * ARC * MathUtils.ROOT3;
 
         //check to make sure still in right part
         if (easia != this.isEurasianPart(x, y)) {
@@ -87,7 +95,7 @@ public class ModifiedAirocean extends ConformalEstimate {
             return true;
         }
 
-        if (y > ROOT3 * ARC / 4) //above arctic ocean
+        if (y > MathUtils.ROOT3 * ARC / 4) //above arctic ocean
         {
             return x < 0;
         }
@@ -111,6 +119,6 @@ public class ModifiedAirocean extends ConformalEstimate {
 
     @Override
     public double[] bounds() {
-        return new double[]{ -1.5 * ARC * ROOT3, -1.5 * ARC, 3 * ARC, ROOT3 * ARC }; //TODO: 3*ARC is prly to high
+        return new double[]{ -1.5 * ARC * MathUtils.ROOT3, -1.5 * ARC, 3 * ARC, MathUtils.ROOT3 * ARC }; //TODO: 3*ARC is prly to high
     }
 }

@@ -2,17 +2,33 @@ package io.github.terra121.projection.transform;
 
 import io.github.terra121.projection.GeographicProjection;
 
-public class ScaleProjection extends AbstractTransformation {
+/**
+ * Scales the warps projection's projected space up or down.
+ * More specifically, it multiplies x and y by there respective scale factors.
+ */
+public class ScaleProjection extends ProjectionTransform {
+    private final double scaleX;
+    private final double scaleY;
 
-    double scaleX;
-    double scaleY;
-
+    /**
+     * Creates a new ScaleProjection with different scale factor for the x and y axis.
+     *
+     * @param input - projection to transform
+     * @param scaleX - scaling to apply along the x axis
+     * @param scaleY - scaling to apply along the y axis
+     */
     public ScaleProjection(GeographicProjection input, double scaleX, double scaleY) {
         super(input);
         this.scaleX = scaleX;
         this.scaleY = scaleY;
     }
 
+    /**
+     * Creates a new ScaleProjection with the same scale factor for the x and y axis.
+     *
+     * @param input - projection to transform
+     * @param scale - scale factor to apply on both axis
+     */
     public ScaleProjection(GeographicProjection input, double scale) {
         this(input, scale, scale);
     }

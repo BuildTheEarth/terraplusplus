@@ -2,8 +2,15 @@ package io.github.terra121.projection.transform;
 
 import io.github.terra121.projection.GeographicProjection;
 
-public class UprightOrientation extends AbstractTransformation {
+/**
+ * Mirrors the warped projection vertically.
+ * I.E. x' = x and y' = -y
+ */
+public class UprightOrientation extends ProjectionTransform {
 
+    /**
+     * @param input - projection to transform
+     */
     public UprightOrientation(GeographicProjection input) {
         super(input);
     }
@@ -14,8 +21,8 @@ public class UprightOrientation extends AbstractTransformation {
     }
 
     @Override
-    public double[] fromGeo(double lon, double lat) {
-        double[] p = this.input.fromGeo(lon, lat);
+    public double[] fromGeo(double longitude, double latitude) {
+        double[] p = this.input.fromGeo(longitude, latitude);
         p[1] = -p[1];
         return p;
     }

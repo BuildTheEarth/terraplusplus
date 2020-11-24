@@ -2,20 +2,41 @@ package io.github.terra121.projection.airocean;
 
 import io.github.terra121.projection.GeographicProjection;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import io.github.terra121.util.MathUtils;
 
+/**
+ * Implementation of the Dynmaxion projection.
+ * Also known as Airocean or Fuller projection.
+ *
+ * @see <a href="https://en.wikipedia.org/wiki/Dymaxion_map">Wikipedia's article on the Dynmaxion projection</a>
+ */
 public class Airocean extends GeographicProjection {
 
-    protected static double ARC = 2 * Math.asin(Math.sqrt(5 - Math.sqrt(5)) / Math.sqrt(10));
+    protected static final double ARC = 2 * Math.asin(Math.sqrt(5 - Math.sqrt(5)) / Math.sqrt(10));
+    protected static final double Z = Math.sqrt(5 + 2 * Math.sqrt(5)) / Math.sqrt(15);
+    protected static final double EL = Math.sqrt(8) / Math.sqrt(5 + Math.sqrt(5));
+    protected static final double EL6 = EL / 6;
+    protected static final double DVE = Math.sqrt(3 + Math.sqrt(5)) / Math.sqrt(5 + Math.sqrt(5));
+    protected static final double R = -3 * EL6 / DVE;
 
-    protected static final double TO_RADIANS = Math.PI / 180.0;
-    protected static final double ROOT3 = Math.sqrt(3);
-    protected static double[] VERT = {
+    /**
+     * Number of iterations for Newton's method
+     */
+    private static final int NEWTON = 5;
+
+    /**
+     * Returned by {@link #toGeo(double, double)} when trying to convert coordinates outside the projection domain.
+     */
+    public static final double[] OUT_OF_BOUNDS = { Double.NaN, Double.NaN };
+
+	/**
+	 * This contains the vertices of the icosahedron,
+	 * identified by their geographic longitude and latitude in degrees.
+	 * https://en.wikipedia.org/wiki/Regular_icosahedron#Spherical_coordinates
+	 * When the class is loaded, a static block below converts all these coordinates
+	 * to the equivalent spherical coordinates (longitude and colatitude), in radians.
+	 */
+    protected static final double[] VERTICES = {
             10.536199, 64.700000,
             -5.245390, 2.300882,
             58.157706, 10.447378,
@@ -29,6 +50,7 @@ public class Airocean extends GeographicProjection {
             -57.700000, -39.100000,
             -169.463800, -64.700000,
     };
+
     protected static final int[] ISO = {
             2, 1, 6,
             1, 0, 2,
@@ -53,7 +75,8 @@ public class Airocean extends GeographicProjection {
             11, 6, 7, //child of 14
             3, 7, 8, //child of 15
     };
-    public static double[] CENTER_MAP = {
+
+    protected static final double[] CENTER_MAP = {
             -3, 7,
             -2, 5,
             -1, 7,
@@ -77,48 +100,50 @@ public class Airocean extends GeographicProjection {
             -5, -5, //20, pseudo triangle, child of 14
             -2, -7, //21 , pseudo triangle, child of 15
     };
-    public static byte[] FLIP_TRIANGLE = {
+
+	/**
+	 * Indicates for each face if it needs to be flipped after projecting
+	 */
+    protected static final byte[] FLIP_TRIANGLE = {
             1, 0, 1, 0, 0,
             1, 0, 1, 0, 1, 0, 1, 0, 1, 0,
             1, 1, 1, 0, 0,
             1, 0,
     };
+
+	/**
+	 * This contains the Cartesian coordinates of the centroid
+	 * of each face of the icosahedron.
+	 */
     protected static final double[] CENTROID = new double[66];
+
     protected static final double[] ROTATION_MATRIX = new double[198];
     protected static final double[] INVERSE_ROTATION_MATRIX = new double[198];
+
     protected static final int[] FACE_ON_GRID = {
             -1, -1, 0, 1, 2, -1, -1, 3, -1, 4, -1,
             -1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
             20, 19, 15, 21, 16, -1, 17, 18, -1, -1, -1,
     };
-    protected static final double Z = Math.sqrt(5 + 2 * Math.sqrt(5)) / Math.sqrt(15);
-    protected static final double EL = Math.sqrt(8) / Math.sqrt(5 + Math.sqrt(5));
-    protected static final double EL6 = EL / 6;
-    protected static final double DVE = Math.sqrt(3 + Math.sqrt(5)) / Math.sqrt(5 + Math.sqrt(5));
-    protected static final double R = -3 * EL6 / DVE;
-    public static double[] OUT_OF_BOUNDS = { 0.0 / 0, 0.0 / 0 };
 
     static {
 
         for (int i = 0; i < 22; i++) {
             CENTER_MAP[2 * i] *= 0.5 * ARC;
-            CENTER_MAP[2 * i + 1] *= ARC * ROOT3 / 12;
+            CENTER_MAP[2 * i + 1] *= ARC * MathUtils.ROOT3 / 12;
         }
-    }
-
-    static {
 
         for (int i = 0; i < 12; i++) {
-            VERT[2 * i + 1] = 90 - VERT[2 * i + 1];
+            VERTICES[2 * i + 1] = 90 - VERTICES[2 * i + 1];
 
-            VERT[2 * i] *= TO_RADIANS;
-            VERT[2 * i + 1] *= TO_RADIANS;
+            VERTICES[2 * i] = Math.toRadians(VERTICES[2 * i]);
+            VERTICES[2 * i + 1] = Math.toRadians(VERTICES[2 * i + 1]);
         }
 
         for (int i = 0; i < 22; i++) {
-            double[] a = cart(VERT[2 * ISO[i * 3]], VERT[2 * ISO[i * 3] + 1]);
-            double[] b = cart(VERT[2 * ISO[i * 3 + 1]], VERT[2 * ISO[i * 3 + 1] + 1]);
-            double[] c = cart(VERT[2 * ISO[i * 3 + 2]], VERT[2 * ISO[i * 3 + 2] + 1]);
+            double[] a = cart(VERTICES[2 * ISO[i * 3]], VERTICES[2 * ISO[i * 3] + 1]);
+            double[] b = cart(VERTICES[2 * ISO[i * 3 + 1]], VERTICES[2 * ISO[i * 3 + 1] + 1]);
+            double[] c = cart(VERTICES[2 * ISO[i * 3 + 2]], VERTICES[2 * ISO[i * 3 + 2] + 1]);
 
             double xsum = a[0] + b[0] + c[0];
             double ysum = a[1] + b[1] + c[1];
@@ -133,7 +158,7 @@ public class Airocean extends GeographicProjection {
             double clon = Math.atan2(ysum, xsum);
             double clat = Math.atan2(Math.sqrt(xsum * xsum + ysum * ysum), zsum);
 
-            double[] v = { VERT[2 * ISO[i * 3]], VERT[2 * ISO[i * 3] + 1] };
+            double[] v = { VERTICES[2 * ISO[i * 3]], VERTICES[2 * ISO[i * 3] + 1] };
             v = yRot(v[0] - clon, v[1], -clat);
 
             produceZYZRotationMatrix(ROTATION_MATRIX, i * 9, -clon, -clat, (Math.PI / 2) - v[0]);
@@ -163,6 +188,15 @@ public class Airocean extends GeographicProjection {
         out[offset + 8] = cosb;
     }
 
+    /**
+	 * Computes the Cartesian position vector of a vertex using it's spherical coordinates.
+	 * It is assumed that the sphere is of radius 1.
+	 *
+     * @param lambda - longitude in radians
+     * @param phi - colatitude in radians
+     *
+     * @return {x, y, z} coordinates in the Cartesian coordinate system
+     */
     protected static double[] cart(double lambda, double phi) {
         double sinphi = Math.sin(phi);
         return new double[]{ sinphi * Math.cos(lambda), sinphi * Math.sin(lambda), Math.cos(phi) };
@@ -198,7 +232,7 @@ public class Airocean extends GeographicProjection {
 
         //cast equiladeral triangles to 45 degreee right triangles (side length of root2)
         double xp = x / ARC;
-        double yp = y / (ARC * ROOT3);
+        double yp = y / (ARC * MathUtils.ROOT3);
 
         int row;
         if (yp > -0.25) {
@@ -255,83 +289,6 @@ public class Airocean extends GeographicProjection {
         };
     }
 
-    public static void main(String[] args) throws IOException {
-        Airocean projection = new ModifiedAirocean();
-
-        //System.out.println(projection.metersPerUnit());
-        //System.out.println((projection.bounds()[0])*projection.metersPerUnit());
-        //System.out.println((projection.bounds()[2]-projection.bounds()[0])*projection.metersPerUnit());
-        //System.out.println((projection.bounds()[3]-projection.bounds()[1])*projection.metersPerUnit());
-
-        double[] f = (new ConformalEstimate()).fromGeo(-169.245937, 65.865726);
-        f = projection.toGeo(f[0], f[1]);
-
-        //System.out.println(f[0] + " " + f[1]);
-
-        BufferedImage base;
-
-        InputStream is = new FileInputStream("../resources/assets/terra121/data/map.png");
-        base = ImageIO.read(is);
-
-        BufferedImage img = new BufferedImage(4096, 4096, BufferedImage.TYPE_INT_ARGB);
-
-        //scale should be able to fit whole earth inside texture
-        double[] bounds = projection.bounds();
-        double scale = Math.max(Math.abs(bounds[2] - bounds[0]), Math.abs(bounds[3] - bounds[1]));
-
-        int w = img.getWidth();
-        int h = img.getHeight();
-
-        long og = System.nanoTime();
-
-        ConformalEstimate cp = new ConformalEstimate();
-
-        double[] oc = cp.toGeo(0, ARC * ROOT3 / 12);
-        f = cp.fromGeo(oc[0], oc[1] + 360.0 * 0.001 / 40075017);
-        double[] g = cp.fromGeo(oc[0], oc[1]);
-        System.out.println(Math.sqrt((f[0] - g[0]) * (f[0] - g[0]) + (f[1] - g[1]) * (f[1] - g[1])) * cp.metersPerUnit());
-
-        System.out.println(cp.metersPerUnit() / 40075017);
-        System.out.println(ARC);
-
-        System.out.println((System.nanoTime() - og) / 1000000000.0);
-
-        for (int x = 0; x < w; x++) {
-            for (int y = 0; y < h; y++) {
-                //image coords to projection coords
-                double X = (x / (double) w) * scale + bounds[0];
-                double Y = (y / (double) h) * scale + bounds[1];
-
-                //not out of bounds
-                if (bounds[0] <= X && X <= bounds[2] && bounds[1] <= Y && Y <= bounds[3]) {
-
-                    double[] proj = projection.toGeo(X, Y); //projection coords to lon lat
-
-                    //lat lon to reference image coords
-                    int lon = (int) ((proj[0] / 360 + 0.5) * base.getWidth());
-                    int lat = (int) ((0.5 + proj[1] / 180) * base.getHeight());
-
-                    if (proj[0] != proj[0] || proj[1] != proj[1]) {
-                        lon = 0;
-                        lat = 0;
-                    }
-
-                    //get pixel from reference image if possible
-                    if (lon >= 0 && lat >= 0 && lat < base.getHeight() && lon < base.getWidth()) {
-                        //if(lon!=1024 || lat!=512)
-                        //System.out.println(lon+" "+lat);
-                        img.setRGB(x, h - y - 1, base.getRGB(lon, base.getHeight() - lat - 1));
-                    } //else System.out.println(proj[0]+" "+proj[1]+" "+lon+" "+lat);
-                }
-            }
-        }
-
-        System.out.println((System.nanoTime() - og) / 1000000000.0);
-
-        ImageIO.write(img, "png", new File("out.png"));
-    }
-    private int newton = 5;
-
     protected double[] triangleTransform(double x, double y, double z) {
 
         double S = Z / z;
@@ -339,17 +296,17 @@ public class Airocean extends GeographicProjection {
         double xp = S * x;
         double yp = S * y;
 
-        double a = Math.atan((2 * yp / ROOT3 - EL6) / DVE); //ARC/2 terms cancel
-        double b = Math.atan((xp - yp / ROOT3 - EL6) / DVE);
-        double c = Math.atan((-xp - yp / ROOT3 - EL6) / DVE);
+        double a = Math.atan((2 * yp / MathUtils.ROOT3 - EL6) / DVE); //ARC/2 terms cancel
+        double b = Math.atan((xp - yp / MathUtils.ROOT3 - EL6) / DVE);
+        double c = Math.atan((-xp - yp / MathUtils.ROOT3 - EL6) / DVE);
 
-        return new double[]{ 0.5 * (b - c), (2 * a - b - c) / (2 * ROOT3) };
+        return new double[]{ 0.5 * (b - c), (2 * a - b - c) / (2 * MathUtils.ROOT3) };
     }
 
     protected double[] inverseTriangleTransformNewton(double xpp, double ypp) {
 
         //a & b are linearly related to c, so using the tan of sum formula we know: tan(c+off) = (tanc + tanoff)/(1-tanc*tanoff)
-        double tanaoff = Math.tan(ROOT3 * ypp + xpp); // a = c + root3*y'' + x''
+        double tanaoff = Math.tan(MathUtils.ROOT3 * ypp + xpp); // a = c + root3*y'' + x''
         double tanboff = Math.tan(2 * xpp); // b = c + 2x''
 
         double anumer = tanaoff * tanaoff + 1;
@@ -366,7 +323,7 @@ public class Airocean extends GeographicProjection {
         //double fp = anumer + bnumer + 1; //derivative relative to tanc
 
         //int i = newton;
-        for (int i = 0; i < this.newton; i++) {
+        for (int i = 0; i < NEWTON; i++) {
             double f = tana + tanb + tanc - R; //R = tana + tanb + tanc
             double fp = anumer * adenom * adenom + bnumer * bdenom * bdenom + 1; //derivative relative to tanc
 
@@ -382,8 +339,89 @@ public class Airocean extends GeographicProjection {
         }
 
         //simple reversal algebra based on tan values
-        double yp = ROOT3 * (DVE * tana + EL6) / 2;
-        double xp = DVE * tanb + yp / ROOT3 + EL6;
+        double yp = MathUtils.ROOT3 * (DVE * tana + EL6) / 2;
+        double xp = DVE * tanb + yp / MathUtils.ROOT3 + EL6;
+
+        //x = z*xp/Z, y = z*yp/Z, x^2 + y^2 + z^2 = 1
+        double xpoZ = xp / Z;
+        double ypoZ = yp / Z;
+
+        double z = 1 / Math.sqrt(1 + xpoZ * xpoZ + ypoZ * ypoZ);
+
+        return new double[]{ z * xpoZ, z * ypoZ, z };
+    }
+
+    protected double[] inverseTriangleTransformCbrt(double xpp, double ypp) {
+        //a & b are linearly related to c, so using the tan of sum formula we know: tan(c+off) = (tanc + tanoff)/(1-tanc*tanoff)
+        double tanaoff = Math.tan(MathUtils.ROOT3 * ypp + xpp); // a = c + root3*y'' + x''
+        double tanboff = Math.tan(2 * xpp); // b = c + 2x''
+
+        //using a derived cubic equation and cubic formula
+        double l = tanboff * tanaoff;
+        double m = -(R * tanboff * tanaoff + 2 * tanboff + 2 * tanaoff);
+        double n = 3 + R * tanboff + R * tanaoff - 2 * tanboff * tanaoff;
+        double o = tanboff + tanaoff - R;
+
+        double p = -m / (3 * l);
+        double q = p * p * p + (m * n - 3 * l * o) / (6 * l * l);
+        double r = n / (3 * l);
+
+        double rmpp = r - p * p;
+        double imag = Math.sqrt(-(q * q + rmpp * rmpp * rmpp));
+        double mag = Math.sqrt(imag * imag + q * q);
+
+        double b = Math.atan2(imag, q);
+
+        double tanc = 2 * Math.cbrt(mag) * Math.cos((b / 3)) + p;
+
+        double tana = (tanc + tanaoff) / (1 - tanc * tanaoff);
+        double tanb = (tanc + tanboff) / (1 - tanc * tanboff);
+
+        //simple reversal algebra based on tan values
+        double yp = MathUtils.ROOT3 * (DVE * tana + EL6) / 2;
+        double xp = DVE * tanb + yp / MathUtils.ROOT3 + EL6;
+
+        //x = z*xp/Z, y = z*yp/Z, x^2 + y^2 + z^2 = 1
+        double xpoZ = xp / Z;
+        double ypoZ = yp / Z;
+
+        double z = 1 / Math.sqrt(1 + xpoZ * xpoZ + ypoZ * ypoZ);
+
+        return new double[]{ z * xpoZ, z * ypoZ, z };
+    }
+
+    protected double[] inverseTriangleTransformCbrtNewton(double xpp, double ypp) {
+        //a & b are linearly related to c, so using the tan of sum formula we know: tan(c+off) = (tanc + tanoff)/(1-tanc*tanoff)
+        double tanaoff = Math.tan(MathUtils.ROOT3 * ypp + xpp); // a = c + root3*y'' + x''
+        double tanboff = Math.tan(2 * xpp); // b = c + 2x''
+        double sumtmp = tanaoff + tanboff;
+
+        //using a derived cubic equation and cubic formula
+        double l = tanboff * tanaoff;
+        double m = -(R * l + 2 * tanboff + 2 * tanaoff);
+        double n = 3 + R * sumtmp - 2 * l;
+        double o = sumtmp - R;
+
+        double l3 = 3 * l;
+        double m2 = 2 * m;
+
+        double x = -o / n; //x = tanc
+
+        for (int i = 0; i < NEWTON; i++) {
+            double x2 = x * x;
+
+            double f = l * x2 * x + m * x2 + n * x + o;
+            double fp = l3 * x2 + m2 * x + n;
+
+            x -= f / fp;
+        }
+
+        double tana = (x + tanaoff) / (1 - x * tanaoff);
+        double tanb = (x + tanboff) / (1 - x * tanboff);
+
+        //simple reversal algebra based on tan values
+        double yp = MathUtils.ROOT3 * (DVE * tana + EL6) / 2;
+        double xp = DVE * tanb + yp / MathUtils.ROOT3 + EL6;
 
         //x = z*xp/Z, y = z*yp/Z, x^2 + y^2 + z^2 = 1
         double xpoZ = xp / Z;
@@ -399,17 +437,17 @@ public class Airocean extends GeographicProjection {
     }
 
     @Override
-    public double[] fromGeo(double lon, double lat) {
+    public double[] fromGeo(double longitude, double latitude) {
 
-        lat = 90 - lat;
-        lon *= TO_RADIANS;
-        lat *= TO_RADIANS;
+        latitude = 90 - latitude;
+        longitude = Math.toRadians(longitude);
+        latitude = Math.toRadians(latitude);
 
-        double sinphi = Math.sin(lat);
+        double sinphi = Math.sin(latitude);
 
-        double x = Math.cos(lon) * sinphi;
-        double y = Math.sin(lon) * sinphi;
-        double z = Math.cos(lat);
+        double x = Math.cos(longitude) * sinphi;
+        double y = Math.sin(longitude) * sinphi;
+        double z = Math.cos(latitude);
 
         int face = findTriangle(x, y, z);
 
@@ -429,9 +467,9 @@ public class Airocean extends GeographicProjection {
 
         x = out[0];
         //deal with special snowflakes (child faces 20, 21)
-        if (((face == 15 && x > out[1] * ROOT3) || face == 14) && x > 0) {
-            out[0] = 0.5 * x - 0.5 * ROOT3 * out[1];
-            out[1] = 0.5 * ROOT3 * x + 0.5 * out[1];
+        if (((face == 15 && x > out[1] * MathUtils.ROOT3) || face == 14) && x > 0) {
+            out[0] = 0.5 * x - 0.5 * MathUtils.ROOT3 * out[1];
+            out[1] = 0.5 * MathUtils.ROOT3 * x + 0.5 * out[1];
             face += 6; //shift 14->20 & 15->21
         }
 
@@ -461,19 +499,19 @@ public class Airocean extends GeographicProjection {
                 break;
 
             case 20:
-                if (-y * ROOT3 > x) {
+                if (-y * MathUtils.ROOT3 > x) {
                     return OUT_OF_BOUNDS;
                 }
                 break;
 
             case 15:
-                if (x > 0 && x > y * ROOT3) {
+                if (x > 0 && x > y * MathUtils.ROOT3) {
                     return OUT_OF_BOUNDS;
                 }
                 break;
 
             case 21:
-                if (x < 0 || -y * ROOT3 > x) {
+                if (x < 0 || -y * MathUtils.ROOT3 > x) {
                     return OUT_OF_BOUNDS;
                 }
                 break;
@@ -498,12 +536,12 @@ public class Airocean extends GeographicProjection {
         double zp = x * INVERSE_ROTATION_MATRIX[off + 6] + y * INVERSE_ROTATION_MATRIX[off + 7] + z * INVERSE_ROTATION_MATRIX[off + 8];
 
         //convert back to spherical coordinates
-        return new double[]{ Math.atan2(yp, xp) / TO_RADIANS, 90 - Math.acos(zp) / TO_RADIANS };
+        return new double[]{ Math.toDegrees(Math.atan2(yp, xp)), 90 - Math.toDegrees(Math.acos(zp)) };
     }
 
     @Override
     public double[] bounds() {
-        return new double[]{ -3 * ARC, -0.75 * ARC * ROOT3, 2.5 * ARC, 0.75 * ARC * ROOT3 };
+        return new double[]{ -3 * ARC, -0.75 * ARC * MathUtils.ROOT3, 2.5 * ARC, 0.75 * ARC * MathUtils.ROOT3 };
     }
 
     @Override
@@ -511,58 +549,8 @@ public class Airocean extends GeographicProjection {
         return false;
     }
 
-    /*public static void main(String[] args) throws IOException {
-        Airocean projection = new ModifiedAirocean();
-
-        double[] c = projection.fromGeo(12.4900422, 41.8902102);//-73.985821, 40.723241);
-        System.out.println(c[0] + " " + c[1]);
-        c = projection.toGeo(c[0], c[1]);
-        System.out.println(c[0] + " " + c[1]);
-
-
-        System.out.println((new ConformalEstimate()).fromGeo(170.185772, 53.611924)[0]);
-        System.out.println((new ConformalEstimate()).fromGeo(170.185772, 53.611924)[1]);
-
-        System.out.println(ARC);
-
-        BufferedImage base;
-
-        InputStream is = new FileInputStream("../../../../../resources/assets/terra121/data/map.png");
-        base = ImageIO.read(is);
-
-        BufferedImage img = new BufferedImage(1024, 1024, BufferedImage.TYPE_INT_ARGB);
-
-        //scale should be able to fit whole earth inside texture
-        double[] bounds = projection.bounds();
-        double scale = Math.max(Math.abs(bounds[2] - bounds[0]), Math.abs(bounds[3] - bounds[1]));
-
-        int w = img.getWidth();
-        int h = img.getHeight();
-
-        for (int lon = 0; lon < base.getWidth(); lon++) {
-            for (int lat = 0; lat < base.getHeight(); lat++) {
-
-                //lat lon to reference image coords
-                double Lon = (lon / (double) base.getWidth() - 0.5) * 360;
-                double Lat = (lat / (double) base.getHeight() - 0.5) * 180;
-
-                double proj[] = projection.fromGeo(Lon, Lat); //projection coords to x y
-
-                int x = (int) (w * (proj[0] - bounds[0]) / scale);
-                int y = (int) (h * (proj[1] - bounds[1]) / scale);
-
-                //get pixel from reference image if possible
-                if (x >= 0 && y >= 0 && x < img.getHeight() && y < img.getWidth()) {
-                    img.setRGB(x, h - y - 1, base.getRGB(lon, base.getHeight() - lat - 1));
-                }
-            }
-        }
-
-        ImageIO.write(img, "png", new File("out.png"));
-    }*/
-
     @Override
     public double metersPerUnit() {
-        return Math.sqrt(510100000000000.0 / (20 * ROOT3 * ARC * ARC / 4));
+        return Math.sqrt(510100000000000.0 / (20 * MathUtils.ROOT3 * ARC * ARC / 4));
     }
 }

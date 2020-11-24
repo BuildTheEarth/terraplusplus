@@ -2,10 +2,16 @@ package io.github.terra121.projection.transform;
 
 import io.github.terra121.projection.GeographicProjection;
 
-public abstract class AbstractTransformation extends GeographicProjection {
+/**
+ * Warps a Geographic projection and applies a transformation to it.
+ */
+public abstract class ProjectionTransform extends GeographicProjection {
     protected final GeographicProjection input;
 
-    public AbstractTransformation(GeographicProjection input) {
+    /**
+     * @param input - projection to transform
+     */
+    public ProjectionTransform(GeographicProjection input) {
         this.input = input;
     }
 
