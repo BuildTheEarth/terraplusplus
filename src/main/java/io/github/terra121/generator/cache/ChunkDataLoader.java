@@ -1,6 +1,7 @@
 package io.github.terra121.generator.cache;
 
 import com.google.common.cache.CacheLoader;
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.terra121.generator.EarthGenerator;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,16 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CachedChunkData> {
                 }
             }
         }
+
+        double min = Double.POSITIVE_INFINITY;
+        double max = Double.NEGATIVE_INFINITY;
+        for (int i = 0; i < 16 * 16; i++) {
+            min = Math.min(min, data.heights[i]);
+            max = Math.max(max, data.heights[i]);
+        }
+        data.surfaceMinCube = Coords.blockToCube(min);
+        data.surfaceMaxCube = Coords.blockToCube(Math.ceil(max));
+
         return data;
     }
 }
