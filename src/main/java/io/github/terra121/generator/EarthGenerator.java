@@ -63,8 +63,6 @@ public class EarthGenerator extends BasicCubeGenerator {
     public final GeographicProjection projection;
     private final CustomGeneratorSettings cubiccfg;
 
-    public final Set<Block> unnaturals = Collections.newSetFromMap(new IdentityHashMap<>());
-
     public final Map<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers = new IdentityHashMap<>();
 
     private final List<ICubicStructureGenerator> structureGenerators = new ArrayList<>();
@@ -94,10 +92,6 @@ public class EarthGenerator extends BasicCubeGenerator {
 
         this.osm = new OpenStreetMap(this.projection, this.doRoads, this.cfg.settings.osmwater, this.doBuildings);
         this.heights = new Heights(this.cfg.settings.osmwater ? this.osm.water : null, 13, this.cfg.settings.smoothblend);
-
-        this.unnaturals.add(Blocks.STONEBRICK);
-        this.unnaturals.add(Blocks.CONCRETE);
-        this.unnaturals.add(Blocks.BRICK_BLOCK);
 
         this.surfacePopulators = new HashSet<>();
 
@@ -177,7 +171,6 @@ public class EarthGenerator extends BasicCubeGenerator {
 
                 //get biome (thanks to 	z3nth10n for spoting this one)
                 List<IBiomeBlockReplacer> reps = this.biomeBlockReplacers.get(this.biomes.getBiome(pos.setPos(cubeX * 16 + x, 0, cubeZ * 16 + z)));
-
                 for (int y = 0; y < 16 && y < height - Coords.cubeToMinBlock(cubeY); y++) {
                     IBlockState block = Blocks.STONE.getDefaultState();
                     for (IBiomeBlockReplacer rep : reps) {
@@ -224,7 +217,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         //generate structures
         this.structureGenerators.forEach(gen -> gen.generate(this.world, primer, new CubePos(cubeX, cubeY, cubeZ)));
 
-        if (cubeY >= data.surfaceMinCube && cubeY <= data.surfaceMaxCube) { //spawn roads
+        if (data.intersectsSurface(cubeY)) { //spawn roads
             Set<Segment> segments = this.osm.segmentsForChunk(cubeX, cubeZ, 8.0d);
             if (segments != null) {
                 segments.stream()
@@ -242,50 +235,33 @@ public class EarthGenerator extends BasicCubeGenerator {
         if (!MinecraftForge.EVENT_BUS.post(new CubePopulatorEvent(this.world, cube))) {
             Random rand = Coords.coordsSeedRandom(this.world.getSeed(), cube.getX(), cube.getY(), cube.getZ());
 
+            CachedChunkData data = this.cache.getUnchecked(cube.getCoords().chunkPos());
+
             Biome biome = cube.getBiome(Coords.getCubeCenter(cube));
 
             if (this.cfg.settings.dynamicbaseheight) {
-                double[] proj = this.projection.toGeo((cube.getX() * 16 + 8), (cube.getZ() * 16 + 8));
-                this.cubiccfg.expectedBaseHeight = (float) this.heights.estimateLocal(proj[0], proj[1]);
+                this.cubiccfg.expectedBaseHeight = (float) data.heights[8 * 16 + 8];
             }
 
             MinecraftForge.EVENT_BUS.post(new PopulateCubeEvent.Pre(this.world, rand, cube.getX(), cube.getY(), cube.getZ(), false));
 
-            CubePos pos = cube.getCoords();
-
-            int surf = this.isSurface(this.world, cube);
-            if (surf == 0) {
+            if (data.intersectsSurface(cube.getY())) {
                 for (ICubicPopulator pop : this.surfacePopulators) {
-                    pop.generate(this.world, rand, pos, biome);
+                    pop.generate(this.world, rand, cube.getCoords(), biome);
                 }
             }
 
-            this.biomePopulators.get(biome).generate(this.world, rand, pos, biome);
+            this.biomePopulators.get(biome).generate(this.world, rand, cube.getCoords(), biome);
 
-            if (surf == 1) {
-                this.snow.generate(this.world, rand, pos, biome);
+            if (data.aboveSurface(cube.getY())) {
+                this.snow.generate(this.world, rand, cube.getCoords(), biome);
             }
 
             MinecraftForge.EVENT_BUS.post(new PopulateCubeEvent.Post(this.world, rand, cube.getX(), cube.getY(), cube.getZ(), false));
-            CubeGeneratorsRegistry.generateWorld(this.world, rand, pos, biome);
-        }
-    }
 
-    //TODO: so inefficient but it's the best i could think of, short of caching this state by coords
-    //TODO: factor in if air right above solid cube
-    private int isSurface(World world, ICube cube) {
-        IBlockState defState = Blocks.AIR.getDefaultState();
-        IBlockState type = null;
-        for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
-                type = world.getBlockState(new BlockPos(x + cube.getX() * 16, 16 + cube.getY() * 16, z + cube.getZ() * 16));
-                if (type == defState &&
-                    cube.getBlockState(x, 0, z) != defState && !this.unnaturals.contains(cube.getBlockState(x, 0, z).getBlock())) {
-                    return 0;
-                }
-            }
+            //other mod generators
+            CubeGeneratorsRegistry.generateWorld(this.world, rand, cube.getCoords(), biome);
         }
-        return type == defState ? 1 : -1;
     }
 
     @Override
