@@ -10,6 +10,7 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import net.daporkchop.ldbjni.LevelDB;
 import net.daporkchop.ldbjni.direct.DirectDB;
+import net.daporkchop.lib.common.function.throwing.EFunction;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.iq80.leveldb.CompressionType;
@@ -50,27 +51,25 @@ public class HttpUtil {
     }
 
     /**
-     * Attempts to GET an array of URLs in order, returning the response body of the first successful one.
+     * Attempts to GET an array of URLs in order, returning the parsed response body of the first successful one.
      *
      * @param urls the URLs
-     * @return the response body, or {@code null} if all requests returned {@code 404 Not Found} or the equivalent
+     * @param parseFunction a function to use to parse the response body
+     * @return the parsed response body
      * @throws IOException if no URLs were given, or all returned an error code
      */
-    public static ByteBuf getFirst(@NonNull String[] urls) throws IOException {
-        IOException cause = null;
+    public static <T> T getFirst(@NonNull String[] urls, @NonNull EFunction<ByteBuf, T> parseFunction) throws Exception {
+        Exception cause = null;
         boolean found404 = false;
 
         for (String url : urls) {
             try {
-                ByteBuf buf = getSingle(url);
-                if (buf != null) {
-                    return buf;
-                } else {
-                    found404 = true;
-                }
-            } catch (IOException e) {
+                return getSingle(url, parseFunction);
+            } catch (FileNotFoundException e) {
+                found404 = true;
+            } catch (Exception e) {
                 if (cause == null) {
-                    cause = new IOException();
+                    cause = new Exception();
                 }
                 cause.addSuppressed(e);
             }
@@ -90,14 +89,15 @@ public class HttpUtil {
      * Attempts to GET a single URL.
      *
      * @param url the URL
-     * @return the response body, or {@code null} if the request returned {@code 404 Not Found} or the equivalent
+     * @param parseFunction a function to use to parse the response body
+     * @return the parsed response body
      * @throws IOException if an I/O exception occurred while attempting to get the data
      */
-    public static ByteBuf getSingle(@NonNull String url) throws IOException {
+    public static <T> T getSingle(@NonNull String url, @NonNull EFunction<ByteBuf, T> parseFunction) throws Exception {
         URL parsedUrl = new URL(url);
         boolean canCache = TerraConfig.data.cache && !"file".equals(parsedUrl.getProtocol()); //we don't want to cache local files, because they're already on disk
 
-        IOException cause = null;
+        Exception cause = null;
         ByteBuf key = Unpooled.wrappedBuffer(url.getBytes(StandardCharsets.UTF_8));
 
         ByteBuf buf = ByteBufAllocator.DEFAULT.buffer();
@@ -109,9 +109,8 @@ public class HttpUtil {
                 if (canCache && DB.getInto(key, buf)) { //url was found in cache
                     TerraMod.LOGGER.info("Cache hit: {}", url);
                     if (buf.readBoolean()) { //cached value exists
-                        return buf.retain();
+                        return parseFunction.applyThrowing(buf);
                     } else { //we cached a 404
-                        buf.release();
                         return null;
                     }
                 }
@@ -131,22 +130,26 @@ public class HttpUtil {
                         }
 
                         try (InputStream in = conn.getInputStream()) {
-                            buf.clear();
+                            buf.clear().writeBoolean(true);
                             do {
                                 buf.ensureWritable(1024);
                             } while (buf.writeBytes(in, 1024) > 0);
                         }
 
+                        T parsed = parseFunction.applyThrowing(buf.skipBytes(1));
+
                         if (canCache) { //write data to cache
-                            DB.put(key, buf);
+                            DB.put(key, buf.readerIndex(0));
                         }
-                        return buf.retain();
+                        return parsed;
                     } catch (FileNotFoundException e) { //server returned 404 Not Found
-                        buf.release();
-                        return null;
-                    } catch (IOException e) {
+                        if (canCache) { //write missing entry to cache
+                            DB.put(key, buf.clear().writeBoolean(false));
+                        }
+                        throw e;
+                    } catch (Exception e) {
                         if (cause == null) {
-                            cause = new IOException("Unable to GET " + url);
+                            cause = new Exception("Unable to GET " + url);
                         }
                         cause.addSuppressed(e);
                     }

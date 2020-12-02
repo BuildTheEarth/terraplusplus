@@ -61,21 +61,12 @@ public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, T> {
     @Deprecated
     @Override
     public T load(ChunkPos pos) throws Exception {
-        ByteBuf data = this.fetchTile(pos.x, pos.z);
-        try {
-            return this.decode(pos.x, pos.z, data);
-        } finally { //avoid memory leak in the case of failure by always releasing the data
-            data.release();
-        }
-    }
-
-    protected ByteBuf fetchTile(int tileX, int tileZ) throws IOException {
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-        this.addProperties(tileX, tileZ, builder);
+        this.addProperties(pos.x, pos.z, builder);
         Map<String, String> properties = builder.build();
 
-        return HttpUtil.getFirst(Arrays.stream(this.urls(tileX, tileZ))
-                .map(url -> HttpUtil.formatUrl(properties, url))
-                .toArray(String[]::new));
+        return HttpUtil.getFirst(
+                Arrays.stream(this.urls(pos.x, pos.z)).map(url -> HttpUtil.formatUrl(properties, url)).toArray(String[]::new),
+                data -> this.decode(pos.x, pos.z, data));
     }
 }

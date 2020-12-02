@@ -37,9 +37,6 @@ public enum SegmentFill {
             int maxX = min((int) ceil(max(lon0, lon1) + radius), 16);
             int minZ = max((int) floor(min(lat0, lat1) - radius), 0);
             int maxZ = min((int) ceil(max(lat0, lat1) + radius), 16);
-            if (minX == maxX || minZ == maxZ) {
-                return;
-            }
 
             double segmentLengthSq = (lon1 - lon0) * (lon1 - lon0) + (lat1 - lat0) * (lat1 - lat0);
             for (int x = minX; x < maxX; x++) {

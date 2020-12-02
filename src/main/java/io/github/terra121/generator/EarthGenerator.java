@@ -203,7 +203,7 @@ public class EarthGenerator extends BasicCubeGenerator {
             this.caveGenerator.generate(this.world, primer, new CubePos(cubeX, cubeY, cubeZ));
         }
 
-        if (cubeY >= data.surfaceMinCube && cubeY < data.surfaceMaxCube) { //spawn roads
+        if (cubeY >= data.surfaceMinCube && cubeY <= data.surfaceMaxCube) { //spawn roads
             Set<Segment> segments = this.osm.segmentsForChunk(cubeX, cubeZ, 8.0d);
             if (segments != null) {
                 segments.stream()

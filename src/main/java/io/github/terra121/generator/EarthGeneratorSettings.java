@@ -20,7 +20,6 @@ public class EarthGeneratorSettings {
     private Gson gson;
 
     public EarthGeneratorSettings(String generatorSettings) {
-
         if (!TerraConfig.reducedConsoleMessages) {
             TerraMod.LOGGER.info(generatorSettings);
         }

@@ -8,6 +8,7 @@ import io.netty.buffer.ByteBufInputStream;
 import lombok.NonNull;
 
 import javax.imageio.ImageIO;
+import java.io.IOException;
 
 public class Heights extends DoubleTiledDataset {
     protected final Water water;
@@ -32,7 +33,7 @@ public class Heights extends DoubleTiledDataset {
     }
 
     @Override
-    protected double[] decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception {
+    protected double[] decode(int tileX, int tileZ, @NonNull ByteBuf data) throws IOException {
         int[] iData = new int[TILE_SIZE * TILE_SIZE];
         ImageIO.read(new ByteBufInputStream(data)).getRGB(0, 0, TILE_SIZE, TILE_SIZE, iData, 0, TILE_SIZE);
 
