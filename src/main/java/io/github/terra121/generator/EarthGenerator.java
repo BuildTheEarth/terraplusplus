@@ -10,6 +10,8 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.CubePopulatorEvent;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.structure.ICubicStructureGenerator;
+import io.github.opencubicchunks.cubicchunks.api.worldgen.structure.event.InitCubicStructureGeneratorEvent;
 import io.github.opencubicchunks.cubicchunks.cubicgen.BasicCubeGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.BiomeBlockReplacerConfig;
 import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.CubicBiome;
@@ -17,6 +19,8 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.IBiomeBlockRe
 import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.IBiomeBlockReplacerProvider;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGeneratorSettings;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicCaveGenerator;
+import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicRavineGenerator;
+import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.feature.CubicStrongholdGenerator;
 import io.github.terra121.dataset.Heights;
 import io.github.terra121.dataset.ScalarDataset;
 import io.github.terra121.dataset.osm.OpenStreetMap;
@@ -36,6 +40,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.terraingen.InitMapGenEvent;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.ArrayList;
@@ -54,14 +59,18 @@ import static java.lang.Math.*;
 public class EarthGenerator extends BasicCubeGenerator {
     public final ScalarDataset heights;
     public final OpenStreetMap osm;
-    public final Map<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers = new IdentityHashMap<>();
     public final BiomeProvider biomes;
     public final GeographicProjection projection;
-    public final Set<Block> unnaturals = Collections.newSetFromMap(new IdentityHashMap<>());
     private final CustomGeneratorSettings cubiccfg;
+
+    public final Set<Block> unnaturals = Collections.newSetFromMap(new IdentityHashMap<>());
+
+    public final Map<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers = new IdentityHashMap<>();
+
+    private final List<ICubicStructureGenerator> structureGenerators = new ArrayList<>();
+
     private final Set<ICubicPopulator> surfacePopulators;
     private final Map<Biome, ICubicPopulator> biomePopulators = new IdentityHashMap<>();
-    private final CubicCaveGenerator caveGenerator;
     private final SnowPopulator snow;
     public final EarthGeneratorSettings cfg;
     private final boolean doRoads;
@@ -97,7 +106,21 @@ public class EarthGenerator extends BasicCubeGenerator {
 
         this.cubiccfg = this.cfg.getCustomCubic();
 
-        this.caveGenerator = new CubicCaveGenerator();
+        if (this.cubiccfg.caves) {
+            InitCubicStructureGeneratorEvent caveEvent = new InitCubicStructureGeneratorEvent(InitMapGenEvent.EventType.CAVE, new CubicCaveGenerator());
+            MinecraftForge.TERRAIN_GEN_BUS.post(caveEvent);
+            this.structureGenerators.add(caveEvent.getNewGen());
+        }
+        if (this.cubiccfg.ravines) {
+            InitCubicStructureGeneratorEvent ravineEvent = new InitCubicStructureGeneratorEvent(InitMapGenEvent.EventType.RAVINE, new CubicRavineGenerator(this.cubiccfg));
+            MinecraftForge.TERRAIN_GEN_BUS.post(ravineEvent);
+            this.structureGenerators.add(ravineEvent.getNewGen());
+        }
+        if (this.cubiccfg.strongholds) {
+            InitCubicStructureGeneratorEvent strongholdsEvent = new InitCubicStructureGeneratorEvent(InitMapGenEvent.EventType.STRONGHOLD, new CubicStrongholdGenerator(this.cubiccfg));
+            MinecraftForge.TERRAIN_GEN_BUS.post(strongholdsEvent);
+            this.structureGenerators.add(strongholdsEvent.getNewGen());
+        }
 
         for (Biome biome : ForgeRegistries.BIOMES) {
             CubicBiome cubicBiome = CubicBiome.getCubic(biome);
@@ -125,7 +148,6 @@ public class EarthGenerator extends BasicCubeGenerator {
         return this.generateCube(cubeX, cubeY, cubeZ, new CubePrimer());
     }
 
-    //TODO: more efficient
     @Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer) {
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
@@ -199,9 +221,8 @@ public class EarthGenerator extends BasicCubeGenerator {
             }
         }
 
-        if (this.cfg.settings.caves) {
-            this.caveGenerator.generate(this.world, primer, new CubePos(cubeX, cubeY, cubeZ));
-        }
+        //generate structures
+        this.structureGenerators.forEach(gen -> gen.generate(this.world, primer, new CubePos(cubeX, cubeY, cubeZ)));
 
         if (cubeY >= data.surfaceMinCube && cubeY <= data.surfaceMaxCube) { //spawn roads
             Set<Segment> segments = this.osm.segmentsForChunk(cubeX, cubeZ, 8.0d);

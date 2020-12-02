@@ -52,8 +52,6 @@ public class TerraWorldFragment extends CommandFragment {
                 new TextElement("False", TextFormatting.RED)));
         sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Smooth Blend: ", TextFormatting.BLUE), projectionSettings.smoothblend ? new TextElement("True", TextFormatting.GREEN) :
                 new TextElement("False", TextFormatting.RED)));
-        sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Caves: ", TextFormatting.BLUE), projectionSettings.caves ? new TextElement("True", TextFormatting.GREEN) :
-                new TextElement("False", TextFormatting.RED)));
     }
 
     @Override

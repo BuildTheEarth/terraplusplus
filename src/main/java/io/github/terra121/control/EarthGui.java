@@ -57,7 +57,7 @@ public class EarthGui extends GuiScreen implements DynamicOptions.Handler {
             IOUtils.closeQuietly(is);
         }
 
-        String[] projs = (String[]) GeographicProjection.projections.keySet().toArray(new String[0]);
+        String[] projs = GeographicProjection.projections.keySet().toArray(new String[0]);
 
         this.settingElems = new DynamicOptions.Element[]{
                 this.cycleButton(6969, "projection", projs, e -> {
@@ -72,10 +72,7 @@ public class EarthGui extends GuiScreen implements DynamicOptions.Handler {
                 this.toggleButton(6966, "roads", null),
                 this.toggleButton(6965, "osmwater", null),
                 this.toggleButton(6964, "dynamicbaseheight", null),
-                this.toggleButton(6963, "buildings", null),
-                this.toggleButton(6962, "caves", null),
-                this.toggleButton(6961, "lidar", null),
-                this.textField(6960, "customdataset", "Custom Terrain Directory")
+                this.toggleButton(6963, "buildings", null)
         };
         this.projectMap(false);
     }
