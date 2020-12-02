@@ -20,7 +20,7 @@ public class Heights extends DoubleTiledDataset {
     }
 
     @Override
-    protected String[] urls() {
+    protected String[] urls(int tileX, int tileZ) {
         return TerraConfig.data.heights;
     }
 

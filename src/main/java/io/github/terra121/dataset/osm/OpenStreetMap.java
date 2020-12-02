@@ -55,7 +55,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
     }
 
     @Override
-    protected String[] urls() {
+    protected String[] urls(int tileX, int tileZ) {
         return TerraConfig.data.overpass;
     }
 

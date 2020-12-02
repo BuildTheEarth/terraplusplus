@@ -38,6 +38,14 @@ configurations {
 }
 
 repositories {
+    maven { //used for leveldb
+        name = "DaPorkchop_"
+        url = "https://maven.daporkchop.net/"
+    }
+    maven { //used for leveldb
+        name = "OpenCollab Snapshots"
+        url = "https://repo.opencollab.dev/snapshot/"
+    }
     maven {
         name = "JitPack"
         url = "https://jitpack.io/"
@@ -53,6 +61,10 @@ dependencies {
     }
 
     shade "org.apache.commons:commons-imaging:1.0-alpha2"
+
+    shade("net.daporkchop:leveldb-mcpe-jni:0.0.10-SNAPSHOT")  {
+        exclude group: "io.netty"
+    }
 
     compileOnly "org.projectlombok:lombok:1.18.0"
     annotationProcessor "org.projectlombok:lombok:1.18.0"

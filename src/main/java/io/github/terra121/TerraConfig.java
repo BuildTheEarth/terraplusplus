@@ -44,8 +44,8 @@ public class TerraConfig {
         };
 
         public String[] overpass = {
-                "https://overpass.kumi.systems/api/interpreter/?data=[out:json];way(${lat.min},${lon.min},${lat.max},${lon.max});out%20geom(${lat.min},${lon.min},${lat.max},${lon.max})%20tags%20qt;(._<;);out%20body%20qt;is_in(${lat.min},${lon.min});area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;",
-                "https://lz4.overpass-api.de/api/interpreter/?data=[out:json];way(${lat.min},${lon.min},${lat.max},${lon.max});out%20geom(${lat.min},${lon.min},${lat.max},${lon.max})%20tags%20qt;(._<;);out%20body%20qt;is_in(${lat.min},${lon.min});area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;"
+                "https://lz4.overpass-api.de/api/interpreter/?data=[out:json];way(${lat.min},${lon.min},${lat.max},${lon.max});out%20geom(${lat.min},${lon.min},${lat.max},${lon.max})%20tags%20qt;(._<;);out%20body%20qt;is_in(${lat.min},${lon.min});area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;",
+                "https://overpass.kumi.systems/api/interpreter/?data=[out:json];way(${lat.min},${lon.min},${lat.max},${lon.max});out%20geom(${lat.min},${lon.min},${lat.max},${lon.max})%20tags%20qt;(._<;);out%20body%20qt;is_in(${lat.min},${lon.min});area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;"
         };
 
         @Comment({
@@ -53,5 +53,17 @@ public class TerraConfig {
         })
         @RangeInt(min = 1)
         public int retryCount = 2;
+
+        @Comment({
+                "The connection timeout duration, in milliseconds."
+        })
+        @RangeInt(min = 1)
+        public int timeout = 5000;
+
+        @Comment({
+                "Whether or not to use the persistent data cache.",
+                "This is strongly recommended for performance. Disable only for debugging, or if you have EXTREMELY limited storage."
+        })
+        public boolean cache = true;
     }
 }

@@ -15,6 +15,10 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
     protected static final int TILE_SIZE = 1 << TILE_SHIFT; //256
     protected static final int TILE_MASK = (1 << TILE_SHIFT) - 1; //0xFF
 
+    protected static boolean isInRange(double lon, double lat) {
+        return lon <= 180.0d && lon >= -180.0d && lat <= 85.0d && lat >= -85.0d;
+    }
+
     public final boolean smooth;
 
     public DoubleTiledDataset(GeographicProjection proj, double scale, boolean smooth) {
@@ -26,7 +30,7 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
     @Override
     public double estimateLocal(double lon, double lat) {
         //basic bound check
-        if (!(lon <= 180.0d && lon >= -180.0d && lat <= 85.0d && lat >= -85.0d)) {
+        if (!isInRange(lon, lat)) {
             return -2.0d;
         }
 
