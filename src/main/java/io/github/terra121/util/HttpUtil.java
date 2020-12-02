@@ -107,7 +107,9 @@ public class HttpUtil {
             // being requested by multiple threads at once
             synchronized (url = url.intern()) {
                 if (canCache && DB.getInto(key, buf)) { //url was found in cache
-                    TerraMod.LOGGER.info("Cache hit: {}", url);
+                    if (!TerraConfig.reducedConsoleMessages) {
+                        TerraMod.LOGGER.info("Cache hit: {}", url);
+                    }
                     if (buf.readBoolean()) { //cached value exists
                         return parseFunction.applyThrowing(buf);
                     } else { //we cached a 404

@@ -12,14 +12,12 @@ buildscript {
     }
 }
 apply plugin: "net.minecraftforge.gradle.forge"
-//Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: "com.github.johnrengelman.shadow"
 
-version = "0.1"
-group = "io.github.terra121" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "terra121"
+version = "0.1-1.12.2"
+group = "net.buildtheearth"
+archivesBaseName = "terraplusplus"
 
-sourceCompatibility = targetCompatibility = "1.8" // Need this here so eclipse task generates correctly.
 compileJava {
     sourceCompatibility = targetCompatibility = "1.8"
 }
