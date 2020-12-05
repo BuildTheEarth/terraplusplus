@@ -1,5 +1,7 @@
 package io.github.terra121.projection;
 
+import io.github.terra121.TerraConstants;
+
 /**
  * Implementation of the Mercator projection, normalized between -1 and 1.
  * 
@@ -31,7 +33,7 @@ public class CenteredMapsProjection extends GeographicProjection {
 
     @Override
     public double metersPerUnit() {
-        return Math.cos(Math.toRadians(30)) * EARTH_CIRCUMFERENCE / 2; //Accurate at about 30 degrees
+        return Math.cos(Math.toRadians(30)) * TerraConstants.EARTH_CIRCUMFERENCE / 2; //Accurate at about 30 degrees
     }
 
     @Override

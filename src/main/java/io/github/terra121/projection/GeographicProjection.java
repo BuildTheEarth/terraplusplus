@@ -21,14 +21,10 @@ import io.github.terra121.TerraConstants;
  * 
  * All geographic coordinates are in degrees.
  * 
- * This base class applies no transformation so longitude and latitude are the same as x and y (equirectangular projection).
  * 
  * @see <a href="https://en.wikipedia.org/wiki/Equirectangular_projection">Wikipedia's article on the equirectangular projection</a>
  */
-public class GeographicProjection {
-
-    public static final double EARTH_CIRCUMFERENCE = TerraConstants.EARTH_CIRCUMFERENCE;
-    public static final double EARTH_POLAR_CIRCUMFERENCE = TerraConstants.EARTH_POLAR_CIRCUMFERENCE;
+public abstract class GeographicProjection {
 
     /**
      * Contains the various projections implemented in Terra121,
@@ -39,7 +35,7 @@ public class GeographicProjection {
     static {
         projections = new HashMap<>();
         projections.put("web_mercator", new CenteredMapsProjection());
-        projections.put("equirectangular", new GeographicProjection());
+        projections.put("equirectangular", new EquirectangularProjection());
         projections.put("sinusoidal", new SinusoidalProjection());
         projections.put("equal_earth", new EqualEarth());
         projections.put("airocean", new Airocean());
@@ -48,7 +44,8 @@ public class GeographicProjection {
         projections.put("conformal", new ConformalEstimate());
         projections.put("bteairocean", new ModifiedAirocean());
     }
-
+    
+    
     /**
      * Orients a projection
      * 
@@ -74,6 +71,7 @@ public class GeographicProjection {
         return base;
     }
 
+    
     /**
      * Converts map coordinates to geographic coordinates
      * 
@@ -82,9 +80,7 @@ public class GeographicProjection {
      * 
      * @return {longitude, latitude} in degrees
      */
-    public double[] toGeo(double x, double y) {
-        return new double[]{ x, y };
-    }
+    public abstract double[] toGeo(double x, double y);
 
     /**
      * Converts geographic coordinates to map coordinates
@@ -94,9 +90,7 @@ public class GeographicProjection {
      * 
      * @return {x, y} map coordinates
      */
-    public double[] fromGeo(double longitude, double latitude) {
-        return new double[]{ longitude, latitude };
-    }
+    public abstract double[] fromGeo(double longitude, double latitude);
 
     /**
      * Gives an estimation of the scale of this projection.
@@ -105,10 +99,8 @@ public class GeographicProjection {
      * 
      * @return an estimation of the scale of this projection
      */
-    public double metersPerUnit() {
-        return 100000;
-    }
-
+    public abstract double metersPerUnit();
+    
     /**
      * Indicates the minimum and maximum X and Y coordinates on the projected space.
      * 
@@ -163,8 +155,8 @@ public class GeographicProjection {
         double[] geo = this.toGeo(x, y);
 
         //TODO: east may be slightly off because earth not a sphere
-        double[] off = this.fromGeo(geo[0] + east * 360.0 / (Math.cos(geo[1] * Math.PI / 180.0) * EARTH_CIRCUMFERENCE),
-                geo[1] + north * 360.0 / EARTH_POLAR_CIRCUMFERENCE);
+        double[] off = this.fromGeo(geo[0] + east * 360.0 / (Math.cos(geo[1] * Math.PI / 180.0) * TerraConstants.EARTH_CIRCUMFERENCE),
+                geo[1] + north * 360.0 / TerraConstants.EARTH_POLAR_CIRCUMFERENCE);
 
         return new double[]{ off[0] - x, off[1] - y };
     }
@@ -182,7 +174,7 @@ public class GeographicProjection {
      */
     public double[] tissot(double longitude, double latitude, double d) {
 
-        double R = EARTH_CIRCUMFERENCE / (2 * Math.PI);
+        double R = TerraConstants.EARTH_CIRCUMFERENCE / (2 * Math.PI);
 
         double ddeg = d * 180.0 / Math.PI;
 

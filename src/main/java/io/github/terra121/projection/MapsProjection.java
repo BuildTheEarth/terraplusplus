@@ -37,4 +37,9 @@ public class MapsProjection extends GeographicProjection {
     public boolean upright() {
         return true;
     }
+
+	@Override
+	public double metersPerUnit() {
+		return 100000;
+	}
 }

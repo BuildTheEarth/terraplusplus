@@ -2,8 +2,10 @@ package io.github.terra121.projection;
 
 /**
  * Implements the equirecangular projection but transforms it so that all coordinates on the projected space are positive.
+ * 
+ * @see EquirectangularProjection
  */
-public class ImageProjection extends GeographicProjection {
+public class ImageProjection extends EquirectangularProjection {
 	
     @Override
     public double[] toGeo(double x, double y) {
