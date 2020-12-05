@@ -1,18 +1,22 @@
 package io.github.terra121.dataset;
 
+import io.github.terra121.dataset.osm.OpenStreetMap;
+import io.github.terra121.dataset.osm.OSMRegion;
+import net.minecraft.util.math.ChunkPos;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 
 public class Water {
     public WaterGround grounding;
-    public OpenStreetMaps osm;
+    public OpenStreetMap osm;
     public int hres;
 
-    public HashSet<OpenStreetMaps.Coord> inverts;
+    public HashSet<ChunkPos> inverts;
     public boolean doingInverts;
 
-    public Water(OpenStreetMaps osm, int horizontalres) throws IOException {
+    public Water(OpenStreetMap osm, int horizontalres) throws IOException {
         InputStream is = this.getClass().getClassLoader().getResourceAsStream("assets/terra121/data/ground.dat");
         this.grounding = new WaterGround(is);
         this.osm = osm;
@@ -22,8 +26,7 @@ public class Water {
     }
 
     public byte getState(double lon, double lat) {
-
-        Region region = this.osm.regionCache(new double[]{ lon, lat });
+        OSMRegion region = this.osm.regionCache(new double[]{ lon, lat });
 
         //default if download failed
         if (region == null) {
@@ -33,10 +36,8 @@ public class Water {
         //transform to water render res
         lon -= region.west;
         lat -= region.south;
-        lon /= OpenStreetMaps.TILE_SIZE / this.hres;
-        lat /= OpenStreetMaps.TILE_SIZE / this.hres;
-
-        //System.out.println(lon + " " + lat);
+        lon /= OpenStreetMap.TILE_SIZE / this.hres;
+        lat /= OpenStreetMap.TILE_SIZE / this.hres;
 
         //TODO: range check
         int idx = region.getStateIdx((short) lon, (short) lat);
@@ -61,8 +62,8 @@ public class Water {
             return 2; //all other out of bounds is water
         }
 
-        double oshift = OpenStreetMaps.TILE_SIZE / this.hres;
-        double ashift = OpenStreetMaps.TILE_SIZE / this.hres;
+        double oshift = OpenStreetMap.TILE_SIZE / this.hres;
+        double ashift = OpenStreetMap.TILE_SIZE / this.hres;
 
         //rounding errors fixed by recalculating values from scratch (wonder if this glitch also causes the oddly strait terrain that sometimes appears)
         double Ob = Math.floor(lon / oshift) * oshift;
@@ -98,45 +99,4 @@ public class Water {
         //get perlin style interpolation on this block
         return (1 - v) * (ll * (1 - u) + lr * u) + (ul * (1 - u) + ur * u) * v;
     }
-	
-	/*public static void main(String args[]) {
-		TerraMod.LOGGER = LogManager.getLogger();
-		
-		OpenStreetMaps osm = new OpenStreetMaps(new GeographicProjection());
-		
-		double south = 21.2938987;
-		double north = 21.3280017;
-		double west = -157.6564764;
-		double east = -157.6393124;
-		int n = 1000;
-		
-		System.out.println("Rendering...");
-    	BufferedImage img = new BufferedImage(n, n, BufferedImage.TYPE_INT_RGB);
-		
-		for(int y=0; y<n; y++) {
-			for(int x=0; x<n; x++) {
-				double X = west + x*(east-west)/n;
-				double Y = south + (n-y-1)*(north-south)/n;
-				
-				Region b = osm.regionCache(new double[] {X,Y});
-				int c = osm.water.getState(X,Y)==2?0xff0000ff:osm.water.getState(X,Y)>0.4?0xffffffff:0;
-				//int c = osm.water.grounding.state(b.coord.x, b.coord.y)==0?0xff0000ff:0xffffffff;
-				img.setRGB(x, y, c);
-				
-				//osm.water.getState(-98.923594, 29.564990)
-			}
-		}
-		
-	    File outputfile = new File("saved.png");
-	    try {
-			ImageIO.write(img, "png", outputfile);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		
-		for(LandLine line: osm.regions.iterator().next().lines) {
-			System.out.println(line.breaks);
-		}
-	}*/
 }

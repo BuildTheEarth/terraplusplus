@@ -1,4 +1,6 @@
-package io.github.terra121.projection;
+package io.github.terra121.projection.transform;
+
+import io.github.terra121.projection.GeographicProjection;
 
 /**
  * Mirrors the warped projection vertically.
@@ -6,9 +8,9 @@ package io.github.terra121.projection;
  */
 public class UprightOrientation extends ProjectionTransform {
 
-	/**
-	 * @param input - projection to transform
-	 */
+    /**
+     * @param input - projection to transform
+     */
     public UprightOrientation(GeographicProjection input) {
         super(input);
     }

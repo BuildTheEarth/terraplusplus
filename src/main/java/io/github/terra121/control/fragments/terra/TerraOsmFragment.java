@@ -2,7 +2,7 @@ package io.github.terra121.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import io.github.terra121.EarthTerrainProcessor;
+import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.chat.ChatHelper;
 import io.github.terra121.chat.TextElement;
@@ -24,7 +24,7 @@ public class TerraOsmFragment extends CommandFragment {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         if(sender instanceof MinecraftServer && args.length < 1) {
-            sender.sendMessage(TerraConstants.TextConstants.playerOnly);
+            sender.sendMessage(TerraConstants.TextConstants.getPlayerOnly());
             return;
         }
 
@@ -32,14 +32,14 @@ public class TerraOsmFragment extends CommandFragment {
         IChunkProvider cp = world.getChunkProvider();
 
         if (!(cp instanceof CubeProviderServer)) {
-            sender.sendMessage(TerraConstants.TextConstants.notCC);
+            sender.sendMessage(TerraConstants.TextConstants.getNotCC());
             return;
         }
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
-        if (!(gen instanceof EarthTerrainProcessor)) {
-            sender.sendMessage(TerraConstants.TextConstants.notTerra);
+        if (!(gen instanceof EarthGenerator)) {
+            sender.sendMessage(TerraConstants.TextConstants.getNotTerra());
             return;
         }
 
@@ -57,7 +57,7 @@ public class TerraOsmFragment extends CommandFragment {
             senderName = e.getName();
         }
 
-        EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
+        EarthGenerator terrain = (EarthGenerator) gen;
         GeographicProjection projection = terrain.projection;
 
         double[] result = projection.toGeo(pos.x, pos.z);

@@ -2,6 +2,7 @@ package io.github.terra121;
 
 import io.github.terra121.dataset.Climate;
 import io.github.terra121.dataset.Soil;
+import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.projection.GeographicProjection;
 import net.minecraft.init.Biomes;
 import net.minecraft.util.math.BlockPos;
@@ -17,20 +18,10 @@ import java.util.List;
 import java.util.Random;
 
 public class EarthBiomeProvider extends BiomeProvider {
-
-    /*public Biome getBiome(BlockPos pos, Biome defaultBiome) {
-        int x = pos.getX();
-        int z = pos.getZ();
-        return Biomes.DESERT;
-    }*/
-
     public Soil soil;
     public Climate climate;
     public GeographicProjection projection;
 
-    /**
-     * The biome generator object.
-     */
     private final Biome defaultBiome;
 
     public EarthBiomeProvider(Biome biomeIn, World world) {
@@ -273,13 +264,5 @@ public class EarthBiomeProvider extends BiomeProvider {
     @Override
     public boolean areBiomesViable(int x, int z, int radius, List<Biome> allowed) {
         return true;
-    }
-
-    public boolean func_190944_c() {
-        return true;
-    }
-
-    public Biome func_190943_d() {
-        return this.defaultBiome;
     }
 }

@@ -1,5 +1,6 @@
-package io.github.terra121;
+package io.github.terra121.generator;
 
+import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
@@ -8,8 +9,10 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.api.S
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGeneratorSettings;
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.CustomGenSettingsSerialization;
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.fixer.PresetLoadError;
+import io.github.terra121.TerraConfig;
+import io.github.terra121.TerraMod;
 import io.github.terra121.projection.GeographicProjection;
-import io.github.terra121.projection.ScaleProjection;
+import io.github.terra121.projection.transform.ScaleProjection;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public class EarthGeneratorSettings {
@@ -18,7 +21,6 @@ public class EarthGeneratorSettings {
     private Gson gson;
 
     public EarthGeneratorSettings(String generatorSettings) {
-
         if (!TerraConfig.reducedConsoleMessages) {
             TerraMod.LOGGER.info(generatorSettings);
         }
@@ -38,32 +40,19 @@ public class EarthGeneratorSettings {
     }
 
     @Override
-	public String toString() {
+    public String toString() {
         return this.gson.toJson(this.settings, JsonSettings.class);
     }
 
     public CustomGeneratorSettings getCustomCubic() {
-        if (this.settings.customcubic.isEmpty()) {
-            CustomGeneratorSettings cfg = CustomGeneratorSettings.defaults();
-            cfg.ravines = false;
-            if (this.settings.caves) {
-                cfg.dungeonCount = 3;
-            } else {
-                cfg.dungeonCount = 0;
-            }
-            //no surface lakes by default
-            for (CustomGeneratorSettings.LakeConfig lake : cfg.lakes) {
-                lake.surfaceProbability = new CustomGeneratorSettings.UserFunction();
-            }
-            if (!this.settings.caves) {
-                for (CustomGeneratorSettings.LakeConfig lake : cfg.lakes) {
-                    lake.mainProbability = new CustomGeneratorSettings.UserFunction();
-                }
-            }
+        if (Strings.isNullOrEmpty(this.settings.customcubic)) { //use new minimal defaults
+            CustomGeneratorSettings cfg = new CustomGeneratorSettings();
+            cfg.mineshafts = cfg.caves = cfg.strongholds = cfg.dungeons = cfg.ravines = false;
+            cfg.lakes.clear();
             return cfg;
+        } else {
+            return this.customCubicFromJson(this.settings.customcubic);
         }
-
-        return this.customCubicFromJson(this.settings.customcubic);
     }
 
     //Crappy attempt to coerce custom cubic settings
@@ -82,10 +71,6 @@ public class EarthGeneratorSettings {
         GeographicProjection p = GeographicProjection.orientProjection(
                 GeographicProjection.projections.get(this.settings.projection), this.settings.orentation);
 
-        if (this.settings.scaleX == null || this.settings.scaleY == null) {
-            return new ScaleProjection(p, 100000, 100000); //TODO: better default
-        }
-
         if (this.settings.scaleX == 1 && this.settings.scaleY == 1) {
             FMLCommonHandler.instance().exitJava(-1, false);
         }
@@ -102,16 +87,13 @@ public class EarthGeneratorSettings {
     public static class JsonSettings {
         public String projection = "equirectangular";
         public GeographicProjection.Orientation orentation = GeographicProjection.Orientation.swapped;
-        public Double scaleX = 100000.0;
-        public Double scaleY = 100000.0;
-        public Boolean smoothblend = true;
-        public Boolean roads = true;
+        public double scaleX = 100000.0d;
+        public double scaleY = 100000.0d;
+        public boolean smoothblend = true;
+        public boolean roads = true;
         public String customcubic = "";
-        public Boolean dynamicbaseheight = true;
-        public Boolean osmwater = false;
-        public Boolean buildings = false;
-        public Boolean caves = false;
-        public Boolean lidar = false; // Experimental LIDAR data
-        public String customdataset = "";
+        public boolean dynamicbaseheight = true;
+        public boolean osmwater = false;
+        public boolean buildings = false;
     }
 }

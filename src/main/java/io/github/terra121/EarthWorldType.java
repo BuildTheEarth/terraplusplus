@@ -4,6 +4,7 @@ import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.terra121.control.EarthGui;
+import io.github.terra121.generator.EarthGenerator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.init.Biomes;
@@ -16,6 +17,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class EarthWorldType extends WorldType implements ICubicWorldType {
+	
     public static EarthWorldType create() {
         return new EarthWorldType();
     }
@@ -26,7 +28,7 @@ public class EarthWorldType extends WorldType implements ICubicWorldType {
 
     @Override
     public ICubeGenerator createCubeGenerator(World world) {
-        return new EarthTerrainProcessor(world);
+        return new EarthGenerator(world);
     }
 
     @Override

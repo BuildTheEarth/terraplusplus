@@ -1,11 +1,12 @@
-package io.github.terra121.projection;
+package io.github.terra121.projection.transform;
+
+import io.github.terra121.projection.GeographicProjection;
 
 /**
  * Warps a Geographic projection and applies a transformation to it.
  */
 public abstract class ProjectionTransform extends GeographicProjection {
-	
-    protected GeographicProjection input;
+    protected final GeographicProjection input;
 
     /**
      * @param input - projection to transform

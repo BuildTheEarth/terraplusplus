@@ -2,7 +2,6 @@ package io.github.terra121.control;
 
 import io.github.terra121.TerraConstants;
 import io.github.terra121.control.fragments.FragmentManager;
-import io.github.terra121.control.fragments.admin.AdminOverpassFragment;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -15,7 +14,6 @@ public class TerraAdminCommand extends FragmentManager {
     public TerraAdminCommand() {
         setTitle(TranslateUtil.translate("terra121.commands.terraadmin.title"));
         setCommandBase("terraadmin");
-        registerCommandFragment(new AdminOverpassFragment());
     }
 
     @Override
@@ -48,7 +46,7 @@ public class TerraAdminCommand extends FragmentManager {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         if(!hasPermission(null, sender)) {
-            sender.sendMessage(TerraConstants.TextConstants.noPermission);
+            sender.sendMessage(TerraConstants.TextConstants.getNoPermission());
             return;
         }
         executeFragment(server, sender, args);

@@ -1,5 +1,7 @@
 package io.github.terra121;
 
+import org.apache.logging.log4j.Logger;
+
 import io.github.terra121.control.TerraAdminCommand;
 import io.github.terra121.control.TerraCommand;
 import io.github.terra121.control.TerraTeleport;
@@ -8,8 +10,6 @@ import io.github.terra121.letsencryptcraft.LetsEncryptAdder;
 import io.github.terra121.provider.EarthWorldProvider;
 import io.github.terra121.provider.GenerationEventDenier;
 import io.github.terra121.provider.WaterDenier;
-import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.DimensionType;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
@@ -20,9 +20,9 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.server.permission.DefaultPermissionLevel;
 import net.minecraftforge.server.permission.PermissionAPI;
-import org.apache.logging.log4j.Logger;
 
 @Mod(modid = TerraMod.MODID, name = TerraMod.NAME, version = TerraMod.VERSION, dependencies = "required-after:cubicchunks; required-after:cubicgen", acceptableRemoteVersions = "*")
 public class TerraMod implements ILetsEncryptMod {
@@ -46,6 +46,10 @@ public class TerraMod implements ILetsEncryptMod {
     public void preInit(FMLPreInitializationEvent event) {
         LOGGER = event.getModLog();
         EarthWorldType.create();
+        
+        // This is just a handy shortcut when creating new BTE worlds on the client not needed on the server
+        // It is critical that this happens after the EarthWorldType is registered
+        if(Side.CLIENT.equals(event.getSide())) BTEWorldType.create();
 
         if (CUSTOM_PROVIDER) {
             setupProvider();
@@ -57,6 +61,7 @@ public class TerraMod implements ILetsEncryptMod {
         MinecraftForge.TERRAIN_GEN_BUS.register(GenerationEventDenier.class);
         MinecraftForge.EVENT_BUS.register(WaterDenier.class);
         MinecraftForge.EVENT_BUS.register(TerraConfig.class);
+        if(Side.CLIENT.equals(event.getSide())) MinecraftForge.EVENT_BUS.register(BTEWorldType.class);
         PermissionAPI.registerNode(TerraConstants.controlCommandNode + "tpll", DefaultPermissionLevel.OP, "Allows a player to do /tpll");
         PermissionAPI.registerNode(TerraConstants.controlCommandNode + "terra", DefaultPermissionLevel.OP, "Allows access to terra commands");
         PermissionAPI.registerNode(TerraConstants.controlCommandNode + "terra.utility", DefaultPermissionLevel.OP, "Allows access to terra++'s utilities");

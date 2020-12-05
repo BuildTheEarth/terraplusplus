@@ -3,7 +3,7 @@ package io.github.terra121.control.fragments.terra;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.terra121.EarthBiomeProvider;
-import io.github.terra121.EarthTerrainProcessor;
+import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.chat.ChatHelper;
 import io.github.terra121.chat.TextElement;
@@ -24,25 +24,25 @@ public class TerraEnvironmentFragment extends CommandFragment {
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         BiomeProvider bp = sender.getEntityWorld().getBiomeProvider();
         if (!(bp instanceof EarthBiomeProvider)) { //must have normal biome provider
-            sender.sendMessage(TerraConstants.TextConstants.notTerra);
+            sender.sendMessage(TerraConstants.TextConstants.getNotTerra());
         }
 
         World world = sender.getEntityWorld();
         IChunkProvider cp = world.getChunkProvider();
 
         if (!(cp instanceof CubeProviderServer)) {
-            sender.sendMessage(TerraConstants.TextConstants.notCC);
+            sender.sendMessage(TerraConstants.TextConstants.getNotCC());
             return;
         }
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
-        if (!(gen instanceof EarthTerrainProcessor)) {
-            sender.sendMessage(TerraConstants.TextConstants.notTerra);
+        if (!(gen instanceof EarthGenerator)) {
+            sender.sendMessage(TerraConstants.TextConstants.getNotTerra());
             return;
         }
 
-        EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
+        EarthGenerator terrain = (EarthGenerator) gen;
         GeographicProjection projection = terrain.projection;
 
         double[] c = this.getCoordArgs(sender, args, projection);

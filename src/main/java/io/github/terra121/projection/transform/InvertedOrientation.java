@@ -1,4 +1,6 @@
-package io.github.terra121.projection;
+package io.github.terra121.projection.transform;
+
+import io.github.terra121.projection.GeographicProjection;
 
 /**
  * Inverses the warped projection such that x becomes y and y becomes x.

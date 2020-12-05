@@ -1,17 +1,18 @@
-package io.github.terra121.projection;
+package io.github.terra121.projection.transform;
+
+import io.github.terra121.projection.GeographicProjection;
 
 /**
  * Scales the warps projection's projected space up or down.
  * More specifically, it multiplies x and y by there respective scale factors.
  */
 public class ScaleProjection extends ProjectionTransform {
-
-    private double scaleX;
-    private double scaleY;
+    private final double scaleX;
+    private final double scaleY;
 
     /**
      * Creates a new ScaleProjection with different scale factor for the x and y axis.
-     * 
+     *
      * @param input - projection to transform
      * @param scaleX - scaling to apply along the x axis
      * @param scaleY - scaling to apply along the y axis
@@ -24,7 +25,7 @@ public class ScaleProjection extends ProjectionTransform {
 
     /**
      * Creates a new ScaleProjection with the same scale factor for the x and y axis.
-     * 
+     *
      * @param input - projection to transform
      * @param scale - scale factor to apply on both axis
      */
@@ -64,13 +65,4 @@ public class ScaleProjection extends ProjectionTransform {
     public double metersPerUnit() {
         return this.input.metersPerUnit() / Math.sqrt((this.scaleX * this.scaleX + this.scaleY * this.scaleY) / 2); //TODO: better transform
     }
-
-	public double getScaleX() {
-		return scaleX;
-	}
-
-	public double getScaleY() {
-		return scaleY;
-	}
-    
 }

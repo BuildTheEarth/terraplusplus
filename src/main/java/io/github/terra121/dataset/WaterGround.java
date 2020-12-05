@@ -33,14 +33,6 @@ public class WaterGround {
         //System.out.println(data.size()+" "+height);
     }
 
-    public int getWidth() {
-        return this.width;
-    }
-
-    public int getHeight() {
-        return this.height;
-    }
-
     public byte getOfficial(int x, int y) {
         if (x >= this.width || x < 0 || y >= this.height || y < 0) {
             return 0;

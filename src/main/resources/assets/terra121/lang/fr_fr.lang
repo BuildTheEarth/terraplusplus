@@ -1,0 +1,86 @@
+## World Type name
+generator.EarthCubic=Planète Terre
+
+## GUI options
+terra121.gui.projection=Projection
+terra121.gui.orientation=Orientation
+terra121.gui.roads=Génération des routes
+terra121.gui.smoothblend=Lissage du terrain
+terra121.gui.dynamicbaseheight=Minerais basés sur la hauteur
+terra121.gui.osmwater=Eau avancée (experimental)
+terra121.gui.buildings=Contours OSM des bâtiments
+terra121.gui.lidar=Terrain custom
+terra121.gui.caves=Grottes
+
+terra121.gui.biomemap=Carte de debug
+
+## Projection types
+terra121.projection.web_mercator=Mercator
+terra121.projection.equirectangular=Cylindrique équidistante
+terra121.projection.sinusoidal=Sinusoïdale
+terra121.projection.equal_earth=Equal Earth
+terra121.projection.transverse_mercator=Transverse de Mercator
+terra121.projection.airocean=Airocean (Non BTE)
+terra121.projection.conformal=Approx. conforme (Non BTE)
+terra121.projection.bteairocean=Build The Earth
+
+## Projection orientations
+terra121.orientation.upright=Droite
+terra121.orientation.none=Pas d'orientation
+terra121.orientation.swapped=Axes inversés
+
+## command messages
+terra121.commands.tpll.usage=/tpll <latitude> <longitude> [altitude] [joueur]
+terra121.commands.dataset.usage=/dataset [chemin du dossier des données]
+
+terra121.commands.terra.usage=/terra
+terra121.commands.terraadmin.usage=/terraadmin
+
+terra121.commands.terra.gensettings=Paramètres du générateur:
+terra121.commands.terra.latlon=lat lon: ph_.7f ph_.7f
+terra121.commands.terra.xy=x y: ph_.7f ph_.7f
+terra121.commands.terra.environment=ph_.1f °C; ph_.1f mm/yr; soil id: ph_d
+terra121.commands.terra.tissot= ~ph_.5f blocks/meter ± ph_.5f°
+terra121.commands.terra.rstwtr=La génération d'eau de la région ( ph_d, ph_d ) a étée réinitialisée (Seuls les chunks nouvellement générés seront affectés)
+terra121.commands.terra.invwtr=La génération d'eau de la région ( ph_d, ph_d ) a étée inversée (Seuls les chunks nouvellement générés seront affectés)
+
+terra121.commands.overpass.usage=/terraadmin overpass <status|list|default|fallback>
+terra121.commands.overpass.list.default=Par défaut:  ph_s
+terra121.commands.overpass.list.fallback=Alternatif: ph_s
+terra121.commands.overpass.list.nofallback=Aucun endpoint alternatif de configuré
+terra121.commands.overpass.set.default=Utilisation du serveur Overpass par défaut
+terra121.commands.overpass.set.fallback=Utilisation du serveur Overpass alternatif
+terra121.commands.overpass.status.default=En train d'utiliser le serveur Overpass par défaut: ph_s
+terra121.commands.overpass.status.fallback=En train d'utiliser le serveur Overpass alternatif: ph_s
+
+terra121.commands.terra.title=Commandes de Terra++
+terra121.commands.terraadmin.title=Commandes d'administration de Terra++
+
+## fragment messages
+terra121.fragment.help.purpose=Lister toutes les commandes
+
+terra121.fragment.terra.where.purpose=Affiche l'emplacement du joueur dans le monde
+terra121.fragment.terra.where.notproj=L'emplacement n'est pas sur la projection!
+terra121.fragment.terra.world.purpose=Affiche les paramètres de projection du monde
+terra121.fragment.terra.osm.purpose=Affiche l'emplacement actuelle dans Maps
+terra121.fragment.terra.info.purpose=Informations sur Terra++
+terra121.fragment.terra.convert.purpose=Convertit [x,z] en [lat,lon], et [lat,lon] en [x,z]
+terra121.fragment.terra.environment.purpose=Affiche des données sur l'envirronement
+terra121.fragment.terra.distortion.purpose=Affiche la distortion à l'emplacement actuel
+terra121.fragment.terra.winvert.purpose=Résout les problèmes d'eau inversée
+terra121.fragment.admin.overpass.purpose=Change les paramètres de l'API Overpass d'OSM
+
+terra121.fragment.terra.world.header=Paramètres de projection du monde:
+
+## command errors
+terra121.error.notcc=Doit être dans un monde Cubic Chunks!
+terra121.error.notterra=Doit être dans un monde Terra1:1!
+terra121.error.playeronly=Merci de spéfier un jouer ou d'éxecuter depuis un joueur!
+terra121.error.numbers=Tout les arguments doivent être des nombres!
+terra121.error.getcoords=Impossible d'obtenir les coordonnées!
+terra121.error.notplayer=Vous n'êtes pas un joueur, merci d'en spécifier un!
+terra121.error.unknownplayer=Ce joueur n'a pas été trouvé sur le serveur!
+terra121.error.notopothers=Des permissions sont requises pour obtenir des informations sur les autres joueurs!
+terra121.error.notop=Des permissions sont requises pour utiliser cette commande!
+terra121.error.nowtr=Ce monde n'utilise pas l'eau avancée!
+terra121.error.invwtr=La région ( ph_d, ph_d ) est déjà dans cet état!

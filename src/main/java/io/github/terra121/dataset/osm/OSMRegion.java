@@ -1,11 +1,16 @@
-package io.github.terra121.dataset;
+package io.github.terra121.dataset.osm;
+
+import io.github.terra121.dataset.LandLine;
+import io.github.terra121.dataset.Water;
+import io.github.terra121.dataset.osm.segment.Segment;
+import io.github.terra121.util.bvh.BVH;
+import net.minecraft.util.math.ChunkPos;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class Region {
-    public boolean failedDownload = false;
-    public OpenStreetMaps.Coord coord;
+public class OSMRegion {
+    public ChunkPos coord;
     public Water water;
     public LandLine southLine;
     public LandLine[] lines;
@@ -15,7 +20,9 @@ public class Region {
     public short[][] indexes;
     public byte[][] states;
 
-    public Region(OpenStreetMaps.Coord coord, Water water) {
+    public BVH<Segment> segments;
+
+    public OSMRegion(ChunkPos coord, Water water) {
         this.coord = coord;
         this.water = water;
 
@@ -26,8 +33,8 @@ public class Region {
 
         this.southLine = new LandLine();
 
-        this.south = coord.y * OpenStreetMaps.TILE_SIZE;
-        this.west = coord.x * OpenStreetMaps.TILE_SIZE;
+        this.south = coord.z * OpenStreetMap.TILE_SIZE;
+        this.west = coord.x * OpenStreetMap.TILE_SIZE;
     }
 
     public void addWaterEdge(double slon, double slat, double elon, double elat, long type) {
@@ -37,11 +44,11 @@ public class Region {
         slon -= this.west;
         elon -= this.west;
 
-        slon /= OpenStreetMaps.TILE_SIZE / this.water.hres;
-        elon /= OpenStreetMaps.TILE_SIZE / this.water.hres;
+        slon /= OpenStreetMap.TILE_SIZE / this.water.hres;
+        elon /= OpenStreetMap.TILE_SIZE / this.water.hres;
 
-        slat /= OpenStreetMaps.TILE_SIZE / this.water.hres;
-        elat /= OpenStreetMaps.TILE_SIZE / this.water.hres;
+        slat /= OpenStreetMap.TILE_SIZE / this.water.hres;
+        elat /= OpenStreetMap.TILE_SIZE / this.water.hres;
 
         if (slat <= 0 || elat <= 0 && (slat >= 0 || elat >= 0)) {
             if (slat == 0) {
@@ -82,9 +89,6 @@ public class Region {
     }
 
     public void renderWater(Set<Long> ground) {
-        double size = OpenStreetMaps.TILE_SIZE;
-        double ressize = OpenStreetMaps.TILE_SIZE / this.water.hres;
-
         this.indexes = new short[this.water.hres][];
         this.states = new byte[this.water.hres][];
 
@@ -93,14 +97,6 @@ public class Region {
         //we are done with these resources, now that they are compiled
         this.lines = null;
         this.southLine = null;
-
-		/*for(int y=0;y<test.length;y++) {
-			for(int x=0;x<test[0].length;x++) {
-				char c = test[test.length-y-1][x]>0?' ':'#';
-				System.out.print(c+""+c);
-			}
-			System.out.println();
-		}*/
     }
 
     //another fliping binary search, why can't java have a decent fuzzy one built in
@@ -128,10 +124,6 @@ public class Region {
     }
 
     public boolean equals(Object other) {
-        return (other instanceof Region) && this.coord.equals(((Region) other).coord);
-    }
-
-    public enum BoundaryType {
-        water
+        return (other instanceof OSMRegion) && this.coord.equals(((OSMRegion) other).coord);
     }
 }
