@@ -30,93 +30,107 @@ public class Airocean extends GeographicProjection {
 	/**
 	 * This contains the vertices of the icosahedron,
 	 * identified by their geographic longitude and latitude in degrees.
-	 * https://en.wikipedia.org/wiki/Regular_icosahedron#Spherical_coordinates
 	 * When the class is loaded, a static block below converts all these coordinates
 	 * to the equivalent spherical coordinates (longitude and colatitude), in radians.
+	 * 
+	 * @see <a href="https://en.wikipedia.org/wiki/Regular_icosahedron#Spherical_coordinates">Wikipedia</a>
 	 */
-    protected static final double[] VERTICES = {
-            10.536199, 64.700000,
-            -5.245390, 2.300882,
-            58.157706, 10.447378,
-            122.300000, 39.100000,
-            -143.478490, 50.103201,
-            -67.132330, 23.717925,
-            36.521510, -50.103200,
-            112.867673, -23.717930,
-            174.754610, -2.300882,
-            -121.842290, -10.447350,
-            -57.700000, -39.100000,
-            -169.463800, -64.700000,
-    };
+	protected static final double[][] VERTICES = new double[][] {
+		{10.536199, 64.700000},
+		{-5.245390, 2.300882},
+		{58.157706, 10.447378},
+		{122.300000, 39.100000},
+		{-143.478490, 50.103201},
+		{-67.132330, 23.717925},
+		{36.521510, -50.103200},
+		{112.867673, -23.717930},
+		{174.754610, -2.300882},
+		{-121.842290, -10.447350},
+		{-57.700000, -39.100000},
+		{-169.463800, -64.700000},
+	};
     
-    protected static final int[] ISO = {
-            2, 1, 6,
-            1, 0, 2,
-            0, 1, 5,
-            1, 5, 10,
-            1, 6, 10,
-            7, 2, 6,
-            2, 3, 7,
-            3, 0, 2,
-            0, 3, 4,
-            4, 0, 5, //9, qubec
-            5, 4, 9,
-            9, 5, 10,
-            10, 9, 11,
-            11, 6, 10,
-            6, 7, 11,
-            8, 3, 7,
-            8, 3, 4,
-            8, 4, 9,
-            9, 8, 11,
-            7, 8, 11,
-            11, 6, 7, //child of 14
-            3, 7, 8, //child of 15
-    };
+	/**
+	 * Indicates the vertices forming each face of the icosahedron.
+	 * Each entry refers to the index of a vertex in {@link #VERTICES}
+	 */
+	protected static final int[][] ISO = new int[][] {
+		{2, 1, 6},
+		{1, 0, 2},
+		{0, 1, 5},
+		{1, 5, 10},
+		{1, 6, 10},
+		{7, 2, 6},
+		{2, 3, 7},
+		{3, 0, 2},
+		{0, 3, 4},
+		{4, 0, 5}, //9, qubec
+		{5, 4, 9},
+		{9, 5, 10},
+		{10, 9, 11},
+		{11, 6, 10},
+		{6, 7, 11},
+		{8, 3, 7},
+		{8, 3, 4},
+		{8, 4, 9},
+		{9, 8, 11},
+		{7, 8, 11},
+		{11, 6, 7}, //child of 14
+		{3, 7, 8} //child of 15
+	};
     
-    protected static final double[] CENTER_MAP = {
-            -3, 7,
-            -2, 5,
-            -1, 7,
-            2, 5,
-            4, 5,
-            -4, 1,
-            -3, -1,
-            -2, 1,
-            -1, -1,
-            0, 1,
-            1, -1,
-            2, 1,
-            3, -1,
-            4, 1,
-            5, -1, //14, left side, right to be cut
-            -3, -5,
-            -1, -5,
-            1, -5,
-            2, -7,
-            -4, -7,
-            -5, -5, //20, pseudo triangle, child of 14
-            -2, -7, //21 , pseudo triangle, child of 15
+    protected static final double[][] CENTER_MAP = {
+            {-3, 7},
+            {-2, 5},
+            {-1, 7},
+            {2, 5},
+            {4, 5},
+            {-4, 1},
+            {-3, -1},
+            {-2, 1},
+            {-1, -1},
+            {0, 1},
+            {1, -1},
+            {2, 1},
+            {3, -1},
+            {4, 1},
+            {5, -1}, //14, left side, right to be cut
+            {-3, -5},
+            {-1, -5},
+            {1, -5},
+            {2, -7},
+            {-4, -7},
+            {-5, -5}, //20, pseudo triangle, child of 14
+            {-2, -7} //21 , pseudo triangle, child of 15
     };
     
 	/**
 	 * Indicates for each face if it needs to be flipped after projecting
 	 */
-    protected static final byte[] FLIP_TRIANGLE = {
-            1, 0, 1, 0, 0,
-            1, 0, 1, 0, 1, 0, 1, 0, 1, 0,
-            1, 1, 1, 0, 0,
-            1, 0,
-    };
+	protected static final boolean[] FLIP_TRIANGLE = new boolean[] {
+			true, false, true, false , false,
+			true, false, true, false, true, false, true, false, true, false,
+			true, true, true , false, false,
+			true, false
+	};
     
 	/**
-	 * This contains the Cartesian coordinates of the centroid
+	 * This contains the Cartesian coordinates the centroid
 	 * of each face of the icosahedron.
 	 */
-    protected static final double[] CENTROID = new double[66];
+	protected static final double[][] CENTROIDS = new double[22][3];
     
-    protected static final double[] ROTATION_MATRIX = new double[198];
-    protected static final double[] INVERSE_ROTATION_MATRIX = new double[198];
+	/**
+	 * Rotation matrices to move the triangles to the reference coordinates from the original positions.
+	 * Indexed by the face's indices.
+	 */
+    protected static final double[][][] ROTATION_MATRICES = new double[22][3][3];
+    
+    /**
+     * Rotation matrices to move the triangles from the reference coordinates to their original positions.
+     * Indexed by the face's indices.
+     */
+    protected static final double[][][] INVERSE_ROTATION_MATRICES = new double[22][3][3];
     
     protected static final int[] FACE_ON_GRID = {
             -1, -1, 0, 1, 2, -1, -1, 3, -1, 4, -1,
@@ -127,88 +141,65 @@ public class Airocean extends GeographicProjection {
     static {
     	
         for (int i = 0; i < 22; i++) {
-            CENTER_MAP[2 * i] *= 0.5 * ARC;
-            CENTER_MAP[2 * i + 1] *= ARC * MathUtils.ROOT3 / 12;
+            CENTER_MAP[i][0] *= 0.5 * ARC;
+            CENTER_MAP[i][1] *= ARC * MathUtils.ROOT3 / 12;
         }
 
-        for (int i = 0; i < 12; i++) {
-            VERTICES[2 * i + 1] = 90 - VERTICES[2 * i + 1];
+		// Will contain the list of vertices in Cartesian coordinates
+		double[][] verticesCartesian = new double[VERTICES.length][3];
 
-            VERTICES[2 * i] = Math.toRadians(VERTICES[2 * i]);
-            VERTICES[2 * i + 1] = Math.toRadians(VERTICES[2 * i + 1]);
-        }
+		// Convert the geographic vertices to spherical in radians
+		for(int i=0; i < VERTICES.length; i++) {
+			double[] vertexSpherical = MathUtils.geo2Spherical(VERTICES[i]);
+			double[] vertex = MathUtils.spherical2Cartesian(vertexSpherical);
+			verticesCartesian[i] = vertex;
+			VERTICES[i] = vertexSpherical;
+		}
 
-        for (int i = 0; i < 22; i++) {
-            double[] a = cart(VERTICES[2 * ISO[i * 3]], VERTICES[2 * ISO[i * 3] + 1]);
-            double[] b = cart(VERTICES[2 * ISO[i * 3 + 1]], VERTICES[2 * ISO[i * 3 + 1] + 1]);
-            double[] c = cart(VERTICES[2 * ISO[i * 3 + 2]], VERTICES[2 * ISO[i * 3 + 2] + 1]);
+		for(int i = 0; i < 22; i++) {
 
-            double xsum = a[0] + b[0] + c[0];
-            double ysum = a[1] + b[1] + c[1];
-            double zsum = a[2] + b[2] + c[2];
-
+			// Vertices of the current face
+			double[] vec1 = verticesCartesian[ISO[i][0]];
+			double[] vec2 = verticesCartesian[ISO[i][1]];
+			double[] vec3 = verticesCartesian[ISO[i][2]];
+			
+			// Find the centroid's projection onto the sphere
+            double xsum = vec1[0] + vec2[0] + vec3[0];
+            double ysum = vec1[1] + vec2[1] + vec3[1];
+            double zsum = vec1[2] + vec2[2] + vec3[2];
             double mag = Math.sqrt(xsum * xsum + ysum * ysum + zsum * zsum);
+			CENTROIDS[i] = new double[] {xsum / mag, ysum / mag, zsum / mag};
 
-            CENTROID[3 * i] = xsum / mag;
-            CENTROID[3 * i + 1] = ysum / mag;
-            CENTROID[3 * i + 2] = zsum / mag;
+			double[] centroidSpherical = MathUtils.cartesian2Spherical(CENTROIDS[i]);
+			double centroidLambda = centroidSpherical[0];
+			double centroidPhi = centroidSpherical[1];
 
-            double clon = Math.atan2(ysum, xsum);
-            double clat = Math.atan2(Math.sqrt(xsum * xsum + ysum * ysum), zsum);
+			double vertex[] = VERTICES[ISO[i][0]];
+			double v[] = new double[] {vertex[0] - centroidLambda, vertex[1]};
+			v = yRot(v, -centroidPhi);
 
-            double[] v = { VERTICES[2 * ISO[i * 3]], VERTICES[2 * ISO[i * 3] + 1] };
-            v = yRot(v[0] - clon, v[1], -clat);
+			ROTATION_MATRICES[i] = MathUtils.produceZYZRotationMatrix(-centroidLambda, -centroidPhi, (Math.PI/2) - v[0]);
+			INVERSE_ROTATION_MATRICES[i] = MathUtils.produceZYZRotationMatrix(v[0] - (Math.PI/2), centroidPhi, centroidLambda);
 
-            produceZYZRotationMatrix(ROTATION_MATRIX, i * 9, -clon, -clat, (Math.PI / 2) - v[0]);
-            produceZYZRotationMatrix(INVERSE_ROTATION_MATRIX, i * 9, v[0] - (Math.PI / 2), clat, clon);
-        }
+		}
     }
 
-    public static void produceZYZRotationMatrix(double[] out, int offset, double a, double b, double c) {
-
-        double sina = Math.sin(a);
-        double cosa = Math.cos(a);
-        double sinb = Math.sin(b);
-        double cosb = Math.cos(b);
-        double sinc = Math.sin(c);
-        double cosc = Math.cos(c);
-
-        out[offset + 0] = cosa * cosb * cosc - sinc * sina;
-        out[offset + 1] = -sina * cosb * cosc - sinc * cosa;
-        out[offset + 2] = cosc * sinb;
-
-        out[offset + 3] = sinc * cosb * cosa + cosc * sina;
-        out[offset + 4] = cosc * cosa - sinc * cosb * sina;
-        out[offset + 5] = sinc * sinb;
-
-        out[offset + 6] = -sinb * cosa;
-        out[offset + 7] = sinb * sina;
-        out[offset + 8] = cosb;
-    }
-
-    /**
-	 * Computes the Cartesian position vector of a vertex using it's spherical coordinates.
-	 * It is assumed that the sphere is of radius 1.
+	/**
+	 * Finds the face of the icosahedron on which to project a point.
+	 * In practice, it works by finding the face with the closest centroid to the point.
 	 * 
-     * @param lambda - longitude in radians
-     * @param phi - colatitude in radians
-     * 
-     * @return {x, y, z} coordinates in the Cartesian coordinate system
-     */
-    protected static double[] cart(double lambda, double phi) {
-        double sinphi = Math.sin(phi);
-        return new double[]{ sinphi * Math.cos(lambda), sinphi * Math.sin(lambda), Math.cos(phi) };
-    }
-
-    protected static int findTriangle(double x, double y, double z) {
+	 * @param vector - position vector as double array of length 3, using Cartesian coordinates
+	 * @return an integer identifying the face on which to project the point
+	 */
+    protected int findTriangle(double[] vector) {
 
         double min = Double.MAX_VALUE;
         int face = 0;
 
         for (int i = 0; i < 20; i++) {
-            double xd = CENTROID[3 * i] - x;
-            double yd = CENTROID[3 * i + 1] - y;
-            double zd = CENTROID[3 * i + 2] - z;
+            double xd = CENTROIDS[i][0] - vector[0];
+            double yd = CENTROIDS[i][1] - vector[1];
+            double zd = CENTROIDS[i][2] - vector[2];
 
             double dissq = xd * xd + yd * yd + zd * zd;
             if (dissq < min) {
@@ -226,14 +217,14 @@ public class Airocean extends GeographicProjection {
         return face;
     }
 
-    protected static int findMapTriangle(double x, double y) {
+    protected int findMapTriangle(double x, double y) {
 
         double min = Double.MAX_VALUE;
         int face = 0;
 
         for (int i = 0; i < 20; i++) {
-            double xd = CENTER_MAP[2 * i] - x;
-            double yd = CENTER_MAP[2 * i + 1] - y;
+            double xd = CENTER_MAP[i][0] - x;
+            double yd = CENTER_MAP[i][1] - y;
 
             double dissq = xd * xd + yd * yd;
             if (dissq < min) {
@@ -247,7 +238,7 @@ public class Airocean extends GeographicProjection {
 
     protected static int findTriangleGrid(double x, double y) {
 
-        //cast equiladeral triangles to 45 degreee right triangles (side length of root2)
+        //cast equilateral triangles to 45 degrees right triangles (side length of root2)
         double xp = x / ARC;
         double yp = y / (ARC * MathUtils.ROOT3);
 
@@ -268,7 +259,7 @@ public class Airocean extends GeographicProjection {
             return -1;
         }
 
-        yp += 0.25; //change origin to vertex 4, to allow grids to allign
+        yp += 0.25; //change origin to vertex 4, to allow grids to align
 
         //rotate coords 45 degrees so left and right sides of the triangle become the x/y axies (also side lengths are now 1)
         double xr = xp - yp;
@@ -288,8 +279,8 @@ public class Airocean extends GeographicProjection {
         return FACE_ON_GRID[row * 11 + col]; //get face at this position
     }
 
-    static double[] yRot(double lambda, double phi, double rot) {
-        double[] c = cart(lambda, phi);
+    protected static double[] yRot(double[] spherical, double rot) {
+        double[] c = MathUtils.spherical2Cartesian(spherical);
 
         double x = c[0];
         c[0] = c[2] * Math.sin(rot) + x * Math.cos(rot);
@@ -306,12 +297,12 @@ public class Airocean extends GeographicProjection {
         };
     }
 
-    protected double[] triangleTransform(double x, double y, double z) {
+    protected double[] triangleTransform(double[] vec) {
 
-        double S = Z / z;
+        double S = Z / vec[2];
 
-        double xp = S * x;
-        double yp = S * y;
+        double xp = S * vec[0];
+        double yp = S * vec[1];
 
         double a = Math.atan((2 * yp / MathUtils.ROOT3 - EL6) / DVE); //ARC/2 terms cancel
         double b = Math.atan((xp - yp / MathUtils.ROOT3 - EL6) / DVE);
@@ -456,44 +447,32 @@ public class Airocean extends GeographicProjection {
     @Override
     public double[] fromGeo(double longitude, double latitude) {
 
-        latitude = 90 - latitude;
-        longitude = Math.toRadians(longitude);
-        latitude = Math.toRadians(latitude);
+        double[] vector = MathUtils.spherical2Cartesian(MathUtils.geo2Spherical(new double[] {longitude, latitude}));
 
-        double sinphi = Math.sin(latitude);
-
-        double x = Math.cos(longitude) * sinphi;
-        double y = Math.sin(longitude) * sinphi;
-        double z = Math.cos(latitude);
-
-        int face = findTriangle(x, y, z);
+        int face = findTriangle(vector);
 
         //apply rotation matrix (move triangle onto template triangle)
-        int off = 9 * face;
-        double xp = x * ROTATION_MATRIX[off + 0] + y * ROTATION_MATRIX[off + 1] + z * ROTATION_MATRIX[off + 2];
-        double yp = x * ROTATION_MATRIX[off + 3] + y * ROTATION_MATRIX[off + 4] + z * ROTATION_MATRIX[off + 5];
-        double zp = x * ROTATION_MATRIX[off + 6] + y * ROTATION_MATRIX[off + 7] + z * ROTATION_MATRIX[off + 8];
-
-        double[] out = this.triangleTransform(xp, yp, zp);
+        double[] pvec = MathUtils.matVecProdD(ROTATION_MATRICES[face], vector);
+        double[] projectedVec = this.triangleTransform(pvec);
 
         //flip triangle to correct orientation
-        if (FLIP_TRIANGLE[face] != 0) {
-            out[0] = -out[0];
-            out[1] = -out[1];
+        if (FLIP_TRIANGLE[face]) {
+            projectedVec[0] = -projectedVec[0];
+            projectedVec[1] = -projectedVec[1];
         }
 
-        x = out[0];
+        vector[0] = projectedVec[0];
         //deal with special snowflakes (child faces 20, 21)
-        if (((face == 15 && x > out[1] * MathUtils.ROOT3) || face == 14) && x > 0) {
-            out[0] = 0.5 * x - 0.5 * MathUtils.ROOT3 * out[1];
-            out[1] = 0.5 * MathUtils.ROOT3 * x + 0.5 * out[1];
+        if (((face == 15 && vector[0] > projectedVec[1] * MathUtils.ROOT3) || face == 14) && vector[0] > 0) {
+            projectedVec[0] = 0.5 * vector[0] - 0.5 * MathUtils.ROOT3 * projectedVec[1];
+            projectedVec[1] = 0.5 * MathUtils.ROOT3 * vector[0] + 0.5 * projectedVec[1];
             face += 6; //shift 14->20 & 15->21
         }
 
-        out[0] += CENTER_MAP[face * 2];
-        out[1] += CENTER_MAP[face * 2 + 1];
+        projectedVec[0] += CENTER_MAP[face][0];
+        projectedVec[1] += CENTER_MAP[face][1];
 
-        return out;
+        return projectedVec;
     }
 
     @Override
@@ -504,8 +483,8 @@ public class Airocean extends GeographicProjection {
             return OUT_OF_BOUNDS;
         }
 
-        x -= CENTER_MAP[face * 2];
-        y -= CENTER_MAP[face * 2 + 1];
+        x -= CENTER_MAP[face][0];
+        y -= CENTER_MAP[face][1];
 
         //deal with bounds of special snowflakes
         switch (face) {
@@ -535,7 +514,7 @@ public class Airocean extends GeographicProjection {
         }
 
         //flip triangle to upright orientation (if not already)
-        if (FLIP_TRIANGLE[face] != 0) {
+        if (FLIP_TRIANGLE[face]) {
             x = -x;
             y = -y;
         }
@@ -546,14 +525,12 @@ public class Airocean extends GeographicProjection {
         y = c[1];
         double z = c[2];
 
+        double[] vec = new double[] {x, y, z};
         //apply inverse rotation matrix (move triangle from template triangle to correct position on globe)
-        int off = 9 * face;
-        double xp = x * INVERSE_ROTATION_MATRIX[off + 0] + y * INVERSE_ROTATION_MATRIX[off + 1] + z * INVERSE_ROTATION_MATRIX[off + 2];
-        double yp = x * INVERSE_ROTATION_MATRIX[off + 3] + y * INVERSE_ROTATION_MATRIX[off + 4] + z * INVERSE_ROTATION_MATRIX[off + 5];
-        double zp = x * INVERSE_ROTATION_MATRIX[off + 6] + y * INVERSE_ROTATION_MATRIX[off + 7] + z * INVERSE_ROTATION_MATRIX[off + 8];
-
-        //convert back to spherical coordinates
-        return new double[]{ Math.toDegrees(Math.atan2(yp, xp)), 90 - Math.toDegrees(Math.acos(zp)) };
+        double[] vecp = MathUtils.matVecProdD(INVERSE_ROTATION_MATRICES[face], vec);
+        
+        //convert back to geo coordinates
+        return MathUtils.spherical2Geo(MathUtils.cartesian2Spherical(vecp));
     }
 
     @Override
