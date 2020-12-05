@@ -16,10 +16,14 @@ public class CachedChunkData {
     protected int surfaceMaxCube;
 
     public boolean intersectsSurface(int cubeY) {
-        return cubeY >= this.surfaceMinCube && cubeY < this.surfaceMaxCube;
+        return cubeY >= this.surfaceMinCube && cubeY <= this.surfaceMaxCube;
     }
 
     public boolean aboveSurface(int cubeY) {
-        return cubeY >= this.surfaceMaxCube;
+        return cubeY > this.surfaceMaxCube;
+    }
+
+    public boolean belowSurface(int cubeY) {
+        return cubeY < this.surfaceMinCube;
     }
 }

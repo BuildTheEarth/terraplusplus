@@ -1,6 +1,11 @@
 package io.github.terra121.util;
 
 import com.google.common.base.Preconditions;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
 import io.github.terra121.TerraConfig;
 import io.github.terra121.TerraMod;
 import io.netty.buffer.ByteBuf;
@@ -25,6 +30,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,25 +41,35 @@ import java.util.regex.Pattern;
  */
 @UtilityClass
 public class HttpUtil {
-    private static final DirectDB DB;
-
-    static {
-        File cacheRoot = getCacheRoot();
-        try {
-            TerraMod.LOGGER.info("Opening cache DB at {}", cacheRoot);
-            Preconditions.checkState(cacheRoot.exists() || cacheRoot.mkdirs(), "unable to create directory: %s", cacheRoot);
-            DB = LevelDB.PROVIDER.open(getCacheRoot(), new Options()
-                    .compressionType(CompressionType.SNAPPY));
-            TerraMod.LOGGER.info("Cached DB opened successfully.");
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to open cache DB at " + cacheRoot, e);
-        }
-    }
+    private static final LoadingCache<String, DirectDB> DBS = CacheBuilder.newBuilder()
+            .expireAfterAccess(5L, TimeUnit.MINUTES)
+            .removalListener((RemovalListener<String, DirectDB>) notification -> {
+                File cacheRoot = new File(getCacheRoot(), notification.getKey());
+                try {
+                    TerraMod.LOGGER.info("Closing cache DB at {}", cacheRoot);
+                    notification.getValue().close();
+                } catch (IOException e) {
+                    throw new RuntimeException("Unable to close cache DB at " + cacheRoot, e);
+                }
+            })
+            .build(new CacheLoader<String, DirectDB>() {
+                @Override
+                public DirectDB load(String key) throws Exception {
+                    File cacheRoot = new File(getCacheRoot(), key);
+                    try {
+                        TerraMod.LOGGER.info("Opening cache DB at {}", cacheRoot);
+                        Preconditions.checkState(cacheRoot.exists() || cacheRoot.mkdirs(), "unable to create directory: %s", cacheRoot);
+                        return LevelDB.PROVIDER.open(cacheRoot, new Options().compressionType(CompressionType.SNAPPY));
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to open cache DB at " + cacheRoot, e);
+                    }
+                }
+            });
 
     /**
      * Attempts to GET an array of URLs in order, returning the parsed response body of the first successful one.
      *
-     * @param urls the URLs
+     * @param urls          the URLs
      * @param parseFunction a function to use to parse the response body
      * @return the parsed response body
      * @throws IOException if no URLs were given, or all returned an error code
@@ -88,13 +104,14 @@ public class HttpUtil {
     /**
      * Attempts to GET a single URL.
      *
-     * @param url the URL
+     * @param url           the URL
      * @param parseFunction a function to use to parse the response body
      * @return the parsed response body
      * @throws IOException if an I/O exception occurred while attempting to get the data
      */
     public static <T> T getSingle(@NonNull String url, @NonNull EFunction<ByteBuf, T> parseFunction) throws Exception {
         URL parsedUrl = new URL(url);
+        String dbKey = getCacheDBName(parsedUrl);
         boolean canCache = TerraConfig.data.cache && !"file".equals(parsedUrl.getProtocol()); //we don't want to cache local files, because they're already on disk
 
         Exception cause = null;
@@ -106,7 +123,7 @@ public class HttpUtil {
             //synchronizing on the interned string makes for a simple global mutex, preventing the same URL from
             // being requested by multiple threads at once
             synchronized (url = url.intern()) {
-                if (canCache && DB.getInto(key, buf)) { //url was found in cache
+                if (canCache && DBS.getUnchecked(dbKey).getInto(key, buf)) { //url was found in cache
                     if (!TerraConfig.reducedConsoleMessages) {
                         TerraMod.LOGGER.info("Cache hit: {}", url);
                     }
@@ -141,12 +158,12 @@ public class HttpUtil {
                         T parsed = parseFunction.applyThrowing(buf.skipBytes(1));
 
                         if (canCache) { //write data to cache
-                            DB.put(key, buf.readerIndex(0));
+                            DBS.getUnchecked(dbKey).put(key, buf.readerIndex(0));
                         }
                         return parsed;
                     } catch (FileNotFoundException e) { //server returned 404 Not Found
                         if (canCache) { //write missing entry to cache
-                            DB.put(key, buf.clear().writeBoolean(false));
+                            DBS.getUnchecked(dbKey).put(key, buf.clear().writeBoolean(false));
                         }
                         throw e;
                     } catch (Exception e) {
@@ -179,6 +196,10 @@ public class HttpUtil {
         }
         matcher.appendTail(out);
         return out.toString();
+    }
+
+    public static String getCacheDBName(@NonNull URL url) {
+        return url.getProtocol() + '/' + url.getHost().replaceAll("[\\\\?%*:|\"<>]", "_");
     }
 
     private static File getCacheRoot() {

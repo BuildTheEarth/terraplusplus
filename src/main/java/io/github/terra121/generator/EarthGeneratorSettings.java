@@ -49,6 +49,7 @@ public class EarthGeneratorSettings {
             CustomGeneratorSettings cfg = new CustomGeneratorSettings();
             cfg.mineshafts = cfg.caves = cfg.strongholds = cfg.dungeons = cfg.ravines = false;
             cfg.lakes.clear();
+            cfg.waterLevel = 0;
             return cfg;
         } else {
             return this.customCubicFromJson(this.settings.customcubic);

@@ -17,6 +17,8 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.BiomeBlockRep
 import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.CubicBiome;
 import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.IBiomeBlockReplacer;
 import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.IBiomeBlockReplacerProvider;
+import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.OceanWaterReplacer;
+import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.TerrainShapeReplacer;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGeneratorSettings;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicCaveGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicRavineGenerator;
@@ -31,7 +33,6 @@ import io.github.terra121.populator.CliffReplacer;
 import io.github.terra121.populator.EarthTreePopulator;
 import io.github.terra121.populator.SnowPopulator;
 import io.github.terra121.projection.GeographicProjection;
-import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -44,7 +45,6 @@ import net.minecraftforge.event.terraingen.InitMapGenEvent;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -63,7 +63,7 @@ public class EarthGenerator extends BasicCubeGenerator {
     public final GeographicProjection projection;
     private final CustomGeneratorSettings cubiccfg;
 
-    public final Map<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers = new IdentityHashMap<>();
+    public final IBiomeBlockReplacer[][] biomeBlockReplacers;
 
     private final List<ICubicStructureGenerator> structureGenerators = new ArrayList<>();
 
@@ -122,8 +122,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         }
 
         BiomeBlockReplacerConfig conf = this.cubiccfg.replacerConfig;
-        CliffReplacer cliffs = new CliffReplacer();
-
+        Map<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers = new IdentityHashMap<>();
         for (Biome biome : ForgeRegistries.BIOMES) {
             CubicBiome cubicBiome = CubicBiome.getCubic(biome);
             Iterable<IBiomeBlockReplacerProvider> providers = cubicBiome.getReplacerProviders();
@@ -131,10 +130,14 @@ public class EarthGenerator extends BasicCubeGenerator {
             for (IBiomeBlockReplacerProvider prov : providers) {
                 replacers.add(prov.create(world, cubicBiome, conf));
             }
-            replacers.add(cliffs);
 
-            this.biomeBlockReplacers.put(biome, replacers);
+            //remove these replacers because they're redundant
+            replacers.removeIf(replacer -> replacer instanceof TerrainShapeReplacer || replacer instanceof OceanWaterReplacer);
+
+            biomeBlockReplacers.put(biome, replacers);
         }
+        this.biomeBlockReplacers = new IBiomeBlockReplacer[biomeBlockReplacers.keySet().stream().mapToInt(Biome::getIdForBiome).max().orElse(0) + 1][];
+        biomeBlockReplacers.forEach((biome, replacers) -> this.biomeBlockReplacers[Biome.getIdForBiome(biome)] = replacers.toArray(new IBiomeBlockReplacer[0]));
     }
 
     @Override
@@ -144,40 +147,18 @@ public class EarthGenerator extends BasicCubeGenerator {
 
     @Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer) {
-        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-
         CachedChunkData data = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ));
 
-        //fill in the world
-        for (int x = 0; x < 16; x++) {
+        //build ground surfaces
+        this.generateSurface(cubeX, cubeY, cubeZ, primer, data, this.world.getChunk(cubeX, cubeZ).getBiomeArray());
+
+        //add water
+        this.generateWater(cubeX, cubeY, cubeZ, primer, data);
+
+        /*for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
                 double height = data.heights[x * 16 + z];
                 double wateroff = data.wateroffs[x * 16 + z];
-
-                //estimate slopes
-                double dx;
-                double dz;
-                if (x == 16 - 1) {
-                    dx = data.heights[x * 16 + z] - data.heights[(x - 1) * 16 + z];
-                } else {
-                    dx = data.heights[(x + 1) * 16 + z] - data.heights[x * 16 + z];
-                }
-
-                if (z == 16 - 1) {
-                    dz = data.heights[x * 16 + z] - data.heights[x * 16 + z - 1];
-                } else {
-                    dz = data.heights[x * 16 + z + 1] - data.heights[x * 16 + z];
-                }
-
-                //get biome (thanks to 	z3nth10n for spoting this one)
-                List<IBiomeBlockReplacer> reps = this.biomeBlockReplacers.get(this.biomes.getBiome(pos.setPos(cubeX * 16 + x, 0, cubeZ * 16 + z)));
-                for (int y = 0; y < 16 && y < height - Coords.cubeToMinBlock(cubeY); y++) {
-                    IBlockState block = Blocks.STONE.getDefaultState();
-                    for (IBiomeBlockReplacer rep : reps) {
-                        block = rep.getReplacedBlock(block, cubeX * 16 + x, cubeY * 16 + y + 63, cubeZ * 16 + z, dx, -1, dz, height - (cubeY * 16 + y));
-                    }
-                    primer.setBlockState(x, y, z, block);
-                }
 
                 int minblock = Coords.cubeToMinBlock(cubeY);
 
@@ -212,7 +193,7 @@ public class EarthGenerator extends BasicCubeGenerator {
                     }
                 }
             }
-        }
+        }*/
 
         //generate structures
         this.structureGenerators.forEach(gen -> gen.generate(this.world, primer, new CubePos(cubeX, cubeY, cubeZ)));
@@ -227,6 +208,75 @@ public class EarthGenerator extends BasicCubeGenerator {
         }
 
         return primer;
+    }
+
+    private void generateSurface(int cubeX, int cubeY, int cubeZ, CubePrimer primer, CachedChunkData data, byte[] biomes) {
+        IBlockState stone = Blocks.STONE.getDefaultState();
+        if (data.belowSurface(cubeY + 2)) { //below surface -> solid stone (padding of 2 cubes because some replacers might need it)
+            //technically, i could reflectively get access to the primer's underlying char[] and use Arrays.fill(), because this
+            // implementation causes 4096 calls to ObjectIntIdentityMap#get() when only 1 would be necessary...
+            for (int x = 0; x < 16; x++) {
+                for (int y = 0; y < 16; y++) {
+                    for (int z = 0; z < 16; z++) {
+                        primer.setBlockState(z, y, z, stone);
+                    }
+                }
+            }
+        } else if (data.aboveSurface(cubeY)) { //above surface -> air (no padding here, replacers don't normally affect anything above the surface)
+            //no-op, the primer is already air!
+        } else {
+            double[] heights = data.heights();
+
+            for (int x = 0; x < 16; x++) {
+                for (int z = 0; z < 16; z++) {
+                    double height = heights[x * 16 + z];
+                    double dx = x == 15 ? height - heights[(x - 1) * 16 + z] : heights[(x + 1) * 16 + z] - height;
+                    double dz = z == 15 ? height - heights[x * 16 + (z - 1)] : heights[x * 16 + (z + 1)] - height;
+
+                    int maxY = min((int) ceil(height) - Coords.cubeToMinBlock(cubeY), 16);
+                    if (maxY > 0) {
+                        int blockX = Coords.cubeToMinBlock(cubeX) + x;
+                        int blockZ = Coords.cubeToMinBlock(cubeZ) + z;
+                        IBiomeBlockReplacer[] replacers = this.biomeBlockReplacers[biomes[x * 16 + z] & 0xFF];
+                        for (int y = 0; y < maxY; y++) {
+                            int blockY = Coords.cubeToMinBlock(cubeY) + y;
+                            double density = height - blockY;
+                            IBlockState state = stone;
+                            for (IBiomeBlockReplacer replacer : replacers) {
+                                state = replacer.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
+                            }
+
+                            //calling this explicitly increases the likelihood of JIT inlining it
+                            //(for reference: previously, CliffReplacer was manually added to each biome as the last replacer)
+                            state = CliffReplacer.INSTANCE.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
+
+                            primer.setBlockState(x, y, z, state);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void generateWater(int cubeX, int cubeY, int cubeZ, CubePrimer primer, CachedChunkData data) {
+        IBlockState air = Blocks.AIR.getDefaultState();
+        IBlockState water = Blocks.WATER.getDefaultState();
+        if (data.belowSurface(cubeY + 2)) { //below surface -> no water will generate here (padding of 2 cubes because some replacers might need it)
+            //no-op, the primer is already solid stone!
+        } else if (cubeY < 0) { //y=0 is sea level
+            //replace all air blocks with water
+            for (int y = 0; y < 16; y++) { //YZX is more cache-friendly, as it's the same coordinate order as CubePrimer uses
+                for (int z = 0; z < 16; z++) {
+                    for (int x = 0; x < 16; x++) {
+                        if (primer.getBlockState(x, y, z) == air) {
+                            primer.setBlockState(x, y, z, water);
+                        }
+                    }
+                }
+            }
+        } else {
+            //TODO: something
+        }
     }
 
     @Override
