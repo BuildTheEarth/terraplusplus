@@ -1,6 +1,7 @@
 package io.github.terra121.projection.airocean;
 
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.MathUtils;
 
 /**
@@ -22,11 +23,6 @@ public class Airocean extends GeographicProjection {
      * Number of iterations for Newton's method
      */
     private static final int NEWTON = 5;
-    
-    /**
-     * Returned by {@link #toGeo(double, double)} when trying to convert coordinates outside the projection domain.
-     */
-    public static final double[] OUT_OF_BOUNDS = { Double.NaN, Double.NaN };
     
 	/**
 	 * This contains the vertices of the icosahedron,
@@ -477,12 +473,10 @@ public class Airocean extends GeographicProjection {
     }
 
     @Override
-    public double[] toGeo(double x, double y) {
+    public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
         int face = findTriangleGrid(x, y);
 
-        if (face == -1) {
-            return OUT_OF_BOUNDS;
-        }
+        if (face == -1) throw OutOfProjectionBoundsException.INSTANCE;
 
         x -= CENTER_MAP[face][0];
         y -= CENTER_MAP[face][1];
@@ -490,27 +484,16 @@ public class Airocean extends GeographicProjection {
         //deal with bounds of special snowflakes
         switch (face) {
             case 14:
-                if (x > 0) {
-                    return OUT_OF_BOUNDS;
-                }
+                if (x > 0) throw OutOfProjectionBoundsException.INSTANCE;
                 break;
-
             case 20:
-                if (-y * MathUtils.ROOT3 > x) {
-                    return OUT_OF_BOUNDS;
-                }
+                if (-y * MathUtils.ROOT3 > x) throw OutOfProjectionBoundsException.INSTANCE;
                 break;
-
             case 15:
-                if (x > 0 && x > y * MathUtils.ROOT3) {
-                    return OUT_OF_BOUNDS;
-                }
+                if (x > 0 && x > y * MathUtils.ROOT3) throw OutOfProjectionBoundsException.INSTANCE;
                 break;
-
             case 21:
-                if (x < 0 || -y * MathUtils.ROOT3 > x) {
-                    return OUT_OF_BOUNDS;
-                }
+                if (x < 0 || -y * MathUtils.ROOT3 > x) throw OutOfProjectionBoundsException.INSTANCE;
                 break;
         }
 

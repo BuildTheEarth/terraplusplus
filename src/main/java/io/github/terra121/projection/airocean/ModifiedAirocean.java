@@ -1,5 +1,6 @@
 package io.github.terra121.projection.airocean;
 
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.MathUtils;
 
 /**
@@ -51,7 +52,7 @@ public class ModifiedAirocean extends ConformalEstimate {
     }
 
     @Override
-    public double[] toGeo(double x, double y) {
+    public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
         boolean easia;
         if (y < 0) {
             easia = x > 0;
@@ -78,9 +79,7 @@ public class ModifiedAirocean extends ConformalEstimate {
         y += 0.75 * ARC * MathUtils.ROOT3;
 
         //check to make sure still in right part
-        if (easia != this.isEurasianPart(x, y)) {
-            return OUT_OF_BOUNDS;
-        }
+        if (easia != this.isEurasianPart(x, y)) throw OutOfProjectionBoundsException.INSTANCE;
 
         return super.toGeo(x, y);
     }

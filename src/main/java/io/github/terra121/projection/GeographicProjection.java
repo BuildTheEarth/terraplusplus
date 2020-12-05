@@ -26,183 +26,193 @@ import io.github.terra121.TerraConstants;
  */
 public abstract class GeographicProjection {
 
-    /**
-     * Contains the various projections implemented in Terra121,
-     * identified by a String key.
-     */
-    public static final Map<String, GeographicProjection> projections;
+	/**
+	 * Contains the various projections implemented in Terra121,
+	 * identified by a String key.
+	 */
+	public static final Map<String, GeographicProjection> projections;
 
-    static {
-        projections = new HashMap<>();
-        projections.put("web_mercator", new CenteredMapsProjection());
-        projections.put("equirectangular", new EquirectangularProjection());
-        projections.put("sinusoidal", new SinusoidalProjection());
-        projections.put("equal_earth", new EqualEarth());
-        projections.put("airocean", new Airocean());
-        projections.put("transverse_mercator", new TransverseMercatorProjection());
-        projections.put("airocean", new Airocean());
-        projections.put("conformal", new ConformalEstimate());
-        projections.put("bteairocean", new ModifiedAirocean());
-    }
-    
-    
-    /**
-     * Orients a projection
-     * 
-     * @param base - the projection to orient
-     * @param orientation - the orientation to use
-     * 
-     * @return a projection that warps the base projection but applies the transformation described by the given orientation
-     */
-    public static GeographicProjection orientProjection(GeographicProjection base, Orientation orientation) {
-        if (base.upright()) {
-            if (orientation == Orientation.upright) {
-                return base;
-            }
-            base = new UprightOrientation(base);
-        }
+	static {
+		projections = new HashMap<>();
+		projections.put("web_mercator", new CenteredMapsProjection());
+		projections.put("equirectangular", new EquirectangularProjection());
+		projections.put("sinusoidal", new SinusoidalProjection());
+		projections.put("equal_earth", new EqualEarth());
+		projections.put("airocean", new Airocean());
+		projections.put("transverse_mercator", new TransverseMercatorProjection());
+		projections.put("airocean", new Airocean());
+		projections.put("conformal", new ConformalEstimate());
+		projections.put("bteairocean", new ModifiedAirocean());
+	}
 
-        if (orientation == Orientation.swapped) {
-            return new InvertedOrientation(base);
-        } else if (orientation == Orientation.upright) {
-            base = new UprightOrientation(base);
-        }
 
-        return base;
-    }
+	/**
+	 * Orients a projection
+	 * 
+	 * @param base - the projection to orient
+	 * @param orientation - the orientation to use
+	 * 
+	 * @return a projection that warps the base projection but applies the transformation described by the given orientation
+	 */
+	public static GeographicProjection orientProjection(GeographicProjection base, Orientation orientation) {
+		if (base.upright()) {
+			if (orientation == Orientation.upright) {
+				return base;
+			}
+			base = new UprightOrientation(base);
+		}
 
-    
-    /**
-     * Converts map coordinates to geographic coordinates
-     * 
-     * @param x - x map coordinate
-     * @param y - y map coordinate
-     * 
-     * @return {longitude, latitude} in degrees
-     */
-    public abstract double[] toGeo(double x, double y);
+		if (orientation == Orientation.swapped) {
+			return new InvertedOrientation(base);
+		} else if (orientation == Orientation.upright) {
+			base = new UprightOrientation(base);
+		}
 
-    /**
-     * Converts geographic coordinates to map coordinates
-     * 
-     * @param longitude - longitude, in degrees
-     * @param latitude - latitude, in degrees
-     * 
-     * @return {x, y} map coordinates
-     */
-    public abstract double[] fromGeo(double longitude, double latitude);
+		return base;
+	}
 
-    /**
-     * Gives an estimation of the scale of this projection.
-     * This is just an estimation, as distortion is inevitable when projecting a sphere onto a flat surface,
-     * so this value varies from places to places in reality.
-     * 
-     * @return an estimation of the scale of this projection
-     */
-    public abstract double metersPerUnit();
-    
-    /**
-     * Indicates the minimum and maximum X and Y coordinates on the projected space.
-     * 
-     * @return {minimum X, minimum Y, maximum X, maximum Y}
-     */
-    public double[] bounds() {
 
-        //get max in by using extreme coordinates
-        double[] bounds = {
-                this.fromGeo(-180, 0)[0],
-                this.fromGeo(0, -90)[1],
-                this.fromGeo(180, 0)[0],
-                this.fromGeo(0, 90)[1]
-        };
+	/**
+	 * Converts map coordinates to geographic coordinates
+	 * 
+	 * @param x - x map coordinate
+	 * @param y - y map coordinate
+	 * 
+	 * @return {longitude, latitude} in degrees
+	 * @throws OutOfProjectionBoundsException if the specified point on the projected space cannot be mapped to a point of the geographic space
+	 */
+	public abstract double[] toGeo(double x, double y) throws OutOfProjectionBoundsException;
 
-        if (bounds[0] > bounds[2]) {
-            double t = bounds[0];
-            bounds[0] = bounds[2];
-            bounds[2] = t;
-        }
+	/**
+	 * Converts geographic coordinates to map coordinates
+	 * 
+	 * @param longitude - longitude, in degrees
+	 * @param latitude - latitude, in degrees
+	 * 
+	 * @return {x, y} map coordinates
+	 * @throws OutOfProjectionBoundsException if the specified point on the geographic space cannot be mapped to a point of the projected space
+	 */
+	public abstract double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException;
 
-        if (bounds[1] > bounds[3]) {
-            double t = bounds[1];
-            bounds[1] = bounds[3];
-            bounds[3] = t;
-        }
+	/**
+	 * Gives an estimation of the scale of this projection.
+	 * This is just an estimation, as distortion is inevitable when projecting a sphere onto a flat surface,
+	 * so this value varies from places to places in reality.
+	 * 
+	 * @return an estimation of the scale of this projection
+	 */
+	public abstract double metersPerUnit();
 
-        return bounds;
-    }
+	/**
+	 * Indicates the minimum and maximum X and Y coordinates on the projected space.
+	 * 
+	 * @return {minimum X, minimum Y, maximum X, maximum Y}
+	 */
+	public double[] bounds() {
 
-    /**
-     * Indicates whether or not the north pole is projected to the north of the south pole on the projected space,
-     * assuming Minecraft's coordinate system cardinal directions for the projected space (north is negative Z).
-     * 
-     * @return north pole Z <= south pole Z
-     */
-    public boolean upright() {
-        return this.fromGeo(0, 90)[1] <= this.fromGeo(0, -90)[1];
-    }
+		try {
+			//get max in by using extreme coordinates
+			double[] bounds = {
+					this.fromGeo(-180, 0)[0],
+					this.fromGeo(0, -90)[1],
+					this.fromGeo(180, 0)[0],
+					this.fromGeo(0, 90)[1]
+			};
 
-    /**
-     * Calculates the vector that goes a given distance north and a given distance east from the given point in the projected space.
-     * 
-     * @param x - x coordinate in the projected space
-     * @param y - y coordinate in the projected space
-     * @param north - how far north to go, in meters on the geographic space
-     * @param east - how far east to go, in meters on the geographic space
-     * 
-     * @return {distance x, distance y} on the projected space
-     */
-    public double[] vector(double x, double y, double north, double east) {
-        double[] geo = this.toGeo(x, y);
+			if (bounds[0] > bounds[2]) {
+				double t = bounds[0];
+				bounds[0] = bounds[2];
+				bounds[2] = t;
+			}
 
-        //TODO: east may be slightly off because earth not a sphere
-        double[] off = this.fromGeo(geo[0] + east * 360.0 / (Math.cos(geo[1] * Math.PI / 180.0) * TerraConstants.EARTH_CIRCUMFERENCE),
-                geo[1] + north * 360.0 / TerraConstants.EARTH_POLAR_CIRCUMFERENCE);
+			if (bounds[1] > bounds[3]) {
+				double t = bounds[1];
+				bounds[1] = bounds[3];
+				bounds[3] = t;
+			}
 
-        return new double[]{ off[0] - x, off[1] - y };
-    }
+			return bounds;
+		} catch (OutOfProjectionBoundsException e) {
+			return new double[] {0, 0, 1, 1};
+		}
+	}
 
-    /**
-     * Computes the Tissot's indicatrix of this projection at the given point (i.e. the distortion).
-     * 
-     * @see <a href="https://en.wikipedia.org/wiki/Tissot's_indicatrix">Wikipedia's article on Tissot's indicatrix</a>
-     * 
-     * @param longitude - longitude in degrees
-     * @param latitude - latitude in degrees
-     * @param d - a length differential in meters (a small quantity used to approximate partial derivatives)
-     * 
-     * @return {area inflation, maximum angular distortion, maximum scale factor, minimum scale factor}
-     */
-    public double[] tissot(double longitude, double latitude, double d) {
+	/**
+	 * Indicates whether or not the north pole is projected to the north of the south pole on the projected space,
+	 * assuming Minecraft's coordinate system cardinal directions for the projected space (north is negative Z).
+	 * 
+	 * @return north pole Z <= south pole Z
+	 */
+	public boolean upright() {
+		try {
+			return this.fromGeo(0, 90)[1] <= this.fromGeo(0, -90)[1];
+		} catch (OutOfProjectionBoundsException e) {
+			return false;
+		}
+	}
 
-        double R = TerraConstants.EARTH_CIRCUMFERENCE / (2 * Math.PI);
+	/**
+	 * Calculates the vector that goes a given distance north and a given distance east from the given point in the projected space.
+	 * 
+	 * @param x - x coordinate in the projected space
+	 * @param y - y coordinate in the projected space
+	 * @param north - how far north to go, in meters on the geographic space
+	 * @param east - how far east to go, in meters on the geographic space
+	 * 
+	 * @return {distance x, distance y} on the projected space
+	 */
+	public double[] vector(double x, double y, double north, double east) throws OutOfProjectionBoundsException {
+		double[] geo = this.toGeo(x, y);
 
-        double ddeg = d * 180.0 / Math.PI;
+		//TODO: east may be slightly off because earth not a sphere
+		double[] off = this.fromGeo(geo[0] + east * 360.0 / (Math.cos(geo[1] * Math.PI / 180.0) * TerraConstants.EARTH_CIRCUMFERENCE),
+				geo[1] + north * 360.0 / TerraConstants.EARTH_POLAR_CIRCUMFERENCE);
 
-        double[] base = this.fromGeo(longitude, latitude);
-        double[] lonoff = this.fromGeo(longitude + ddeg, latitude);
-        double[] latoff = this.fromGeo(longitude, latitude + ddeg);
+		return new double[]{ off[0] - x, off[1] - y };
+	}
 
-        double dxdl = (lonoff[0] - base[0]) / d;
-        double dxdp = (latoff[0] - base[0]) / d;
-        double dydl = (lonoff[1] - base[1]) / d;
-        double dydp = (latoff[1] - base[1]) / d;
+	/**
+	 * Computes the Tissot's indicatrix of this projection at the given point (i.e. the distortion).
+	 * 
+	 * @see <a href="https://en.wikipedia.org/wiki/Tissot's_indicatrix">Wikipedia's article on Tissot's indicatrix</a>
+	 * 
+	 * @param longitude - longitude in degrees
+	 * @param latitude - latitude in degrees
+	 * @param d - a length differential in meters (a small quantity used to approximate partial derivatives)
+	 * 
+	 * @return {area inflation, maximum angular distortion, maximum scale factor, minimum scale factor}
+	 */
+	public double[] tissot(double longitude, double latitude, double d) throws OutOfProjectionBoundsException {
 
-        double cosp = Math.cos(latitude * Math.PI / 180.0);
+		double R = TerraConstants.EARTH_CIRCUMFERENCE / (2 * Math.PI);
 
-        double h = Math.sqrt(dxdp * dxdp + dydp * dydp) / R;
-        double k = Math.sqrt(dxdl * dxdl + dydl * dydl) / (cosp * R);
+		double ddeg = d * 180.0 / Math.PI;
 
-        double sint = Math.abs(dydp * dxdl - dxdp * dydl) / (R * R * cosp * h * k);
-        double ap = Math.sqrt(h * h + k * k + 2 * h * k * sint);
-        double bp = Math.sqrt(h * h + k * k - 2 * h * k * sint);
+		double[] base = this.fromGeo(longitude, latitude);
+		double[] lonoff = this.fromGeo(longitude + ddeg, latitude);
+		double[] latoff = this.fromGeo(longitude, latitude + ddeg);
 
-        double a = (ap + bp) / 2;
-        double b = (ap - bp) / 2;
+		double dxdl = (lonoff[0] - base[0]) / d;
+		double dxdp = (latoff[0] - base[0]) / d;
+		double dydl = (lonoff[1] - base[1]) / d;
+		double dydp = (latoff[1] - base[1]) / d;
 
-        return new double[]{ h * k * sint, 2 * Math.asin(bp / ap), a, b };
-    }
+		double cosp = Math.cos(latitude * Math.PI / 180.0);
 
-    public enum Orientation {
-        none, upright, swapped
-    }
+		double h = Math.sqrt(dxdp * dxdp + dydp * dydp) / R;
+		double k = Math.sqrt(dxdl * dxdl + dydl * dydl) / (cosp * R);
+
+		double sint = Math.abs(dydp * dxdl - dxdp * dydl) / (R * R * cosp * h * k);
+		double ap = Math.sqrt(h * h + k * k + 2 * h * k * sint);
+		double bp = Math.sqrt(h * h + k * k - 2 * h * k * sint);
+
+		double a = (ap + bp) / 2;
+		double b = (ap - bp) / 2;
+
+		return new double[]{ h * k * sint, 2 * Math.asin(bp / ap), a, b };
+	}
+
+	public enum Orientation {
+		none, upright, swapped
+	}
 }

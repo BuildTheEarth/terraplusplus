@@ -1,6 +1,7 @@
 package io.github.terra121.projection.transform;
 
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 
 /**
  * Mirrors the warped projection vertically.
@@ -16,12 +17,12 @@ public class UprightOrientation extends ProjectionTransform {
     }
 
     @Override
-    public double[] toGeo(double x, double y) {
+    public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
         return this.input.toGeo(x, -y);
     }
 
     @Override
-    public double[] fromGeo(double longitude, double latitude) {
+    public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
         double[] p = this.input.fromGeo(longitude, latitude);
         p[1] = -p[1];
         return p;
