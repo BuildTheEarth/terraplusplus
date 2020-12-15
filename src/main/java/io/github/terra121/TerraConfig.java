@@ -1,5 +1,6 @@
 package io.github.terra121;
 
+import io.github.terra121.util.http.Http;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.Config.Comment;
 import net.minecraftforge.common.config.Config.Name;
@@ -30,6 +31,8 @@ public class TerraConfig {
     public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
         if (TerraMod.MODID.equals(event.getModID())) {
             ConfigManager.sync(TerraMod.MODID, Config.Type.INSTANCE);
+
+            Http.configChanged();
         }
     }
 

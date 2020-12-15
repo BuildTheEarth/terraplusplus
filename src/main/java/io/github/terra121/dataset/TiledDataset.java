@@ -5,12 +5,11 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import io.github.terra121.projection.GeographicProjection;
-import io.github.terra121.util.HttpUtil;
+import io.github.terra121.util.http.Http;
 import io.netty.buffer.ByteBuf;
 import lombok.NonNull;
 import net.minecraft.util.math.ChunkPos;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -65,8 +64,8 @@ public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, T> {
         this.addProperties(pos.x, pos.z, builder);
         Map<String, String> properties = builder.build();
 
-        return HttpUtil.getFirst(
-                Arrays.stream(this.urls(pos.x, pos.z)).map(url -> HttpUtil.formatUrl(properties, url)).toArray(String[]::new),
+        return Http.getFirst(
+                Arrays.stream(this.urls(pos.x, pos.z)).map(url -> Http.formatUrl(properties, url)).toArray(String[]::new),
                 data -> this.decode(pos.x, pos.z, data));
     }
 }
