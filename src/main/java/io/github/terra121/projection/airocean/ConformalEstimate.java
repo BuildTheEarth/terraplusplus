@@ -1,11 +1,10 @@
 package io.github.terra121.projection.airocean;
 
-import io.github.terra121.projection.InvertableVectorField;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Scanner;
 
+import io.github.terra121.projection.InvertableVectorField;
 import io.github.terra121.util.MathUtils;
 
 /**
@@ -55,11 +54,11 @@ public class ConformalEstimate extends Airocean {
     }
 
     @Override
-    protected double[] triangleTransform(double x, double y, double z) {
-        double[] c = super.triangleTransform(x, y, z);
+    protected double[] triangleTransform(double[] vec) {
+        double[] c = super.triangleTransform(vec);
 
-        x = c[0];
-        y = c[1];
+        double x = c[0];
+        double y = c[1];
 
         c[0] /= ARC;
         c[1] /= ARC;

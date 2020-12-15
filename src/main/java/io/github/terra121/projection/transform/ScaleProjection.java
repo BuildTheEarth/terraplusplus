@@ -1,6 +1,7 @@
 package io.github.terra121.projection.transform;
 
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 
 /**
  * Scales the warps projection's projected space up or down.
@@ -34,12 +35,12 @@ public class ScaleProjection extends ProjectionTransform {
     }
 
     @Override
-    public double[] toGeo(double x, double y) {
+    public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
         return this.input.toGeo(x / this.scaleX, y / this.scaleY);
     }
 
     @Override
-    public double[] fromGeo(double lon, double lat) {
+    public double[] fromGeo(double lon, double lat) throws OutOfProjectionBoundsException {
         double[] p = this.input.fromGeo(lon, lat);
         p[0] *= this.scaleX;
         p[1] *= this.scaleY;
