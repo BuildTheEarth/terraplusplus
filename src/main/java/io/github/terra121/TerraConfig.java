@@ -65,5 +65,11 @@ public class TerraConfig {
                 "This is strongly recommended for performance. Disable only for debugging, or if you have EXTREMELY limited storage."
         })
         public boolean cache = true;
+
+        @Comment({
+                "The maximum age of data in the persistent cache, in minutes. Data older than this will be expired.",
+                "Default: 2880 minutes (2 days)"
+        })
+        public int cacheTTL = 2880;
     }
 }

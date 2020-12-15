@@ -1,11 +1,6 @@
 package io.github.terra121.util;
 
 import com.google.common.base.Preconditions;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
 import io.github.terra121.TerraConfig;
 import io.github.terra121.TerraMod;
 import io.netty.buffer.ByteBuf;
@@ -41,30 +36,18 @@ import java.util.regex.Pattern;
  */
 @UtilityClass
 public class HttpUtil {
-    private static final LoadingCache<String, DirectDB> DBS = CacheBuilder.newBuilder()
-            .expireAfterAccess(5L, TimeUnit.MINUTES)
-            .removalListener((RemovalListener<String, DirectDB>) notification -> {
-                File cacheRoot = new File(getCacheRoot(), notification.getKey());
-                try {
-                    TerraMod.LOGGER.info("Closing cache DB at {}", cacheRoot);
-                    notification.getValue().close();
-                } catch (IOException e) {
-                    throw new RuntimeException("Unable to close cache DB at " + cacheRoot, e);
-                }
-            })
-            .build(new CacheLoader<String, DirectDB>() {
-                @Override
-                public DirectDB load(String key) throws Exception {
-                    File cacheRoot = new File(getCacheRoot(), key);
-                    try {
-                        TerraMod.LOGGER.info("Opening cache DB at {}", cacheRoot);
-                        Preconditions.checkState(cacheRoot.exists() || cacheRoot.mkdirs(), "unable to create directory: %s", cacheRoot);
-                        return LevelDB.PROVIDER.open(cacheRoot, new Options().compressionType(CompressionType.SNAPPY));
-                    } catch (IOException e) {
-                        throw new RuntimeException("Failed to open cache DB at " + cacheRoot, e);
-                    }
-                }
-            });
+    private static final DirectDB DB;
+
+    static {
+        File cacheRoot = getCacheRoot();
+        try {
+            TerraMod.LOGGER.info("Opening cache DB at {}", cacheRoot);
+            Preconditions.checkState(cacheRoot.exists() || cacheRoot.mkdirs(), "unable to create directory: %s", cacheRoot);
+            DB = LevelDB.PROVIDER.open(cacheRoot, new Options().compressionType(CompressionType.SNAPPY));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to open cache DB at " + cacheRoot, e);
+        }
+    }
 
     /**
      * Attempts to GET an array of URLs in order, returning the parsed response body of the first successful one.
@@ -111,77 +94,95 @@ public class HttpUtil {
      */
     public static <T> T getSingle(@NonNull String url, @NonNull EFunction<ByteBuf, T> parseFunction) throws Exception {
         URL parsedUrl = new URL(url);
-        String dbKey = getCacheDBName(parsedUrl);
         boolean canCache = TerraConfig.data.cache && !"file".equals(parsedUrl.getProtocol()); //we don't want to cache local files, because they're already on disk
 
         Exception cause = null;
         ByteBuf key = Unpooled.wrappedBuffer(url.getBytes(StandardCharsets.UTF_8));
 
-        ByteBuf buf = ByteBufAllocator.DEFAULT.buffer();
+        long now = System.currentTimeMillis();
+        long ttl = TimeUnit.MINUTES.toMillis(TerraConfig.data.cacheTTL);
+
+        ByteBuf cachedValue = canCache ? DB.getZeroCopy(key) : null;
         try {
-            //intern the string to make its identity global
-            //synchronizing on the interned string makes for a simple global mutex, preventing the same URL from
-            // being requested by multiple threads at once
-            synchronized (url = url.intern()) {
-                if (canCache && DBS.getUnchecked(dbKey).getInto(key, buf)) { //url was found in cache
-                    if (!TerraConfig.reducedConsoleMessages) {
-                        TerraMod.LOGGER.info("Cache hit: {}", url);
-                    }
-                    if (buf.readBoolean()) { //cached value exists
-                        return parseFunction.applyThrowing(buf);
-                    } else { //we cached a 404
-                        return null;
-                    }
+            if (cachedValue != null && cachedValue.readLong() + ttl < now) { //cache hit, and the cached value hasn't expired yet
+                if (!TerraConfig.reducedConsoleMessages) {
+                    TerraMod.LOGGER.info("Cache hit: {}", url);
                 }
-
-                for (int i = 0; i < TerraConfig.data.retryCount; i++) {
-                    if (!TerraConfig.reducedConsoleMessages) {
-                        TerraMod.LOGGER.info("GET #{}: {}", i, url);
-                    }
-
-                    try {
-                        URLConnection conn = parsedUrl.openConnection();
-                        conn.addRequestProperty("User-Agent", TerraMod.USERAGENT);
-                        conn.setConnectTimeout(TerraConfig.data.timeout);
-                        conn.setReadTimeout(TerraConfig.data.timeout);
-                        if (conn instanceof HttpURLConnection) {
-                            ((HttpURLConnection) conn).setInstanceFollowRedirects(true);
-                        }
-
-                        try (InputStream in = conn.getInputStream()) {
-                            buf.clear().writeBoolean(true);
-                            do {
-                                buf.ensureWritable(1024);
-                            } while (buf.writeBytes(in, 1024) > 0);
-                        }
-
-                        T parsed = parseFunction.applyThrowing(buf.skipBytes(1));
-
-                        if (canCache) { //write data to cache
-                            DBS.getUnchecked(dbKey).put(key, buf.readerIndex(0));
-                        }
-                        return parsed;
-                    } catch (FileNotFoundException e) { //server returned 404 Not Found
-                        if (canCache) { //write missing entry to cache
-                            DBS.getUnchecked(dbKey).put(key, buf.clear().writeBoolean(false));
-                        }
-                        throw e;
-                    } catch (Exception e) {
-                        if (cause == null) {
-                            cause = new Exception("Unable to GET " + url);
-                        }
-                        cause.addSuppressed(e);
-                    }
+                if (cachedValue.readBoolean()) { //cached value exists
+                    return parseFunction.applyThrowing(cachedValue);
+                } else { //we cached a 404
+                    return null;
                 }
             }
-        } finally {
-            buf.release();
-        }
 
-        if (cause != null) {
-            throw cause;
-        } else {
-            throw new IllegalStateException("0 retries?!?");
+            ByteBuf buf = ByteBufAllocator.DEFAULT.buffer();
+            try {
+                //intern the string to make its identity global
+                //synchronizing on the interned string makes for a simple global mutex, preventing the same URL from
+                // being requested by multiple threads at once
+                synchronized (url = url.intern()) {
+                    for (int i = 0; i < TerraConfig.data.retryCount; i++) {
+                        if (!TerraConfig.reducedConsoleMessages) {
+                            TerraMod.LOGGER.info("GET #{}: {}", i, url);
+                        }
+
+                        try {
+                            URLConnection conn = parsedUrl.openConnection();
+                            conn.addRequestProperty("User-Agent", TerraMod.USERAGENT);
+                            conn.setConnectTimeout(TerraConfig.data.timeout);
+                            conn.setReadTimeout(TerraConfig.data.timeout);
+                            if (conn instanceof HttpURLConnection) {
+                                ((HttpURLConnection) conn).setInstanceFollowRedirects(true);
+                            }
+
+                            try (InputStream in = conn.getInputStream()) {
+                                buf.clear().writeLong(now).writeBoolean(true);
+                                do {
+                                    buf.ensureWritable(1024);
+                                } while (buf.writeBytes(in, 1024) > 0);
+                            }
+
+                            T parsed = parseFunction.applyThrowing(buf.skipBytes(9));
+
+                            if (canCache) { //write data to cache
+                                DB.put(key, buf.readerIndex(0));
+                            }
+                            return parsed;
+                        } catch (FileNotFoundException e) { //server returned 404 Not Found
+                            if (canCache) { //write missing entry to cache
+                                DB.put(key, buf.clear().writeLong(now).writeBoolean(false));
+                            }
+                            throw e;
+                        } catch (Exception e) {
+                            if (cause == null) {
+                                cause = new Exception("Unable to GET " + url);
+                            }
+                            cause.addSuppressed(e);
+                        }
+                    }
+                }
+            } finally {
+                buf.release();
+            }
+
+            if (cachedValue != null) { //we still have a value from the cache. it's expired, but we'll return it anyway because we were unable to fetch anything
+                if (!TerraConfig.reducedConsoleMessages) {
+                    TerraMod.LOGGER.info("Falling back to expired cached value: {}", url);
+                }
+                if (cachedValue.readBoolean()) { //cached value exists
+                    return parseFunction.applyThrowing(cachedValue);
+                } else { //we cached a 404
+                    return null;
+                }
+            } else if (cause != null) {
+                throw cause;
+            } else {
+                throw new IllegalStateException("0 retries?!?");
+            }
+        } finally {
+            if (cachedValue != null) {
+                cachedValue.release();
+            }
         }
     }
 
@@ -196,10 +197,6 @@ public class HttpUtil {
         }
         matcher.appendTail(out);
         return out.toString();
-    }
-
-    public static String getCacheDBName(@NonNull URL url) {
-        return url.getProtocol() + '/' + url.getHost().replaceAll("[\\\\?%*:|\"<>]", "_");
     }
 
     private static File getCacheRoot() {
