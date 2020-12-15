@@ -3,12 +3,13 @@ package io.github.terra121.control.fragments.terra;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.terra121.EarthBiomeProvider;
-import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.chat.ChatHelper;
 import io.github.terra121.chat.TextElement;
 import io.github.terra121.control.fragments.CommandFragment;
+import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -56,7 +57,7 @@ public class TerraEnvironmentFragment extends CommandFragment {
 
     @Override
     public String[] getName() {
-        return new String[]{"environment", "env"};
+        return new String[]{ "environment", "env" };
     }
 
     @Override
@@ -79,13 +80,9 @@ public class TerraEnvironmentFragment extends CommandFragment {
             return this.getNumbers(args[2], args[1]);
         } else if (args.length == 2) {
             double[] c = this.getPlayerCoords(sender, args[1], projection);
-            if (c == null) {
-            }
             return c;
         } else {
             double[] c = this.getPlayerCoords(sender, null, projection);
-            if (c == null) {
-            }
             return c;
         }
     }
@@ -96,13 +93,18 @@ public class TerraEnvironmentFragment extends CommandFragment {
         try {
             x = Double.parseDouble(s1);
             y = Double.parseDouble(s2);
-        } catch (Exception e) { }
+        } catch (Exception e) {
+        }
 
         return new double[]{ x, y };
     }
 
     private double[] getPlayerCoords(ICommandSender sender, String arg, GeographicProjection projection) {
         Vec3d pos = sender.getCommandSenderEntity().getPositionVector();
-        return projection.toGeo(pos.x, pos.z);
+        try {
+            return projection.toGeo(pos.x, pos.z);
+        } catch (OutOfProjectionBoundsException e) { //out of bounds, return NaN
+            return new double[]{ Double.NaN, Double.NaN };
+        }
     }
 }

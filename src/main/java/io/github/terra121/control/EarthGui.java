@@ -4,6 +4,7 @@ import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.TerraMod;
 import io.github.terra121.control.DynamicOptions.Element;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
@@ -142,23 +143,27 @@ public class EarthGui extends GuiScreen implements DynamicOptions.Handler {
                 //not out of bounds
                 if (bounds[0] <= X && X <= bounds[2] && bounds[1] <= Y && Y <= bounds[3]) {
 
-                    double[] proj = this.projection.toGeo(X, Y); //projection coords to lon lat
+                    try {
+                        double[] proj = this.projection.toGeo(X, Y); //projection coords to lon lat
 
-                    if (!(proj[0] >= -180 && proj[0] <= 180 && proj[1] >= -90 && proj[1] <= 90)) {
-                        continue; //out of bounds gets a transparent
-                    }
-
-                    if (this.biomemap != null) {
-                        img.setRGB(x, y, this.biomemap.getColor(proj)); //biome map
-                    } else { //image map
-                        //lat lon to reference image coords
-                        int lon = (int) ((proj[0] / 360 + 0.5) * this.base.getWidth());
-                        int lat = (int) ((0.5 + proj[1] / 180) * this.base.getHeight());
-
-                        //get pixel from reference image if possible
-                        if (lon >= 0 && lat >= 0 && lat < this.base.getHeight() && lon < this.base.getWidth()) {
-                            img.setRGB(x, y, this.base.getRGB(lon, this.base.getHeight() - lat - 1));
+                        if (!(proj[0] >= -180 && proj[0] <= 180 && proj[1] >= -90 && proj[1] <= 90)) {
+                            continue; //out of bounds gets a transparent
                         }
+
+                        if (this.biomemap != null) {
+                            img.setRGB(x, y, this.biomemap.getColor(proj)); //biome map
+                        } else { //image map
+                            //lat lon to reference image coords
+                            int lon = (int) ((proj[0] / 360 + 0.5) * this.base.getWidth());
+                            int lat = (int) ((0.5 + proj[1] / 180) * this.base.getHeight());
+
+                            //get pixel from reference image if possible
+                            if (lon >= 0 && lat >= 0 && lat < this.base.getHeight() && lon < this.base.getWidth()) {
+                                img.setRGB(x, y, this.base.getRGB(lon, this.base.getHeight() - lat - 1));
+                            }
+                        }
+                    } catch (OutOfProjectionBoundsException e) { //out of bounds, transparent
+                        continue;
                     }
                 }
             }

@@ -5,6 +5,7 @@ import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import io.github.terra121.dataset.Trees;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -44,8 +45,12 @@ public class EarthTreePopulator implements ICubicPopulator {
 
     @Override
     public void generate(World world, Random random, CubePos pos, Biome biome) {
-
-        double[] projected = this.projection.toGeo(pos.getX() * 16, pos.getZ() * 16);
+        double[] projected;
+        try {
+            projected = this.projection.toGeo(pos.getX() * 16, pos.getZ() * 16);
+        } catch (OutOfProjectionBoundsException e) { //out of bounds, don't generate trees
+            return;
+        }
 
         double canopy = this.trees.estimateLocal(projected[0], projected[1]);
 

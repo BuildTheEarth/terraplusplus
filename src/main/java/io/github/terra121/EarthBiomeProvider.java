@@ -4,6 +4,7 @@ import io.github.terra121.dataset.Climate;
 import io.github.terra121.dataset.Soil;
 import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import net.minecraft.init.Biomes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -60,7 +61,11 @@ public class EarthBiomeProvider extends BiomeProvider {
             return Biomes.PLAINS;
         }
 
-        return this.classify(this.projection.toGeo(pos.getX(), pos.getZ()));
+        try {
+            return this.classify(this.projection.toGeo(pos.getX(), pos.getZ()));
+        } catch (OutOfProjectionBoundsException e) { //out of bounds, assume ocean
+            return Biomes.DEEP_OCEAN;
+        }
     }
 
     /**

@@ -1,6 +1,7 @@
 package io.github.terra121.dataset;
 
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 
 import static io.github.opencubicchunks.cubicchunks.api.util.MathUtil.*;
 import static java.lang.Math.*;
@@ -35,9 +36,12 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
         }
 
         //project coords
-        double[] floatCoords = this.projection.fromGeo(lon, lat);
-
-        return this.smooth ? this.estimateSmooth(floatCoords) : this.estimateBasic(floatCoords);
+        try {
+            double[] floatCoords = this.projection.fromGeo(lon, lat);
+            return this.smooth ? this.estimateSmooth(floatCoords) : this.estimateBasic(floatCoords);
+        } catch (OutOfProjectionBoundsException e) {
+            return -2.0d;
+        }
     }
 
     //new style

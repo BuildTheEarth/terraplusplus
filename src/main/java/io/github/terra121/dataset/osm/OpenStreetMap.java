@@ -8,6 +8,7 @@ import io.github.terra121.dataset.Water;
 import io.github.terra121.dataset.osm.segment.Segment;
 import io.github.terra121.dataset.osm.segment.SegmentType;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.bvh.BVH;
 import io.github.terra121.util.bvh.Bounds2d;
 import io.netty.buffer.ByteBuf;
@@ -86,9 +87,13 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         // projection is linear or almost linear
         for (int dx = -1; dx <= 1; dx += 2) {
             for (int dz = -1; dz <= 1; dz += 2) {
-                OSMRegion region = this.regionCache(this.projection.toGeo(Coords.cubeToMinBlock(chunkX + max(dx, 0)) + copySign(padding, dx), Coords.cubeToMinBlock(chunkZ + max(dz, 0)) + copySign(padding, dz)));
-                if (region != null && processedSegments.add(region.coord)) {
-                    region.segments.forEachIntersecting(bb, segments::add);
+                try {
+                    OSMRegion region = this.regionCache(this.projection.toGeo(Coords.cubeToMinBlock(chunkX + max(dx, 0)) + copySign(padding, dx), Coords.cubeToMinBlock(chunkZ + max(dz, 0)) + copySign(padding, dz)));
+                    if (region != null && processedSegments.add(region.coord)) {
+                        region.segments.forEachIntersecting(bb, segments::add);
+                    }
+                } catch (OutOfProjectionBoundsException e) {
+                    //simply skip regions that are out of bounds
                 }
             }
         }
@@ -307,13 +312,17 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                 if (geom == null) {
                     lastProj = null;
                 } else {
-                    double[] proj = this.projection.fromGeo(geom.lon, geom.lat);
+                    try {
+                        double[] proj = this.projection.fromGeo(geom.lon, geom.lat);
 
-                    if (lastProj != null) { //register as a road edge
-                        this.allSegments.add(new Segment(lastProj[0], lastProj[1], proj[0], proj[1], type, lanes, region, attributes, layer));
+                        if (lastProj != null) { //register as a road edge
+                            this.allSegments.add(new Segment(lastProj[0], lastProj[1], proj[0], proj[1], type, lanes, region, attributes, layer));
+                        }
+
+                        lastProj = proj;
+                    } catch (OutOfProjectionBoundsException e) { //projection is out of bounds, make this point unusable
+                        lastProj = null;
                     }
-
-                    lastProj = proj;
                 }
             }
         }

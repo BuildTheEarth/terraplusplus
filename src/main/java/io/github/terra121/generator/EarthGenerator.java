@@ -33,6 +33,7 @@ import io.github.terra121.populator.CliffReplacer;
 import io.github.terra121.populator.EarthTreePopulator;
 import io.github.terra121.populator.SnowPopulator;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -318,15 +319,20 @@ public class EarthGenerator extends BasicCubeGenerator {
     public BlockPos getClosestStructure(String name, BlockPos pos, boolean findUnexplored) {
         // eyes of ender are now compasses
         if ("Stronghold".equals(name)) {
-            double[] vec = this.projection.vector(pos.getX(), pos.getZ(), 1, 0); //direction's to one meter north of here
+            try {
+                double[] vec = this.projection.vector(pos.getX(), pos.getZ(), 1, 0); //direction's to one meter north of here
 
-            //normalize vector
-            double mag = Math.sqrt(vec[0] * vec[0] + vec[1] * vec[1]);
-            vec[0] /= mag;
-            vec[1] /= mag;
+                //normalize vector
+                double mag = Math.sqrt(vec[0] * vec[0] + vec[1] * vec[1]);
+                vec[0] /= mag;
+                vec[1] /= mag;
 
-            //project vector 100 blocks out to get "stronghold" position
-            return new BlockPos((int) (pos.getX() + vec[0] * 100.0), pos.getY(), (int) (pos.getZ() + vec[1] * 100.0));
+                //project vector 100 blocks out to get "stronghold" position
+                return new BlockPos((int) (pos.getX() + vec[0] * 100.0), pos.getY(), (int) (pos.getZ() + vec[1] * 100.0));
+            } catch (OutOfProjectionBoundsException e) { //out of bounds, we can't really find where north is...
+                //simply return center of world
+                return BlockPos.ORIGIN;
+            }
         }
         return null;
     }

@@ -8,6 +8,7 @@ import io.github.terra121.chat.ChatHelper;
 import io.github.terra121.chat.TextElement;
 import io.github.terra121.control.fragments.CommandFragment;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -54,14 +55,18 @@ public class TerraConvertFragment extends CommandFragment{
 
         double[] c = new double[]{x, y};
 
-        if (-180 <= c[1] && c[1] <= 180 && -90 <= c[0] && c[0] <= 90) {
-            c = projection.fromGeo(c[1], c[0]);
-            sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Result: ", TextFormatting.GRAY), new TextElement("" + c[0], TextFormatting.BLUE),
-                    new TextElement(", ", TextFormatting.GRAY), new TextElement("" + c[1], TextFormatting.BLUE)));
-        } else {
-            c = projection.toGeo(c[0], c[1]);
-            sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Result: ", TextFormatting.GRAY), new TextElement("" + c[1], TextFormatting.BLUE),
-                    new TextElement(", ", TextFormatting.GRAY), new TextElement("" + c[0], TextFormatting.BLUE)));
+        try {
+            if (-180 <= c[1] && c[1] <= 180 && -90 <= c[0] && c[0] <= 90) {
+                c = projection.fromGeo(c[1], c[0]);
+                sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Result: ", TextFormatting.GRAY), new TextElement("" + c[0], TextFormatting.BLUE),
+                        new TextElement(", ", TextFormatting.GRAY), new TextElement("" + c[1], TextFormatting.BLUE)));
+            } else {
+                c = projection.toGeo(c[0], c[1]);
+                sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Result: ", TextFormatting.GRAY), new TextElement("" + c[1], TextFormatting.BLUE),
+                        new TextElement(", ", TextFormatting.GRAY), new TextElement("" + c[0], TextFormatting.BLUE)));
+            }
+        } catch (OutOfProjectionBoundsException e) { //out of bounds, print error
+            sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Invalid coordinats!", TextFormatting.RED)));
         }
     }
 

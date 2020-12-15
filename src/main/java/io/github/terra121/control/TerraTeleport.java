@@ -110,6 +110,7 @@ public class TerraTeleport extends Command {
 
             double lon;
             double lat;
+            double[] proj;
 
             try {
                 lat = Double.parseDouble(args[0]);
@@ -117,12 +118,11 @@ public class TerraTeleport extends Command {
                 if (alt != null) {
                     alt = Double.toString(Double.parseDouble(alt));
                 }
+                proj = terrain.projection.fromGeo(lon, lat);
             } catch (Exception e) {
                 sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(TranslateUtil.translate("terra121.error.numbers"), TextFormatting.RED)));
                 return;
             }
-
-            double[] proj = terrain.projection.fromGeo(lon, lat);
 
             if (alt == null) {
                 alt = String.valueOf(terrain.heights.estimateLocal(lon, lat) + 1);

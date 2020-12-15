@@ -8,6 +8,7 @@ import io.github.terra121.chat.ChatHelper;
 import io.github.terra121.chat.TextElement;
 import io.github.terra121.control.fragments.CommandFragment;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -36,10 +37,15 @@ public class TerraDistortionFragment extends CommandFragment {
         EarthGenerator terrain = (EarthGenerator) gen;
         GeographicProjection projection = terrain.projection;
 
-        double[] c = projection.toGeo(sender.getPositionVector().x, sender.getPositionVector().z);
-        c = projection.tissot(c[0], c[1], 0.0000001);
+        double[] c;
+        try {
+            c = projection.toGeo(sender.getPositionVector().x, sender.getPositionVector().z);
+            c = projection.tissot(c[0], c[1], 0.0000001);
+        } catch (OutOfProjectionBoundsException e) { //out of bounds, set c to null to print error message
+            c = null;
+        }
 
-        if(c == null || Double.isNaN(c[0])) {
+        if (c == null || Double.isNaN(c[0])) {
             sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(TranslateUtil.translate("terra121.fragment.terra.where.notproj"), TextFormatting.RED)));
             return;
         }

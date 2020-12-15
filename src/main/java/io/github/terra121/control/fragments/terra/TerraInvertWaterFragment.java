@@ -2,13 +2,14 @@ package io.github.terra121.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.chat.ChatHelper;
 import io.github.terra121.chat.TextElement;
 import io.github.terra121.control.fragments.CommandFragment;
 import io.github.terra121.dataset.Water;
+import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -43,9 +44,14 @@ public class TerraInvertWaterFragment extends CommandFragment {
             return;
         }
 
-        double[] c = projection.toGeo(sender.getPositionVector().x, sender.getPositionVector().z);
+        double[] c;
+        try {
+            c = projection.toGeo(sender.getPositionVector().x, sender.getPositionVector().z);
+        } catch (OutOfProjectionBoundsException e) { //out of bounds, set c to null to print error
+            c = null;
+        }
 
-        if(c == null || Double.isNaN(c[0])) {
+        if (c == null || Double.isNaN(c[0])) {
             sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(TranslateUtil.translate("terra121.fragment.terra.where.notproj"), TextFormatting.RED)));
             return;
         }
@@ -56,13 +62,16 @@ public class TerraInvertWaterFragment extends CommandFragment {
         water.doingInverts = true;
 
         boolean restore = false;
-        if(args.length > 0)
-            if(!(args[0].equalsIgnoreCase("true") || args[0].equalsIgnoreCase("false"))) {
+        if (args.length > 0) {
+            if (!(args[0].equalsIgnoreCase("true") || args[0].equalsIgnoreCase("false"))) {
                 sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Usage: /terra invertwater [restore:<true/false>]", TextFormatting.RED)));
                 return;
             } else {
-                if(args[0].equalsIgnoreCase("true")) restore = true;
+                if (args[0].equalsIgnoreCase("true")) {
+                    restore = true;
+                }
             }
+        }
 
         if (restore ? water.inverts.remove(region) : water.inverts.add(region)) {
             sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.format(restore ? "terra121.commands.terra.rstwtr" : "terra121.commands.terra.invwtr", region.x, region.z), TextFormatting.GRAY)));
@@ -74,7 +83,7 @@ public class TerraInvertWaterFragment extends CommandFragment {
 
     @Override
     public String[] getName() {
-        return new String[]{"invertwater", "invwtr", "restorewater", "rstwtr"};
+        return new String[]{ "invertwater", "invwtr", "restorewater", "rstwtr" };
     }
 
     @Override
@@ -84,7 +93,7 @@ public class TerraInvertWaterFragment extends CommandFragment {
 
     @Override
     public String[] getArguments() {
-        return new String[]{"[restore:<true/false>]"};
+        return new String[]{ "[restore:<true/false>]" };
     }
 
     @Override

@@ -3,6 +3,7 @@ package io.github.terra121.populator;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import io.github.terra121.EarthBiomeProvider;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -19,8 +20,12 @@ public class SnowPopulator implements ICubicPopulator {
         if (air || (blockstate.getBlock().isAir(blockstate, world, pos) && Blocks.SNOW_LAYER.canPlaceBlockAt(world, pos))) {
             //this cast could fail but this function should only be called in earth anyways
             EarthBiomeProvider ebp = (EarthBiomeProvider) world.getBiomeProvider();
-            double[] proj = ebp.projection.toGeo(pos.getX(), pos.getZ());
-            return ebp.climate.isSnow(proj[0], proj[1], pos.getY());
+            try {
+                double[] proj = ebp.projection.toGeo(pos.getX(), pos.getZ());
+                return ebp.climate.isSnow(proj[0], proj[1], pos.getY());
+            } catch (OutOfProjectionBoundsException e) { //out of bounds, assume not snow
+                return false;
+            }
         }
         return false;
     }

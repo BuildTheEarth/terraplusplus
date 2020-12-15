@@ -3,6 +3,7 @@ package io.github.terra121.dataset;
 import com.google.common.collect.ImmutableMap;
 import io.github.terra121.TerraConfig;
 import io.github.terra121.projection.MapsProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import lombok.NonNull;
@@ -47,7 +48,13 @@ public class Heights extends DoubleTiledDataset {
                 for (int x = 0; x < TILE_SIZE; x++) {
                     double height = out[z * TILE_SIZE + x];
                     if (height > -1.0d && height != 0.0d && height < 200.0d) {
-                        double[] proj = this.projection.toGeo((tileX * TILE_SIZE + x) / this.scale, (tileZ * TILE_SIZE + z) / this.scale);
+                        double[] proj;
+                        try {
+                            proj = this.projection.toGeo((tileX * TILE_SIZE + x) / this.scale, (tileZ * TILE_SIZE + z) / this.scale);
+                        } catch (OutOfProjectionBoundsException e) { //out of bounds... this is PROBABLY impossible, but you can never be too sure
+                            //just leave height as it is in the dataset and proceed to the next sample
+                            continue;
+                        }
                         double lon = proj[0];
                         double lat = proj[1];
 
