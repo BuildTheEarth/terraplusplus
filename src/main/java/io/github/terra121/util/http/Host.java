@@ -1,6 +1,5 @@
 package io.github.terra121.util.http;
 
-import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
@@ -9,7 +8,6 @@ import java.net.URL;
 /**
  * @author DaPorkchop_
  */
-@AllArgsConstructor
 @EqualsAndHashCode
 class Host {
     @NonNull
@@ -18,9 +16,13 @@ class Host {
 
     protected final boolean ssl;
 
+    @EqualsAndHashCode.Exclude
+    protected final String authority;
+
     public Host(@NonNull URL url) {
         this.host = url.getHost();
         this.port = Math.max(url.getPort(), url.getDefaultPort());
+        this.authority = url.getAuthority();
 
         switch (url.getProtocol()) {
             case "http":
@@ -32,5 +34,12 @@ class Host {
             default:
                 throw new IllegalArgumentException("unsupported protocol: " + url.getProtocol());
         }
+    }
+
+    protected Host(@NonNull Host host) {
+        this.host = host.host;
+        this.port = host.port;
+        this.ssl = host.ssl;
+        this.authority = host.authority;
     }
 }

@@ -1,10 +1,8 @@
 package io.github.terra121;
 
-import io.github.terra121.util.http.Http;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.Config.Comment;
 import net.minecraftforge.common.config.Config.Name;
-import net.minecraftforge.common.config.Config.RangeInt;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -31,8 +29,6 @@ public class TerraConfig {
     public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
         if (TerraMod.MODID.equals(event.getModID())) {
             ConfigManager.sync(TerraMod.MODID, Config.Type.INSTANCE);
-
-            Http.configChanged();
         }
     }
 
@@ -50,18 +46,6 @@ public class TerraConfig {
                 "https://overpass.kumi.systems/api/interpreter/?data=[out:json];way(${lat.min},${lon.min},${lat.max},${lon.max});out%20geom(${lat.min},${lon.min},${lat.max},${lon.max})%20tags%20qt;(._<;);out%20body%20qt;is_in(${lat.min},${lon.min});area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;",
                 "https://lz4.overpass-api.de/api/interpreter/?data=[out:json];way(${lat.min},${lon.min},${lat.max},${lon.max});out%20geom(${lat.min},${lon.min},${lat.max},${lon.max})%20tags%20qt;(._<;);out%20body%20qt;is_in(${lat.min},${lon.min});area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;"
         };
-
-        @Comment({
-                "The number of times to attempt to re-download data tiles in the event of a failure."
-        })
-        @RangeInt(min = 1)
-        public int retryCount = 2;
-
-        @Comment({
-                "The connection timeout duration, in milliseconds."
-        })
-        @RangeInt(min = 1)
-        public int timeout = 5000;
 
         @Comment({
                 "Whether or not to use the persistent data cache.",

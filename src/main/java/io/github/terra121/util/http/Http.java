@@ -5,7 +5,6 @@ import io.github.terra121.TerraConfig;
 import io.github.terra121.TerraMod;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoop;
@@ -19,7 +18,7 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SupportedCipherSuiteFilter;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import io.netty.util.AttributeKey;
+import io.netty.util.ReferenceCountUtil;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import net.daporkchop.ldbjni.LevelDB;
@@ -35,11 +34,8 @@ import javax.net.ssl.SSLException;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -56,12 +52,7 @@ import java.util.regex.Pattern;
  */
 @UtilityClass
 public class Http {
-    protected final AttributeKey<Boolean> ATTR_CHANNEL_FULL = AttributeKey.newInstance("terra++_http_channel_full");
-
-    private final ThreadFactory NETWORK_THREAD_FACTORY = PThreadFactories.builder().daemon().minPriority()
-            .name("terra++ HTTP network thread").build();
-    private final ThreadFactory WORKER_THREAD_FACTORY = PThreadFactories.builder().daemon().minPriority().collapsingId()
-            .name("terra++ HTTP worker thread #%d").build();
+    private final ThreadFactory NETWORK_THREAD_FACTORY = PThreadFactories.builder().daemon().minPriority().name("terra++ HTTP network thread").build();
 
     protected final EventLoop NETWORK_EVENT_LOOP = (Epoll.isAvailable()
             ? new EpollEventLoopGroup(1, NETWORK_THREAD_FACTORY) //use epoll on linux systems wherever possible
@@ -70,13 +61,13 @@ public class Http {
     protected final Bootstrap DEFAULT_BOOTSTRAP = new Bootstrap()
             .group(NETWORK_EVENT_LOOP)
             .channel(Epoll.isAvailable() ? EpollSocketChannel.class : NioSocketChannel.class)
-            .option(ChannelOption.SO_KEEPALIVE, true)
-            .option(ChannelOption.SO_TIMEOUT, 5)
-            .attr(ATTR_CHANNEL_FULL, false);
+            .option(ChannelOption.SO_KEEPALIVE, true);
 
     protected final SslContext SSL_CONTEXT;
 
     protected final Map<Host, HostManager> MANAGERS = new ConcurrentHashMap<>();
+
+    protected final int MAX_CONTENT_LENGTH = Integer.MAX_VALUE; //impossibly large, no requests will actually be this big but whatever
 
     private final DirectDB DB;
 
@@ -104,16 +95,24 @@ public class Http {
         }
     }
 
-    public void configChanged() {
-    }
-
-    protected HostManager managerFor(@NonNull URL url) {
+    private HostManager managerFor(@NonNull URL url) {
         return MANAGERS.computeIfAbsent(new Host(url), host -> new HostManager(host, 1));
     }
 
+    /**
+     * Asynchronously gets the contents of the given resource.
+     *
+     * @param url the url of the resource to get
+     * @return a {@link CompletableFuture} which will be completed with the resource data, or {@code null} if the resource isn't found
+     */
     public static CompletableFuture<ByteBuf> get(@NonNull String url) {
         try {
             URL parsed = new URL(url);
+
+            if ("file".equalsIgnoreCase(parsed.getProtocol())) { //it's a file, read from disk (also async)
+                return Disk.read(new File(parsed.getFile()));
+            }
+
             CompletableFuture<ByteBuf> future = new CompletableFuture<>();
             managerFor(parsed).submit(parsed.getFile(), future);
             return future;
@@ -130,13 +129,15 @@ public class Http {
      * @return the parsed response body
      * @throws IOException if no URLs were given, or all returned an error code
      */
-    public static <T> T getFirst(@NonNull String[] urls, @NonNull EFunction<ByteBuf, T> parseFunction) throws Exception {
+    public static <T> CompletableFuture<T> getFirst(@NonNull String[] urls, @NonNull EFunction<ByteBuf, T> parseFunction) throws Exception {
+        //TODO: make this actually async
+
         Exception cause = null;
         boolean found404 = false;
 
         for (String url : urls) {
             try {
-                return getSingle(url, parseFunction);
+                return CompletableFuture.completedFuture(getSingle(url, parseFunction));
             } catch (FileNotFoundException e) {
                 found404 = true;
             } catch (Exception e) {
@@ -149,7 +150,7 @@ public class Http {
 
         if (found404) {
             //one of the urls was successful, but returned 404 Not Found
-            return null;
+            return CompletableFuture.completedFuture(null);
         } else if (cause != null) {
             throw cause;
         } else {
@@ -165,7 +166,16 @@ public class Http {
      * @return the parsed response body
      * @throws IOException if an I/O exception occurred while attempting to get the data
      */
-    public static <T> T getSingle(@NonNull String url, @NonNull EFunction<ByteBuf, T> parseFunction) throws Exception {
+    private static <T> T getSingle(@NonNull String url, @NonNull EFunction<ByteBuf, T> parseFunction) throws Exception {
+        if (true) {
+            ByteBuf buf = get(url).join();
+            try {
+                return buf != null ? parseFunction.applyThrowing(buf) : null;
+            } finally {
+                ReferenceCountUtil.release(buf);
+            }
+        }
+
         URL parsedUrl = new URL(url);
         boolean canCache = TerraConfig.data.cache && !"file".equals(parsedUrl.getProtocol()); //we don't want to cache local files, because they're already on disk
 
@@ -175,7 +185,7 @@ public class Http {
         long now = System.currentTimeMillis();
         long ttl = TimeUnit.MINUTES.toMillis(TerraConfig.data.cacheTTL);
 
-        ByteBuf cachedValue = canCache ? DB.getZeroCopy(key) : null;
+        /*ByteBuf cachedValue = canCache ? DB.getZeroCopy(key) : null;
         try {
             if (cachedValue != null && cachedValue.readLong() + ttl < now) { //cache hit, and the cached value hasn't expired yet
                 if (!TerraConfig.reducedConsoleMessages) {
@@ -256,7 +266,8 @@ public class Http {
             if (cachedValue != null) {
                 cachedValue.release();
             }
-        }
+        }*/
+        return null;
     }
 
     public static String formatUrl(@NonNull Map<String, String> properties, @NonNull String url) {
@@ -282,5 +293,15 @@ public class Http {
             mcRoot = new File("/tmp");
         }
         return new File(mcRoot, "terraplusplus/cache");
+    }
+
+    protected <T> void copyResultTo(@NonNull CompletableFuture<T> src, @NonNull CompletableFuture<T> dst) {
+        src.whenComplete((v, t) -> {
+            if (t != null) {
+                dst.completeExceptionally(t);
+            } else {
+                dst.complete(v);
+            }
+        });
     }
 }

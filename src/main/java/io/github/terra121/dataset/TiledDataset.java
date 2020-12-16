@@ -64,8 +64,10 @@ public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, T> {
         this.addProperties(pos.x, pos.z, builder);
         Map<String, String> properties = builder.build();
 
+        //TODO: make this actually utilize the async capabilities of Http.getFirst
+
         return Http.getFirst(
                 Arrays.stream(this.urls(pos.x, pos.z)).map(url -> Http.formatUrl(properties, url)).toArray(String[]::new),
-                data -> this.decode(pos.x, pos.z, data));
+                data -> this.decode(pos.x, pos.z, data)).join();
     }
 }

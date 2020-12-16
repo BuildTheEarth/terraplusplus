@@ -1,26 +1,38 @@
 package io.github.terra121.util.http;
 
 import io.github.terra121.TerraMod;
+import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelInitializer;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpClientCodec;
+import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.util.AttributeKey;
+import io.netty.util.ReferenceCountUtil;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+import net.daporkchop.lib.common.util.PorkUtil;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayDeque;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.IdentityHashMap;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -33,24 +45,26 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  * @author DaPorkchop_
  */
 final class HostManager extends Host {
-    protected final Queue<Request> pendingRequests = new ArrayDeque<>();
-    protected final Set<Request> activeRequests = Collections.newSetFromMap(new IdentityHashMap<>());
+    private static final AttributeKey<Request> ATTR_REQUEST = AttributeKey.valueOf(Request.class, "terra++");
 
-    protected final int maxConcurrentRequests;
+    private final Deque<Request> pendingRequests = new ArrayDeque<>();
+    private final Bootstrap bootstrap;
 
-    protected Channel channel = null;
-    protected ChannelFuture channelFuture = null;
+    private final int maxConcurrentRequests;
+    private int activeRequests = 0;
 
-    public HostManager(@NonNull URL url, int maxConcurrentRequests) {
-        super(url);
-
-        this.maxConcurrentRequests = positive(maxConcurrentRequests, "maxConcurrentRequests");
-    }
+    private final Set<Channel> channels = Collections.newSetFromMap(new IdentityHashMap<>());
+    private ChannelFuture channelFuture = null;
 
     public HostManager(@NonNull Host host, int maxConcurrentRequests) {
-        super(host.host, host.port, host.ssl);
+        super(host);
 
         this.maxConcurrentRequests = positive(maxConcurrentRequests, "maxConcurrentRequests");
+
+        this.bootstrap = DEFAULT_BOOTSTRAP.clone()
+                .handler(new Initializer(new Handler()))
+                .remoteAddress(this.host, this.port)
+                .attr(ATTR_REQUEST, null);
     }
 
     /**
@@ -60,49 +74,39 @@ final class HostManager extends Host {
      * @param future a {@link CompletableFuture} that will be notified once the request is completed
      */
     public void submit(@NonNull String path, @NonNull CompletableFuture<ByteBuf> future) {
-        if (!NETWORK_EVENT_LOOP.inEventLoop()) { //execute on network thread
-            NETWORK_EVENT_LOOP.submit(() -> this.submit(path, future));
-            return;
-        }
+        NETWORK_EVENT_LOOP.submit(() -> { //force execution on network thread
+            this.pendingRequests.add(new Request(path, future)); //add to request queue
 
-        this.submit0(new Request(this.host, path, future));
+            this.tryWorkOffQueue();
+        });
     }
 
-    private synchronized void submit0(@NonNull Request request) {
-        if (this.activeRequests.size() >= this.maxConcurrentRequests) { //add to request queue and exit
-            this.pendingRequests.add(request);
-            return;
-        }
-
-        if (!this.trySendRequest0(request)) { //no currently open channels
-            this.considerOpeningAnotherConnection();
-
-            //add the request to the queue so that it can be sent once the channel is open
-            this.pendingRequests.add(request);
+    private void tryWorkOffQueue() {
+        for (Request request; this.activeRequests < this.maxConcurrentRequests && (request = this.pendingRequests.peek()) != null && this.trySendRequest0(request); ) {
+            checkState(this.pendingRequests.poll() == request, "unable to remove request from queue!");
         }
     }
 
-    private synchronized boolean trySendRequest0(@NonNull Request request) {
-        if (this.channel == null || this.channel.attr(ATTR_CHANNEL_FULL).get()) {
-            return false;
+    private boolean trySendRequest0(@NonNull Request request) {
+        for (Channel channel : this.channels) {
+            if (channel.attr(ATTR_REQUEST).compareAndSet(null, request)) { //the channel is currently inactive
+                channel.writeAndFlush(request.toNetty(), channel.voidPromise()); //send request
+                this.activeRequests++;
+                return true;
+            }
         }
 
-        this.activeRequests.add(request); //mark request as active
-        this.channel.writeAndFlush(request, this.channel.voidPromise()); //send request
-        return true;
+        this.considerOpeningAnotherConnection();
+        return false;
     }
 
-    private synchronized void considerOpeningAnotherConnection() {
-        if (this.channel == null && this.channelFuture == null) {
-            //open a new connection
-            this.channelFuture = Http.DEFAULT_BOOTSTRAP.clone()
-                    .handler(new HttpChannelInitializer(this))
-                    .connect(this.host, this.port)
-                    .addListener((ChannelFutureListener) this::handleChannelOpened);
+    private void considerOpeningAnotherConnection() {
+        if (this.channelFuture == null) { //channelFuture is null, so there is no currently opening channel
+            (this.channelFuture = this.bootstrap.connect()).addListener((ChannelFutureListener) this::handleChannelOpened);
         }
     }
 
-    private synchronized void handleChannelOpened(@NonNull ChannelFuture channelFuture) {
+    private void handleChannelOpened(@NonNull ChannelFuture channelFuture) {
         checkState(channelFuture == this.channelFuture, "unknown channel future?!?");
         this.channelFuture = null;
 
@@ -113,39 +117,76 @@ final class HostManager extends Host {
             return;
         }
 
-        (this.channel = channelFuture.channel()).closeFuture().addListener((ChannelFutureListener) this::handleChannelClosed);
+        Channel channel = channelFuture.channel();
+        this.channels.add(channel);
+        channel.closeFuture().addListener((ChannelFutureListener) this::handleChannelClosed);
 
-        Request request = this.pendingRequests.peek();
-        if (request != null && this.trySendRequest0(request)) { //send request
-            checkState(this.pendingRequests.poll() == request, "unable to remove request from queue!");
+        this.tryWorkOffQueue();
+    }
+
+    private void handleChannelClosed(@NonNull ChannelFuture channelFuture) {
+        Channel channel = channelFuture.channel();
+        //if the channel is still stored as an active connection, it was closed for some other reason than the
+        // server sending a "Connection: close" header, so let's double-check the channel state
+        if (this.channels.remove(channel)) {
+            Request request = channel.attr(ATTR_REQUEST).getAndSet(null);
+            if (request != null) {
+                //the channel still has a request associated with it! the channel was a keepalive channel,
+                // and the server closed it at the same time as we sent the request. let's re-submit the request
+                // so that it can be issued again on a new channel
+
+                this.pendingRequests.addFirst(request); //add to front of queue so that it doesn't have to wait through the entire queue again
+
+                this.tryWorkOffQueue();
+            }
         }
     }
 
-    private synchronized void handleChannelClosed(@NonNull ChannelFuture channelFuture) {
-        System.out.println("channel closed: " + channelFuture.channel());
-    }
+    private void handleResponse(@NonNull Channel channel, Object msg) {
+        Request request = null;
+        try {
+            if (!(msg instanceof FullHttpResponse)) {
+                throw new IllegalArgumentException(PorkUtil.className(msg));
+            }
+            FullHttpResponse response = (FullHttpResponse) msg;
 
-    synchronized void handleRequestComplete(@NonNull Request request, @NonNull FullHttpResponse response) {
-        switch (response.status().codeClass()) {
-            case SUCCESS: //notify handler
-                request.future.complete(response.content().copy());
-                break;
-            case INFORMATIONAL: //no-op
-                break;
-            case REDIRECTION: //handle redirect safely
-                try {
-                    URL url = new URL(response.headers().get(HttpHeaderNames.LOCATION));
-                    Http.managerFor(url).submit(url.getFile(), request.future);
-                } catch (MalformedURLException e) {
-                    request.future.completeExceptionally(e);
-                }
-                break;
-            default: //failure
-                request.future.completeExceptionally(new IOException("response from server: " + response.status()));
-        }
+            request = channel.attr(ATTR_REQUEST).getAndSet(null);
+            checkState(request != null, "received response on inactive channel?!?");
 
-        if ((request = this.pendingRequests.peek()) != null && this.trySendRequest0(request)) { //send request
-            checkState(this.pendingRequests.poll() == request, "unable to remove request from queue!");
+            this.activeRequests--; //decrement active requests counter to enable another request to be made
+
+            if (!HttpUtil.isKeepAlive(response)) { //response isn't keep-alive, close connection
+                //remove connection from active connections now to prevent it from
+                // being re-used if the close operation isn't completed before this method ends
+                this.channels.remove(channel);
+                channel.close();
+            }
+
+            switch (response.status().codeClass()) {
+                case SUCCESS: //notify handler
+                    request.future.complete(response.content().copy());
+                    break;
+                case INFORMATIONAL: //no-op
+                    break;
+                case REDIRECTION: //handle redirect
+                    Http.copyResultTo(Http.get(response.headers().get(HttpHeaderNames.LOCATION)), request.future);
+                    break;
+                case CLIENT_ERROR:
+                    if (response.status() == HttpResponseStatus.NOT_FOUND) { //notify handler
+                        request.future.complete(null);
+                        break;
+                    }
+                default: //failure
+                    request.future.completeExceptionally(new IOException("response from server: " + response.status()));
+            }
+
+            this.tryWorkOffQueue(); //if this request is completed, another slot must have been freed up
+        } catch (Exception e) {
+            if (request != null) {
+                request.future.completeExceptionally(e);
+            }
+        } finally {
+            ReferenceCountUtil.release(msg);
         }
     }
 
@@ -155,20 +196,63 @@ final class HostManager extends Host {
      * @author DaPorkchop_
      */
     @RequiredArgsConstructor
-    static final class Request {
-        @NonNull
-        protected final String host;
+    @ToString
+    private final class Request {
         @NonNull
         protected final String path;
         @NonNull
         protected final CompletableFuture<ByteBuf> future;
 
-        public HttpRequest toNetty(@NonNull HttpVersion version) {
-            DefaultFullHttpRequest request = new DefaultFullHttpRequest(version, HttpMethod.GET, this.path);
+        public HttpRequest toNetty() {
+            DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, this.path);
             request.headers()
-                    .set(HttpHeaderNames.HOST, this.host)
+                    .set(HttpHeaderNames.HOST, HostManager.this.authority)
                     .set(HttpHeaderNames.USER_AGENT, TerraMod.USERAGENT);
+            HttpUtil.setKeepAlive(request, true);
             return request;
+        }
+    }
+
+    /**
+     * Initializes a {@link Channel} for sending HTTP(S) requests.
+     *
+     * @author DaPorkchop_
+     */
+    @RequiredArgsConstructor
+    private final class Initializer extends ChannelInitializer<Channel> {
+        @NonNull
+        private final ChannelHandler httpHandler;
+
+        @Override
+        protected void initChannel(Channel ch) throws Exception {
+            if (HostManager.this.ssl) {
+                ch.pipeline().addLast(Http.SSL_CONTEXT.newHandler(ch.alloc(), HostManager.this.host, HostManager.this.port));
+            }
+
+            ch.pipeline().addLast(
+                    new HttpClientCodec(),
+                    new HttpContentDecompressor(),
+                    new HttpObjectAggregator(Http.MAX_CONTENT_LENGTH),
+                    this.httpHandler);
+        }
+    }
+
+    /**
+     * Relays messages that reach the tail of the Netty pipeline to the host manager.
+     *
+     * @author DaPorkchop_
+     */
+    @ChannelHandler.Sharable
+    private final class Handler extends ChannelInboundHandlerAdapter {
+        @Override
+        public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+            HostManager.this.handleResponse(ctx.channel(), msg);
+        }
+
+        @Override
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+            cause.printStackTrace();
+            super.exceptionCaught(ctx, cause);
         }
     }
 }
