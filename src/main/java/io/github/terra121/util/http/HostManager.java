@@ -50,16 +50,14 @@ final class HostManager extends Host {
     private final Deque<Request> pendingRequests = new ArrayDeque<>();
     private final Bootstrap bootstrap;
 
-    private final int maxConcurrentRequests;
+    private int maxConcurrentRequests = 1;
     private int activeRequests = 0;
 
     private final Set<Channel> channels = Collections.newSetFromMap(new IdentityHashMap<>());
     private ChannelFuture channelFuture = null;
 
-    public HostManager(@NonNull Host host, int maxConcurrentRequests) {
+    public HostManager(@NonNull Host host) {
         super(host);
-
-        this.maxConcurrentRequests = positive(maxConcurrentRequests, "maxConcurrentRequests");
 
         this.bootstrap = DEFAULT_BOOTSTRAP.clone()
                 .handler(new Initializer(new Handler()))
@@ -79,6 +77,15 @@ final class HostManager extends Host {
 
             this.tryWorkOffQueue();
         });
+    }
+
+    /**
+     * Updates the maximum number of concurrent requests to this host.
+     *
+     * @param maxConcurrentRequests the new maximum number of concurrent requests
+     */
+    public void setMaxConcurrentRequests(int maxConcurrentRequests) {
+        this.maxConcurrentRequests = positive(maxConcurrentRequests, "maxConcurrentRequests");
     }
 
     private void tryWorkOffQueue() {

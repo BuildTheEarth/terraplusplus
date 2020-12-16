@@ -5,7 +5,7 @@ import io.github.terra121.TerraConfig;
 import io.github.terra121.TerraMod;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoop;
 import io.netty.channel.epoll.Epoll;
@@ -21,27 +21,20 @@ import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.ReferenceCountUtil;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-import net.daporkchop.ldbjni.LevelDB;
-import net.daporkchop.ldbjni.direct.DirectDB;
 import net.daporkchop.lib.common.function.throwing.EFunction;
 import net.daporkchop.lib.common.misc.threadfactory.PThreadFactories;
-import net.minecraft.client.Minecraft;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import org.iq80.leveldb.CompressionType;
-import org.iq80.leveldb.Options;
 
 import javax.net.ssl.SSLException;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -69,8 +62,6 @@ public class Http {
 
     protected final int MAX_CONTENT_LENGTH = Integer.MAX_VALUE; //impossibly large, no requests will actually be this big but whatever
 
-    private final DirectDB DB;
-
     static {
         try {
             SSL_CONTEXT = SslContextBuilder.forClient()
@@ -82,21 +73,8 @@ public class Http {
         }
     }
 
-    static {
-        File cacheRoot = getCacheRoot();
-        try {
-            if (TerraMod.LOGGER != null) {
-                TerraMod.LOGGER.info("Opening cache DB at {}", cacheRoot);
-            }
-            Preconditions.checkState(cacheRoot.exists() || cacheRoot.mkdirs(), "unable to create directory: %s", cacheRoot);
-            DB = LevelDB.PROVIDER.open(cacheRoot, new Options().compressionType(CompressionType.SNAPPY));
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to open cache DB at " + cacheRoot, e);
-        }
-    }
-
     private HostManager managerFor(@NonNull URL url) {
-        return MANAGERS.computeIfAbsent(new Host(url), host -> new HostManager(host, 1));
+        return MANAGERS.computeIfAbsent(new Host(url), HostManager::new);
     }
 
     /**
@@ -105,19 +83,54 @@ public class Http {
      * @param url the url of the resource to get
      * @return a {@link CompletableFuture} which will be completed with the resource data, or {@code null} if the resource isn't found
      */
-    public static CompletableFuture<ByteBuf> get(@NonNull String url) {
+    public CompletableFuture<ByteBuf> get(@NonNull String url) {
         try {
             URL parsed = new URL(url);
 
             if ("file".equalsIgnoreCase(parsed.getProtocol())) { //it's a file, read from disk (also async)
-                return Disk.read(new File(parsed.getFile()));
+                return Disk.read(Paths.get(parsed.getFile()), false);
             }
 
-            CompletableFuture<ByteBuf> future = new CompletableFuture<>();
-            managerFor(parsed).submit(parsed.getFile(), future);
-            return future;
+            Path cacheFile = Disk.cacheFileFor(parsed.toString());
+            return Disk.read(cacheFile, true)
+                    .thenCompose(cachedData -> {
+                        if (TerraMod.LOGGER != null && !TerraConfig.reducedConsoleMessages) {
+                            TerraMod.LOGGER.info("Cache {}: {}", cachedData != null ? "hit" : "miss", url);
+                        }
+                        if (cachedData != null) { //we found something in the cache
+                            //first byte is a boolean indicating whether or not the cached value is a 404
+                            return CompletableFuture.completedFuture(cachedData.readBoolean() ? cachedData : null);
+                        } else { //cache miss
+                            CompletableFuture<ByteBuf> future = new CompletableFuture<>();
+                            managerFor(parsed).submit(parsed.getFile(), future);
+
+                            future.thenAccept(requestedData -> { //store the response body in the cache
+                                //prefix data with 404 flag
+                                ByteBuf toCacheData = ByteBufAllocator.DEFAULT.ioBuffer().writeBoolean(requestedData != null);
+                                if (requestedData != null) { //append the actual data
+                                    toCacheData.writeBytes(requestedData, requestedData.readerIndex(), requestedData.readableBytes());
+                                }
+                                Disk.write(cacheFile, toCacheData);
+                            });
+                            return future;
+                        }
+                    });
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(url, e);
+        }
+    }
+
+    /**
+     * Sets the maximum number of concurrent requests to the given remote host.
+     *
+     * @param host                  the host. May be any valid URL, however only the protocol and authority components will be considered
+     * @param maxConcurrentRequests the new maximum number of concurrent requests to the host
+     */
+    public void setMaximumConcurrentRequestsTo(@NonNull String host, int maxConcurrentRequests) {
+        try {
+            managerFor(new URL(host)).setMaxConcurrentRequests(maxConcurrentRequests);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException(host, e);
         }
     }
 
@@ -167,107 +180,12 @@ public class Http {
      * @throws IOException if an I/O exception occurred while attempting to get the data
      */
     private static <T> T getSingle(@NonNull String url, @NonNull EFunction<ByteBuf, T> parseFunction) throws Exception {
-        if (true) {
-            ByteBuf buf = get(url).join();
-            try {
-                return buf != null ? parseFunction.applyThrowing(buf) : null;
-            } finally {
-                ReferenceCountUtil.release(buf);
-            }
-        }
-
-        URL parsedUrl = new URL(url);
-        boolean canCache = TerraConfig.data.cache && !"file".equals(parsedUrl.getProtocol()); //we don't want to cache local files, because they're already on disk
-
-        Exception cause = null;
-        ByteBuf key = Unpooled.wrappedBuffer(url.getBytes(StandardCharsets.UTF_8));
-
-        long now = System.currentTimeMillis();
-        long ttl = TimeUnit.MINUTES.toMillis(TerraConfig.data.cacheTTL);
-
-        /*ByteBuf cachedValue = canCache ? DB.getZeroCopy(key) : null;
+        ByteBuf buf = get(url).join();
         try {
-            if (cachedValue != null && cachedValue.readLong() + ttl < now) { //cache hit, and the cached value hasn't expired yet
-                if (!TerraConfig.reducedConsoleMessages) {
-                    TerraMod.LOGGER.info("Cache hit: {}", url);
-                }
-                if (cachedValue.readBoolean()) { //cached value exists
-                    return parseFunction.applyThrowing(cachedValue);
-                } else { //we cached a 404
-                    return null;
-                }
-            }
-
-            ByteBuf buf = ByteBufAllocator.DEFAULT.buffer();
-            try {
-                //intern the string to make its identity global
-                //synchronizing on the interned string makes for a simple global mutex, preventing the same URL from
-                // being requested by multiple threads at once
-                synchronized (url = url.intern()) {
-                    for (int i = 0; i < TerraConfig.data.retryCount; i++) {
-                        if (!TerraConfig.reducedConsoleMessages) {
-                            TerraMod.LOGGER.info("GET #{}: {}", i, url);
-                        }
-
-                        try {
-                            URLConnection conn = parsedUrl.openConnection();
-                            conn.addRequestProperty("User-Agent", TerraMod.USERAGENT);
-                            conn.setConnectTimeout(TerraConfig.data.timeout);
-                            conn.setReadTimeout(TerraConfig.data.timeout);
-                            if (conn instanceof HttpURLConnection) {
-                                ((HttpURLConnection) conn).setInstanceFollowRedirects(true);
-                            }
-
-                            try (InputStream in = conn.getInputStream()) {
-                                buf.clear().writeLong(now).writeBoolean(true);
-                                do {
-                                    buf.ensureWritable(1024);
-                                } while (buf.writeBytes(in, 1024) > 0);
-                            }
-
-                            T parsed = parseFunction.applyThrowing(buf.skipBytes(9));
-
-                            if (canCache) { //write data to cache
-                                DB.put(key, buf.readerIndex(0));
-                            }
-                            return parsed;
-                        } catch (FileNotFoundException e) { //server returned 404 Not Found
-                            if (canCache) { //write missing entry to cache
-                                DB.put(key, buf.clear().writeLong(now).writeBoolean(false));
-                            }
-                            throw e;
-                        } catch (Exception e) {
-                            if (cause == null) {
-                                cause = new Exception("Unable to GET " + url);
-                            }
-                            cause.addSuppressed(e);
-                        }
-                    }
-                }
-            } finally {
-                buf.release();
-            }
-
-            if (cachedValue != null) { //we still have a value from the cache. it's expired, but we'll return it anyway because we were unable to fetch anything
-                if (!TerraConfig.reducedConsoleMessages) {
-                    TerraMod.LOGGER.info("Falling back to expired cached value: {}", url);
-                }
-                if (cachedValue.readBoolean()) { //cached value exists
-                    return parseFunction.applyThrowing(cachedValue);
-                } else { //we cached a 404
-                    return null;
-                }
-            } else if (cause != null) {
-                throw cause;
-            } else {
-                throw new IllegalStateException("0 retries?!?");
-            }
+            return buf != null ? parseFunction.applyThrowing(buf) : null;
         } finally {
-            if (cachedValue != null) {
-                cachedValue.release();
-            }
-        }*/
-        return null;
+            ReferenceCountUtil.release(buf);
+        }
     }
 
     public static String formatUrl(@NonNull Map<String, String> properties, @NonNull String url) {
@@ -283,16 +201,19 @@ public class Http {
         return out.toString();
     }
 
-    private static File getCacheRoot() {
-        File mcRoot;
-        try {
-            mcRoot = FMLCommonHandler.instance().getSide().isClient()
-                    ? Minecraft.getMinecraft().gameDir
-                    : FMLCommonHandler.instance().getMinecraftServerInstance().getFile("");
-        } catch (NullPointerException e) { //this probably means we're running in a test environment, and FML isn't initialized
-            mcRoot = new File("/tmp");
+    public void configChanged() {
+        Matcher matcher = Pattern.compile("^(\\d+): (.+)$").matcher("");
+        for (String entry : TerraConfig.data.maxConcurrentRequests) {
+            if (matcher.reset(entry).matches()) {
+                try {
+                    setMaximumConcurrentRequestsTo(matcher.group(2), Integer.parseInt(matcher.group(1)));
+                } catch (Exception e) {
+                    TerraMod.LOGGER.error("Invalid entry: \"" + entry + '"', e);
+                }
+            } else {
+                TerraMod.LOGGER.warn("Invalid entry: \"{}\"", entry);
+            }
         }
-        return new File(mcRoot, "terraplusplus/cache");
     }
 
     protected <T> void copyResultTo(@NonNull CompletableFuture<T> src, @NonNull CompletableFuture<T> dst) {

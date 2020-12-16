@@ -1,5 +1,6 @@
 package io.github.terra121;
 
+import io.github.terra121.util.http.Http;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.Config.Comment;
 import net.minecraftforge.common.config.Config.Name;
@@ -29,6 +30,7 @@ public class TerraConfig {
     public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
         if (TerraMod.MODID.equals(event.getModID())) {
             ConfigManager.sync(TerraMod.MODID, Config.Type.INSTANCE);
+            Http.configChanged();
         }
     }
 
@@ -45,6 +47,24 @@ public class TerraConfig {
         public String[] overpass = {
                 "https://overpass.kumi.systems/api/interpreter/?data=[out:json];way(${lat.min},${lon.min},${lat.max},${lon.max});out%20geom(${lat.min},${lon.min},${lat.max},${lon.max})%20tags%20qt;(._<;);out%20body%20qt;is_in(${lat.min},${lon.min});area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;",
                 "https://lz4.overpass-api.de/api/interpreter/?data=[out:json];way(${lat.min},${lon.min},${lat.max},${lon.max});out%20geom(${lat.min},${lon.min},${lat.max},${lon.max})%20tags%20qt;(._<;);out%20body%20qt;is_in(${lat.min},${lon.min});area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;"
+        };
+
+        @Comment({
+                "Configures the maximum permitted number of concurrent HTTP requests to each of the given hosts.",
+                "Each line is an entry, given in the following format:",
+                "  \"<number>: <host>\"",
+                "Example: \"3: https://example.com/\" will permit up to 8 requests to URLs starting with \"https://example.com/\" to be made at once.",
+                "",
+                "You are strongly advised not to modify the default settings. Many of these services do not have the capacity to deal with thousands"
+                + " of concurrent requests, and raising the limits will only make them slower for everyone while not actually providing any noticeable performance"
+                + " improvements for you."
+        })
+        public String[] maxConcurrentRequests = {
+                "8: https://cloud.daporkchop.net/",
+                "8: https://s3.amazonaws.com/",
+                "1: http://gis-treecover.wri.org/",
+                "2: https://overpass.kumi.systems/",
+                "2: https://lz4.overpass-api.de/"
         };
 
         @Comment({
