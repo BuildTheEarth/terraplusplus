@@ -259,6 +259,12 @@ final class HostManager extends Host {
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
             cause.printStackTrace();
+
+            Request request = ctx.channel().attr(ATTR_REQUEST).getAndSet(null);
+            if (request != null) { //inform request that it failed
+                request.future.completeExceptionally(cause);
+                HostManager.this.activeRequests--;
+            }
             super.exceptionCaught(ctx, cause);
         }
     }

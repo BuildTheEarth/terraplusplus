@@ -18,15 +18,12 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SupportedCipherSuiteFilter;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import io.netty.util.ReferenceCountUtil;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import net.daporkchop.lib.common.function.throwing.EFunction;
 import net.daporkchop.lib.common.misc.threadfactory.PThreadFactories;
 
 import javax.net.ssl.SSLException;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -35,8 +32,11 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
+import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * Handles sending and caching of HTTP requests.
@@ -140,35 +140,59 @@ public class Http {
      * @param urls          the URLs
      * @param parseFunction a function to use to parse the response body
      * @return the parsed response body
-     * @throws IOException if no URLs were given, or all returned an error code
      */
-    public static <T> CompletableFuture<T> getFirst(@NonNull String[] urls, @NonNull EFunction<ByteBuf, T> parseFunction) throws Exception {
-        //TODO: make this actually async
+    public static <T> CompletableFuture<T> getFirst(@NonNull String[] urls, @NonNull EFunction<ByteBuf, T> parseFunction) {
+        checkArg(urls.length > 0, "must provide at least one url");
 
-        Exception cause = null;
-        boolean found404 = false;
+        if (urls.length == 1) {
+            return getSingle(urls[0], parseFunction);
+        }
 
-        for (String url : urls) {
-            try {
-                return CompletableFuture.completedFuture(getSingle(url, parseFunction));
-            } catch (FileNotFoundException e) {
-                found404 = true;
-            } catch (Exception e) {
-                if (cause == null) {
-                    cause = new Exception();
+        class State implements BiConsumer<T, Throwable> {
+            final CompletableFuture<T> future = new CompletableFuture<>();
+            RuntimeException e = null;
+
+            /**
+             * The current iteration index.
+             */
+            int i = -1;
+
+            /**
+             * Whether or not any of the URLs completed successfully, but returned {@code 404 Not Found}.
+             */
+            boolean foundMissing = false;
+
+            @Override
+            public void accept(T value, Throwable cause) {
+                if (cause != null) {
+                    if (this.e == null) {
+                        this.e = new RuntimeException("All URLs completed exceptionally!");
+                    }
+                    this.e.addSuppressed(cause);
+                } else if (value == null) { //remember that one of the URLs 404'd
+                    this.foundMissing = true;
+                } else { //complete the future successfully with the retrieved value
+                    this.future.complete(value);
+                    return;
                 }
-                cause.addSuppressed(e);
+
+                this.advance();
+            }
+
+            protected void advance() {
+                if (++this.i < urls.length) {
+                    getSingle(urls[this.i], parseFunction).whenComplete(this);
+                } else if (this.foundMissing) { //the best result from any of the URLs was a 404
+                    this.future.complete(null);
+                } else {
+                    this.future.completeExceptionally(this.e);
+                }
             }
         }
 
-        if (found404) {
-            //one of the urls was successful, but returned 404 Not Found
-            return CompletableFuture.completedFuture(null);
-        } else if (cause != null) {
-            throw cause;
-        } else {
-            throw new IllegalStateException("0 urls?!?");
-        }
+        State state = new State();
+        state.advance();
+        return state.future;
     }
 
     /**
@@ -177,15 +201,18 @@ public class Http {
      * @param url           the URL
      * @param parseFunction a function to use to parse the response body
      * @return the parsed response body
-     * @throws IOException if an I/O exception occurred while attempting to get the data
      */
-    private static <T> T getSingle(@NonNull String url, @NonNull EFunction<ByteBuf, T> parseFunction) throws Exception {
-        ByteBuf buf = get(url).join();
-        try {
-            return buf != null ? parseFunction.applyThrowing(buf) : null;
-        } finally {
-            ReferenceCountUtil.release(buf);
-        }
+    public static <T> CompletableFuture<T> getSingle(@NonNull String url, @NonNull EFunction<ByteBuf, T> parseFunction) {
+        return get(url)
+                .thenCompose(buf -> buf == null
+                        ? CompletableFuture.completedFuture(null)
+                        : CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return parseFunction.apply(buf);
+                    } finally {
+                        buf.release();
+                    }
+                }));
     }
 
     public static String formatUrl(@NonNull Map<String, String> properties, @NonNull String url) {
