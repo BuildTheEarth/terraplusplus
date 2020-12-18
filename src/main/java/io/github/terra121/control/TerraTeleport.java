@@ -125,7 +125,7 @@ public class TerraTeleport extends Command {
             }
 
             if (alt == null) {
-                alt = String.valueOf(terrain.heights.estimateLocal(lon, lat) + 1);
+                alt = String.valueOf(terrain.heights.get(lon, lat) + 1);
             }
 
             sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Teleported to ", TextFormatting.GRAY), new TextElement(new DecimalFormat("##.#####").format(lat), TextFormatting.BLUE),

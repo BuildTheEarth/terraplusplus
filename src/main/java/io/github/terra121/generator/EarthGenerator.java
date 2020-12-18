@@ -23,6 +23,7 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGenerato
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicCaveGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicRavineGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.feature.CubicStrongholdGenerator;
+import io.github.terra121.dataset.BlendMode;
 import io.github.terra121.dataset.Heights;
 import io.github.terra121.dataset.ScalarDataset;
 import io.github.terra121.dataset.osm.OpenStreetMap;
@@ -92,7 +93,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         this.biomes = world.getBiomeProvider(); //TODO: make this not order dependent
 
         this.osm = new OpenStreetMap(this.projection, this.doRoads, this.cfg.settings.osmwater, this.doBuildings);
-        this.heights = new Heights(this.cfg.settings.osmwater ? this.osm.water : null, 13, this.cfg.settings.smoothblend);
+        this.heights = new Heights(this.cfg.settings.osmwater ? this.osm.water : null, 13, this.cfg.settings.smoothblend ? BlendMode.SMOOTH : BlendMode.LINEAR);
 
         this.surfacePopulators = new HashSet<>();
 
@@ -155,46 +156,6 @@ public class EarthGenerator extends BasicCubeGenerator {
 
         //add water
         this.generateWater(cubeX, cubeY, cubeZ, primer, data);
-
-        /*for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
-                double height = data.heights[x * 16 + z];
-                double wateroff = data.wateroffs[x * 16 + z];
-
-                int minblock = Coords.cubeToMinBlock(cubeY);
-
-                if (abs(cubeX) < 5 && abs(cubeZ) < 5) {
-                    //NULL ISLAND
-                } else if (this.cfg.settings.osmwater) {
-                    if (wateroff > 1) {
-                        int start = (int) (height);
-                        if (start == 0) {
-                            start = -1; //elev 0 should still be treated as ocean when in ocean
-                        }
-
-                        start -= minblock;
-                        if (start < 0) {
-                            start = 0;
-                        }
-                        for (int y = start; y < 16 && y <= -1 - minblock; y++) {
-                            primer.setBlockState(x, y, z, Blocks.WATER.getDefaultState());
-                        }
-                    } else if (wateroff > 0.4) {
-                        int start = (int) (height - (wateroff - 0.4) * 4) - minblock;
-                        if (start < 0) {
-                            start = 0;
-                        }
-                        for (int y = start; y < 16 && y < height - minblock; y++) {
-                            primer.setBlockState(x, y, z, Blocks.WATER.getDefaultState());
-                        }
-                    }
-                } else {
-                    for (int y = (int) max(height - minblock, 0); y < 16 && y < -minblock; y++) {
-                        primer.setBlockState(x, y, z, Blocks.WATER.getDefaultState());
-                    }
-                }
-            }
-        }*/
 
         //generate structures
         this.structureGenerators.forEach(gen -> gen.generate(this.world, primer, new CubePos(cubeX, cubeY, cubeZ)));
@@ -275,8 +236,46 @@ public class EarthGenerator extends BasicCubeGenerator {
                     }
                 }
             }
-        } else {
-            //TODO: something
+        } else { //TODO: this works, but is slow and i need to redo it to work with polygons
+            for (int x = 0; x < 16; x++) {
+                for (int z = 0; z < 16; z++) {
+                    double height = data.heights[x * 16 + z];
+                    double wateroff = data.wateroffs[x * 16 + z];
+
+                    int minblock = Coords.cubeToMinBlock(cubeY);
+
+                    if (abs(cubeX) < 5 && abs(cubeZ) < 5) {
+                        //NULL ISLAND
+                    } else if (this.cfg.settings.osmwater) {
+                        if (wateroff > 1) {
+                            int start = (int) (height);
+                            if (start == 0) {
+                                start = -1; //elev 0 should still be treated as ocean when in ocean
+                            }
+
+                            start -= minblock;
+                            if (start < 0) {
+                                start = 0;
+                            }
+                            for (int y = start; y < 16 && y <= -1 - minblock; y++) {
+                                primer.setBlockState(x, y, z, water);
+                            }
+                        } else if (wateroff > 0.4) {
+                            int start = (int) (height - (wateroff - 0.4) * 4) - minblock;
+                            if (start < 0) {
+                                start = 0;
+                            }
+                            for (int y = start; y < 16 && y < height - minblock; y++) {
+                                primer.setBlockState(x, y, z, water);
+                            }
+                        }
+                    } else {
+                        for (int y = (int) max(height - minblock, 0); y < 16 && y < -minblock; y++) {
+                            primer.setBlockState(x, y, z, water);
+                        }
+                    }
+                }
+            }
         }
     }
 

@@ -15,8 +15,9 @@ public class Heights extends DoubleTiledDataset {
     protected final Water water;
     private final int zoom;
 
-    public Heights(Water water, int zoom, boolean smooth) {
-        super(new MapsProjection(), 1 << (zoom + 8), smooth);
+    public Heights(Water water, int zoom, @NonNull BlendMode blendMode) {
+        super(new MapsProjection(), 1 << (zoom + 8), blendMode);
+
         this.water = water;
         this.zoom = zoom;
     }
@@ -43,7 +44,7 @@ public class Heights extends DoubleTiledDataset {
             out[i] = ((iData[i] & 0x00FFFFFF) - 0x800000) / 256.0d;
         }
 
-        if (this.water != null) {
+        if (this.water != null) { //TODO: move this elsewhere
             for (int z = 0; z < TILE_SIZE; z++) {
                 for (int x = 0; x < TILE_SIZE; x++) {
                     double height = out[z * TILE_SIZE + x];

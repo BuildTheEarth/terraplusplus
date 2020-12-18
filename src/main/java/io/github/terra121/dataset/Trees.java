@@ -1,21 +1,20 @@
 package io.github.terra121.dataset;
 
-import java.util.Collections;
-
-import org.apache.commons.imaging.common.bytesource.ByteSourceInputStream;
-import org.apache.commons.imaging.formats.tiff.TiffImageParser;
-
 import io.github.terra121.TerraConfig;
 import io.github.terra121.projection.EquirectangularProjection;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import lombok.NonNull;
+import org.apache.commons.imaging.common.bytesource.ByteSourceInputStream;
+import org.apache.commons.imaging.formats.tiff.TiffImageParser;
+
+import java.util.Collections;
 
 public class Trees extends DoubleTiledDataset {
     public static final double BLOCK_SIZE = 16.0d / 100000.0d;
 
     public Trees() {
-        super(new EquirectangularProjection(), 1.0d / BLOCK_SIZE, false);
+        super(new EquirectangularProjection(), 1.0d / BLOCK_SIZE, BlendMode.LINEAR);
     }
 
     @Override

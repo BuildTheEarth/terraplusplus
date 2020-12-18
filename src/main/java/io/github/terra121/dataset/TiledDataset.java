@@ -12,29 +12,32 @@ import net.minecraft.util.math.ChunkPos;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
-public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, T> {
-    protected final LoadingCache<ChunkPos, T> cache = CacheBuilder.newBuilder()
+import static net.daporkchop.lib.common.math.PMath.*;
+
+public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, CompletableFuture<T>> {
+    protected final LoadingCache<ChunkPos, CompletableFuture<T>> cache = CacheBuilder.newBuilder()
             .softValues()
+            .expireAfterAccess(5L, TimeUnit.MINUTES)
             .build(this);
 
     protected final double tileSize;
     protected final double scale;
 
     protected final GeographicProjection projection;
-    //TODO: scales are obsolete with new ScaleProjection type
-    protected final double[] bounds;
+    protected final int minSampleX;
+    protected final int maxSampleX;
 
     public TiledDataset(GeographicProjection proj, double tileSize, double scale) {
         this.projection = proj;
         this.tileSize = tileSize;
         this.scale = scale;
 
-        this.bounds = proj.bounds();
-        this.bounds[0] *= this.scale;
-        this.bounds[1] *= this.scale;
-        this.bounds[2] *= this.scale;
-        this.bounds[3] *= this.scale;
+        double[] bounds = proj.bounds();
+        this.minSampleX = floorI(bounds[0] * this.scale);
+        this.maxSampleX = ceilI(bounds[2] * this.scale);
     }
 
     protected abstract String[] urls(int tileX, int tileZ);
@@ -50,7 +53,12 @@ public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, T> {
 
     protected abstract T decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception;
 
+    @Deprecated
     public T getTile(int tileX, int tileZ) {
+        return this.getTileAsync(tileX, tileZ).join();
+    }
+
+    public CompletableFuture<T> getTileAsync(int tileX, int tileZ) {
         return this.cache.getUnchecked(new ChunkPos(tileX, tileZ));
     }
 
@@ -59,15 +67,13 @@ public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, T> {
      */
     @Deprecated
     @Override
-    public T load(ChunkPos pos) throws Exception {
+    public CompletableFuture<T> load(ChunkPos pos) throws Exception {
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
         this.addProperties(pos.x, pos.z, builder);
         Map<String, String> properties = builder.build();
 
-        //TODO: make this actually utilize the async capabilities of Http.getFirst
-
         return Http.getFirst(
                 Arrays.stream(this.urls(pos.x, pos.z)).map(url -> Http.formatUrl(properties, url)).toArray(String[]::new),
-                data -> this.decode(pos.x, pos.z, data)).join();
+                data -> this.decode(pos.x, pos.z, data));
     }
 }

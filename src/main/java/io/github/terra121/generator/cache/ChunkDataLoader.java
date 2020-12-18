@@ -21,19 +21,33 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CachedChunkData> {
     public CachedChunkData load(ChunkPos pos) {
         CachedChunkData data = new CachedChunkData();
 
+        double[] lons = new double[16 * 16];
+        double[] lats = new double[16 * 16];
+
+        //project all coordinates
+        for (int x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++) {
+                try {
+                    double[] projected = this.generator.projection.toGeo(pos.x * 16 + x, pos.z * 16 + z);
+                    lons[x * 16 + z] = projected[0];
+                    lats[x * 16 + z] = projected[1];
+                } catch (OutOfProjectionBoundsException e) { //out of bounds
+                    lons[x * 16 + z] = Double.NaN;
+                    lats[x * 16 + z] = Double.NaN;
+                }
+            }
+        }
+
         if (abs(pos.x) < 5 && abs(pos.z) < 5) { //null island
             Arrays.fill(data.heights, 1.0d);
         } else {
             //get heights beforehand
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
-                    try {
-                        double[] projected = this.generator.projection.toGeo(pos.x * 16 + x, pos.z * 16 + z);
-                        data.heights[x * 16 + z] = this.generator.heights.estimateLocal(projected[0], projected[1]);
-                        data.wateroffs[x * 16 + z] = this.generator.osm.water.estimateLocal(projected[0], projected[1]);
-                    } catch (OutOfProjectionBoundsException e) { //out of bounds, assume ocean
-                        data.heights[x * 16 + z] = -100.0d;
-                    }
+                    double[] heights = this.generator.heights.getAsync(lons, lats).join();
+                    System.arraycopy(heights, 0, data.heights, 0, heights.length);
+
+                    data.wateroffs[x * 16 + z] = this.generator.osm.water.estimateLocal(lons[x * 16 + z], lats[x * 16 + z]);
                 }
             }
         }
