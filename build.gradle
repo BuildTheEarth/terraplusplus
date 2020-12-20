@@ -14,6 +14,7 @@ buildscript {
 apply plugin: "net.minecraftforge.gradle.forge"
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: "com.github.johnrengelman.shadow"
+apply plugin: "maven-publish"
 
 version = "0.1"
 group = "io.github.terra121" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
@@ -91,3 +92,22 @@ task relocateShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.Co
 }
 shadowJar.dependsOn relocateShadowJar
 
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = "net.buildtheearth"
+            artifactId = "terraplusplus"
+            version = project.version
+
+            from components.java
+
+            artifacts.clear()
+            artifact(shadowJar) {
+                classifier = ""
+            }
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
+}
