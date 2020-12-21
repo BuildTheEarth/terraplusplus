@@ -2,6 +2,7 @@ package io.github.terra121.dataset.osm;
 
 import io.github.terra121.dataset.LandLine;
 import io.github.terra121.dataset.Water;
+import io.github.terra121.dataset.osm.poly.Polygon;
 import io.github.terra121.dataset.osm.segment.Segment;
 import io.github.terra121.util.bvh.BVH;
 import net.minecraft.util.math.ChunkPos;
@@ -21,6 +22,7 @@ public class OSMRegion {
     public byte[][] states;
 
     public BVH<Segment> segments;
+    public BVH<Polygon> polygons;
 
     public OSMRegion(ChunkPos coord, Water water) {
         this.coord = coord;

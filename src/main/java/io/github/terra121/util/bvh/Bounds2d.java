@@ -51,6 +51,6 @@ public interface Bounds2d {
      * @return whether or not this bounding box contains the given bounding box
      */
     default boolean contains(@NonNull Bounds2d other) {
-        return this.minX() <= other.minX() && this.maxX() >= other.maxX() && this.minZ() <= other.minX() && this.maxZ() >= other.maxX();
+        return this.minX() <= other.minX() && this.maxX() >= other.maxX() && this.minZ() <= other.minZ() && this.maxZ() >= other.maxZ();
     }
 }

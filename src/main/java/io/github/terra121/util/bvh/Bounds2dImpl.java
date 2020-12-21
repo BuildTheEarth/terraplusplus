@@ -15,8 +15,8 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 class Bounds2dImpl implements Bounds2d {
-    protected double minX;
-    protected double maxX;
-    protected double minZ;
-    protected double maxZ;
+    protected final double minX;
+    protected final double maxX;
+    protected final double minZ;
+    protected final double maxZ;
 }

@@ -5,6 +5,7 @@ import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.terra121.TerraConfig;
 import io.github.terra121.dataset.TiledDataset;
 import io.github.terra121.dataset.Water;
+import io.github.terra121.dataset.osm.poly.Polygon;
 import io.github.terra121.dataset.osm.segment.Segment;
 import io.github.terra121.dataset.osm.segment.SegmentType;
 import io.github.terra121.projection.GeographicProjection;
@@ -22,20 +23,24 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static java.lang.Math.*;
 
+//TODO: make this class thread-safe (currently the state is shared among all threads)
 public class OpenStreetMap extends TiledDataset<OSMRegion> {
     private static final double CHUNK_SIZE = 16;
     public static final double TILE_SIZE = 1 / 60.0;//250*(360.0/40075000.0);
 
     public final Water water;
     private final List<Segment> allSegments = new ArrayList<>();
+    private final List<Polygon> allPolygons = new ArrayList<>();
     private final Gson gson = new Gson();
     private final boolean doRoad;
     private final boolean doWater;
@@ -67,6 +72,9 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
 
         region.segments = new BVH<>(this.allSegments);
         this.allSegments.clear();
+
+        region.polygons = new BVH<>(this.allPolygons);
+        this.allPolygons.clear();
 
         return region;
     }
@@ -155,7 +163,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                 }
 
                 if ("coastline".equals(naturalv)) {
-                    this.waterway(elem, -1, region, null);
+                    this.waterway(elem, -1, region);
                 } else if (highway != null || building != null || ("river".equals(waterway) || "canal".equals(waterway) || "stream".equals(waterway))) { //TODO: fewer equals
                     SegmentType type = SegmentType.ROAD;
 
@@ -259,7 +267,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                             if (member.type == EType.way) {
                                 Element way = allWays.get(member.ref);
                                 if (way != null) {
-                                    this.waterway(way, elem.id + 3600000000L, region, null);
+                                    this.waterway(way, elem.id + 3600000000L, region);
                                     unusedWays.remove(way);
                                 }
                             }
@@ -292,7 +300,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                     String wway = way.tags.get("waterway");
 
                     if (waterv != null || "water".equals(naturalv) || "riverbank".equals(wway)) {
-                        this.waterway(way, way.id + 2400000000L, region, null);
+                        this.waterway(way, way.id + 2400000000L, region);
                     }
                 }
             }
@@ -328,8 +336,13 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         }
     }
 
-    Geometry waterway(Element way, long id, OSMRegion region, Geometry last) {
+    Geometry waterway(Element way, long id, OSMRegion region) {
+        Geometry last = null;
         if (way.geometry != null) {
+            this.allPolygons.add(new Polygon(new double[][][]{
+                    Arrays.stream(way.geometry).filter(Objects::nonNull).map(geom -> new double[]{ geom.lon, geom.lat }).toArray(double[][]::new)
+            }));
+
             for (Geometry geom : way.geometry) {
                 if (geom != null && last != null) {
                     region.addWaterEdge(last.lon, last.lat, geom.lon, geom.lat, id);
@@ -337,7 +350,6 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                 last = geom;
             }
         }
-
         return last;
     }
 
