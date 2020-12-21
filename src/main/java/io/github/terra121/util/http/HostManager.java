@@ -95,6 +95,10 @@ final class HostManager extends Host {
     }
 
     private boolean trySendRequest0(@NonNull Request request) {
+        if (request.future.isDone()) { //future is already completed (probably due to cancellation), pretend that we handled it
+            return true;
+        }
+
         for (Channel channel : this.channels) {
             if (channel.attr(ATTR_REQUEST).compareAndSet(null, request)) { //the channel is currently inactive
                 channel.writeAndFlush(request.toNetty(), channel.voidPromise()); //send request
