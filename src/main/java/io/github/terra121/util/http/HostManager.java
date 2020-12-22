@@ -35,6 +35,7 @@ import java.util.Deque;
 import java.util.IdentityHashMap;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 import static io.github.terra121.util.http.Http.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
@@ -68,12 +69,12 @@ final class HostManager extends Host {
     /**
      * Submits a GET request to this host.
      *
-     * @param path   the path of the request
-     * @param future a {@link CompletableFuture} that will be notified once the request is completed
+     * @param path         the path of the request
+     * @param callback       a {@link Callback} that will be notified once the request is completed
      */
-    public void submit(@NonNull String path, @NonNull CompletableFuture<ByteBuf> future) {
+    public void submit(@NonNull String path, @NonNull Callback callback) {
         NETWORK_EVENT_LOOP.submit(() -> { //force execution on network thread
-            this.pendingRequests.add(new Request(path, future)); //add to request queue
+            this.pendingRequests.add(new Request(path, callback)); //add to request queue
 
             this.tryWorkOffQueue();
         });
@@ -95,7 +96,7 @@ final class HostManager extends Host {
     }
 
     private boolean trySendRequest0(@NonNull Request request) {
-        if (request.future.isDone()) { //future is already completed (probably due to cancellation), pretend that we handled it
+        if (request.callback.isCancelled()) { //future is already completed (probably due to cancellation), pretend that we handled it
             return true;
         }
 
@@ -123,7 +124,7 @@ final class HostManager extends Host {
 
         if (!channelFuture.isSuccess()) {
             //TODO: fail pending requests only if no other connections are open
-            this.pendingRequests.forEach(r -> r.future.completeExceptionally(channelFuture.cause()));
+            this.pendingRequests.forEach(r -> r.callback.handle(null, channelFuture.cause()));
             this.pendingRequests.clear();
             return;
         }
@@ -173,32 +174,36 @@ final class HostManager extends Host {
                 channel.close();
             }
 
-            switch (response.status().codeClass()) {
-                case SUCCESS: //notify handler
-                    request.future.complete(response.content().copy());
-                    break;
-                case INFORMATIONAL: //no-op
-                    break;
-                case REDIRECTION: //handle redirect
-                    Http.copyResultTo(Http.get(response.headers().get(HttpHeaderNames.LOCATION)), request.future);
-                    break;
-                case CLIENT_ERROR:
-                    if (response.status() == HttpResponseStatus.NOT_FOUND) { //notify handler
-                        request.future.complete(null);
-                        break;
-                    }
-                default: //failure
-                    request.future.completeExceptionally(new IOException("response from server: " + response.status()));
-            }
-
-            this.tryWorkOffQueue(); //if this request is completed, another slot must have been freed up
+            request.callback.handle(response, null);
         } catch (Exception e) {
             if (request != null) {
-                request.future.completeExceptionally(e);
+                request.callback.handle(null, e);
             }
         } finally {
             ReferenceCountUtil.release(msg);
+
+            this.tryWorkOffQueue(); //if this request is completed, another slot must have been freed up
         }
+    }
+
+    /**
+     * A callback function that is executed when the request is completed.
+     *
+     * @author DaPorkchop_
+     */
+    public interface Callback {
+        /**
+         * @return whether or not the request has been cancelled
+         */
+        boolean isCancelled();
+
+        /**
+         * Handles the response body.
+         *
+         * @param response  the HTTP response
+         * @param throwable the {@link Throwable} that was thrown (if the request was not able to be executed successfully)
+         */
+        void handle(FullHttpResponse response, Throwable throwable);
     }
 
     /**
@@ -212,7 +217,7 @@ final class HostManager extends Host {
         @NonNull
         protected final String path;
         @NonNull
-        protected final CompletableFuture<ByteBuf> future;
+        protected final Callback callback;
 
         public HttpRequest toNetty() {
             DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, this.path);
@@ -266,7 +271,7 @@ final class HostManager extends Host {
 
             Request request = ctx.channel().attr(ATTR_REQUEST).getAndSet(null);
             if (request != null) { //inform request that it failed
-                request.future.completeExceptionally(cause);
+                request.callback.handle(null, cause);
                 HostManager.this.activeRequests--;
             }
             super.exceptionCaught(ctx, cause);

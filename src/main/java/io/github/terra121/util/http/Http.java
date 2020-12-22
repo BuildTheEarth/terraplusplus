@@ -5,7 +5,7 @@ import io.github.terra121.TerraConfig;
 import io.github.terra121.TerraMod;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoop;
 import io.netty.channel.epoll.Epoll;
@@ -13,19 +13,25 @@ import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http2.Http2SecurityUtil;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SupportedCipherSuiteFilter;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import io.netty.util.ReferenceCountUtil;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import net.daporkchop.lib.common.function.throwing.EFunction;
 import net.daporkchop.lib.common.misc.threadfactory.PThreadFactories;
 
 import javax.net.ssl.SSLException;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -84,40 +90,117 @@ public class Http {
      * @return a {@link CompletableFuture} which will be completed with the resource data, or {@code null} if the resource isn't found
      */
     public CompletableFuture<ByteBuf> get(@NonNull String url) {
-        try {
-            URL parsed = new URL(url);
+        CompletableFuture<ByteBuf> future = new CompletableFuture<>();
+        get(url, future);
+        return future;
+    }
 
-            if ("file".equalsIgnoreCase(parsed.getProtocol())) { //it's a file, read from disk (also async)
-                return Disk.read(Paths.get(parsed.getFile()), false);
+    public void get(@NonNull String _url, @NonNull CompletableFuture<ByteBuf> future) {
+        class State implements BiConsumer<ByteBuf, Throwable>, HostManager.Callback {
+            URL parsed;
+            Path cacheFile;
+
+            @Override
+            public boolean isCancelled() {
+                return future.isDone();
             }
 
-            Path cacheFile = Disk.cacheFileFor(parsed.toString());
-            return Disk.read(cacheFile, true)
-                    .thenCompose(cachedData -> {
-                        if (TerraMod.LOGGER != null && !TerraConfig.reducedConsoleMessages) {
-                            TerraMod.LOGGER.info("Cache {}: {}", cachedData != null ? "hit" : "miss", url);
-                        }
-                        if (cachedData != null) { //we found something in the cache
-                            //first byte is a boolean indicating whether or not the cached value is a 404
-                            return CompletableFuture.completedFuture(cachedData.readBoolean() ? cachedData : null);
-                        } else { //cache miss
-                            CompletableFuture<ByteBuf> future = new CompletableFuture<>();
-                            managerFor(parsed).submit(parsed.getFile(), future);
+            @Override
+            public void accept(ByteBuf cachedData, Throwable throwable) { //stage 1: handle value from cache
+                if (TerraMod.LOGGER != null) {
+                    if (throwable != null) {
+                        TerraMod.LOGGER.error("Unable to read cache for " + this.parsed, throwable);
+                    } else if (!TerraConfig.reducedConsoleMessages) {
+                        TerraMod.LOGGER.info("Cache {}: {}", cachedData != null ? "hit" : "miss", this.parsed);
+                    }
+                }
 
-                            future.thenAccept(requestedData -> { //store the response body in the cache
-                                //prefix data with 404 flag
-                                ByteBuf toCacheData = ByteBufAllocator.DEFAULT.ioBuffer().writeBoolean(requestedData != null);
-                                if (requestedData != null) { //append the actual data
-                                    toCacheData.writeBytes(requestedData, requestedData.readerIndex(), requestedData.readableBytes());
-                                }
-                                Disk.write(cacheFile, toCacheData);
-                            });
-                            return future;
+                try {
+                    if (cachedData != null) { //we found something in the cache
+                        switch (cachedData.readByte()) {
+                            case 0: //404 Not Found
+                                future.complete(null);
+                                return;
+                            case 1: //2xx
+                                future.complete(cachedData.retain());
+                                return;
+                            case 2: //redirect
+                                this.step(cachedData.readCharSequence(cachedData.readableBytes(), StandardCharsets.UTF_8).toString());
+                                return;
                         }
-                    });
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException(url, e);
+                    }
+                } catch (Exception e) {
+                    if (TerraMod.LOGGER != null) {
+                        TerraMod.LOGGER.error("Unable to read cache for " + this.parsed, e);
+                    }
+                } finally {
+                    ReferenceCountUtil.release(cachedData);
+                }
+
+                //cache miss, send the actual request
+                managerFor(this.parsed).submit(this.parsed.getFile(), this);
+            }
+
+            @Override
+            public void handle(FullHttpResponse response, Throwable throwable) { //stage 2: handle HTTP response
+                if (throwable != null) { //if an exception occurred, notify future and exit
+                    future.completeExceptionally(throwable);
+                } else {
+                    Path cacheFile = this.cacheFile; //get here because the field might be modified if the response is a redirect
+                    ByteBuf toCacheData;
+                    switch (response.status().codeClass()) {
+                        case SUCCESS:
+                            //notify future first
+                            //copy because it's a composite buffer, which would be slow when accessing individual bytes (this is not an issue
+                            // when writing to disk, because FileChannel can efficiently write data from multiple buffers at once)
+                            future.complete(response.content().copy());
+
+                            toCacheData = Unpooled.compositeBuffer(2)
+                                    .addComponent(true, Unpooled.wrappedBuffer(new byte[]{ 1 }))
+                                    .addComponent(true, response.content().retain());
+                            break;
+                        case INFORMATIONAL: //no-op: nothing needs to be done
+                            return;
+                        case REDIRECTION: { //handle redirect
+                            String dst = response.headers().get(HttpHeaderNames.LOCATION);
+                            toCacheData = Unpooled.wrappedBuffer(new byte[]{ 2 }, dst.getBytes(StandardCharsets.UTF_8));
+                            this.step(dst);
+                            break;
+                        }
+                        case CLIENT_ERROR:
+                            if (response.status() == HttpResponseStatus.NOT_FOUND) { //notify handler
+                                toCacheData = Unpooled.wrappedBuffer(new byte[]{ 0 });
+                                future.complete(null);
+                                break;
+                            }
+                        default: //failure
+                            future.completeExceptionally(new IOException("response from server: " + response.status()));
+                            return;
+                    }
+
+                    //write to disk
+                    Disk.write(cacheFile, toCacheData);
+                }
+            }
+
+            void step(@NonNull String url) {
+                try {
+                    this.parsed = new URL(url);
+                } catch (MalformedURLException e) {
+                    throw new IllegalArgumentException(url, e);
+                }
+
+                if ("file".equalsIgnoreCase(this.parsed.getProtocol())) { //it's a file, read from disk (also async)
+                    copyResultTo(Disk.read(Paths.get(this.parsed.getFile()), false), future);
+                    return;
+                }
+
+                this.cacheFile = Disk.cacheFileFor(this.parsed.toString());
+                Disk.read(this.cacheFile, true).whenComplete(this);
+            }
         }
+
+        new State().step(_url);
     }
 
     /**
