@@ -1,7 +1,5 @@
 package io.github.terra121.util.interval;
 
-import lombok.NonNull;
-
 /**
  * A 1-dimensional interval represented using double-precision floating-point coordinates.
  *
@@ -23,22 +21,12 @@ public interface Interval {
     double max();
 
     /**
-     * Checks whether or not this interval intersects the given interval.
+     * Checks whether or not this interval contains the given point.
      *
-     * @param other the interval
-     * @return whether or not the two intervales intersect
+     * @param point the point
+     * @return whether or not this interval contains the given point
      */
-    default boolean intersects(@NonNull Interval other) {
-        return this.min() < other.max() && this.max() > other.min();
-    }
-
-    /**
-     * Checks whether or not this interval contains the given interval.
-     *
-     * @param other the interval
-     * @return whether or not this interval contains the given interval
-     */
-    default boolean contains(@NonNull Interval other) {
-        return this.min() <= other.min() && this.max() >= other.max();
+    default boolean contains(double point) {
+        return this.min() <= point && this.max() >= point;
     }
 }

@@ -22,7 +22,7 @@ public enum PolygonFill {
             int baseY = Coords.cubeToMinBlock(cubeY);
             int baseZ = Coords.cubeToMinBlock(cubeZ);
 
-            p.tessellateDistance(baseX, 16, baseZ, 16, 3, (blockX, blockZ, depth) -> {
+            p.rasterizeShape(baseX, 16, baseZ, 16, (blockX, blockZ) -> {
                 int x = blockX - baseX;
                 int z = blockZ - baseZ;
                 int y = floorI(heights[x * 16 + z]) - baseY;

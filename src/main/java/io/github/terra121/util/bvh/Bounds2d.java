@@ -41,7 +41,7 @@ public interface Bounds2d {
      * @return whether or not the two bounding boxes intersect
      */
     default boolean intersects(@NonNull Bounds2d other) {
-        return this.minX() < other.maxX() && this.maxX() > other.minX() && this.minZ() < other.maxZ() && this.maxZ() > other.minZ();
+        return this.minX() <= other.maxX() && this.maxX() >= other.minX() && this.minZ() <= other.maxZ() && this.maxZ() >= other.minZ();
     }
 
     /**

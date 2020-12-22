@@ -1,5 +1,7 @@
 package io.github.terra121.util.interval;
 
+import io.netty.util.concurrent.FastThreadLocal;
+import io.netty.util.internal.InternalThreadLocalMap;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
@@ -7,9 +9,11 @@ import lombok.ToString;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.function.Consumer;
 
 import static java.lang.Math.*;
+import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 /**
  * Implementation of a <a href="https://en.wikipedia.org/wiki/Segment_tree">segment tree</a> along a single axis of a series of 2-dimensional line segments.
@@ -18,6 +22,8 @@ import static java.lang.Math.*;
  */
 @ToString
 public class IntervalTree<V extends Interval> {
+    protected static final FastThreadLocal<Collection<?>> LIST_CACHE = new FastThreadLocal<>();
+
     /**
      * The number of values that must be present in a node in order for it to become eligible for splitting.
      */
@@ -55,26 +61,38 @@ public class IntervalTree<V extends Interval> {
     }
 
     /**
-     * Gets a {@link Collection} containing every value that intersects with the given point.
+     * Gets a {@link Collection} containing every value that contains the given point.
      *
-     * @param interval the interval that values must intersect with
+     * @param point the interval that values must contain
      * @return the values
      */
-    public Collection<V> getAllIntersecting(@NonNull Interval interval) {
-        Collection<V> result = new ArrayList<>();
-        this.forEachIntersecting(interval, result::add);
-        return result;
+    public Collection<V> getAllIntersecting(double point) {
+        InternalThreadLocalMap map = InternalThreadLocalMap.get();
+        Collection<V> result = uncheckedCast(LIST_CACHE.get(map));
+        if (result == null) { //create new list
+            result = new ArrayList<>();
+        }
+
+        this.forEachIntersecting(point, result::add);
+
+        if (result.isEmpty()) { //no intersections, cache list to be re-used on a subsequent invocation of this method
+            LIST_CACHE.set(map, result);
+            return Collections.emptyList();
+        } else {
+            LIST_CACHE.set(map, null);
+            return result;
+        }
     }
 
     /**
-     * Runs the given function on every value that intersects with the given point.
+     * Runs the given function on every value that contains the given point.
      *
-     * @param interval the interval that values must intersect with
+     * @param point the interval that values must contain
      * @param callback the callback function to run
      */
-    public void forEachIntersecting(@NonNull Interval interval, @NonNull Consumer<V> callback) {
-        if (this.root != null && interval.intersects(this.root)) {
-            this.root.forEachIntersecting(interval, callback);
+    public void forEachIntersecting(double point, @NonNull Consumer<V> callback) {
+        if (this.root != null && this.root.contains(point)) {
+            this.root.forEachIntersecting(point, callback);
         }
     }
 
@@ -136,25 +154,19 @@ public class IntervalTree<V extends Interval> {
         }
 
         @SuppressWarnings("unchecked")
-        protected void forEachIntersecting(Interval interval, Consumer<V> callback) {
+        protected void forEachIntersecting(double point, Consumer<V> callback) {
             if (this.children != null) { //not a leaf node
                 for (Node<V> child : this.children) {
-                    if (child != null && interval.intersects(child)) {
-                        child.forEachIntersecting(interval, callback);
+                    if (child != null && child.contains(point)) {
+                        child.forEachIntersecting(point, callback);
                     }
                 }
             }
 
             if (this.values != null) { //this node contains some values
-                if (interval.contains(this)) { //the query box contains this entire node, therefore we can assume that all of the values intersect it
-                    for (Object value : this.values) {
+                for (Object value : this.values) { //check intersection with each value individually
+                    if (((V) value).contains(point)) {
                         callback.accept((V) value);
-                    }
-                } else { //check intersection with each value individually
-                    for (Object value : this.values) {
-                        if (interval.intersects((V) value)) {
-                            callback.accept((V) value);
-                        }
                     }
                 }
             }
