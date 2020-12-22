@@ -27,20 +27,40 @@ public class Polygon implements Bounds2d {
     }
 
     public static void main(String... args) {
-        BufferedImage img = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
+        while (true) {
+            debugThing();
+        }
+    }
+
+    private static void debugThing() { //separate method to allow me to hot-swap
+        int size = 130;
+        int shift = 2;
+        BufferedImage img = new BufferedImage(size << shift, size << shift, BufferedImage.TYPE_INT_ARGB);
         Polygon polygon = new Polygon(new double[][][]{
-                { { 0, 64 }, { 0, 0 }, { 64, 0 }, { 128, 64 }, { 128, 128 }, { 64, 128 } },
+                { { 0, 64 }, { 8, 8 }, { 64, 0 }, { 128, 64 }, { 128, 128 }, { 64, 128 } },
                 { { 16, 16 }, { 16, 32 }, { 32, 32 }, { 32, 16 } }
         });
-        /*polygon = new Polygon(new double[][][]{
-                { { 0, 0 }, { 64, 32 }, { 128, 0 }, { 64, 128 }, }
-        });*/
+            /*polygon = new Polygon(new double[][][]{
+                    { { 0, 0 }, { 64, 32 }, { 128, 0 }, { 64, 128 }, }
+            });*/
 
-        polygon.tessellate(0, 512, 0, 512, 15, (x, z, depth) -> {
-            img.setRGB(z, x, 0xFF000000 | (depth << 4 | depth) << 16);
+        int[] arr = new int[1 << shift];
+
+        polygon.tessellateDistance(0, size, 0, size, 15, (x, z, depth) -> {
+            checkIndex(16, abs(depth));
+            int color = (depth & 0xF) == depth ? 0xFF000000 | (depth << 4 | depth) << 16 : 0xFF0000FF;
+            Arrays.fill(arr, color);
+            img.setRGB(z << shift, x << shift, 1 << shift, 1 << shift, arr, 0, 0);
         });
 
-        PorkUtil.simpleDisplayImage(img);
+        //fill base polygon shape with green
+        polygon.tessellateShape(0, size, 0, size, (x, z) -> {
+            int color = img.getRGB(z << shift, x << shift) | 0xFF00FF00;
+            Arrays.fill(arr, color);
+            img.setRGB(z << shift, x << shift, 1 << shift, 1 << shift, arr, 0, 0);
+        });
+
+        PorkUtil.simpleDisplayImage(true, img);
     }
 
     protected final IntervalTree<Segment> segments;
@@ -98,33 +118,74 @@ public class Polygon implements Bounds2d {
         return arr;
     }
 
-    public void tessellate(int baseX, int sizeX, int baseZ, int sizeZ, int maxDist, @NonNull TessellationCallback callback) {
-        double[][] intersections2d = new double[sizeX + (maxDist << 1)][];
-        for (int x = -maxDist; x < sizeX + maxDist; x++) {
-            intersections2d[x + maxDist] = this.getIntersectionPoints(baseX + x);
-        }
+    public void tessellateDistance(int baseX, int sizeX, int baseZ, int sizeZ, int maxDist, @NonNull DistTessellationCallback callback) {
+        int[][] distances2d = new int[(maxDist << 1) + 1][sizeZ];
 
+        for (int x = -maxDist; x < sizeX + maxDist; x++) {
+            { //compute distances
+                int[] distances = distances2d[0];
+                Arrays.fill(distances, 0);
+                double[] intersectionPoints = this.getIntersectionPoints(x + baseX);
+
+                for (int i = 0; i < intersectionPoints.length; ) {
+                    int min = clamp(floorI(intersectionPoints[i++]) - baseZ, 0, sizeZ);
+                    int max = clamp(ceilI(intersectionPoints[i++]) - baseZ, 0, sizeZ);
+                    for (int z = min; z < max; z++) {
+                        distances[z] = min(min(z - min, max - z) + 1, maxDist);
+                    }
+                }
+
+                System.arraycopy(distances2d, 1, distances2d, 0, maxDist << 1); //shift distances down by one
+                distances2d[maxDist << 1] = distances;
+            }
+
+            if (x >= maxDist) {
+                int[] distances = distances2d[maxDist];
+                for (int z = 0; z < sizeZ; z++) {
+                    int dist = distances[z];
+                    if (dist > 0) { //if distance is <= 0, the pixel is blank, so we don't care about the distance
+                        int r = dist;
+                        for (int dx = -r; dx <= r; dx++) {
+                            dist = min(dist, distances2d[dx + maxDist][z] + abs(dx));
+                        }
+                        callback.pixel(x + baseX - maxDist, z + baseZ, dist);
+                    }
+                }
+            }
+        }
+    }
+
+    public void tessellateShape(int baseX, int sizeX, int baseZ, int sizeZ, @NonNull ShapeTessellationCallback callback) {
         for (int x = 0; x < sizeX; x++) {
-            double[] intersectionPoints = intersections2d[x + maxDist];
+            double[] intersectionPoints = this.getIntersectionPoints(x + baseX);
 
             for (int i = 0; i < intersectionPoints.length; ) {
-                int min = clamp(floorI(intersectionPoints[i++]), baseZ, baseZ + sizeZ);
-                int max = clamp(floorI(intersectionPoints[i++]), baseZ, baseZ + sizeZ);
+                int min = clamp(floorI(intersectionPoints[i++]) - baseZ, 0, sizeZ);
+                int max = clamp(ceilI(intersectionPoints[i++]) - baseZ, 0, sizeZ);
                 for (int z = min; z < max; z++) {
-                    int dist = min(min(z - min, max - z) + 1, maxDist);
-                    callback.accept(x + baseX, z, dist);
+                    callback.pixel(x + baseX, z);
                 }
             }
         }
     }
 
     /**
-     * Callback function used to set individual pixel values during tessellation.
+     * Callback function used by {@link #tessellateDistance(int, int, int, int, int, DistTessellationCallback)}.
      *
      * @author DaPorkchop_
      */
     @FunctionalInterface
-    public interface TessellationCallback {
-        void accept(int x, int z, int dist);
+    public interface DistTessellationCallback {
+        void pixel(int x, int z, int dist);
+    }
+
+    /**
+     * Callback function used by {@link #tessellateShape(int, int, int, int, ShapeTessellationCallback)}.
+     *
+     * @author DaPorkchop_
+     */
+    @FunctionalInterface
+    public interface ShapeTessellationCallback {
+        void pixel(int x, int z);
     }
 }

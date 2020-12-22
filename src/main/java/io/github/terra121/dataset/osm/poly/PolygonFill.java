@@ -5,7 +5,6 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 
-import static java.lang.Math.*;
 import static net.daporkchop.lib.common.math.PMath.*;
 
 /**
@@ -23,7 +22,7 @@ public enum PolygonFill {
             int baseY = Coords.cubeToMinBlock(cubeY);
             int baseZ = Coords.cubeToMinBlock(cubeZ);
 
-            p.tessellate(baseX, 16, baseZ, 16, 3, (blockX, blockZ, depth) -> {
+            p.tessellateDistance(baseX, 16, baseZ, 16, 3, (blockX, blockZ, depth) -> {
                 int x = blockX - baseX;
                 int z = blockZ - baseZ;
                 int y = floorI(heights[x * 16 + z]) - baseY;
