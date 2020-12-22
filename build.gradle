@@ -13,6 +13,7 @@ buildscript {
 }
 apply plugin: "net.minecraftforge.gradle.forge"
 apply plugin: "com.github.johnrengelman.shadow"
+apply plugin: "maven-publish"
 
 version = "0.1-1.12.2"
 group = "net.buildtheearth"
@@ -104,3 +105,22 @@ task relocateShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.Co
 }
 shadowJar.dependsOn relocateShadowJar
 
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = "net.buildtheearth"
+            artifactId = "terraplusplus"
+            version = project.version
+
+            from components.java
+
+            artifacts.clear()
+            artifact(shadowJar) {
+                classifier = ""
+            }
+            artifact sourceJar {
+                classifier "sources"
+            }
+        }
+    }
+}
