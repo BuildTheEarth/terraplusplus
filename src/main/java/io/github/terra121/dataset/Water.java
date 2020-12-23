@@ -2,13 +2,17 @@ package io.github.terra121.dataset;
 
 import io.github.terra121.dataset.osm.OpenStreetMap;
 import io.github.terra121.dataset.osm.OSMRegion;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
+import io.github.terra121.util.CornerBoundingBox2d;
+import lombok.NonNull;
 import net.minecraft.util.math.ChunkPos;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.concurrent.CompletableFuture;
 
-public class Water {
+public class Water implements ScalarDataset {
     public WaterGround grounding;
     public OpenStreetMap osm;
     public int hres;
@@ -51,8 +55,8 @@ public class Water {
         return state;
     }
 
-    //TODO: more efficient
-    public float estimateLocal(double lon, double lat) {
+    @Override
+    public double get(double lon, double lat) {
         //bound check
         if (!(lon <= 180 && lon >= -180 && lat <= 80 && lat >= -80)) {
             if (lat < -80) //antartica is land
@@ -98,5 +102,29 @@ public class Water {
 
         //get perlin style interpolation on this block
         return (1 - v) * (ll * (1 - u) + lr * u) + (ul * (1 - u) + ur * u) * v;
+    }
+
+    @Override
+    public CompletableFuture<double[]> getAsync(@NonNull CornerBoundingBox2d bounds, int sizeX, int sizeZ) throws OutOfProjectionBoundsException {
+        return CompletableFuture.supplyAsync(() -> {
+            double stepX = 1.0d / sizeX;
+            double stepZ = 1.0d / sizeZ;
+
+            double[] point = new double[2];
+            double[] out = new double[sizeX * sizeZ];
+
+            double fx = 0.0d;
+            for (int i = 0, x = 0; x < sizeX; x++, fx += stepX) {
+                double fz = 0.0d;
+                for (int z = 0; z < sizeZ; z++, fz += stepZ) {
+                    //compute coordinates of point
+                    point = bounds.point(point, fx, fz);
+
+                    //sample value at point
+                    out[i++] = this.get(point[0], point[1]);
+                }
+            }
+            return out;
+        });
     }
 }

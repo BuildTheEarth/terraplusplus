@@ -5,6 +5,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.transform.ScaleProjection;
 import io.github.terra121.util.http.Http;
 import io.netty.buffer.ByteBuf;
 import lombok.NonNull;
@@ -24,20 +25,18 @@ public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, CompletableF
             .build(this);
 
     protected final double tileSize;
-    protected final double scale;
 
     protected final GeographicProjection projection;
     protected final int minSampleX;
     protected final int maxSampleX;
 
-    public TiledDataset(GeographicProjection proj, double tileSize, double scale) {
+    public TiledDataset(GeographicProjection proj, double tileSize) {
         this.projection = proj;
         this.tileSize = tileSize;
-        this.scale = scale;
 
         double[] bounds = proj.bounds();
-        this.minSampleX = floorI(bounds[0] * this.scale);
-        this.maxSampleX = ceilI(bounds[2] * this.scale);
+        this.minSampleX = floorI(bounds[0]);
+        this.maxSampleX = ceilI(bounds[2]);
     }
 
     protected abstract String[] urls(int tileX, int tileZ);
@@ -59,7 +58,11 @@ public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, CompletableF
     }
 
     public CompletableFuture<T> getTileAsync(int tileX, int tileZ) {
-        return this.cache.getUnchecked(new ChunkPos(tileX, tileZ));
+        return this.getTileAsync(new ChunkPos(tileX, tileZ));
+    }
+
+    public CompletableFuture<T> getTileAsync(@NonNull ChunkPos pos) {
+        return this.cache.getUnchecked(pos);
     }
 
     /**

@@ -2,20 +2,22 @@ package io.github.terra121.dataset;
 
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
+import io.github.terra121.projection.transform.ScaleProjection;
+import io.github.terra121.util.CornerBoundingBox2d;
 import io.github.terra121.util.IntToDoubleBiFunction;
+import io.github.terra121.util.bvh.Bounds2d;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import lombok.NonNull;
 import net.daporkchop.lib.common.math.BinMath;
+import net.daporkchop.lib.unsafe.PUnsafe;
+import net.minecraft.util.math.ChunkPos;
 
-import java.util.BitSet;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
-import static java.lang.Math.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
-import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 /**
  * A {@link TiledDataset} which operates on a grid of interpolated {@code double}s.
@@ -34,7 +36,7 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
     public final BlendMode blendMode;
 
     public DoubleTiledDataset(GeographicProjection proj, double scale, @NonNull BlendMode blendMode) {
-        super(proj, 1.0d / scale * TILE_SIZE, scale);
+        super(new ScaleProjection(proj, scale), 1.0d / scale * TILE_SIZE);
 
         this.blendMode = blendMode;
     }
@@ -57,7 +59,7 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
             return -2.0d;
         }
 
-        return this.blendMode.get(projX * this.scale, projZ * this.scale, this);
+        return this.blendMode.get(projX, projZ, this);
     }
 
     /**
@@ -75,98 +77,66 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
     }
 
     @Override
-    public CompletableFuture<double[]> getAsync(@NonNull double[] lons, @NonNull double[] lats) {
-        checkArg(lons.length == lats.length, "input coordinates must have same number of longitude values as latitudes!");
-        int count = lons.length;
-
-        if (count == 0) { //no input points -> no output points, ez
+    public CompletableFuture<double[]> getAsync(@NonNull CornerBoundingBox2d bounds, int sizeX, int sizeZ) throws OutOfProjectionBoundsException {
+        if (notNegative(sizeX, "sizeX") == 0 | notNegative(sizeZ, "sizeZ") == 0) { //no input points -> no output points, ez
             return CompletableFuture.completedFuture(new double[0]);
         }
 
-        class State implements Supplier<CompletableFuture<double[]>[]>, Function<Void, double[]>, IntToDoubleBiFunction {
-            final BitSet oopbs = new BitSet(); //out of projection bounds
-            double[] xs;
-            double[] zs;
-            double[] results;
+        CornerBoundingBox2d localBounds = bounds.fromGeo(this.projection);
+        Bounds2d paddedLocalBounds = localBounds.axisAlign(-this.blendMode.size, this.blendMode.size);
 
+        class State implements Function<Void, double[]>, IntToDoubleBiFunction {
             final Long2ObjectMap<double[]> loadedTiles = new Long2ObjectOpenHashMap<>();
 
-            @Override
-            public CompletableFuture<double[]>[] get() { //stage 1: compute positions of tiles to get
-                this.xs = new double[count];
-                this.zs = new double[count];
-                this.results = new double[count];
+            public CompletableFuture<Void> requestTiles() { //stage 1: compute positions of tiles to get and convert them to futures
+                ChunkPos[] tilePositions = paddedLocalBounds.toTiles(TILE_SIZE);
 
-                for (int i = 0; i < count; i++) {
-                    if (isInRange(lons[i], lats[i])) {
-                        try {
-                            double[] proj = DoubleTiledDataset.this.projection.fromGeo(lons[i], lats[i]);
-                            this.xs[i] = proj[0];
-                            this.zs[i] = proj[1];
-                            continue;
-                        } catch (OutOfProjectionBoundsException e) {
-                            //handled below
-                        }
-                    }
-
-                    //the input coordinates are out of bounds, use error value and mark coordinate index as errored
-                    this.results[i] = -2.0d;
-                    this.oopbs.set(i);
-                }
-
-                Long2ObjectMap<CompletableFuture<double[]>> futures = new Long2ObjectOpenHashMap<>();
-
-                double scale = DoubleTiledDataset.this.scale;
-                BlendMode blendMode = DoubleTiledDataset.this.blendMode;
-                double offset = blendMode.offset;
-                int size = blendMode.size;
-
-                for (int i = 0; i < count; i++) {
-                    if (!this.oopbs.get(i)) { //skip input points that are out of projection bounds
-                        int x = (int) floor(this.xs[i] * scale + offset);
-                        int z = (int) floor(this.zs[i] * scale + offset);
-                        for (int dx = 0; dx < size; dx++) { //expand to blending search radius
-                            for (int dz = 0; dz < size; dz++) {
-                                //also convert to tile coordinates
-                                long pos = BinMath.packXY((x + dx) >> TILE_SHIFT, (z + dz) >> TILE_SHIFT);
-                                if (!futures.containsKey(pos)) { //tile hasn't been requested yet, so issue the request now
-                                    futures.put(pos, DoubleTiledDataset.this.getTileAsync(BinMath.unpackX(pos), BinMath.unpackY(pos))
-                                            .thenApply(tile -> { //put tile directly into map when it's loaded
-                                                synchronized (this.loadedTiles) { //synchronize because we can't be certain that all of the futures will be completed by a constant thread
-                                                    this.loadedTiles.put(pos, tile);
-                                                }
-                                                return tile;
-                                            }));
-                                }
-                            }
-                        }
-                    }
-                }
-
-                return uncheckedCast(futures.values().toArray(new CompletableFuture[0]));
+                return CompletableFuture.allOf(Arrays.stream(tilePositions)
+                        .map(pos -> DoubleTiledDataset.this.getTileAsync(pos)
+                                .thenApply(tile -> { //put tile directly into map when it's loaded
+                                    //synchronize because we can't be certain that all of the futures will be completed by the same thread
+                                    synchronized (this.loadedTiles) {
+                                        this.loadedTiles.put(BinMath.packXY(pos.x, pos.z), tile);
+                                    }
+                                    return tile;
+                                }))
+                        .toArray(CompletableFuture[]::new));
             }
 
             @Override
             public double[] apply(Void unused) { //stage 2: actually compute the values now that they've been fetched
-                for (int i = 0; i < count; i++) {
-                    if (!this.oopbs.get(i)) { //skip input points that are out of projection bounds
-                        this.results[i] = DoubleTiledDataset.this.blendMode.get(this.xs[i] * DoubleTiledDataset.this.scale, this.zs[i] * DoubleTiledDataset.this.scale, this);
+                BlendMode blendMode = DoubleTiledDataset.this.blendMode;
+
+                double stepX = 1.0d / sizeX;
+                double stepZ = 1.0d / sizeZ;
+
+                double[] point = new double[2];
+                double[] out = new double[sizeX * sizeZ];
+
+                double fx = 0.0d;
+                for (int i = 0, x = 0; x < sizeX; x++, fx += stepX) {
+                    double fz = 0.0d;
+                    for (int z = 0; z < sizeZ; z++, fz += stepZ) {
+                        //compute coordinates of point
+                        point = localBounds.point(point, fx, fz);
+
+                        //sample value at point
+                        out[i++] = blendMode.get(point[0], point[1], this);
                     }
                 }
-                return this.results;
+
+                return out;
             }
 
             @Override
-            public double apply(int sampleX, int sampleZ) { //gets raw sample values to be used in blending
-                double[] tile = this.loadedTiles.get(BinMath.packXY(sampleX >> TILE_SHIFT, sampleZ >> TILE_SHIFT));
-                return tile[(sampleZ & TILE_MASK) * TILE_SIZE + (sampleX & TILE_MASK)];
+            public double apply(int x, int z) { //gets raw sample values to be used in blending
+                double[] tile = this.loadedTiles.get(BinMath.packXY(x >> TILE_SHIFT, z >> TILE_SHIFT));
+                checkArg(tile != null, "unknown tile (%d,%d)! sample: (%d,%d), local bounds: %s", x >> TILE_SHIFT, z >> TILE_SHIFT, x, z, localBounds);
+                return tile[(z & TILE_MASK) * TILE_SIZE + (x & TILE_MASK)];
             }
         }
 
         State state = new State();
-
-        return CompletableFuture.supplyAsync(state)
-                .<Void>thenCompose(CompletableFuture::allOf)
-                .thenApplyAsync(state);
+        return CompletableFuture.allOf(state.requestTiles()).thenApplyAsync(state);
     }
 }

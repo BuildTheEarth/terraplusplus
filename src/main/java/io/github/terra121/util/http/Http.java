@@ -168,7 +168,7 @@ public class Http {
                             break;
                         }
                         case CLIENT_ERROR:
-                            if (response.status() == HttpResponseStatus.NOT_FOUND) { //notify handler
+                            if (response.status().code() == 404) { //404 Not Found
                                 toCacheData = Unpooled.wrappedBuffer(new byte[]{ 0 });
                                 future.complete(null);
                                 break;

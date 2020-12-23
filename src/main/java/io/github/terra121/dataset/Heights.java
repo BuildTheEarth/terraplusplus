@@ -51,7 +51,7 @@ public class Heights extends DoubleTiledDataset {
                     if (height > -1.0d && height != 0.0d && height < 200.0d) {
                         double[] proj;
                         try {
-                            proj = this.projection.toGeo((tileX * TILE_SIZE + x) / this.scale, (tileZ * TILE_SIZE + z) / this.scale);
+                            proj = this.projection.toGeo(tileX * TILE_SIZE + x, tileZ * TILE_SIZE + z);
                         } catch (OutOfProjectionBoundsException e) { //out of bounds... this is PROBABLY impossible, but you can never be too sure
                             //just leave height as it is in the dataset and proceed to the next sample
                             continue;
@@ -59,14 +59,14 @@ public class Heights extends DoubleTiledDataset {
                         double lon = proj[0];
                         double lat = proj[1];
 
-                        double mine = this.water.estimateLocal(lon, lat);
+                        double mine = this.water.get(lon, lat);
 
                         double oceanRadius = 2.0d / (60.0d * 60.0d);
                         if (mine > 1.4d || (height > 10.0d & (mine > 1.0d
-                                                              || this.water.estimateLocal(lon + oceanRadius, lat) > 1.0d
-                                                              || this.water.estimateLocal(lon - oceanRadius, lat) > 1.0d
-                                                              || this.water.estimateLocal(lon, lat + oceanRadius) > 1.0d
-                                                              || this.water.estimateLocal(lon, lat - oceanRadius) > 1.0d))) {
+                                                              || this.water.get(lon + oceanRadius, lat) > 1.0d
+                                                              || this.water.get(lon - oceanRadius, lat) > 1.0d
+                                                              || this.water.get(lon, lat + oceanRadius) > 1.0d
+                                                              || this.water.get(lon, lat - oceanRadius) > 1.0d))) {
                             height = -1.0d;
                         }
                     }

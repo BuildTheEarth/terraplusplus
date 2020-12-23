@@ -54,11 +54,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.*;
 
 public class EarthGenerator extends BasicCubeGenerator {
+    public static boolean isNullIsland(int chunkX, int chunkZ) {
+        return abs(chunkX) < 5 && abs(chunkZ) < 5;
+    }
+
     public final ScalarDataset heights;
     public final OpenStreetMap osm;
     public final BiomeProvider biomes;
@@ -76,7 +81,7 @@ public class EarthGenerator extends BasicCubeGenerator {
     private final boolean doRoads;
     private final boolean doBuildings;
 
-    public final LoadingCache<ChunkPos, CachedChunkData> cache = CacheBuilder.newBuilder()
+    public final LoadingCache<ChunkPos, CompletableFuture<CachedChunkData>> cache = CacheBuilder.newBuilder()
             .expireAfterAccess(5L, TimeUnit.MINUTES)
             .softValues()
             .build(new ChunkDataLoader(this));
@@ -149,7 +154,7 @@ public class EarthGenerator extends BasicCubeGenerator {
 
     @Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer) {
-        CachedChunkData data = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ));
+        CachedChunkData data = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ)).join();
 
         //build ground surfaces
         this.generateSurface(cubeX, cubeY, cubeZ, primer, data, this.world.getChunk(cubeX, cubeZ).getBiomeArray());
@@ -285,7 +290,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         if (!MinecraftForge.EVENT_BUS.post(new CubePopulatorEvent(this.world, cube))) {
             Random rand = Coords.coordsSeedRandom(this.world.getSeed(), cube.getX(), cube.getY(), cube.getZ());
 
-            CachedChunkData data = this.cache.getUnchecked(cube.getCoords().chunkPos());
+            CachedChunkData data = this.cache.getUnchecked(cube.getCoords().chunkPos()).join();
 
             Biome biome = cube.getBiome(Coords.getCubeCenter(cube));
 

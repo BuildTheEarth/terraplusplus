@@ -33,9 +33,7 @@ import java.util.Set;
 
 import static java.lang.Math.*;
 
-//TODO: make this class thread-safe (currently the state is shared among all threads)
 public class OpenStreetMap extends TiledDataset<OSMRegion> {
-    private static final double CHUNK_SIZE = 16;
     public static final double TILE_SIZE = 1 / 60.0;//250*(360.0/40075000.0);
 
     public final Water water;
@@ -47,7 +45,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
     private final boolean doBuildings;
 
     public OpenStreetMap(GeographicProjection proj, boolean doRoad, boolean doWater, boolean doBuildings) {
-        super(proj, TILE_SIZE, 1.0d);
+        super(proj, TILE_SIZE);
 
         try {
             this.water = new Water(this, 256);
@@ -66,7 +64,9 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
     }
 
     @Override
-    protected OSMRegion decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception {
+    protected synchronized OSMRegion decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception {
+        //TODO: make this able to run concurrently without a shared state
+
         OSMRegion region = new OSMRegion(new ChunkPos(tileX, tileZ), this.water);
         this.doGson(new ByteBufInputStream(data), region);
 

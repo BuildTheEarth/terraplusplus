@@ -1,7 +1,9 @@
 package io.github.terra121.util;
 
-public abstract class MathUtils {
-	
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
+public class MathUtils {
 	/**
 	 * Square root of 3
 	 */
