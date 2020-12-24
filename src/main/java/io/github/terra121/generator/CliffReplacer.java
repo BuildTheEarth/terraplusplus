@@ -1,4 +1,4 @@
-package io.github.terra121.populator;
+package io.github.terra121.generator;
 
 import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.IBiomeBlockReplacer;
 import lombok.AccessLevel;
@@ -7,12 +7,11 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 
-import java.util.HashSet;
-import java.util.Set;
-
-//sheer cliff faces should not be grass or dirt
+/**
+ * Prevents sheer cliff faces from being grass or dirt.
+ */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class CliffReplacer implements IBiomeBlockReplacer {
+public final class CliffReplacer implements IBiomeBlockReplacer {
     public static final CliffReplacer INSTANCE = new CliffReplacer();
 
     private static final IBlockState STONE = Blocks.STONE.getDefaultState();
@@ -28,5 +27,4 @@ public class CliffReplacer implements IBiomeBlockReplacer {
 
         return prev;
     }
-
 }

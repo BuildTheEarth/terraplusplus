@@ -27,11 +27,11 @@ public class CachedChunkData {
 
         double[] defaultHeights = new double[16 * 16];
         Arrays.fill(defaultHeights, -2.0d);
-        BLANK = new CachedChunkData(defaultHeights, defaultWateroffs, Collections.emptySet(), Collections.emptySet());
+        BLANK = new CachedChunkData(defaultHeights, defaultWateroffs, Collections.emptySet(), Collections.emptySet(), 0.0d);
 
         defaultHeights = new double[16 * 16];
         Arrays.fill(defaultHeights, 1.0d);
-        NULL_ISLAND = new CachedChunkData(defaultHeights, defaultWateroffs, Collections.emptySet(), Collections.emptySet());
+        NULL_ISLAND = new CachedChunkData(defaultHeights, defaultWateroffs, Collections.emptySet(), Collections.emptySet(), 0.0d);
     }
 
     public final double[] heights;
@@ -43,9 +43,12 @@ public class CachedChunkData {
     private final int surfaceMinCube;
     private final int surfaceMaxCube;
 
-    public CachedChunkData(@NonNull double[] heights, @NonNull double[] wateroffs, @NonNull Set<Segment> segments, @NonNull Set<Polygon> polygons) {
+    private final double treeCover;
+
+    public CachedChunkData(@NonNull double[] heights, @NonNull double[] wateroffs, Set<Segment> segments, Set<Polygon> polygons, double treeCover) {
         this.heights = heights;
         this.wateroffs = wateroffs;
+        this.treeCover = treeCover;
 
         Arrays.sort(this.segments = segments.toArray(new Segment[0]));
         Arrays.sort(this.polygons = polygons.toArray(new Polygon[0]));

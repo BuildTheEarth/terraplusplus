@@ -105,6 +105,11 @@ public class Water implements ScalarDataset {
     }
 
     @Override
+    public CompletableFuture<Double> getAsync(double lon, double lat) throws OutOfProjectionBoundsException {
+        return CompletableFuture.supplyAsync(() -> this.get(lon, lat));
+    }
+
+    @Override
     public CompletableFuture<double[]> getAsync(@NonNull CornerBoundingBox2d bounds, int sizeX, int sizeZ) throws OutOfProjectionBoundsException {
         return CompletableFuture.supplyAsync(() -> {
             double stepX = 1.0d / sizeX;

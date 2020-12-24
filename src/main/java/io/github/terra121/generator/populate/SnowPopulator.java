@@ -1,9 +1,13 @@
-package io.github.terra121.populator;
+package io.github.terra121.generator.populate;
 
+import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import io.github.terra121.EarthBiomeProvider;
+import io.github.terra121.generator.cache.CachedChunkData;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -12,7 +16,9 @@ import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
-public class SnowPopulator implements ICubicPopulator {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public final class SnowPopulator implements IEarthPopulator {
+    public static final SnowPopulator INSTANCE = new SnowPopulator();
 
     public static boolean canSnow(BlockPos pos, World world, boolean air) {
         IBlockState blockstate = world.getBlockState(pos);
@@ -30,16 +36,11 @@ public class SnowPopulator implements ICubicPopulator {
         return false;
     }
 
-
     @Override
-    public void generate(World world, Random random, CubePos pos, Biome biome) {
-        int baseX = pos.getX() * 16;
-        int baseY = pos.getY() * 16;
-        int baseZ = pos.getZ() * 16;
-		
-		/*EarthBiomeProvider ebp = (EarthBiomeProvider) world.getBiomeProvider();
-		double[] proj = ebp.projection.toGeo(pos.getX()/100000.0, pos.getY()/100000.0);
-		*/
+    public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData data) {
+        int baseX = Coords.cubeToMinBlock(pos.getX());
+        int baseY = Coords.cubeToMinBlock(pos.getY());
+        int baseZ = Coords.cubeToMinBlock(pos.getZ());
 
         if (canSnow(new BlockPos(baseX + 8, baseY + 8, baseZ + 8), world, true)) {
             IBlockState snow = Blocks.SNOW_LAYER.getDefaultState();

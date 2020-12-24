@@ -46,16 +46,17 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
 
             CompletableFuture<double[]> heights = this.generator.heights.getAsync(chunkBoundsGeo, 16, 16);
             CompletableFuture<double[]> waterOffs = this.generator.osm.water.getAsync(chunkBoundsGeo, 16, 16);
-
+            CompletableFuture<Double> treeCover = this.generator.trees.getAsync(chunkBoundsGeo.point(null, 0.5d, 0.5d));
             CompletableFuture<OSMRegion[]> osmRegions = this.generator.osm.getRegionsAsync(osmBoundsGeo);
 
-            return CompletableFuture.allOf(heights, waterOffs, osmRegions)
+            return CompletableFuture.allOf(heights, waterOffs, treeCover, osmRegions)
                     .thenApply(unused -> {
                         Set<Segment> segments = new HashSet<>();
                         for (OSMRegion region : osmRegions.join()) {
                             region.segments.forEachIntersecting(osmBounds, segments::add);
                         }
-                        return new CachedChunkData(heights.join(), waterOffs.join(), segments, Collections.emptySet());
+
+                        return new CachedChunkData(heights.join(), waterOffs.join(), segments, Collections.emptySet(), treeCover.join());
                     });
         } catch (OutOfProjectionBoundsException e) {
             CompletableFuture<CachedChunkData> future = new CompletableFuture<>();

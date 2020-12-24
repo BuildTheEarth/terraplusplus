@@ -21,6 +21,23 @@ public interface ScalarDataset {
     }
 
     /**
+     * @param point the point
+     * @see #getAsync(double, double)
+     */
+    default CompletableFuture<Double> getAsync(@NonNull double[] point) throws OutOfProjectionBoundsException {
+        return this.getAsync(point[0], point[1]);
+    }
+
+    /**
+     * Asynchronously gets a single value at the given point.
+     *
+     * @param lon the longitude
+     * @param lat the latitude
+     * @return a {@link CompletableFuture} which will be completed with the value
+     */
+    CompletableFuture<Double> getAsync(double lon, double lat) throws OutOfProjectionBoundsException;
+
+    /**
      * Asynchronously gets a bunch of values at the given coordinates.
      *
      * @param sizeX the number of samples to take along the X axis

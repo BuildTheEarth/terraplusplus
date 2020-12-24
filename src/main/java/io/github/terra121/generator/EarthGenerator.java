@@ -26,13 +26,14 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.feat
 import io.github.terra121.dataset.BlendMode;
 import io.github.terra121.dataset.Heights;
 import io.github.terra121.dataset.ScalarDataset;
+import io.github.terra121.dataset.Trees;
 import io.github.terra121.dataset.osm.OpenStreetMap;
 import io.github.terra121.dataset.osm.segment.Segment;
 import io.github.terra121.generator.cache.CachedChunkData;
 import io.github.terra121.generator.cache.ChunkDataLoader;
-import io.github.terra121.populator.CliffReplacer;
-import io.github.terra121.populator.EarthTreePopulator;
-import io.github.terra121.populator.SnowPopulator;
+import io.github.terra121.generator.populate.IEarthPopulator;
+import io.github.terra121.generator.populate.TreePopulator;
+import io.github.terra121.generator.populate.SnowPopulator;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import net.minecraft.block.state.IBlockState;
@@ -47,13 +48,10 @@ import net.minecraftforge.event.terraingen.InitMapGenEvent;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -64,8 +62,6 @@ public class EarthGenerator extends BasicCubeGenerator {
         return abs(chunkX) < 5 && abs(chunkZ) < 5;
     }
 
-    public final ScalarDataset heights;
-    public final OpenStreetMap osm;
     public final BiomeProvider biomes;
     public final GeographicProjection projection;
     private final CustomGeneratorSettings cubiccfg;
@@ -74,39 +70,42 @@ public class EarthGenerator extends BasicCubeGenerator {
 
     private final List<ICubicStructureGenerator> structureGenerators = new ArrayList<>();
 
-    private final Set<ICubicPopulator> surfacePopulators;
+    private final List<IEarthPopulator> populators = new ArrayList<>();
     private final Map<Biome, ICubicPopulator> biomePopulators = new IdentityHashMap<>();
-    private final SnowPopulator snow;
     public final EarthGeneratorSettings cfg;
-    private final boolean doRoads;
-    private final boolean doBuildings;
 
     public final LoadingCache<ChunkPos, CompletableFuture<CachedChunkData>> cache = CacheBuilder.newBuilder()
             .expireAfterAccess(5L, TimeUnit.MINUTES)
             .softValues()
             .build(new ChunkDataLoader(this));
 
+    //
+    // DATASETS
+    //
+
+    public final ScalarDataset heights;
+    public final OpenStreetMap osm;
+    public final ScalarDataset trees;
+
     public EarthGenerator(World world) {
         super(world);
 
         this.cfg = new EarthGeneratorSettings(world.getWorldInfo().getGeneratorOptions());
+        this.cubiccfg = this.cfg.getCustomCubic();
         this.projection = this.cfg.getProjection();
 
-        this.doRoads = this.cfg.settings.roads && world.getWorldInfo().isMapFeaturesEnabled();
-        this.doBuildings = this.cfg.settings.buildings && world.getWorldInfo().isMapFeaturesEnabled();
+        boolean doRoads = this.cfg.settings.roads && world.getWorldInfo().isMapFeaturesEnabled();
+        boolean doBuildings = this.cfg.settings.buildings && world.getWorldInfo().isMapFeaturesEnabled();
 
         this.biomes = world.getBiomeProvider(); //TODO: make this not order dependent
 
-        this.osm = new OpenStreetMap(this.projection, this.doRoads, this.cfg.settings.osmwater, this.doBuildings);
+        this.osm = new OpenStreetMap(this.projection, doRoads, this.cfg.settings.osmwater, doBuildings);
         this.heights = new Heights(this.cfg.settings.osmwater ? this.osm.water : null, 13, this.cfg.settings.smoothblend ? BlendMode.SMOOTH : BlendMode.LINEAR);
+        this.trees = new Trees();
 
-        this.surfacePopulators = new HashSet<>();
+        this.populators.add(TreePopulator.INSTANCE);
 
-        this.surfacePopulators.add(new EarthTreePopulator(this.projection));
-        this.snow = new SnowPopulator(); //this will go after the rest
-
-        this.cubiccfg = this.cfg.getCustomCubic();
-
+        //structures
         if (this.cubiccfg.caves) {
             InitCubicStructureGeneratorEvent caveEvent = new InitCubicStructureGeneratorEvent(InitMapGenEvent.EventType.CAVE, new CubicCaveGenerator());
             MinecraftForge.TERRAIN_GEN_BUS.post(caveEvent);
@@ -299,15 +298,15 @@ public class EarthGenerator extends BasicCubeGenerator {
             MinecraftForge.EVENT_BUS.post(new PopulateCubeEvent.Pre(this.world, rand, cube.getX(), cube.getY(), cube.getZ(), false));
 
             if (data.intersectsSurface(cube.getY())) {
-                for (ICubicPopulator pop : this.surfacePopulators) {
-                    pop.generate(this.world, rand, cube.getCoords(), biome);
+                for (IEarthPopulator populator : this.populators) {
+                    populator.populate(this.world, rand, cube.getCoords(), biome, data);
                 }
             }
 
             this.biomePopulators.get(biome).generate(this.world, rand, cube.getCoords(), biome);
 
             if (data.aboveSurface(cube.getY())) {
-                this.snow.generate(this.world, rand, cube.getCoords(), biome);
+                SnowPopulator.INSTANCE.populate(this.world, rand, cube.getCoords(), biome, data);
             }
 
             MinecraftForge.EVENT_BUS.post(new PopulateCubeEvent.Post(this.world, rand, cube.getX(), cube.getY(), cube.getZ(), false));
