@@ -6,6 +6,7 @@ import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.chat.ChatHelper;
 import io.github.terra121.chat.TextElement;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -125,7 +126,12 @@ public class TerraTeleport extends Command {
             }
 
             if (alt == null) {
-                alt = String.valueOf(terrain.heights.get(lon, lat) + 1);
+                try {
+                    alt = String.valueOf(terrain.heights.getAsync(lon, lat).join() + 1);
+                } catch (OutOfProjectionBoundsException e) { //out of bounds, notify user
+                    sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Invalid coordinates!", TextFormatting.RED)));
+                    return;
+                }
             }
 
             sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Teleported to ", TextFormatting.GRAY), new TextElement(new DecimalFormat("##.#####").format(lat), TextFormatting.BLUE),

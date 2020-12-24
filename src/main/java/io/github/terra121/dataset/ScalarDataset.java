@@ -13,14 +13,6 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface ScalarDataset {
     /**
-     * @deprecated use {@link #getAsync(CornerBoundingBox2d, int, int)}
-     */
-    @Deprecated
-    default double get(double lon, double lat) {
-        throw new UnsupportedOperationException();
-    }
-
-    /**
      * @param point the point
      * @see #getAsync(double, double)
      */

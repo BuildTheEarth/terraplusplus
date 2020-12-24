@@ -24,7 +24,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  *
  * @author DaPorkchop_
  */
-public abstract class DoubleTiledDataset extends TiledDataset<double[]> implements ScalarDataset, IntToDoubleBiFunction {
+public abstract class DoubleTiledDataset extends TiledDataset<double[]> implements ScalarDataset {
     protected static final int TILE_SHIFT = 8;
     protected static final int TILE_SIZE = 1 << TILE_SHIFT; //256
     protected static final int TILE_MASK = (1 << TILE_SHIFT) - 1; //0xFF
@@ -35,36 +35,6 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
         super(new ScaleProjection(proj, scale), 1.0d / scale * TILE_SIZE);
 
         this.blendMode = blendMode;
-    }
-
-    @Override
-    public double get(double lon, double lat) {
-        //project coords
-        double projX;
-        double projZ;
-        try {
-            double[] proj = this.projection.fromGeo(lon, lat);
-            projX = proj[0];
-            projZ = proj[1];
-        } catch (OutOfProjectionBoundsException e) {
-            return -2.0d;
-        }
-
-        return this.blendMode.get(projX, projZ, this);
-    }
-
-    /**
-     * @deprecated internal API, do not touch!
-     */
-    @Deprecated
-    @Override
-    public double apply(int sampleX, int sampleZ) { //gets raw sample values to be used in blending
-        if (sampleX <= this.minSampleX || sampleX >= this.maxSampleX) {
-            return 0.0d;
-        }
-
-        double[] tileData = this.getTileAsync(sampleX >> TILE_SHIFT, sampleZ >> TILE_SHIFT).join();
-        return tileData[(sampleZ & TILE_MASK) * TILE_SIZE + (sampleX & TILE_MASK)];
     }
 
     @Override

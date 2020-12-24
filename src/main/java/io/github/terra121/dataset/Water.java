@@ -55,7 +55,7 @@ public class Water implements ScalarDataset {
         return state;
     }
 
-    @Override
+    @Deprecated
     public double get(double lon, double lat) {
         //bound check
         if (!(lon <= 180 && lon >= -180 && lat <= 80 && lat >= -80)) {
