@@ -11,7 +11,7 @@ import static java.lang.Math.*;
  * @author DaPorkchop_
  */
 @ToString(exclude = "region")
-public class Segment implements Bounds2d {
+public class Segment implements Bounds2d, Comparable<Segment> {
     public SegmentType type;
     public double lat0;
     public double lon0;
@@ -76,5 +76,13 @@ public class Segment implements Bounds2d {
     @Override
     public double maxZ() {
         return max(this.lat0, this.lat1);
+    }
+
+    @Override
+    public int compareTo(Segment o) {
+        if (this.layer_number != o.layer_number) {
+            return Integer.compare(this.lanes, o.layer_number);
+        }
+        return this.type.compareTo(o.type);
     }
 }

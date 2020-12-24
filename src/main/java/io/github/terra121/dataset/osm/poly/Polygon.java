@@ -21,7 +21,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  * @author DaPorkchop_
  */
 @Getter
-public class Polygon implements Bounds2d {
+public class Polygon implements Bounds2d, Comparable<Polygon> {
     protected static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
 
     protected static Segment toSegment(@NonNull double[][] points, int i0, int i1) {
@@ -224,6 +224,12 @@ public class Polygon implements Bounds2d {
                 }
             }
         }
+    }
+
+    @Override
+    public int compareTo(Polygon o) {
+        //TODO: implement this
+        return 0;
     }
 
     /**

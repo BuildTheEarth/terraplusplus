@@ -3,11 +3,8 @@ package io.github.terra121.util;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.bvh.Bounds2d;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
-import net.minecraft.util.math.ChunkPos;
 
 import static java.lang.Math.*;
 import static net.daporkchop.lib.common.math.PMath.*;
@@ -18,7 +15,6 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  *
  * @author DaPorkchop_
  */
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString
 public class CornerBoundingBox2d implements Bounds2d {
     protected final double lon00;
@@ -34,11 +30,25 @@ public class CornerBoundingBox2d implements Bounds2d {
     protected final GeographicProjection proj;
     protected final boolean geo;
 
-    public CornerBoundingBox2d(@NonNull GeographicProjection proj, double x, double z, double sizeX, double sizeZ) throws OutOfProjectionBoundsException {
-        this(proj.toGeo(x, z), proj.toGeo(x, z + sizeZ), proj.toGeo(x + sizeX, z), proj.toGeo(x + sizeX, z + sizeZ), proj, true);
+    @ToString.Exclude
+    protected CornerBoundingBox2d other;
+
+    public CornerBoundingBox2d(double x, double z, double sizeX, double sizeZ, @NonNull GeographicProjection proj, boolean geo) throws OutOfProjectionBoundsException {
+        this.lon00 = x;
+        this.lon01 = x;
+        this.lon10 = x + sizeX;
+        this.lon11 = x + sizeX;
+        this.lat00 = z;
+        this.lat01 = z + sizeZ;
+        this.lat10 = z;
+        this.lat11 = z + sizeZ;
+        this.proj = proj;
+        this.geo = geo;
+
+        this.validate();
     }
 
-    public CornerBoundingBox2d(@NonNull double[] point00, @NonNull double[] point01, @NonNull double[] point10, @NonNull double[] point11, @NonNull GeographicProjection proj, boolean geo) {
+    public CornerBoundingBox2d(@NonNull double[] point00, @NonNull double[] point01, @NonNull double[] point10, @NonNull double[] point11, @NonNull GeographicProjection proj, boolean geo) throws OutOfProjectionBoundsException {
         this.lon00 = point00[0];
         this.lat00 = point00[1];
         this.lon01 = point01[0];
@@ -49,6 +59,8 @@ public class CornerBoundingBox2d implements Bounds2d {
         this.lat11 = point11[1];
         this.proj = proj;
         this.geo = geo;
+
+        this.validate();
     }
 
     /**
@@ -72,28 +84,38 @@ public class CornerBoundingBox2d implements Bounds2d {
         return dst;
     }
 
-    public Bounds2d axisAlign(double minOffset, double maxOffset) throws OutOfProjectionBoundsException {
-        double minX = this.minX() + minOffset;
-        double maxX = this.maxX() + maxOffset;
-        double minZ = this.minZ() + minOffset;
-        double maxZ = this.maxZ() + maxOffset;
-
-        //ensure that all points are within projection bounds
-        if (this.geo) {
-            this.proj.fromGeo(minX, minZ);
-            this.proj.fromGeo(minX, maxZ);
-            this.proj.fromGeo(maxX, minZ);
-            this.proj.fromGeo(maxX, maxZ);
-        } else {
-            this.proj.toGeo(minX, minZ);
-            this.proj.toGeo(minX, maxZ);
-            this.proj.toGeo(maxX, minZ);
-            this.proj.toGeo(maxX, maxZ);
-        }
-
-        return Bounds2d.of(minX, maxX, minZ, maxZ);
+    /**
+     * @return a {@link Bounds2d} which contains the entire area enclosed by this bounding box
+     */
+    public Bounds2d axisAlign() throws OutOfProjectionBoundsException {
+        return Bounds2d.of(this.minX(), this.maxX(), this.minZ(), this.maxZ()).validate(this.proj, this.geo);
     }
 
+    /**
+     * @return this bounding box, projected to geographic coordinates
+     */
+    public CornerBoundingBox2d toGeo() throws OutOfProjectionBoundsException {
+        checkState(!this.geo, "already in geographic coordinates!");
+        if (this.other == null) {
+            (this.other = this.toGeo(this.proj)).other = this;
+        }
+        return this.other;
+    }
+
+    /**
+     * @return this bounding box, projected to local coordinates
+     */
+    public CornerBoundingBox2d fromGeo() throws OutOfProjectionBoundsException {
+        checkState(this.geo, "already in local coordinates!");
+        if (this.other == null) {
+            (this.other = this.fromGeo(this.proj)).other = this;
+        }
+        return this.other;
+    }
+
+    /**
+     * @return this bounding box, projected to geographic coordinates using the given {@link GeographicProjection}
+     */
     public CornerBoundingBox2d toGeo(@NonNull GeographicProjection proj) throws OutOfProjectionBoundsException {
         checkState(!this.geo, "already in geographic coordinates!");
         return new CornerBoundingBox2d(
@@ -104,6 +126,9 @@ public class CornerBoundingBox2d implements Bounds2d {
                 proj, true);
     }
 
+    /**
+     * @return this bounding box, projected to local coordinates using the given {@link GeographicProjection}
+     */
     public CornerBoundingBox2d fromGeo(@NonNull GeographicProjection proj) throws OutOfProjectionBoundsException {
         checkState(this.geo, "already in local coordinates!");
         return new CornerBoundingBox2d(
@@ -112,6 +137,26 @@ public class CornerBoundingBox2d implements Bounds2d {
                 proj.fromGeo(this.lon10, this.lat10),
                 proj.fromGeo(this.lon11, this.lat11),
                 proj, false);
+    }
+
+    /**
+     * Ensures that this bounding box is entirely within valid projection bounds.
+     *
+     * @throws OutOfProjectionBoundsException if any part of this bounding box is out of valid projection bounds
+     */
+    public CornerBoundingBox2d validate() throws OutOfProjectionBoundsException {
+        if (this.geo) { //validate bounds
+            this.proj.fromGeo(this.lon00, this.lat00);
+            this.proj.fromGeo(this.lon01, this.lat01);
+            this.proj.fromGeo(this.lon10, this.lat10);
+            this.proj.fromGeo(this.lon11, this.lat11);
+        } else {
+            this.proj.toGeo(this.lon00, this.lat00);
+            this.proj.toGeo(this.lon01, this.lat01);
+            this.proj.toGeo(this.lon10, this.lat10);
+            this.proj.toGeo(this.lon11, this.lat11);
+        }
+        return this;
     }
 
     @Override

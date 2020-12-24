@@ -165,12 +165,10 @@ public class EarthGenerator extends BasicCubeGenerator {
         //generate structures
         this.structureGenerators.forEach(gen -> gen.generate(this.world, primer, new CubePos(cubeX, cubeY, cubeZ)));
 
-        if (data.intersectsSurface(cubeY)) { //spawn roads
-            Set<Segment> segments = this.osm.segmentsForChunk(cubeX, cubeZ, 8.0d);
-            if (segments != null) {
-                segments.stream()
-                        .sorted(Comparator.<Segment>comparingInt(s -> s.layer_number).thenComparing(s -> s.type))
-                        .forEach(s -> s.type.fillType().fill(data.heights, primer, s, cubeX, cubeY, cubeZ));
+        if (data.intersectsSurface(cubeY)) { //render complex geometry onto cube surface
+            //segments (roads, building outlines, streams, etc.)
+            for (Segment s : data.segments()) {
+                s.type.fillType().fill(data.heights, primer, s, cubeX, cubeY, cubeZ);
             }
         }
 

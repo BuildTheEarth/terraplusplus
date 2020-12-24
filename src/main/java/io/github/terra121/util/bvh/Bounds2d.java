@@ -1,5 +1,8 @@
 package io.github.terra121.util.bvh;
 
+import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
+import io.github.terra121.util.CornerBoundingBox2d;
 import lombok.NonNull;
 import net.minecraft.util.math.ChunkPos;
 
@@ -76,5 +79,55 @@ public interface Bounds2d {
             }
         }
         return out;
+    }
+
+    /**
+     * Expands this bounding box by the given amount in every direction.
+     *
+     * @param offset the amount to expand the bounding box by
+     * @return the expanded bounding box
+     */
+    default Bounds2d expand(double offset) {
+        return of(this.minX() - offset, this.maxX() + offset, this.minZ() - offset, this.maxZ() + offset);
+    }
+
+    /**
+     * Converts this bounding box to an equivalent {@link CornerBoundingBox2d}.
+     *
+     * @param proj the {@link GeographicProjection} to use
+     * @param geo  whether or not this bounding box uses geographic coordinates
+     * @return a {@link CornerBoundingBox2d} equivalent to this bounding box
+     */
+    default CornerBoundingBox2d toCornerBB(@NonNull GeographicProjection proj, boolean geo) throws OutOfProjectionBoundsException {
+        double minX = this.minX();
+        double minZ = this.minZ();
+        return new CornerBoundingBox2d(minX, minZ, this.maxX() - minX, this.maxZ() - minZ, proj, geo);
+    }
+
+    /**
+     * Ensures that this bounding box is entirely within valid projection bounds.
+     *
+     * @param proj the {@link GeographicProjection} to use
+     * @param geo  whether or not this bounding box uses geographic coordinates
+     * @throws OutOfProjectionBoundsException if any part of this bounding box is out of valid projection bounds
+     */
+    default Bounds2d validate(@NonNull GeographicProjection proj, boolean geo) throws OutOfProjectionBoundsException {
+        double minX = this.minX();
+        double maxX = this.maxX();
+        double minZ = this.minZ();
+        double maxZ = this.maxZ();
+
+        if (geo) { //validate bounds
+            proj.fromGeo(minX, minZ);
+            proj.fromGeo(minX, maxZ);
+            proj.fromGeo(maxX, minZ);
+            proj.fromGeo(maxX, maxZ);
+        } else {
+            proj.toGeo(minX, minZ);
+            proj.toGeo(minX, maxZ);
+            proj.toGeo(maxX, minZ);
+            proj.toGeo(maxX, maxZ);
+        }
+        return this;
     }
 }

@@ -9,6 +9,7 @@ import io.github.terra121.util.bvh.Bounds2d;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import lombok.NonNull;
+import lombok.val;
 import net.daporkchop.lib.common.math.BinMath;
 import net.daporkchop.lib.unsafe.PUnsafe;
 import net.minecraft.util.math.ChunkPos;
@@ -83,7 +84,7 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
         }
 
         CornerBoundingBox2d localBounds = bounds.fromGeo(this.projection);
-        Bounds2d paddedLocalBounds = localBounds.axisAlign(-this.blendMode.size, this.blendMode.size);
+        Bounds2d paddedLocalBounds = localBounds.axisAlign().expand(this.blendMode.size).validate(this.projection, false);
 
         class State implements Function<Void, double[]>, IntToDoubleBiFunction {
             final Long2ObjectMap<double[]> loadedTiles = new Long2ObjectOpenHashMap<>();
@@ -131,7 +132,6 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
             @Override
             public double apply(int x, int z) { //gets raw sample values to be used in blending
                 double[] tile = this.loadedTiles.get(BinMath.packXY(x >> TILE_SHIFT, z >> TILE_SHIFT));
-                checkArg(tile != null, "unknown tile (%d,%d)! sample: (%d,%d), local bounds: %s", x >> TILE_SHIFT, z >> TILE_SHIFT, x, z, localBounds);
                 return tile[(z & TILE_MASK) * TILE_SIZE + (x & TILE_MASK)];
             }
         }

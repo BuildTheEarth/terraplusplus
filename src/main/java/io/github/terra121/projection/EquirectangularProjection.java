@@ -1,5 +1,7 @@
 package io.github.terra121.projection;
 
+import static java.lang.Math.*;
+
 /**
  * Implements the equirectangular map projection, which applies no transformation at all.
  * x and y are therefore the same as longitude and latitude (in degrees).
@@ -15,7 +17,8 @@ public class EquirectangularProjection extends GeographicProjection {
      * @return {longitude, latitude} in degrees
      */
     @Override
-	public double[] toGeo(double x, double y) {
+	public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
+        this.checkArgs(x, y);
         return new double[]{ x, y };
     }
 
@@ -28,7 +31,8 @@ public class EquirectangularProjection extends GeographicProjection {
      * @return {x, y} map coordinates
      */
     @Override
-	public double[] fromGeo(double longitude, double latitude) {
+	public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
+        this.checkArgs(longitude, latitude);
         return new double[]{ longitude, latitude };
     }
 
@@ -43,5 +47,10 @@ public class EquirectangularProjection extends GeographicProjection {
 	public double metersPerUnit() {
         return 100000;
     }
-    
+
+    private void checkArgs(double lon, double lat) throws OutOfProjectionBoundsException {
+        if (abs(lon) > 180.0d || abs(lat) > 90.0d) {
+            throw OutOfProjectionBoundsException.INSTANCE;
+        }
+    }
 }

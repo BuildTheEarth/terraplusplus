@@ -8,8 +8,11 @@ import io.github.terra121.dataset.Water;
 import io.github.terra121.dataset.osm.poly.Polygon;
 import io.github.terra121.dataset.osm.segment.Segment;
 import io.github.terra121.dataset.osm.segment.SegmentType;
+import io.github.terra121.projection.EquirectangularProjection;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
+import io.github.terra121.projection.transform.ScaleProjection;
+import io.github.terra121.util.CornerBoundingBox2d;
 import io.github.terra121.util.bvh.BVH;
 import io.github.terra121.util.bvh.Bounds2d;
 import io.netty.buffer.ByteBuf;
@@ -30,11 +33,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Math.*;
+import static net.daporkchop.lib.common.math.PMath.*;
+import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 public class OpenStreetMap extends TiledDataset<OSMRegion> {
     public static final double TILE_SIZE = 1 / 60.0;//250*(360.0/40075000.0);
+
+    protected final GeographicProjection earthProjection;
 
     public final Water water;
     private final List<Segment> allSegments = new ArrayList<>();
@@ -44,8 +52,10 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
     private final boolean doWater;
     private final boolean doBuildings;
 
-    public OpenStreetMap(GeographicProjection proj, boolean doRoad, boolean doWater, boolean doBuildings) {
-        super(proj, TILE_SIZE);
+    public OpenStreetMap(@NonNull GeographicProjection earthProjection, boolean doRoad, boolean doWater, boolean doBuildings) {
+        super(new EquirectangularProjection(), TILE_SIZE);
+
+        this.earthProjection = earthProjection;
 
         try {
             this.water = new Water(this, 256);
@@ -80,33 +90,17 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
     }
 
     public ChunkPos getRegion(double lon, double lat) {
-        return new ChunkPos((int) Math.floor(lon / TILE_SIZE), (int) Math.floor(lat / TILE_SIZE));
+        return new ChunkPos(floorI(lon / TILE_SIZE), floorI(lat / TILE_SIZE));
     }
 
-    public Set<Segment> segmentsForChunk(int chunkX, int chunkZ, double padding) {
-        Set<Segment> segments = new HashSet<>();
-        Set<ChunkPos> processedSegments = new HashSet<>();
+    public CompletableFuture<OSMRegion[]> getRegionsAsync(@NonNull CornerBoundingBox2d bounds) throws OutOfProjectionBoundsException {
+        Bounds2d localBounds = bounds.fromGeo(this.projection).axisAlign();
+        CompletableFuture<OSMRegion>[] futures = uncheckedCast(Arrays.stream(localBounds.toTiles(TILE_SIZE))
+                .map(this::getTileAsync)
+                .toArray(CompletableFuture[]::new));
 
-        Bounds2d bb = Bounds2d.of(
-                Coords.cubeToMinBlock(chunkX) - padding, Coords.cubeToMinBlock(chunkX + 1) + padding,
-                Coords.cubeToMinBlock(chunkZ) - padding, Coords.cubeToMinBlock(chunkZ + 1) + padding);
-
-        //it's unfortunate that i have to do it like this rather than simply getting the corners, but there are no guarantees that the
-        // projection is linear or almost linear
-        for (int dx = -1; dx <= 1; dx += 2) {
-            for (int dz = -1; dz <= 1; dz += 2) {
-                try {
-                    OSMRegion region = this.regionCache(this.projection.toGeo(Coords.cubeToMinBlock(chunkX + max(dx, 0)) + copySign(padding, dx), Coords.cubeToMinBlock(chunkZ + max(dz, 0)) + copySign(padding, dz)));
-                    if (region != null && processedSegments.add(region.coord)) {
-                        region.segments.forEachIntersecting(bb, segments::add);
-                    }
-                } catch (OutOfProjectionBoundsException e) {
-                    //simply skip regions that are out of bounds
-                }
-            }
-        }
-
-        return segments;
+        return CompletableFuture.allOf(futures)
+                .thenApplyAsync(unused -> Arrays.stream(futures).map(CompletableFuture::join).toArray(OSMRegion[]::new));
     }
 
     public OSMRegion regionCache(double[] corner) {
@@ -321,7 +315,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                     lastProj = null;
                 } else {
                     try {
-                        double[] proj = this.projection.fromGeo(geom.lon, geom.lat);
+                        double[] proj = this.earthProjection.fromGeo(geom.lon, geom.lat);
 
                         if (lastProj != null) { //register as a road edge
                             this.allSegments.add(new Segment(lastProj[0], lastProj[1], proj[0], proj[1], type, lanes, region, attributes, layer));
