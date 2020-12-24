@@ -29,10 +29,6 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
     protected static final int TILE_SIZE = 1 << TILE_SHIFT; //256
     protected static final int TILE_MASK = (1 << TILE_SHIFT) - 1; //0xFF
 
-    protected static boolean isInRange(double lon, double lat) {
-        return lon <= 180.0d && lon >= -180.0d && lat <= 85.0d && lat >= -85.0d;
-    }
-
     public final BlendMode blendMode;
 
     public DoubleTiledDataset(GeographicProjection proj, double scale, @NonNull BlendMode blendMode) {
@@ -43,11 +39,6 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
 
     @Override
     public double get(double lon, double lat) {
-        //basic bound check
-        if (!isInRange(lon, lat)) {
-            return -2.0d;
-        }
-
         //project coords
         double projX;
         double projZ;

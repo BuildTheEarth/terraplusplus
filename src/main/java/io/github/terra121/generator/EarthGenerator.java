@@ -27,6 +27,7 @@ import io.github.terra121.dataset.BlendMode;
 import io.github.terra121.dataset.Heights;
 import io.github.terra121.dataset.ScalarDataset;
 import io.github.terra121.dataset.Trees;
+import io.github.terra121.dataset.Water;
 import io.github.terra121.dataset.osm.OpenStreetMap;
 import io.github.terra121.dataset.osm.segment.Segment;
 import io.github.terra121.generator.cache.CachedChunkData;
@@ -86,6 +87,7 @@ public class EarthGenerator extends BasicCubeGenerator {
     public final ScalarDataset heights;
     public final OpenStreetMap osm;
     public final ScalarDataset trees;
+    public final Water water;
 
     public EarthGenerator(World world) {
         super(world);
@@ -100,7 +102,8 @@ public class EarthGenerator extends BasicCubeGenerator {
         this.biomes = world.getBiomeProvider(); //TODO: make this not order dependent
 
         this.osm = new OpenStreetMap(this.projection, doRoads, this.cfg.settings.osmwater, doBuildings);
-        this.heights = new Heights(this.cfg.settings.osmwater ? this.osm.water : null, 13, this.cfg.settings.smoothblend ? BlendMode.SMOOTH : BlendMode.LINEAR);
+        this.water = this.cfg.settings.osmwater ? this.osm.water : null;
+        this.heights = new Heights(13, this.cfg.settings.smoothblend ? BlendMode.SMOOTH : BlendMode.LINEAR);
         this.trees = new Trees();
 
         this.populators.add(TreePopulator.INSTANCE);
