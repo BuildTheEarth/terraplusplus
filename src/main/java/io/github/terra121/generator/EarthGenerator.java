@@ -103,7 +103,7 @@ public class EarthGenerator extends BasicCubeGenerator {
 
         this.osm = new OpenStreetMap(this.projection, doRoads, this.cfg.settings.osmwater, doBuildings);
         this.water = this.cfg.settings.osmwater ? this.osm.water : null;
-        this.heights = new Heights(13, this.cfg.settings.smoothblend ? BlendMode.SMOOTH : BlendMode.LINEAR);
+        this.heights = new Heights(this.cfg.settings.smoothblend ? BlendMode.SMOOTH : BlendMode.LINEAR);
         this.trees = new Trees();
 
         this.populators.add(TreePopulator.INSTANCE);

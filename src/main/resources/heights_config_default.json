@@ -4,13 +4,30 @@
 [
   // AWS Terrain Tiles
   // https://registry.opendata.aws/terrain-tiles/
-  {
+  /*{
     "url": "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${zoom}/${x}/${z}.png",
     "zoom": 13,
     "minX": 0,
     "minZ": 0,
-    "maxX": 1,
-    "maxZ": 1,
+    "maxX": 8191,
+    "maxZ": 8191,
     "priority": -1000.0 //low priority
+  },*/
+  {
+    "url": "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${zoom}/${x}/${z}.png",
+    "zoom": 10,
+    "minX": 0,
+    "minZ": 0,
+    "maxX": 1023,
+    "maxZ": 1023,
+    "priority": -1000.0 //low priority
+  },
+  {
+    "url": "file:///home/daporkchop/Desktop/CustomTerrain/${zoom}/${x}/${z}.png",
+    "zoom": 17,
+    "minX": 71066,
+    "maxX": 71118,
+    "minZ": 46474,
+    "maxZ": 46527
   }
 ]

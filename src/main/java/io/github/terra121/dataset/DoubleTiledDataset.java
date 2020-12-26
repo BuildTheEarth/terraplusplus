@@ -29,12 +29,12 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
     protected static final int TILE_SIZE = 1 << TILE_SHIFT; //256
     protected static final int TILE_MASK = (1 << TILE_SHIFT) - 1; //0xFF
 
-    public final BlendMode blendMode;
+    public final BlendMode blend;
 
-    public DoubleTiledDataset(GeographicProjection proj, double scale, @NonNull BlendMode blendMode) {
+    public DoubleTiledDataset(GeographicProjection proj, double scale, @NonNull BlendMode blend) {
         super(new ScaleProjection(proj, scale), 1.0d / scale * TILE_SIZE);
 
-        this.blendMode = blendMode;
+        this.blend = blend;
     }
 
     @Override
@@ -50,14 +50,14 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
 
             @Override
             public Double apply(Void unused) { //stage 2: actually compute the value now that the tiles have been fetched
-                return DoubleTiledDataset.this.blendMode.get(this.localCoords[0], this.localCoords[1], this);
+                return DoubleTiledDataset.this.blend.get(this.localCoords[0], this.localCoords[1], this);
             }
         }
 
         double[] localCoords = this.projection.fromGeo(lon, lat);
 
         Bounds2d paddedLocalBounds = Bounds2d.of(localCoords[0], localCoords[0], localCoords[1], localCoords[1])
-                .expand(this.blendMode.size)
+                .expand(this.blend.size)
                 .validate(this.projection, false);
 
         return new State(localCoords, paddedLocalBounds).future();
@@ -80,7 +80,7 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
 
             @Override
             public double[] apply(Void unused) { //stage 2: actually compute the values now that the tiles have been fetched
-                BlendMode blendMode = DoubleTiledDataset.this.blendMode;
+                BlendMode blend = DoubleTiledDataset.this.blend;
 
                 double stepX = 1.0d / sizeX;
                 double stepZ = 1.0d / sizeZ;
@@ -96,7 +96,7 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
                         point = this.localBounds.point(point, fx, fz);
 
                         //sample value at point
-                        out[i++] = blendMode.get(point[0], point[1], this);
+                        out[i++] = blend.get(point[0], point[1], this);
                     }
                 }
 
@@ -105,7 +105,7 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
         }
 
         CornerBoundingBox2d localBounds = bounds.fromGeo(this.projection);
-        Bounds2d paddedLocalBounds = localBounds.axisAlign().expand(this.blendMode.size).validate(this.projection, false);
+        Bounds2d paddedLocalBounds = localBounds.axisAlign().expand(this.blend.size).validate(this.projection, false);
 
         return new State(localBounds, paddedLocalBounds).future();
     }
@@ -120,7 +120,7 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
         @Override
         public double apply(int x, int z) { //gets raw sample values to be used in blending
             double[] tile = this.loadedTiles.get(BinMath.packXY(x >> TILE_SHIFT, z >> TILE_SHIFT));
-            return tile[(z & TILE_MASK) * TILE_SIZE + (x & TILE_MASK)];
+            return tile[(z & TILE_MASK) << TILE_SHIFT | (x & TILE_MASK)];
         }
 
         public CompletableFuture<R> future() {

@@ -65,12 +65,18 @@ public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, CompletableF
     @Deprecated
     @Override
     public CompletableFuture<T> load(ChunkPos pos) throws Exception {
+        String[] urls = this.urls(pos.x, pos.z);
+
+        if (urls == null || urls.length == 0) { //no urls for tile
+            return CompletableFuture.completedFuture(null);
+        }
+
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
         this.addProperties(pos.x, pos.z, builder);
         Map<String, String> properties = builder.build();
 
         return Http.getFirst(
-                Arrays.stream(this.urls(pos.x, pos.z)).map(url -> Http.formatUrl(properties, url)).toArray(String[]::new),
+                Arrays.stream(urls).map(url -> Http.formatUrl(properties, url)).toArray(String[]::new),
                 data -> this.decode(pos.x, pos.z, data));
     }
 }
