@@ -1,5 +1,6 @@
-package io.github.terra121.dataset;
+package io.github.terra121.dataset.impl;
 
+import io.github.terra121.dataset.ScalarDataset;
 import io.github.terra121.dataset.osm.OpenStreetMap;
 import io.github.terra121.dataset.osm.OSMRegion;
 import io.github.terra121.projection.OutOfProjectionBoundsException;

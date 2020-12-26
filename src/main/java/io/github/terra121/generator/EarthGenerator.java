@@ -24,10 +24,10 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.Cubi
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicRavineGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.feature.CubicStrongholdGenerator;
 import io.github.terra121.dataset.BlendMode;
-import io.github.terra121.dataset.Heights;
+import io.github.terra121.dataset.impl.Heights;
 import io.github.terra121.dataset.ScalarDataset;
-import io.github.terra121.dataset.Trees;
-import io.github.terra121.dataset.Water;
+import io.github.terra121.dataset.impl.Trees;
+import io.github.terra121.dataset.impl.Water;
 import io.github.terra121.dataset.osm.OpenStreetMap;
 import io.github.terra121.dataset.osm.segment.Segment;
 import io.github.terra121.generator.cache.CachedChunkData;

@@ -1,7 +1,7 @@
 package io.github.terra121.dataset.osm;
 
-import io.github.terra121.dataset.LandLine;
-import io.github.terra121.dataset.Water;
+import io.github.terra121.dataset.impl.LandLine;
+import io.github.terra121.dataset.impl.Water;
 import io.github.terra121.dataset.osm.poly.Polygon;
 import io.github.terra121.dataset.osm.segment.Segment;
 import io.github.terra121.util.bvh.BVH;

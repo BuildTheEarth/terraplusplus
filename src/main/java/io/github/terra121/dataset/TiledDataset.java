@@ -27,16 +27,10 @@ public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, CompletableF
     protected final double tileSize;
 
     protected final GeographicProjection projection;
-    protected final int minSampleX;
-    protected final int maxSampleX;
 
     public TiledDataset(GeographicProjection proj, double tileSize) {
         this.projection = proj;
         this.tileSize = tileSize;
-
-        double[] bounds = proj.bounds();
-        this.minSampleX = floorI(bounds[0]);
-        this.maxSampleX = ceilI(bounds[2]);
     }
 
     protected abstract String[] urls(int tileX, int tileZ);

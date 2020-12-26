@@ -1,4 +1,4 @@
-package io.github.terra121.dataset;
+package io.github.terra121.dataset.impl;
 
 import java.util.Map.Entry;
 import java.util.Set;

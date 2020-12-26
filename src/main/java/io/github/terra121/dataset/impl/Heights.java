@@ -1,7 +1,9 @@
-package io.github.terra121.dataset;
+package io.github.terra121.dataset.impl;
 
 import com.google.common.collect.ImmutableMap;
 import io.github.terra121.TerraConfig;
+import io.github.terra121.dataset.BlendMode;
+import io.github.terra121.dataset.DoubleTiledDataset;
 import io.github.terra121.projection.MapsProjection;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;

@@ -61,7 +61,7 @@ dependencies {
 
     shade "org.apache.commons:commons-imaging:1.0-alpha2"
 
-    shade("net.daporkchop:leveldb-mcpe-jni:0.0.10-SNAPSHOT")  {
+    shade("net.daporkchop.lib:binary:0.5.5-SNAPSHOT")  {
         exclude group: "io.netty"
     }
 

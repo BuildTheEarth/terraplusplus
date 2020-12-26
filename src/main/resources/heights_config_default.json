@@ -1,0 +1,16 @@
+//
+// ELEVATION DATASET CONFIGURATION FILE
+//
+[
+  // AWS Terrain Tiles
+  // https://registry.opendata.aws/terrain-tiles/
+  {
+    "url": "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${zoom}/${x}/${z}.png",
+    "zoom": 13,
+    "minX": 0,
+    "minZ": 0,
+    "maxX": 1,
+    "maxZ": 1,
+    "priority": -1000.0 //low priority
+  }
+]

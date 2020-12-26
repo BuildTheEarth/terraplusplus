@@ -3,27 +3,17 @@ package io.github.terra121.generator.populate;
 import com.google.common.collect.ImmutableSet;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
-import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
-import io.github.terra121.dataset.Trees;
 import io.github.terra121.generator.cache.CachedChunkData;
-import io.github.terra121.projection.GeographicProjection;
-import io.github.terra121.projection.OutOfProjectionBoundsException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.feature.WorldGenAbstractTree;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.Random;
 import java.util.Set;
 

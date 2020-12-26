@@ -1,4 +1,6 @@
-package io.github.terra121.dataset;
+package io.github.terra121.dataset.impl;
+
+import io.github.terra121.util.RandomAccessRunlength;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

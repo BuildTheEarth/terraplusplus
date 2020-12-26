@@ -26,6 +26,8 @@ import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import net.daporkchop.lib.common.function.throwing.EFunction;
 import net.daporkchop.lib.common.misc.threadfactory.PThreadFactories;
+import net.daporkchop.lib.common.ref.Ref;
+import net.daporkchop.lib.common.ref.ThreadRef;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
@@ -67,6 +69,8 @@ public class Http {
     protected final Map<Host, HostManager> MANAGERS = new ConcurrentHashMap<>();
 
     protected final int MAX_CONTENT_LENGTH = Integer.MAX_VALUE; //impossibly large, no requests will actually be this big but whatever
+
+    protected static final Ref<Matcher> URL_FORMATTING_MATCHER_CACHE = ThreadRef.regex(Pattern.compile("\\$\\{([a-z0-9.]+)}"));
 
     static {
         try {
@@ -299,16 +303,20 @@ public class Http {
     }
 
     public static String formatUrl(@NonNull Map<String, String> properties, @NonNull String url) {
-        StringBuffer out = new StringBuffer();
-        Matcher matcher = Pattern.compile("\\$\\{([a-z0-9.]+)}").matcher(url);
-        while (matcher.find()) {
-            String key = matcher.group(1);
-            String value = properties.get(key);
-            Preconditions.checkArgument(value != null, "unknown property: \"%s\"", key);
-            matcher.appendReplacement(out, value);
+        Matcher matcher = URL_FORMATTING_MATCHER_CACHE.get().reset(url);
+        if (matcher.find()) {
+            StringBuffer out = new StringBuffer();
+            do {
+                String key = matcher.group(1);
+                String value = properties.get(key);
+                Preconditions.checkArgument(value != null, "unknown property: \"%s\"", key);
+                matcher.appendReplacement(out, value);
+            } while (matcher.find());
+            matcher.appendTail(out);
+            return out.toString();
+        } else {
+            return url;
         }
-        matcher.appendTail(out);
-        return out.toString();
     }
 
     public void configChanged() {

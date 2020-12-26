@@ -1,10 +1,11 @@
-package io.github.terra121.dataset;
+package io.github.terra121.util;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class RandomAccessRunlength<E> {
 
-    private ArrayList<Run> data;
+    private final List<Run> data;
     int size;
 
     public RandomAccessRunlength() {

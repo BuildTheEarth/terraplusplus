@@ -1,4 +1,4 @@
-package io.github.terra121.dataset;
+package io.github.terra121.dataset.impl;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;

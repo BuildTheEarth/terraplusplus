@@ -6,7 +6,7 @@ import io.github.terra121.TerraConstants;
 import io.github.terra121.chat.ChatHelper;
 import io.github.terra121.chat.TextElement;
 import io.github.terra121.control.fragments.CommandFragment;
-import io.github.terra121.dataset.Water;
+import io.github.terra121.dataset.impl.Water;
 import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;

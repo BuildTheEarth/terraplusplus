@@ -1,17 +1,15 @@
 package io.github.terra121.dataset.osm;
 
 import com.google.gson.Gson;
-import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.terra121.TerraConfig;
 import io.github.terra121.dataset.TiledDataset;
-import io.github.terra121.dataset.Water;
+import io.github.terra121.dataset.impl.Water;
 import io.github.terra121.dataset.osm.poly.Polygon;
 import io.github.terra121.dataset.osm.segment.Segment;
 import io.github.terra121.dataset.osm.segment.SegmentType;
 import io.github.terra121.projection.EquirectangularProjection;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
-import io.github.terra121.projection.transform.ScaleProjection;
 import io.github.terra121.util.CornerBoundingBox2d;
 import io.github.terra121.util.bvh.BVH;
 import io.github.terra121.util.bvh.Bounds2d;
@@ -35,7 +33,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-import static java.lang.Math.*;
 import static net.daporkchop.lib.common.math.PMath.*;
 import static net.daporkchop.lib.common.util.PorkUtil.*;
 

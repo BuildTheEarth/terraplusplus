@@ -1,7 +1,7 @@
 package io.github.terra121;
 
-import io.github.terra121.dataset.Climate;
-import io.github.terra121.dataset.Soil;
+import io.github.terra121.dataset.impl.Climate;
+import io.github.terra121.dataset.impl.Soil;
 import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
