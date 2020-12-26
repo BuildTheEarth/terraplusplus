@@ -44,7 +44,6 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 public class Disk {
     private final EventLoop DISK_EXECUTOR = new DefaultEventLoop(PThreadFactories.builder().daemon().minPriority().name("terra++ disk I/O thread").build());
 
-    private final Path TERRA_ROOT;
     private final Path CACHE_ROOT;
     private final Path TMP_FILE;
 
@@ -59,8 +58,7 @@ public class Disk {
                 mcRoot = new File(".");
             }
         }
-        TERRA_ROOT = PFiles.ensureDirectoryExists(new File(mcRoot, "terraplusplus")).toPath();
-        CACHE_ROOT = PFiles.ensureDirectoryExists(TERRA_ROOT.resolve("cache").toFile()).toPath();
+        CACHE_ROOT = PFiles.ensureDirectoryExists(new File(mcRoot, "terraplusplus/cache")).toPath();
 
         TMP_FILE = CACHE_ROOT.resolve("tmp");
         PFiles.rm(TMP_FILE.toFile()); //delete temp file if it exists
@@ -144,7 +142,7 @@ public class Disk {
      * @return the path to the configuration file
      */
     public Path configFile(@NonNull String name) {
-        return TERRA_ROOT.resolve("config/" + name);
+        return CACHE_ROOT.resolveSibling("config").resolve(name);
     }
 
     /**

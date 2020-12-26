@@ -40,10 +40,6 @@ public class TerraConfig {
                 "http://gis-treecover.wri.org/arcgis/rest/services/TreeCover2000/ImageServer/exportImage?f=image&bbox=${lon.min},${lat.min},${lon.max},${lat.max}&imageSR=4152&bboxSR=4152&format=tiff&adjustAspectRatio=false&&interpolation=RSP_CubicConvolution&size=256,256"
         };
 
-        public String[] heights = {
-                "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${zoom}/${x}/${z}.png"
-        };
-
         public String[] overpass = {
                 "https://overpass.kumi.systems/api/interpreter/?data=[out:json];way(${lat.min},${lon.min},${lat.max},${lon.max});out%20geom(${lat.min},${lon.min},${lat.max},${lon.max})%20tags%20qt;(._<;);out%20body%20qt;is_in(${lat.min},${lon.min});area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;",
                 "https://lz4.overpass-api.de/api/interpreter/?data=[out:json];way(${lat.min},${lon.min},${lat.max},${lon.max});out%20geom(${lat.min},${lon.min},${lat.max},${lon.max})%20tags%20qt;(._<;);out%20body%20qt;is_in(${lat.min},${lon.min});area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;"
@@ -78,5 +74,11 @@ public class TerraConfig {
                 "Default: 2880 minutes (2 days)"
         })
         public int cacheTTL = 2880;
+
+        @Comment({
+                "Allows you to configure custom datasets for elevation data.",
+                "When enabled, the custom dataset configuration is stored in <minecraft_root>/terraplusplus/config/heights_config.json"
+        })
+        public boolean customHeights = false;
     }
 }

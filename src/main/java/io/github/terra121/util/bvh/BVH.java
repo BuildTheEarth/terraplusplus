@@ -6,6 +6,7 @@ import lombok.NonNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 
 import static java.lang.Math.*;
@@ -67,8 +68,8 @@ public class BVH<V extends Bounds2d> {
      * @param bb the bounding box that values must intersect with
      * @return the values
      */
-    public Collection<V> getAllIntersecting(@NonNull Bounds2d bb) {
-        Collection<V> result = new ArrayList<>();
+    public List<V> getAllIntersecting(@NonNull Bounds2d bb) {
+        List<V> result = new ArrayList<>();
         this.forEachIntersecting(bb, result::add);
         return result;
     }

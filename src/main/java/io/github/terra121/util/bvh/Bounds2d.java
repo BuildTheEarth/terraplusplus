@@ -130,11 +130,4 @@ public interface Bounds2d {
         }
         return this;
     }
-
-    /**
-     * @return this instance with coordinates converted to integers
-     */
-    default Bounds2i toInt() {
-        return Bounds2i.of(floorI(this.minX()), ceilI(this.maxX()), floorI(this.minZ()), ceilI(this.maxZ()));
-    }
 }

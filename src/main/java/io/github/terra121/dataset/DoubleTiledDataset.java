@@ -120,6 +120,9 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
         @Override
         public double apply(int x, int z) { //gets raw sample values to be used in blending
             double[] tile = this.loadedTiles.get(BinMath.packXY(x >> TILE_SHIFT, z >> TILE_SHIFT));
+            if (tile == null) {
+                return Double.NaN;
+            }
             return tile[(z & TILE_MASK) << TILE_SHIFT | (x & TILE_MASK)];
         }
 
