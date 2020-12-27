@@ -19,7 +19,7 @@ public class GenTest {
     static final int SIZE = 1024;
     static final int BASE_CHUNK_X = (857742 >> 4);
     static final int BASE_CHUNK_Z = (4721747 >> 4) - 16;
-    static final int SCALE = 1;
+    static final int SCALE = 0;
 
     static final int CHUNKS = SIZE >> 4;
 
@@ -46,16 +46,15 @@ public class GenTest {
                     double maxH = Arrays.stream(data[0]).max().getAsDouble();
                     double minW = Arrays.stream(data[1]).min().getAsDouble();
                     double maxW = Arrays.stream(data[1]).max().getAsDouble();
-                    double minO = Arrays.stream(data[2]).min().getAsDouble();
-                    double maxO = Arrays.stream(data[2]).max().getAsDouble();
+
+                    System.out.println(minW + " " + maxW);
 
                     for (int x = 0; x < SIZE; x++) {
                         for (int z = 0; z < SIZE; z++) {
                             int h = clamp(floorI((data[0][x * SIZE + z] - minH) * 255.0d / (maxH - minH)), 0, 255);
                             int w = clamp(floorI((data[1][x * SIZE + z] - minW) * 255.0d / (maxW - minW)), 0, 255);
-                            int o = clamp(floorI((data[2][x * SIZE + z] - minO) * 255.0d / (maxO - minO)), 0, 255);
 
-                            img.setRGB(x, z, 0xFF000000 | h << 16 | o << 8 | w);
+                            img.setRGB(x, z, 0xFF000000 | h << 16 | w);
                         }
                     }
                     return img;
@@ -64,7 +63,7 @@ public class GenTest {
     }
 
     static CompletableFuture<double[][]> tile(int tileX, int tileZ, int level) {
-        double[][] dst = new double[3][SIZE * SIZE];
+        double[][] dst = new double[2][SIZE * SIZE];
         CompletableFuture[] futures;
         if (level == 0) {
             futures = new CompletableFuture[CHUNKS * CHUNKS];
@@ -78,15 +77,7 @@ public class GenTest {
                                     for (int z = 0; z < 16; z++) {
                                         int j = (offX + x) * SIZE + offZ + z;
                                         dst[0][j] = data.heights[x * 16 + z];
-                                        //dst[1][j] = data.wateroffs[x * 16 + z];
-
-                                        double w = data.wateroffs[x * 16 + z];
-                                        if (w != 0.0d) {
-                                            dst[1][j] = 1.0d;
-                                        }
-                                        if (Math.copySign(1.0d, w) < 0.0d) {
-                                            dst[2][j] = 1.0d;
-                                        }
+                                        dst[1][j] = data.wateroffs[x * 16 + z];
                                     }
                                 }
                             });

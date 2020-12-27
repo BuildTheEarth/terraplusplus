@@ -27,8 +27,8 @@ import io.github.terra121.dataset.osm.segment.Segment;
 import io.github.terra121.generator.cache.CachedChunkData;
 import io.github.terra121.generator.cache.ChunkDataLoader;
 import io.github.terra121.generator.populate.IEarthPopulator;
-import io.github.terra121.generator.populate.TreePopulator;
 import io.github.terra121.generator.populate.SnowPopulator;
+import io.github.terra121.generator.populate.TreePopulator;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import net.minecraft.block.state.IBlockState;
@@ -53,6 +53,8 @@ import java.util.concurrent.TimeUnit;
 import static java.lang.Math.*;
 
 public class EarthGenerator extends BasicCubeGenerator {
+    public static final double WATEROFF_TRANSITION = -1.0d;
+
     public static boolean isNullIsland(int chunkX, int chunkZ) {
         return abs(chunkX) < 5 && abs(chunkZ) < 5;
     }
@@ -143,16 +145,13 @@ public class EarthGenerator extends BasicCubeGenerator {
         //build ground surfaces
         this.generateSurface(cubeX, cubeY, cubeZ, primer, data, this.world.getChunk(cubeX, cubeZ).getBiomeArray());
 
-        //add water
-        this.generateWater(cubeX, cubeY, cubeZ, primer, data);
-
         //generate structures
         this.structureGenerators.forEach(gen -> gen.generate(this.world, primer, new CubePos(cubeX, cubeY, cubeZ)));
 
         if (data.intersectsSurface(cubeY)) { //render complex geometry onto cube surface
             //segments (roads, building outlines, streams, etc.)
             for (Segment s : data.segments()) {
-                s.type.fillType().fill(data.heights, primer, s, cubeX, cubeY, cubeZ);
+                s.type.fillType().fill(data, primer, s, cubeX, cubeY, cubeZ);
             }
         }
 
@@ -174,92 +173,43 @@ public class EarthGenerator extends BasicCubeGenerator {
         } else if (data.aboveSurface(cubeY)) { //above surface -> air (no padding here, replacers don't normally affect anything above the surface)
             //no-op, the primer is already air!
         } else {
+            IBlockState water = Blocks.WATER.getDefaultState();
             double[] heights = data.heights();
 
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
-                    double height = heights[x * 16 + z];
-                    double dx = x == 15 ? height - heights[(x - 1) * 16 + z] : heights[(x + 1) * 16 + z] - height;
-                    double dz = z == 15 ? height - heights[x * 16 + (z - 1)] : heights[x * 16 + (z + 1)] - height;
+                    double waterSurfaceHeight = heights[x * 16 + z] + WATEROFF_TRANSITION;
+                    double height = data.heightWithWater(x, z);
+                    double dx = x == 15 ? height - data.heightWithWater(x - 1, z) : data.heightWithWater(x + 1, z) - height;
+                    double dz = z == 15 ? height - data.heightWithWater(x, z - 1) : data.heightWithWater(x, z + 1) - height;
 
-                    int maxY = min((int) ceil(height) - Coords.cubeToMinBlock(cubeY), 16);
-                    if (maxY > 0) {
-                        int blockX = Coords.cubeToMinBlock(cubeX) + x;
-                        int blockZ = Coords.cubeToMinBlock(cubeZ) + z;
-                        IBiomeBlockReplacer[] replacers = this.biomeBlockReplacers[biomes[x * 16 + z] & 0xFF];
-                        for (int y = 0; y < maxY; y++) {
-                            int blockY = Coords.cubeToMinBlock(cubeY) + y;
-                            double density = height - blockY;
-                            IBlockState state = stone;
-                            for (IBiomeBlockReplacer replacer : replacers) {
-                                state = replacer.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
-                            }
+                    int solidTop = min((int) ceil(height) - Coords.cubeToMinBlock(cubeY), 16);
+                    int waterTop = min((int) ceil(waterSurfaceHeight) - Coords.cubeToMinBlock(cubeY), 16);
 
-                            //calling this explicitly increases the likelihood of JIT inlining it
-                            //(for reference: previously, CliffReplacer was manually added to each biome as the last replacer)
-                            state = CliffReplacer.INSTANCE.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
+                    //if we're currently in the actual body of water, offset density by 1 to prevent underwater grass
+                    double densityOffset = height < waterSurfaceHeight ? 1.0d : 0.0d;
 
-                            primer.setBlockState(x, y, z, state);
+                    int blockX = Coords.cubeToMinBlock(cubeX) + x;
+                    int blockZ = Coords.cubeToMinBlock(cubeZ) + z;
+                    IBiomeBlockReplacer[] replacers = this.biomeBlockReplacers[biomes[x * 16 + z] & 0xFF];
+                    for (int y = 0; y < solidTop; y++) {
+                        int blockY = Coords.cubeToMinBlock(cubeY) + y;
+                        double density = height - blockY + densityOffset;
+                        IBlockState state = stone;
+                        for (IBiomeBlockReplacer replacer : replacers) {
+                            state = replacer.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
                         }
+
+                        //calling this explicitly increases the likelihood of JIT inlining it
+                        //(for reference: previously, CliffReplacer was manually added to each biome as the last replacer)
+                        state = CliffReplacer.INSTANCE.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
+
+                        primer.setBlockState(x, y, z, state);
                     }
-                }
-            }
-        }
-    }
 
-    private void generateWater(int cubeX, int cubeY, int cubeZ, CubePrimer primer, CachedChunkData data) {
-        IBlockState air = Blocks.AIR.getDefaultState();
-        IBlockState water = Blocks.WATER.getDefaultState();
-        if (data.belowSurface(cubeY + 2)) { //below surface -> no water will generate here (padding of 2 cubes because some replacers might need it)
-            //no-op, the primer is already solid stone!
-        } else if (cubeY < 0) { //y=0 is sea level
-            //replace all air blocks with water
-            for (int y = 0; y < 16; y++) { //YZX is more cache-friendly, as it's the same coordinate order as CubePrimer uses
-                for (int z = 0; z < 16; z++) {
-                    for (int x = 0; x < 16; x++) {
-                        if (primer.getBlockState(x, y, z) == air) {
-                            primer.setBlockState(x, y, z, water);
-                        }
-                    }
-                }
-            }
-        } else { //TODO: this works, but is slow and i need to redo it to work with polygons
-            for (int x = 0; x < 16; x++) {
-                for (int z = 0; z < 16; z++) {
-                    double height = data.heights[x * 16 + z];
-                    double wateroff = data.wateroffs[x * 16 + z];
-
-                    int minblock = Coords.cubeToMinBlock(cubeY);
-
-                    if (abs(cubeX) < 5 && abs(cubeZ) < 5) {
-                        //NULL ISLAND
-                    } else if (this.cfg.settings.osmwater) {
-                        if (wateroff > 1) {
-                            int start = (int) (height);
-                            if (start == 0) {
-                                start = -1; //elev 0 should still be treated as ocean when in ocean
-                            }
-
-                            start -= minblock;
-                            if (start < 0) {
-                                start = 0;
-                            }
-                            for (int y = start; y < 16 && y <= -1 - minblock; y++) {
-                                primer.setBlockState(x, y, z, water);
-                            }
-                        } else if (wateroff > 0.4) {
-                            int start = (int) (height - (wateroff - 0.4) * 4) - minblock;
-                            if (start < 0) {
-                                start = 0;
-                            }
-                            for (int y = start; y < 16 && y < height - minblock; y++) {
-                                primer.setBlockState(x, y, z, water);
-                            }
-                        }
-                    } else {
-                        for (int y = (int) max(height - minblock, 0); y < 16 && y < -minblock; y++) {
-                            primer.setBlockState(x, y, z, water);
-                        }
+                    //fill water
+                    for (int y = max(solidTop, 0); y < waterTop; y++) {
+                        primer.setBlockState(x, y, z, water);
                     }
                 }
             }

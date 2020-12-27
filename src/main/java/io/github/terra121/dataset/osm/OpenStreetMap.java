@@ -229,8 +229,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
 
                 if ("coastline".equals(naturalv)) {
                     this.waterway(elem);
-                } else if (false && //TODO: delet this
-                           (highway != null || building != null || ("river".equals(waterway) || "canal".equals(waterway) || "stream".equals(waterway)))) { //TODO: fewer equals
+                } else if (highway != null || building != null || ("river".equals(waterway) || "canal".equals(waterway) || "stream".equals(waterway))) { //TODO: fewer equals
                     SegmentType type = SegmentType.ROAD;
 
                     if (waterway != null) {

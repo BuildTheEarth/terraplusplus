@@ -3,6 +3,8 @@ package io.github.terra121.dataset.osm.segment;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.MathUtil;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
+import io.github.terra121.generator.EarthGenerator;
+import io.github.terra121.generator.cache.CachedChunkData;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.MathHelper;
 
@@ -16,14 +18,15 @@ import static java.lang.Math.*;
 public enum SegmentFill {
     NONE {
         @Override
-        public void fill(double[] heights, CubePrimer primer, Segment s, int cubeX, int cubeY, int cubeZ) {
+        public void fill(CachedChunkData data, CubePrimer primer, Segment s, int cubeX, int cubeY, int cubeZ) {
             //no-op
         }
     },
     WIDE {
         @Override
-        public void fill(double[] heights, CubePrimer primer, Segment s, int cubeX, int cubeY, int cubeZ) {
+        public void fill(CachedChunkData data, CubePrimer primer, Segment s, int cubeX, int cubeY, int cubeZ) {
             IBlockState state = s.type.state();
+            boolean allowInWater = s.type.allowInWater();
 
             double radius = s.type.computeRadius(s.lanes);
             double radiusSq = radius * radius;
@@ -41,7 +44,11 @@ public enum SegmentFill {
             double segmentLengthSq = (lon1 - lon0) * (lon1 - lon0) + (lat1 - lat0) * (lat1 - lat0);
             for (int x = minX; x < maxX; x++) {
                 for (int z = minZ; z < maxZ; z++) {
-                    int y = (int) floor(heights[x * 16 + z]) - Coords.cubeToMinBlock(cubeY);
+                    if (!allowInWater && data.wateroffs[x * 16 + z] > 0.0d) {
+                        continue; //don't generate in water
+                    }
+
+                    int y = (int) floor(data.heights[x * 16 + z]) - Coords.cubeToMinBlock(cubeY);
                     if ((y & 0xF) != y) { //if not in this range, someone else will handle it
                         continue;
                     }
@@ -60,8 +67,9 @@ public enum SegmentFill {
     },
     NARROW {
         @Override
-        public void fill(double[] heights, CubePrimer primer, Segment s, int cubeX, int cubeY, int cubeZ) {
+        public void fill(CachedChunkData data, CubePrimer primer, Segment s, int cubeX, int cubeY, int cubeZ) {
             IBlockState state = s.type.state();
+            boolean allowInWater = s.type.allowInWater();
 
             double start = s.lon0;
             double end = s.lon1;
@@ -98,7 +106,11 @@ public enum SegmentFill {
                 to = min(to, 15);
 
                 for (int z = max(0, from); z <= to; z++) {
-                    int y = (int) floor(heights[x * 16 + z]) - Coords.cubeToMinBlock(cubeY);
+                    if (!allowInWater && data.wateroffs[x * 16 + z] > 0.0) {
+                        continue; //don't generate in water
+                    }
+
+                    int y = (int) floor(data.heights[x * 16 + z]) - Coords.cubeToMinBlock(cubeY);
                     if ((y & 0xF) == y) {
                         primer.setBlockState(x, y, z, state);
                     }
@@ -107,5 +119,5 @@ public enum SegmentFill {
         }
     };
 
-    public abstract void fill(double[] heights, CubePrimer primer, Segment s, int cubeX, int cubeY, int cubeZ);
+    public abstract void fill(CachedChunkData data, CubePrimer primer, Segment s, int cubeX, int cubeY, int cubeZ);
 }

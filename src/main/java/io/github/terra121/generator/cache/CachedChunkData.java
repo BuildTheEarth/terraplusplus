@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 
+import static io.github.terra121.generator.EarthGenerator.*;
+
 /**
  * A collection of data cached per-column by {@link EarthGenerator}.
  *
@@ -26,34 +28,33 @@ public class CachedChunkData {
 
     static {
         double[] defaultWateroffs = new double[16 * 16];
+        Arrays.fill(defaultWateroffs, EarthGenerator.WATEROFF_TRANSITION);
 
         double[] defaultHeights = new double[16 * 16];
         Arrays.fill(defaultHeights, BLANK_HEIGHT);
-        BLANK = new CachedChunkData(defaultHeights, defaultWateroffs, Collections.emptySet(), Collections.emptySet(), 0.0d);
+        BLANK = new CachedChunkData(defaultHeights, defaultWateroffs, Collections.emptySet(), 0.0d);
 
         defaultHeights = new double[16 * 16];
         Arrays.fill(defaultHeights, 1.0d);
-        NULL_ISLAND = new CachedChunkData(defaultHeights, defaultWateroffs, Collections.emptySet(), Collections.emptySet(), 0.0d);
+        NULL_ISLAND = new CachedChunkData(defaultHeights, defaultWateroffs, Collections.emptySet(), 0.0d);
     }
 
     public final double[] heights;
     public final double[] wateroffs;
 
     private final Segment[] segments;
-    private final Polygon[] polygons;
 
     private final int surfaceMinCube;
     private final int surfaceMaxCube;
 
     private final double treeCover;
 
-    public CachedChunkData(@NonNull double[] heights, @NonNull double[] wateroffs, Set<Segment> segments, Set<Polygon> polygons, double treeCover) {
+    public CachedChunkData(@NonNull double[] heights, @NonNull double[] wateroffs, Set<Segment> segments, double treeCover) {
         this.heights = heights;
         this.wateroffs = wateroffs;
         this.treeCover = treeCover;
 
         Arrays.sort(this.segments = segments.toArray(new Segment[0]));
-        Arrays.sort(this.polygons = polygons.toArray(new Polygon[0]));
 
         double min = Double.POSITIVE_INFINITY;
         double max = Double.NEGATIVE_INFINITY;
@@ -75,5 +76,15 @@ public class CachedChunkData {
 
     public boolean belowSurface(int cubeY) {
         return cubeY < this.surfaceMinCube;
+    }
+
+    public double heightWithWater(int x, int z) {
+        int i = x * 16 + z;
+        double height = this.heights[i];
+        double wateroff = this.wateroffs[i];
+        if (wateroff >= EarthGenerator.WATEROFF_TRANSITION) {
+            height = height - wateroff + EarthGenerator.WATEROFF_TRANSITION;
+        }
+        return height;
     }
 }

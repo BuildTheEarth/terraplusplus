@@ -12,57 +12,58 @@ import net.minecraft.util.math.BlockPos;
 @AllArgsConstructor
 @Getter
 public enum SegmentType {
-    IGNORE(SegmentFill.NONE, null),
-    STREAM(SegmentFill.NARROW, Blocks.WATER.getDefaultState()),
-    RIVER(SegmentFill.WIDE, Blocks.WATER.getDefaultState()) {
+    IGNORE(SegmentFill.NONE, null, false),
+    STREAM(SegmentFill.NARROW, Blocks.WATER.getDefaultState(), false),
+    RIVER(SegmentFill.WIDE, Blocks.WATER.getDefaultState(), false) {
         @Override
         public double computeRadius(int lanes) {
             return 5.0d;
         }
     },
-    ROAD(SegmentFill.NARROW, Blocks.GRASS_PATH.getDefaultState()),
-    MINOR(SegmentFill.WIDE, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.GRAY)) {
+    ROAD(SegmentFill.NARROW, Blocks.GRASS_PATH.getDefaultState(), true),
+    MINOR(SegmentFill.WIDE, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.GRAY), true) {
         @Override
         public double computeRadius(int lanes) {
             return lanes;
         }
     },
-    SIDE(SegmentFill.WIDE, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.GRAY)) {
+    SIDE(SegmentFill.WIDE, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.GRAY), true) {
         @Override
         public double computeRadius(int lanes) {
             return (3 * lanes + 1) >> 1;
         }
     },
-    MAIN(SegmentFill.WIDE, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.GRAY)) {
+    MAIN(SegmentFill.WIDE, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.GRAY), true) {
         @Override
         public double computeRadius(int lanes) {
             return lanes << 1;
         }
     },
-    INTERCHANGE(SegmentFill.WIDE, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.GRAY)) {
+    INTERCHANGE(SegmentFill.WIDE, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.GRAY), true) {
         @Override
         public double computeRadius(int lanes) {
             return (3 * lanes) >> 1;
         }
     },
-    LIMITEDACCESS(SegmentFill.WIDE, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.GRAY)) {
+    LIMITEDACCESS(SegmentFill.WIDE, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.GRAY), true) {
         @Override
         public double computeRadius(int lanes) {
             return ((6 * lanes) >> 1) + 2;
         }
     },
-    FREEWAY(SegmentFill.WIDE, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.GRAY)) {
+    FREEWAY(SegmentFill.WIDE, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.GRAY), true) {
         @Override
         public double computeRadius(int lanes) {
             return ((6 * lanes) >> 1) + 2;
         }
     },
-    BUILDING(SegmentFill.NARROW, Blocks.BRICK_BLOCK.getDefaultState()),
-    RAIL(SegmentFill.NONE, null);
+    BUILDING(SegmentFill.NARROW, Blocks.BRICK_BLOCK.getDefaultState(), true),
+    RAIL(SegmentFill.NONE, null, true);
 
     @NonNull
     private final SegmentFill fillType;
     private final IBlockState state;
+    private final boolean allowInWater;
 
     public double computeRadius(int lanes) {
         return 1.0d;

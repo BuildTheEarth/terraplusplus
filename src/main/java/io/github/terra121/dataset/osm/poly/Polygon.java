@@ -192,31 +192,36 @@ public class Polygon implements Bounds2d, Comparable<Polygon> {
                     break DISTANCES;
                 }
 
-                int i = Arrays.binarySearch(intersectionPoints, baseX - maxDist);
+                int i = Arrays.binarySearch(intersectionPoints, baseZ - maxDist);
                 i ^= i >> 31; //convert possibly negative insertion index to positive
                 i -= i & 1; //ensure we start on an even index
 
-                final double end = baseZ + sizeZ + maxDist;
-
-                int mask = 0;
-                int min = floorI(intersectionPoints[i++]) - baseZ;
-
-                //fill everything up to this point with blanks
-                for (int z = 0, itrMax = clamp(min, 0, sizeZ); z < itrMax; z++) {
-                    distances[z] = z - min;
-                }
-
                 int max;
-                do {
-                    max = floorI(intersectionPoints[i++]) - baseZ;
 
-                    for (int z = clamp(min, 0, sizeZ), itrMax = clamp(max, 0, sizeZ); z < itrMax; z++) {
-                        distances[z] = min(z - min, max - z - 1) ^ mask;
+                if (i < intersectionPoints.length) { //index is valid
+                    final double end = baseZ + sizeZ + maxDist;
+
+                    int mask = 0;
+                    int min = floorI(intersectionPoints[i++]) - baseZ;
+
+                    //fill everything up to this point with blanks
+                    for (int z = 0, itrMax = clamp(min, 0, sizeZ); z < itrMax; z++) {
+                        distances[z] = z - min;
                     }
 
-                    min = max;
-                    mask = ~mask;
-                } while (i < intersectionPoints.length && intersectionPoints[i] <= end);
+                    do {
+                        max = floorI(intersectionPoints[i++]) - baseZ;
+
+                        for (int z = clamp(min, 0, sizeZ), itrMax = clamp(max, 0, sizeZ); z < itrMax; z++) {
+                            distances[z] = min(z - min, max - z - 1) ^ mask;
+                        }
+
+                        min = max;
+                        mask = ~mask;
+                    } while (i < intersectionPoints.length && intersectionPoints[i] <= end);
+                } else { //index is too high, simply fill from the end
+                    max = floorI(intersectionPoints[intersectionPoints.length - 1]) - baseZ;
+                }
 
                 //fill everything to the edge with blanks
                 for (int z = clamp(max, 0, sizeZ); z < sizeZ; z++) {
