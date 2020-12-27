@@ -1,6 +1,6 @@
 package io.github.terra121.control;
 
-import io.github.terra121.EarthBiomeProvider;
+import io.github.terra121.generator.EarthBiomeProvider;
 import net.minecraft.init.Biomes;
 import net.minecraft.world.biome.Biome;
 

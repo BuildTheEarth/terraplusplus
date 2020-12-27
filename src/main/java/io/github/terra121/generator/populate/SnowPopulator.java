@@ -2,8 +2,7 @@ package io.github.terra121.generator.populate;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
-import io.github.terra121.EarthBiomeProvider;
+import io.github.terra121.generator.EarthBiomeProvider;
 import io.github.terra121.generator.cache.CachedChunkData;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import lombok.AccessLevel;

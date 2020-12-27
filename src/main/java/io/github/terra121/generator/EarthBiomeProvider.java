@@ -1,5 +1,6 @@
-package io.github.terra121;
+package io.github.terra121.generator;
 
+import io.github.terra121.TerraMod;
 import io.github.terra121.dataset.impl.Climate;
 import io.github.terra121.dataset.impl.Soil;
 import io.github.terra121.generator.EarthGeneratorSettings;

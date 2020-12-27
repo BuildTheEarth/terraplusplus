@@ -108,10 +108,10 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
                         OSMRegion[] osmRegions = osmRegionsFuture.join();
 
                         if (heights == null) { //ensure that both arrays are set
-                            heights = NAN_ARRAY.clone();
+                            heights = CachedChunkData.BLANK.heights.clone();
                         }
                         if (wateroffs == null) {
-                            wateroffs = NAN_ARRAY.clone();
+                            wateroffs = CachedChunkData.BLANK.wateroffs.clone();
                         }
                         combineHeightsWithWateroffs(heights, wateroffs);
 
@@ -129,9 +129,7 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
                         return new CachedChunkData(heights, wateroffs, segments, polygons, treeCover);
                     });
         } catch (OutOfProjectionBoundsException e) {
-            CompletableFuture<CachedChunkData> future = new CompletableFuture<>();
-            future.completeExceptionally(e);
-            return future;
+            return CompletableFuture.completedFuture(CachedChunkData.BLANK);
         }
     }
 }

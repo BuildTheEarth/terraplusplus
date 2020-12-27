@@ -59,8 +59,8 @@ public class TerraConfig {
                 "8: https://cloud.daporkchop.net/",
                 "8: https://s3.amazonaws.com/",
                 "1: http://gis-treecover.wri.org/",
-                "2: https://overpass.kumi.systems/",
-                "2: https://lz4.overpass-api.de/"
+                "1: https://overpass.kumi.systems/",
+                "1: https://lz4.overpass-api.de/"
         };
 
         @Comment({
