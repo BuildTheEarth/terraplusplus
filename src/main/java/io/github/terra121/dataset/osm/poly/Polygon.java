@@ -1,6 +1,7 @@
 package io.github.terra121.dataset.osm.poly;
 
 import io.github.opencubicchunks.cubicchunks.api.util.MathUtil;
+import io.github.terra121.TerraMod;
 import io.github.terra121.util.bvh.Bounds2d;
 import io.github.terra121.util.interval.IntervalTree;
 import lombok.Getter;
@@ -11,7 +12,6 @@ import net.minecraft.util.math.MathHelper;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 import static java.lang.Math.*;
@@ -131,6 +131,12 @@ public class Polygon implements Bounds2d, Comparable<Polygon> {
                 segments.add(toSegment(shape, 0, prev));
             }
         }
+        /*for (double[][] shape : shapes) {
+            for (int i = 1; i < shape.length; i++) {
+                segments.add(toSegment(shape, i - 1, i));
+            }
+            segments.add(toSegment(shape, 0, shape.length - 1));
+        }*/
         segments.removeIf(s -> s.lon0 == s.lon1);
 
         checkArg(segments.size() >= 3, "polygon must contain at least 3 valid segments!");
@@ -140,20 +146,20 @@ public class Polygon implements Bounds2d, Comparable<Polygon> {
 
     public double[] getIntersectionPoints(int pos) {
         double center = pos + 0.5d;
-        Collection<Segment> segments = this.segments.getAllIntersecting(center);
-        checkState((segments.size() & 1) == 0, "odd number of intersection points?!?");
+        List<Segment> segments = this.segments.getAllIntersecting(center);
+        if ((segments.size() & 1) != 0) { //odd number of intersection points, skip
+            return EMPTY_DOUBLE_ARRAY;
+        }
 
         int size = segments.size();
         if (size == 0) {
             return EMPTY_DOUBLE_ARRAY;
         } else {
-            double[] arr = new double[size & ~1];
+            double[] arr = new double[size];
 
             int i = 0;
             for (Segment s : segments) {
-                if (i < arr.length) {
-                    arr[i++] = lerp(s.lat0, s.lat1, (s.lon0 - center) / (s.lon0 - s.lon1));
-                }
+                arr[i++] = lerp(s.lat0, s.lat1, (s.lon0 - center) / (s.lon0 - s.lon1));
             }
             Arrays.sort(arr);
             return arr;
@@ -242,20 +248,20 @@ public class Polygon implements Bounds2d, Comparable<Polygon> {
     }
 
     public void rasterizeShape(int baseX, int sizeX, int baseZ, int sizeZ, @NonNull ShapeRasterizationCallback callback) {
-        if (false) {
-            for (int x = 0; x < sizeX; x++) {
-                double[] intersectionPoints = this.getIntersectionPoints(x + baseX);
+        for (int x = 0; x < sizeX; x++) {
+            double[] intersectionPoints = this.getIntersectionPoints(x + baseX);
 
-                for (int i = 0; i < intersectionPoints.length; ) {
-                    int min = clamp(floorI(intersectionPoints[i++]) - baseZ, 0, sizeZ);
-                    int max = clamp(floorI(intersectionPoints[i++]) - baseZ, 0, sizeZ);
-                    for (int z = min; z < max; z++) {
-                        //callback.pixel(x + baseX, z + baseZ);
-                    }
+            for (int i = 0; i < intersectionPoints.length; ) {
+                int min = clamp(floorI(intersectionPoints[i++]) - baseZ, 0, sizeZ);
+                int max = clamp(floorI(intersectionPoints[i++]) - baseZ, 0, sizeZ);
+                for (int z = min; z < max; z++) {
+                    callback.pixel(x + baseX, z + baseZ);
                 }
             }
         }
+    }
 
+    public void rasterizeOutline(int baseX, int sizeX, int baseZ, int sizeZ, @NonNull ShapeRasterizationCallback callback) {
         this.segments.forEach(s -> {
             double radius = 1.0d;
             double radiusSq = radius * radius;

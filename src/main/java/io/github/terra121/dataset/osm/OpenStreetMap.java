@@ -39,6 +39,9 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 public class OpenStreetMap extends TiledDataset<OSMRegion> {
+    //protected static final String QUERY_SUFFIX = "?data=[out:json];way(${lat.min},${lon.min},${lat.max},${lon.max});out%20geom(${lat.min},${lon.min},${lat.max},${lon.max})%20tags%20qt;(._<;);out%20body%20qt;is_in(${lat.min},${lon.min});area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;";
+    protected static final String QUERY_SUFFIX = "?data=[out:json];way(${lat.min},${lon.min},${lat.max},${lon.max});out%20geom%20tags%20qt;(._<;);out%20body%20qt;is_in(${lat.min},${lon.min});area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;";
+
     public static final double TILE_SIZE = 1 / 60.0;//250*(360.0/40075000.0);
 
     protected final GeographicProjection earthProjection;
@@ -69,7 +72,9 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
 
     @Override
     protected String[] urls(int tileX, int tileZ) {
-        return TerraConfig.data.overpass;
+        return Arrays.stream(TerraConfig.data.overpass)
+                .map(s -> s + QUERY_SUFFIX)
+                .toArray(String[]::new);
     }
 
     @Override
@@ -161,7 +166,8 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
 
                 if ("coastline".equals(naturalv)) {
                     this.waterway(elem, -1, region);
-                } else if (highway != null || building != null || ("river".equals(waterway) || "canal".equals(waterway) || "stream".equals(waterway))) { //TODO: fewer equals
+                } else if (false && //TODO: delet this
+                           (highway != null || building != null || ("river".equals(waterway) || "canal".equals(waterway) || "stream".equals(waterway)))) { //TODO: fewer equals
                     SegmentType type = SegmentType.ROAD;
 
                     if (waterway != null) {
@@ -283,7 +289,6 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                         }
                     }
                 }
-
             } else if (elem.type == EType.area) {
                 ground.add(elem.id);
             }

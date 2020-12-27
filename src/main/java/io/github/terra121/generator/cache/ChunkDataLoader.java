@@ -14,11 +14,11 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.util.math.ChunkPos;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+import static java.lang.Math.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
@@ -29,12 +29,6 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @RequiredArgsConstructor
 public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<CachedChunkData>> {
-    private static final double[] NAN_ARRAY = new double[16 * 16];
-
-    static {
-        Arrays.fill(NAN_ARRAY, Double.NaN);
-    }
-
     private static double[] fixHeights(double[] heights) {
         if (heights == null) { //consider heights array to be filled with NaNs
             return CachedChunkData.BLANK.heights;
@@ -94,7 +88,12 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
         polygon.rasterizeShape(baseX, 16, baseZ, 16, (x, z) -> {
             int i = (x - baseX) * 16 + (z - baseZ);
             checkIndex((i & 0xFF) == i, "base: (%d, %d), xz: (%d, %d)", baseX, baseZ, x, z);
-            wateroffs[i] = 1.0d;
+            wateroffs[i] = copySign(1.0d, wateroffs[i]);
+        });
+        polygon.rasterizeOutline(baseX, 16, baseZ, 16, (x, z) -> {
+            int i = (x - baseX) * 16 + (z - baseZ);
+            checkIndex((i & 0xFF) == i, "base: (%d, %d), xz: (%d, %d)", baseX, baseZ, x, z);
+            wateroffs[i] = -abs(wateroffs[i]);
         });
     }
 
