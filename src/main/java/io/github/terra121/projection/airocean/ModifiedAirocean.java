@@ -79,7 +79,7 @@ public class ModifiedAirocean extends ConformalEstimate {
         y += 0.75 * ARC * MathUtils.ROOT3;
 
         //check to make sure still in right part
-        if (easia != this.isEurasianPart(x, y)) throw OutOfProjectionBoundsException.INSTANCE;
+        if (easia != this.isEurasianPart(x, y)) throw OutOfProjectionBoundsException.get();
 
         return super.toGeo(x, y);
     }

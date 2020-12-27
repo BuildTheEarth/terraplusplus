@@ -50,7 +50,7 @@ public class EquirectangularProjection extends GeographicProjection {
 
     private void checkArgs(double lon, double lat) throws OutOfProjectionBoundsException {
         if (abs(lon) > 180.0d || abs(lat) > 90.0d) {
-            throw OutOfProjectionBoundsException.INSTANCE;
+            throw OutOfProjectionBoundsException.get();
         }
     }
 }

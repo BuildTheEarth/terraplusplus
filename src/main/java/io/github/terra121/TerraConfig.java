@@ -71,9 +71,9 @@ public class TerraConfig {
 
         @Comment({
                 "The maximum age of data in the persistent cache, in minutes. Data older than this will be expired.",
-                "Default: 2880 minutes (2 days)"
+                "Default: 1440 minutes (1 day)"
         })
-        public int cacheTTL = 2880;
+        public int cacheTTL = 1440;
 
         @Comment({
                 "Allows you to configure custom datasets for elevation data.",

@@ -476,7 +476,7 @@ public class Airocean extends GeographicProjection {
     public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
         int face = findTriangleGrid(x, y);
 
-        if (face == -1) throw OutOfProjectionBoundsException.INSTANCE;
+        if (face == -1) throw OutOfProjectionBoundsException.get();
 
         x -= CENTER_MAP[face][0];
         y -= CENTER_MAP[face][1];
@@ -484,16 +484,16 @@ public class Airocean extends GeographicProjection {
         //deal with bounds of special snowflakes
         switch (face) {
             case 14:
-                if (x > 0) throw OutOfProjectionBoundsException.INSTANCE;
+                if (x > 0) throw OutOfProjectionBoundsException.get();
                 break;
             case 20:
-                if (-y * MathUtils.ROOT3 > x) throw OutOfProjectionBoundsException.INSTANCE;
+                if (-y * MathUtils.ROOT3 > x) throw OutOfProjectionBoundsException.get();
                 break;
             case 15:
-                if (x > 0 && x > y * MathUtils.ROOT3) throw OutOfProjectionBoundsException.INSTANCE;
+                if (x > 0 && x > y * MathUtils.ROOT3) throw OutOfProjectionBoundsException.get();
                 break;
             case 21:
-                if (x < 0 || -y * MathUtils.ROOT3 > x) throw OutOfProjectionBoundsException.INSTANCE;
+                if (x < 0 || -y * MathUtils.ROOT3 > x) throw OutOfProjectionBoundsException.get();
                 break;
         }
 

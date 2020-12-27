@@ -14,6 +14,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.util.math.ChunkPos;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,6 +28,12 @@ import java.util.concurrent.CompletableFuture;
  */
 @RequiredArgsConstructor
 public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<CachedChunkData>> {
+    private static final double[] NAN_ARRAY = new double[16 * 16];
+
+    static {
+        Arrays.fill(NAN_ARRAY, Double.NaN);
+    }
+
     private static void combineHeightsWithWateroffs(@NonNull double[] heights, @NonNull double[] wateroffs) {
         //original implementation:
         /*double height = out[z * TILE_SIZE + x];
@@ -54,13 +61,17 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
                     }
                     out[z * TILE_SIZE + x] = height;*/
 
-        for (int i = 0; i < heights.length; i++) {
+        for (int i = 0; i < 16 * 16; i++) {
             double height = heights[i];
-            if (height > -1.0d && height != 0.0d && height < 200.0d) {
-                double wateroff = wateroffs[i];
-                if (wateroff > 1.4d) {
-                    heights[i] = -1.0d;
-                }
+            double wateroff = wateroffs[i];
+
+            if (Double.isNaN(height)) {
+                heights[i] = -100.0d;
+                wateroffs[i] = 2.0d;
+            } else if (Double.isNaN(wateroff)) {
+                wateroffs[i] = 0.0d;
+            } else if (height > -1.0d && height != 0.0d && height < 200.0d && wateroff > 1.4d) {
+                heights[i] = -1.0d;
             }
         }
     }
@@ -97,7 +108,17 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
                         double treeCover = treeCoverFuture.join();
                         OSMRegion[] osmRegions = osmRegionsFuture.join();
 
+                        if (heights == null) { //ensure that both arrays are set
+                            heights = NAN_ARRAY.clone();
+                        }
+                        if (wateroffs == null) {
+                            wateroffs = NAN_ARRAY.clone();
+                        }
                         combineHeightsWithWateroffs(heights, wateroffs);
+
+                        if (Double.isNaN(treeCover)) {
+                            treeCover = 0.0d;
+                        }
 
                         //find all segments and polygons that intersect the chunk
                         Set<Segment> segments = new HashSet<>();
