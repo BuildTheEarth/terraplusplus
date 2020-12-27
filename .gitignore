@@ -31,3 +31,5 @@ run
 *.log
 =======
 gradlew
+
+/logs/
