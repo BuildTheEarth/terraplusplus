@@ -6,7 +6,6 @@ import io.github.terra121.control.fragments.terra.TerraConvertFragment;
 import io.github.terra121.control.fragments.terra.TerraDistortionFragment;
 import io.github.terra121.control.fragments.terra.TerraEnvironmentFragment;
 import io.github.terra121.control.fragments.terra.TerraInfoFragment;
-import io.github.terra121.control.fragments.terra.TerraInvertWaterFragment;
 import io.github.terra121.control.fragments.terra.TerraOsmFragment;
 import io.github.terra121.control.fragments.terra.TerraWhereFragment;
 import io.github.terra121.control.fragments.terra.TerraWorldFragment;
@@ -29,7 +28,6 @@ public class TerraCommand extends FragmentManager {
         registerCommandFragment(new TerraConvertFragment());
         registerCommandFragment(new TerraEnvironmentFragment());
         registerCommandFragment(new TerraDistortionFragment());
-        registerCommandFragment(new TerraInvertWaterFragment());
     }
 
     @Override

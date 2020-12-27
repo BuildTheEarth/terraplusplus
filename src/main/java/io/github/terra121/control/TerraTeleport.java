@@ -127,7 +127,7 @@ public class TerraTeleport extends Command {
 
             if (alt == null) {
                 try {
-                    alt = String.valueOf(terrain.heights.getAsync(lon, lat).join() + 1);
+                    alt = String.valueOf(terrain.datasets.heights.getAsync(lon, lat).join() + 1);
                 } catch (OutOfProjectionBoundsException e) { //out of bounds, notify user
                     sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Invalid coordinates!", TextFormatting.RED)));
                     return;

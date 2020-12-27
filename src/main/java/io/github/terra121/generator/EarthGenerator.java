@@ -75,19 +75,9 @@ public class EarthGenerator extends BasicCubeGenerator {
     private final Map<Biome, ICubicPopulator> biomePopulators = new IdentityHashMap<>();
     public final EarthGeneratorSettings cfg;
 
-    public final LoadingCache<ChunkPos, CompletableFuture<CachedChunkData>> cache = CacheBuilder.newBuilder()
-            .expireAfterAccess(5L, TimeUnit.MINUTES)
-            .softValues()
-            .build(new ChunkDataLoader(this));
+    public final GeneratorDatasets datasets;
 
-    //
-    // DATASETS
-    //
-
-    public final ScalarDataset heights;
-    public final OpenStreetMap osm;
-    public final ScalarDataset trees;
-    public final Water water;
+    public final LoadingCache<ChunkPos, CompletableFuture<CachedChunkData>> cache;
 
     public EarthGenerator(World world) {
         super(world);
@@ -96,15 +86,13 @@ public class EarthGenerator extends BasicCubeGenerator {
         this.cubiccfg = this.cfg.getCustomCubic();
         this.projection = this.cfg.getProjection();
 
-        boolean doRoads = this.cfg.settings.roads && world.getWorldInfo().isMapFeaturesEnabled();
-        boolean doBuildings = this.cfg.settings.buildings && world.getWorldInfo().isMapFeaturesEnabled();
-
         this.biomes = world.getBiomeProvider(); //TODO: make this not order dependent
 
-        this.osm = new OpenStreetMap(this.projection, doRoads, this.cfg.settings.osmwater, doBuildings);
-        this.water = this.cfg.settings.osmwater ? this.osm.water : null;
-        this.heights = Heights.constructDataset(this.cfg.settings.smoothblend ? BlendMode.SMOOTH : BlendMode.LINEAR);
-        this.trees = new Trees();
+        this.datasets = new GeneratorDatasets(this.projection, this.cfg, world.getWorldInfo().isMapFeaturesEnabled());
+        this.cache = CacheBuilder.newBuilder()
+                .expireAfterAccess(5L, TimeUnit.MINUTES)
+                .softValues()
+                .build(new ChunkDataLoader(this.datasets));
 
         this.populators.add(TreePopulator.INSTANCE);
 

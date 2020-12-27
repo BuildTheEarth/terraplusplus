@@ -4,62 +4,25 @@ import com.google.common.collect.ImmutableMap;
 import io.github.terra121.TerraConfig;
 import io.github.terra121.dataset.BlendMode;
 import io.github.terra121.dataset.DoubleTiledDataset;
-import io.github.terra121.dataset.ScalarDataset;
 import io.github.terra121.dataset.MultiresDataset;
-import io.github.terra121.projection.EquirectangularProjection;
+import io.github.terra121.dataset.ScalarDataset;
 import io.github.terra121.projection.MapsProjection;
-import io.github.terra121.projection.OutOfProjectionBoundsException;
-import io.github.terra121.util.bvh.Bounds2d;
 import io.github.terra121.util.http.Disk;
-import io.github.terra121.util.http.Http;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import lombok.NonNull;
 import net.daporkchop.lib.binary.oio.StreamUtil;
-import net.daporkchop.lib.common.math.PMath;
 import net.daporkchop.lib.common.misc.file.PFiles;
-import net.daporkchop.lib.common.util.PorkUtil;
 
 import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.util.Arrays;
 
 public class Heights extends DoubleTiledDataset {
-    public static void main(String... args) throws OutOfProjectionBoundsException {
-        Http.setMaximumConcurrentRequestsTo("https://s3.amazonaws.com/", 16);
-
-        int size = 512;
-        int shift = 0;
-        ScalarDataset heights = Heights.constructDataset(BlendMode.LINEAR);
-        BufferedImage img = new BufferedImage(size << shift, size << shift, BufferedImage.TYPE_INT_ARGB);
-
-        int[] arr = new int[1 << shift];
-
-        Bounds2d bounds = Bounds2d.of(15.1, 15.4, 46.1, 46.4);
-        double[] data = heights
-                .getAsync(bounds.toCornerBB(new EquirectangularProjection(), true), size, size)
-                .join();
-
-        double min = Arrays.stream(data).min().orElse(0.0d);
-        double max = Arrays.stream(data).max().orElse(1.0d);
-        for (int x = 0; x < size; x++) {
-            for (int z = 0; z < size; z++) {
-                double d = data[x * size + z];
-                int c = PMath.floorI((d - min) / (max - min) * 255.0d);
-                Arrays.fill(arr, 0xFF000000 | c << 16 | c << 8 | c);
-                img.setRGB(x << shift, z << shift, 1 << shift, 1 << shift, arr, 0, 0);
-            }
-        }
-
-        PorkUtil.simpleDisplayImage(true, img);
-    }
-
     public static ScalarDataset constructDataset(@NonNull BlendMode blend) {
         try {
             URL url = Heights.class.getResource("/heights_config_default.json");

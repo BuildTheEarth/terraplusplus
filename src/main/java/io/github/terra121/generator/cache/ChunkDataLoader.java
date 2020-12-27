@@ -6,6 +6,7 @@ import io.github.terra121.dataset.osm.OSMRegion;
 import io.github.terra121.dataset.osm.poly.Polygon;
 import io.github.terra121.dataset.osm.segment.Segment;
 import io.github.terra121.generator.EarthGenerator;
+import io.github.terra121.generator.GeneratorDatasets;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
 import io.github.terra121.util.bvh.Bounds2d;
@@ -65,7 +66,7 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
     }
 
     @NonNull
-    protected final EarthGenerator generator;
+    protected final GeneratorDatasets data;
 
     @Override
     public CompletableFuture<CachedChunkData> load(ChunkPos pos) {
@@ -80,13 +81,13 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
             Bounds2d chunkBounds = Bounds2d.of(baseX, baseX + 16, baseZ, baseZ + 16);
             Bounds2d osmBounds = chunkBounds.expand(8.0d);
 
-            CornerBoundingBox2d chunkBoundsGeo = chunkBounds.toCornerBB(this.generator.projection, false).toGeo();
-            CornerBoundingBox2d osmBoundsGeo = osmBounds.toCornerBB(this.generator.projection, false).toGeo();
+            CornerBoundingBox2d chunkBoundsGeo = chunkBounds.toCornerBB(this.data.projection, false).toGeo();
+            CornerBoundingBox2d osmBoundsGeo = osmBounds.toCornerBB(this.data.projection, false).toGeo();
 
-            CompletableFuture<double[]> heightsFuture = this.generator.heights.getAsync(chunkBoundsGeo, 16, 16);
-            CompletableFuture<double[]> wateroffsFuture = this.generator.osm.water.getAsync(chunkBoundsGeo, 16, 16);
-            CompletableFuture<Double> treeCoverFuture = this.generator.trees.getAsync(chunkBoundsGeo.point(null, 0.5d, 0.5d));
-            CompletableFuture<OSMRegion[]> osmRegionsFuture = this.generator.osm.getRegionsAsync(osmBoundsGeo);
+            CompletableFuture<double[]> heightsFuture = this.data.heights.getAsync(chunkBoundsGeo, 16, 16);
+            CompletableFuture<double[]> wateroffsFuture = this.data.osm.water.getAsync(chunkBoundsGeo, 16, 16);
+            CompletableFuture<Double> treeCoverFuture = this.data.trees.getAsync(chunkBoundsGeo.point(null, 0.5d, 0.5d));
+            CompletableFuture<OSMRegion[]> osmRegionsFuture = this.data.osm.getRegionsAsync(osmBoundsGeo);
 
             return CompletableFuture.allOf(heightsFuture, wateroffsFuture, treeCoverFuture, osmRegionsFuture)
                     .thenApply(unused -> {

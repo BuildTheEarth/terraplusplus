@@ -330,9 +330,17 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
     Geometry waterway(Element way, long id, OSMRegion region) {
         Geometry last = null;
         if (way.geometry != null) {
-            this.allPolygons.add(new Polygon(new double[][][]{
-                    Arrays.stream(way.geometry).filter(Objects::nonNull).map(geom -> new double[]{ geom.lon, geom.lat }).toArray(double[][]::new)
-            }));
+            int nonNullCount = 0;
+            for (Geometry geometry : way.geometry) {
+                if (geometry != null) {
+                    nonNullCount++;
+                }
+            }
+            if (nonNullCount >= 3) { //only create polygon if there are at least 3 segments
+                this.allPolygons.add(new Polygon(new double[][][]{
+                        Arrays.stream(way.geometry).filter(Objects::nonNull).map(geom -> new double[]{ geom.lon, geom.lat }).toArray(double[][]::new)
+                }));
+            }
 
             for (Geometry geom : way.geometry) {
                 if (geom != null && last != null) {
