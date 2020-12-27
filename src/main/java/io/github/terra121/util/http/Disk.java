@@ -32,6 +32,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.LongAdder;
 
 import static net.daporkchop.lib.common.util.PValidation.*;
 
@@ -156,15 +157,20 @@ public class Disk {
     }
 
     private void pruneCache() throws IOException {
-        if (TerraMod.LOGGER != null && !TerraConfig.reducedConsoleMessages) {
-            TerraMod.LOGGER.info("running cache cleanup...");
-        }
+        TerraMod.LOGGER.info("running cache cleanup...");
+
+        LongAdder count = new LongAdder();
+        LongAdder size = new LongAdder();
         Files.list(CACHE_ROOT)
-                .onClose(() -> {
-                    if (TerraMod.LOGGER != null && !TerraConfig.reducedConsoleMessages) {
-                        TerraMod.LOGGER.info("cache cleanup complete.");
-                    }
+                .filter(Files::isRegularFile)
+                .filter((IOPredicate<Path>) Disk::hasExpired)
+                .peek((IOConsumer<Path>) path -> {
+                    count.increment();
+                    size.add(Files.size(path));
                 })
-                .filter(Files::isRegularFile).filter((IOPredicate<Path>) Disk::hasExpired).forEach((IOConsumer<Path>) Files::delete);
+                .forEach((IOConsumer<Path>) Files::delete);
+
+        double mib = Math.round(size.sum() / (1024.0d * 1024.0d) * 10.0d) / 10.0d;
+        TerraMod.LOGGER.info("cache cleanup complete. deleted {} files, totalling {} bytes ({} MiB)", count.sum(), size.sum(), mib);
     }
 }

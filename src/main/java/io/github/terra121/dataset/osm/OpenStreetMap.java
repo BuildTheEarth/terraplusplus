@@ -15,6 +15,7 @@ import io.github.terra121.util.bvh.BVH;
 import io.github.terra121.util.bvh.Bounds2d;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import net.minecraft.util.math.ChunkPos;
 import org.apache.commons.io.IOUtils;
@@ -34,6 +35,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static net.daporkchop.lib.common.math.PMath.*;
+import static net.daporkchop.lib.common.util.PValidation.*;
 import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 public class OpenStreetMap extends TiledDataset<OSMRegion> {
@@ -73,17 +75,21 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
     @Override
     protected synchronized OSMRegion decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception {
         //TODO: make this able to run concurrently without a shared state
+        try {
+            OSMRegion region = new OSMRegion(new ChunkPos(tileX, tileZ), this.water);
+            this.doGson(new ByteBufInputStream(data), region);
 
-        OSMRegion region = new OSMRegion(new ChunkPos(tileX, tileZ), this.water);
-        this.doGson(new ByteBufInputStream(data), region);
+            region.segments = new BVH<>(this.allSegments);
+            region.polygons = new BVH<>(this.allPolygons);
 
-        region.segments = new BVH<>(this.allSegments);
-        this.allSegments.clear();
-
-        region.polygons = new BVH<>(this.allPolygons);
-        this.allPolygons.clear();
-
-        return region;
+            return region;
+        } catch (Throwable t) {
+            t.printStackTrace();
+            throw new RuntimeException(t);
+        } finally {
+            this.allSegments.clear();
+            this.allPolygons.clear();
+        }
     }
 
     public ChunkPos getRegion(double lon, double lat) {
@@ -330,15 +336,20 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
     Geometry waterway(Element way, long id, OSMRegion region) {
         Geometry last = null;
         if (way.geometry != null) {
-            int nonNullCount = 0;
-            for (Geometry geometry : way.geometry) {
-                if (geometry != null) {
-                    nonNullCount++;
+            if (way.geometry.length >= 3) { //only create polygon if there are at least 3 segments
+                List<double[]> points = new ArrayList<>(way.geometry.length);
+                for (Geometry geometry : way.geometry) {
+                    double[] point = null;
+                    if (geometry != null) {
+                        try {
+                            point = this.earthProjection.fromGeo(geometry.lon, geometry.lat);
+                        } catch (OutOfProjectionBoundsException e) { //skip point
+                        }
+                    }
+                    points.add(point);
                 }
-            }
-            if (nonNullCount >= 3) { //only create polygon if there are at least 3 segments
                 this.allPolygons.add(new Polygon(new double[][][]{
-                        Arrays.stream(way.geometry).filter(Objects::nonNull).map(geom -> new double[]{ geom.lon, geom.lat }).toArray(double[][]::new)
+                        points.toArray(new double[0][])
                 }));
             }
 
@@ -350,6 +361,19 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
             }
         }
         return last;
+    }
+
+    protected double[][][] buildPolygon(@NonNull Geometry[] in) {
+        checkState(Objects.equals(in[0], in[in.length - 1]));
+
+        List<double[][]> shapes = new ArrayList<>();
+        List<double[]> points = new ArrayList<>();
+        Set<Geometry> usedPoints = new HashSet<>();
+
+        for (Geometry geometry : in) {
+        }
+
+        return shapes.isEmpty() ? null : shapes.toArray(new double[0][][]);
     }
 
     public enum Attributes {
@@ -366,6 +390,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         String role;
     }
 
+    @EqualsAndHashCode
     public static class Geometry {
         double lat;
         double lon;

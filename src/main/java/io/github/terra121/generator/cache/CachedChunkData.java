@@ -19,6 +19,8 @@ import java.util.Set;
  */
 @Getter
 public class CachedChunkData {
+    public static final double BLANK_HEIGHT = -2.0d;
+
     public static final CachedChunkData BLANK;
     public static final CachedChunkData NULL_ISLAND;
 
@@ -26,7 +28,7 @@ public class CachedChunkData {
         double[] defaultWateroffs = new double[16 * 16];
 
         double[] defaultHeights = new double[16 * 16];
-        Arrays.fill(defaultHeights, -2.0d);
+        Arrays.fill(defaultHeights, BLANK_HEIGHT);
         BLANK = new CachedChunkData(defaultHeights, defaultWateroffs, Collections.emptySet(), Collections.emptySet(), 0.0d);
 
         defaultHeights = new double[16 * 16];

@@ -87,12 +87,23 @@ public class IntervalTree<V extends Interval> {
     /**
      * Runs the given function on every value that contains the given point.
      *
-     * @param point the interval that values must contain
+     * @param point    the interval that values must contain
      * @param callback the callback function to run
      */
     public void forEachIntersecting(double point, @NonNull Consumer<V> callback) {
         if (this.root != null && this.root.contains(point)) {
             this.root.forEachIntersecting(point, callback);
+        }
+    }
+
+    /**
+     * Runs the given function on every value in the tree.
+     *
+     * @param callback the callback function to run
+     */
+    public void forEach(@NonNull Consumer<V> callback) {
+        if (this.root != null) {
+            this.root.forEach(callback);
         }
     }
 
@@ -153,7 +164,6 @@ public class IntervalTree<V extends Interval> {
             }
         }
 
-        @SuppressWarnings("unchecked")
         protected void forEachIntersecting(double point, Consumer<V> callback) {
             if (this.children != null) { //not a leaf node
                 for (Node<V> child : this.children) {
@@ -164,10 +174,27 @@ public class IntervalTree<V extends Interval> {
             }
 
             if (this.values != null) { //this node contains some values
-                for (Object value : this.values) { //check intersection with each value individually
-                    if (((V) value).contains(point)) {
-                        callback.accept((V) value);
+                for (Object _value : this.values) { //check intersection with each value individually
+                    V value = uncheckedCast(_value);
+                    if (value.contains(point)) {
+                        callback.accept(value);
                     }
+                }
+            }
+        }
+
+        protected void forEach(Consumer<V> callback) {
+            if (this.children != null) { //not a leaf node
+                for (Node<V> child : this.children) {
+                    if (child != null) {
+                        child.forEach(callback);
+                    }
+                }
+            }
+
+            if (this.values != null) { //this node contains some values
+                for (Object value : this.values) { //check intersection with each value individually
+                    callback.accept(uncheckedCast(value));
                 }
             }
         }

@@ -15,7 +15,6 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http2.Http2SecurityUtil;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
@@ -111,12 +110,10 @@ public class Http {
 
             @Override
             public void accept(ByteBuf cachedData, Throwable throwable) { //stage 1: handle value from cache
-                if (TerraMod.LOGGER != null) {
-                    if (throwable != null) {
-                        TerraMod.LOGGER.error("Unable to read cache for " + this.parsed, throwable);
-                    } else if (!TerraConfig.reducedConsoleMessages) {
-                        TerraMod.LOGGER.info("Cache {}: {}", cachedData != null ? "hit" : "miss", this.parsed);
-                    }
+                if (throwable != null) {
+                    TerraMod.LOGGER.error("Unable to read cache for " + this.parsed, throwable);
+                } else if (!TerraConfig.reducedConsoleMessages) {
+                    TerraMod.LOGGER.info("Cache {}: {}", cachedData != null ? "hit" : "miss", this.parsed);
                 }
 
                 try {
@@ -134,9 +131,7 @@ public class Http {
                         }
                     }
                 } catch (Exception e) {
-                    if (TerraMod.LOGGER != null) {
-                        TerraMod.LOGGER.error("Unable to read cache for " + this.parsed, e);
-                    }
+                    TerraMod.LOGGER.error("Unable to read cache for " + this.parsed, e);
                 } finally {
                     ReferenceCountUtil.release(cachedData);
                 }
@@ -252,10 +247,7 @@ public class Http {
             @Override
             public void accept(T value, Throwable cause) {
                 if (cause != null) {
-                    if (this.e == null) {
-                        this.e = new RuntimeException("All URLs completed exceptionally!");
-                    }
-                    this.e.addSuppressed(cause);
+                    this.e().addSuppressed(cause);
                 } else if (value == null) { //remember that one of the URLs 404'd
                     this.foundMissing = true;
                 } else { //complete the future successfully with the retrieved value
@@ -272,8 +264,12 @@ public class Http {
                 } else if (this.foundMissing) { //the best result from any of the URLs was a 404
                     this.future.complete(null);
                 } else {
-                    this.future.completeExceptionally(this.e);
+                    this.future.completeExceptionally(this.e());
                 }
+            }
+
+            protected RuntimeException e() {
+                return this.e != null ? this.e : (this.e = new RuntimeException("All URLs completed exceptionally!"));
             }
         }
 

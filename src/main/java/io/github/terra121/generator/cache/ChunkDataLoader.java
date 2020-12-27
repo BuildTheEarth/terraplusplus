@@ -15,10 +15,11 @@ import lombok.RequiredArgsConstructor;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+
+import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * {@link CacheLoader} implementation for {@link EarthGenerator} which asynchronously aggregates information from multiple datasets and stores it
@@ -32,6 +33,19 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
 
     static {
         Arrays.fill(NAN_ARRAY, Double.NaN);
+    }
+
+    private static double[] fixHeights(double[] heights) {
+        if (heights == null) { //consider heights array to be filled with NaNs
+            return CachedChunkData.BLANK.heights;
+        }
+
+        for (int i = 0; i < 16 * 16; i++) { //replace NaNs with blank height value
+            if (Double.isNaN(heights[i])) {
+                heights[i] = CachedChunkData.BLANK_HEIGHT;
+            }
+        }
+        return heights;
     }
 
     private static void combineHeightsWithWateroffs(@NonNull double[] heights, @NonNull double[] wateroffs) {
@@ -76,6 +90,14 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
         }
     }
 
+    protected static void renderPolygon(int baseX, int baseZ, @NonNull double[] wateroffs, @NonNull Polygon polygon) {
+        polygon.rasterizeShape(baseX, 16, baseZ, 16, (x, z) -> {
+            int i = (x - baseX) * 16 + (z - baseZ);
+            checkIndex((i & 0xFF) == i, "base: (%d, %d), xz: (%d, %d)", baseX, baseZ, x, z);
+            wateroffs[i] = 1.0d;
+        });
+    }
+
     @NonNull
     protected final GeneratorDatasets data;
 
@@ -96,35 +118,36 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
             CornerBoundingBox2d osmBoundsGeo = osmBounds.toCornerBB(this.data.projection, false).toGeo();
 
             CompletableFuture<double[]> heightsFuture = this.data.heights.getAsync(chunkBoundsGeo, 16, 16);
-            CompletableFuture<double[]> wateroffsFuture = this.data.osm.water.getAsync(chunkBoundsGeo, 16, 16);
+            //CompletableFuture<double[]> wateroffsFuture = this.data.osm.water.getAsync(chunkBoundsGeo, 16, 16);
             CompletableFuture<Double> treeCoverFuture = this.data.trees.getAsync(chunkBoundsGeo.point(null, 0.5d, 0.5d));
             CompletableFuture<OSMRegion[]> osmRegionsFuture = this.data.osm.getRegionsAsync(osmBoundsGeo);
 
-            return CompletableFuture.allOf(heightsFuture, wateroffsFuture, treeCoverFuture, osmRegionsFuture)
+            return CompletableFuture.allOf(heightsFuture/*, wateroffsFuture*/, treeCoverFuture, osmRegionsFuture)
                     .thenApply(unused -> {
                         //dereference all futures
-                        double[] heights = heightsFuture.join();
-                        double[] wateroffs = wateroffsFuture.join();
+                        double[] heights = fixHeights(heightsFuture.join());
+                        //double[] wateroffs = wateroffsFuture.join();
                         double treeCover = treeCoverFuture.join();
                         OSMRegion[] osmRegions = osmRegionsFuture.join();
 
-                        if (heights == null) { //ensure that both arrays are set
-                            heights = NAN_ARRAY.clone();
-                        }
-                        if (wateroffs == null) {
-                            wateroffs = NAN_ARRAY.clone();
-                        }
-                        combineHeightsWithWateroffs(heights, wateroffs);
-
-                        if (Double.isNaN(treeCover)) {
-                            treeCover = 0.0d;
-                        }
-
                         //find all segments and polygons that intersect the chunk
                         Set<Segment> segments = new HashSet<>();
-                        Set<Polygon> polygons = Collections.emptySet();
+                        Set<Polygon> polygons = new HashSet<>();
                         for (OSMRegion region : osmRegions) {
                             region.segments.forEachIntersecting(osmBounds, segments::add);
+                            region.polygons.forEachIntersecting(osmBounds, polygons::add);
+                        }
+
+                        //render polygons to create water offsets
+                        double[] wateroffs = new double[16 * 16];
+                        for (Polygon polygon : polygons) {
+                            renderPolygon(baseX, baseZ, wateroffs, polygon);
+                        }
+
+                        combineHeightsWithWateroffs(heights, wateroffs);
+
+                        if (Double.isNaN(treeCover)) { //ensure that treeCover is set
+                            treeCover = 0.0d;
                         }
 
                         return new CachedChunkData(heights, wateroffs, segments, polygons, treeCover);

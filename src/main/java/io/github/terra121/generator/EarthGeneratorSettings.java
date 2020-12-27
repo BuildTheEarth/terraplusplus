@@ -21,7 +21,7 @@ public class EarthGeneratorSettings {
     private Gson gson;
 
     public EarthGeneratorSettings(String generatorSettings) {
-        if (!TerraConfig.reducedConsoleMessages && TerraMod.LOGGER != null) {
+        if (!TerraConfig.reducedConsoleMessages) {
             TerraMod.LOGGER.info(generatorSettings);
         }
 
@@ -94,7 +94,7 @@ public class EarthGeneratorSettings {
         public boolean roads = true;
         public String customcubic = "";
         public boolean dynamicbaseheight = true;
-        public boolean osmwater = false;
-        public boolean buildings = false;
+        public boolean osmwater = true;
+        public boolean buildings = true;
     }
 }
