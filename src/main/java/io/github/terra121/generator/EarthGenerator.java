@@ -160,25 +160,33 @@ public class EarthGenerator extends BasicCubeGenerator {
 
     private void generateSurface(int cubeX, int cubeY, int cubeZ, CubePrimer primer, CachedChunkData data, byte[] biomes) {
         IBlockState stone = Blocks.STONE.getDefaultState();
+        IBlockState water = Blocks.WATER.getDefaultState();
         if (data.belowSurface(cubeY + 2)) { //below surface -> solid stone (padding of 2 cubes because some replacers might need it)
             //technically, i could reflectively get access to the primer's underlying char[] and use Arrays.fill(), because this
             // implementation causes 4096 calls to ObjectIntIdentityMap#get() when only 1 would be necessary...
             for (int x = 0; x < 16; x++) {
                 for (int y = 0; y < 16; y++) {
                     for (int z = 0; z < 16; z++) {
-                        primer.setBlockState(z, y, z, stone);
+                        primer.setBlockState(x, y, z, stone);
                     }
                 }
             }
         } else if (data.aboveSurface(cubeY)) { //above surface -> air (no padding here, replacers don't normally affect anything above the surface)
-            //no-op, the primer is already air!
+            if (cubeY < 0) { //fill with water, we're in the ocean
+                for (int x = 0; x < 16; x++) {
+                    for (int y = 0; y < 16; y++) {
+                        for (int z = 0; z < 16; z++) {
+                            primer.setBlockState(x, y, z, water);
+                        }
+                    }
+                }
+            }
         } else {
-            IBlockState water = Blocks.WATER.getDefaultState();
             double[] heights = data.heights();
 
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
-                    double waterSurfaceHeight = heights[x * 16 + z] + WATEROFF_TRANSITION;
+                    double waterSurfaceHeight = max(heights[x * 16 + z] + WATEROFF_TRANSITION, 0.0d);
                     double height = data.heightWithWater(x, z);
                     double dx = x == 15 ? height - data.heightWithWater(x - 1, z) : data.heightWithWater(x + 1, z) - height;
                     double dz = z == 15 ? height - data.heightWithWater(x, z - 1) : data.heightWithWater(x, z + 1) - height;
