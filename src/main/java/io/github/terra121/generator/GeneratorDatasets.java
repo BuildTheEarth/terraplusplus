@@ -4,7 +4,6 @@ import io.github.terra121.dataset.BlendMode;
 import io.github.terra121.dataset.ScalarDataset;
 import io.github.terra121.dataset.impl.Heights;
 import io.github.terra121.dataset.impl.Trees;
-import io.github.terra121.dataset.impl.Water;
 import io.github.terra121.dataset.osm.OpenStreetMap;
 import io.github.terra121.projection.GeographicProjection;
 import lombok.NonNull;
@@ -20,13 +19,11 @@ public class GeneratorDatasets {
     public final ScalarDataset heights;
     public final OpenStreetMap osm;
     public final ScalarDataset trees;
-    public final Water water;
 
     public GeneratorDatasets(@NonNull GeographicProjection projection,  @NonNull EarthGeneratorSettings cfg, boolean features) {
         this.projection = projection;
 
         this.osm = new OpenStreetMap(projection, features && cfg.settings.roads, cfg.settings.osmwater, features && cfg.settings.buildings);
-        this.water = cfg.settings.osmwater ? this.osm.water : null;
         this.heights = Heights.constructDataset(cfg.settings.smoothblend ? BlendMode.SMOOTH : BlendMode.LINEAR);
         this.trees = new Trees();
     }

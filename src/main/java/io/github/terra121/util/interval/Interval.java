@@ -27,6 +27,6 @@ public interface Interval {
      * @return whether or not this interval contains the given point
      */
     default boolean contains(double point) {
-        return this.min() <= point && this.max() >= point;
+        return this.min() < point && this.max() > point;
     }
 }

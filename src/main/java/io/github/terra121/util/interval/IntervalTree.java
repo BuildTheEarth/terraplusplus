@@ -170,6 +170,7 @@ public class IntervalTree<V extends Interval> {
                 for (Node<V> child : this.children) {
                     if (child != null && child.contains(point)) {
                         child.forEachIntersecting(point, callback);
+                        break;
                     }
                 }
             }

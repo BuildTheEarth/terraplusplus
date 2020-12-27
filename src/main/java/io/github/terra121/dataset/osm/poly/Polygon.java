@@ -1,7 +1,6 @@
 package io.github.terra121.dataset.osm.poly;
 
 import io.github.opencubicchunks.cubicchunks.api.util.MathUtil;
-import io.github.terra121.TerraMod;
 import io.github.terra121.util.bvh.Bounds2d;
 import io.github.terra121.util.interval.IntervalTree;
 import lombok.Getter;
@@ -12,7 +11,9 @@ import net.minecraft.util.math.MathHelper;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static java.lang.Math.*;
 import static net.daporkchop.lib.common.math.PMath.*;
@@ -137,7 +138,7 @@ public class Polygon implements Bounds2d, Comparable<Polygon> {
             }
             segments.add(toSegment(shape, 0, shape.length - 1));
         }*/
-        segments.removeIf(s -> s.lon0 == s.lon1);
+        //segments.removeIf(s -> s.lon0 == s.lon1);
 
         checkArg(segments.size() >= 3, "polygon must contain at least 3 valid segments!");
 
@@ -145,25 +146,35 @@ public class Polygon implements Bounds2d, Comparable<Polygon> {
     }
 
     public double[] getIntersectionPoints(int pos) {
-        double center = pos + 0.5d;
-        List<Segment> segments = this.segments.getAllIntersecting(center);
-        if ((segments.size() & 1) != 0) { //odd number of intersection points, skip
-            return EMPTY_DOUBLE_ARRAY;
-        }
+        int retries = 0;
+        double offset = 0.5d;
+        do {
+            double center = pos + offset;
+            List<Segment> segments = this.segments.getAllIntersecting(center);
+            if ((segments.size() & 1) == 0) { //if there's an even count, this was successful
+                int size = segments.size();
+                if (size == 0) {
+                    return EMPTY_DOUBLE_ARRAY;
+                } else {
+                    double[] arr = new double[size];
 
-        int size = segments.size();
-        if (size == 0) {
-            return EMPTY_DOUBLE_ARRAY;
-        } else {
-            double[] arr = new double[size];
+                    int i = 0;
+                    for (Segment s : segments) {
+                        arr[i++] = lerp(s.lat0, s.lat1, (s.lon0 - center) / (s.lon0 - s.lon1));
+                    }
+                    Arrays.sort(arr);
 
-            int i = 0;
-            for (Segment s : segments) {
-                arr[i++] = lerp(s.lat0, s.lat1, (s.lon0 - center) / (s.lon0 - s.lon1));
+                    return arr;
+                }
             }
-            Arrays.sort(arr);
-            return arr;
-        }
+
+            //retry with another random offset
+            //this happens because sometimes segments are exactly aligned to the sample grid, in which case everything breaks
+            offset = 0.45d + ThreadLocalRandom.current().nextDouble() * 0.1d;
+        } while (retries++ < 3);
+
+        //retried multiple times with different offsets and it still failed, abort...
+        return EMPTY_DOUBLE_ARRAY;
     }
 
     public void rasterizeDistance(int baseX, int sizeX, int baseZ, int sizeZ, int maxDist, @NonNull DistRasterizationCallback callback) {

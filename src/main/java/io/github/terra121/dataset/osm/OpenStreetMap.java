@@ -3,7 +3,6 @@ package io.github.terra121.dataset.osm;
 import com.google.gson.Gson;
 import io.github.terra121.TerraConfig;
 import io.github.terra121.dataset.TiledDataset;
-import io.github.terra121.dataset.impl.Water;
 import io.github.terra121.dataset.osm.poly.Polygon;
 import io.github.terra121.dataset.osm.segment.Segment;
 import io.github.terra121.dataset.osm.segment.SegmentType;
@@ -15,8 +14,13 @@ import io.github.terra121.util.bvh.BVH;
 import io.github.terra121.util.bvh.Bounds2d;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
+import lombok.ToString;
+import net.daporkchop.lib.common.ref.Ref;
+import net.daporkchop.lib.common.ref.ThreadRef;
 import net.minecraft.util.math.ChunkPos;
 import org.apache.commons.io.IOUtils;
 
@@ -46,9 +50,8 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
 
     protected final GeographicProjection earthProjection;
 
-    public final Water water;
-    private final List<Segment> allSegments = new ArrayList<>();
-    private final List<Polygon> allPolygons = new ArrayList<>();
+    private final Ref<List<Segment>> allSegments = ThreadRef.soft(ArrayList::new);
+    private final Ref<List<Polygon>> allPolygons = ThreadRef.soft(ArrayList::new);
     private final Gson gson = new Gson();
     private final boolean doRoad;
     private final boolean doWater;
@@ -58,12 +61,6 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         super(new EquirectangularProjection(), TILE_SIZE);
 
         this.earthProjection = earthProjection;
-
-        try {
-            this.water = new Water(this, 256);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
 
         this.doRoad = doRoad;
         this.doWater = doWater;
@@ -78,22 +75,23 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
     }
 
     @Override
-    protected synchronized OSMRegion decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception {
-        //TODO: make this able to run concurrently without a shared state
+    protected OSMRegion decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception {
+        List<Segment> allSegments = this.allSegments.get();
+        List<Polygon> allPolygons = this.allPolygons.get(); //store here to prevent them from being GC'd
         try {
-            OSMRegion region = new OSMRegion(new ChunkPos(tileX, tileZ), this.water);
+            OSMRegion region = new OSMRegion(new ChunkPos(tileX, tileZ));
             this.doGson(new ByteBufInputStream(data), region);
 
-            region.segments = new BVH<>(this.allSegments);
-            region.polygons = new BVH<>(this.allPolygons);
+            region.segments = new BVH<>(allSegments);
+            region.polygons = new BVH<>(allPolygons);
 
             return region;
         } catch (Throwable t) {
             t.printStackTrace();
             throw new RuntimeException(t);
         } finally {
-            this.allSegments.clear();
-            this.allPolygons.clear();
+            allSegments.clear();
+            allPolygons.clear();
         }
     }
 
@@ -127,15 +125,80 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
 
         Data data = this.gson.fromJson(writer.toString(), Data.class);
 
-        Map<Long, Element> allWays = new HashMap<>();
+        Long2ObjectMap<Element> idToElement = new Long2ObjectOpenHashMap<>();
         Set<Element> unusedWays = new HashSet<>();
-        Set<Long> ground = new HashSet<>();
+
+        //pass 1: build id -> element map
+        for (Element elem : data.elements) {
+            checkState(idToElement.put(elem.id, elem) == null, elem.id);
+        }
+
+        //pass 2: assemble multipolygons
+        for (Element elem : data.elements) {
+            if (elem.type != EType.relation || elem.members == null || elem.tags == null || !"multipolygon".equals(elem.tags.get("type"))) {
+                continue;
+            }
+
+            List<Geometry> out = new ArrayList<>();
+            Map<Geometry, List<Geometry>> points = new HashMap<>();
+            for (Member member : elem.members) {
+                if (member.type != EType.way) {
+                    continue;
+                }
+                Element way = idToElement.get(member.ref);
+                if (way == null || way.geometry == null) {
+                    continue;
+                }
+
+                try {
+                    Geometry head = way.geometry[0];
+                    Geometry tail = way.geometry[way.geometry.length - 1];
+
+                    if (Objects.equals(head, tail)) { //way is a closed loop
+                        out.addAll(Arrays.asList(way.geometry));
+                        continue;
+                    }
+
+                    Geometry matchingPoint;
+                    List<Geometry> listOut;
+                    if ((listOut = points.get(matchingPoint = head)) != null) {
+                        listOut.addAll(0, Arrays.asList(Arrays.copyOfRange(way.geometry, 0, way.geometry.length - 1))); //append to front
+                    } else if ((listOut = points.get(matchingPoint = tail)) != null) {
+                        listOut.addAll(Arrays.asList(Arrays.copyOfRange(way.geometry, 1, way.geometry.length))); //append to tail
+                    }
+
+                    if (listOut != null) {
+                        points.remove(matchingPoint);
+                        if (Objects.equals(listOut.get(0), listOut.get(listOut.size() - 1))) { //closed loop
+                            out.addAll(listOut);
+                            points.remove(listOut.get(0), listOut);
+                            points.remove(listOut.get(listOut.size() - 1), listOut);
+                            continue;
+                        }
+                    } else {
+                        listOut = new ArrayList<>(Arrays.asList(way.geometry));
+                    }
+
+                    points.put(listOut.get(0), listOut);
+                    points.put(listOut.get(listOut.size() - 1), listOut);
+                } finally {
+                    way.geometry = null;
+                }
+            }
+
+            while (!points.isEmpty()) { //hacky solution: fix all points
+                List<Geometry> list = points.values().iterator().next();
+                points.values().removeIf(v -> v == list);
+                out.addAll(list);
+                out.add(list.get(0));
+            }
+
+            elem.geometry = out.toArray(new Geometry[0]);
+        }
 
         for (Element elem : data.elements) {
             Attributes attributes = Attributes.NONE;
             if (elem.type == EType.way) {
-                allWays.put(elem.id, elem);
-
                 if (elem.tags == null) {
                     unusedWays.add(elem);
                     continue;
@@ -165,7 +228,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                 }
 
                 if ("coastline".equals(naturalv)) {
-                    this.waterway(elem, -1, region);
+                    this.waterway(elem);
                 } else if (false && //TODO: delet this
                            (highway != null || building != null || ("river".equals(waterway) || "canal".equals(waterway) || "stream".equals(waterway)))) { //TODO: fewer equals
                     SegmentType type = SegmentType.ROAD;
@@ -266,12 +329,16 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                     String wway = elem.tags.get("waterway");
 
                     if (waterv != null || "water".equals(naturalv) || "riverbank".equals(wway)) {
-                        for (Member member : elem.members) {
-                            if (member.type == EType.way) {
-                                Element way = allWays.get(member.ref);
-                                if (way != null) {
-                                    this.waterway(way, elem.id + 3600000000L, region);
-                                    unusedWays.remove(way);
+                        if (elem.geometry != null) {
+                            this.waterway(elem);
+                        } else {
+                            for (Member member : elem.members) {
+                                if (member.type == EType.way) {
+                                    Element way = idToElement.get(member.ref);
+                                    if (way != null) {
+                                        this.waterway(way);
+                                        unusedWays.remove(way);
+                                    }
                                 }
                             }
                         }
@@ -281,7 +348,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                 if (this.doBuildings && elem.tags.get("building") != null) {
                     for (Member member : elem.members) {
                         if (member.type == EType.way) {
-                            Element way = allWays.get(member.ref);
+                            Element way = idToElement.get(member.ref);
                             if (way != null) {
                                 this.addWay(way, SegmentType.BUILDING, (byte) 1, region, Attributes.NONE, (byte) 0);
                                 unusedWays.remove(way);
@@ -289,8 +356,6 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                         }
                     }
                 }
-            } else if (elem.type == EType.area) {
-                ground.add(elem.id);
             }
         }
 
@@ -302,16 +367,10 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                     String wway = way.tags.get("waterway");
 
                     if (waterv != null || "water".equals(naturalv) || "riverbank".equals(wway)) {
-                        this.waterway(way, way.id + 2400000000L, region);
+                        this.waterway(way);
                     }
                 }
             }
-
-            if (this.water.grounding.state(region.coord.x, region.coord.z) == 0) {
-                ground.add(-1L);
-            }
-
-            region.renderWater(ground);
         }
     }
 
@@ -326,7 +385,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                         double[] proj = this.earthProjection.fromGeo(geom.lon, geom.lat);
 
                         if (lastProj != null) { //register as a road edge
-                            this.allSegments.add(new Segment(lastProj[0], lastProj[1], proj[0], proj[1], type, lanes, region, attributes, layer));
+                            this.allSegments.get().add(new Segment(lastProj[0], lastProj[1], proj[0], proj[1], type, lanes, region, attributes, layer));
                         }
 
                         lastProj = proj;
@@ -338,44 +397,34 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         }
     }
 
-    Geometry waterway(Element way, long id, OSMRegion region) {
+    Geometry waterway(Element way) {
         Geometry last = null;
         if (way.geometry != null) {
-            if (way.geometry.length >= 3) { //only create polygon if there are at least 3 segments
-                List<double[]> points = new ArrayList<>(way.geometry.length);
-                for (Geometry geometry : way.geometry) {
-                    double[] point = null;
-                    if (geometry != null) {
-                        try {
-                            point = this.earthProjection.fromGeo(geometry.lon, geometry.lat);
-                        } catch (OutOfProjectionBoundsException e) { //skip point
-                        }
-                    }
-                    points.add(point);
-                }
-                this.allPolygons.add(new Polygon(new double[][][]{
-                        points.toArray(new double[0][])
-                }));
-            }
-
-            for (Geometry geom : way.geometry) {
-                if (geom != null && last != null) {
-                    region.addWaterEdge(last.lon, last.lat, geom.lon, geom.lat, id);
-                }
-                last = geom;
+            double[][][] poly = this.buildPolygon(way.geometry);
+            if (poly != null) {
+                this.allPolygons.get().add(new Polygon(poly));
             }
         }
         return last;
     }
 
     protected double[][][] buildPolygon(@NonNull Geometry[] in) {
-        checkState(Objects.equals(in[0], in[in.length - 1]));
-
         List<double[][]> shapes = new ArrayList<>();
         List<double[]> points = new ArrayList<>();
         Set<Geometry> usedPoints = new HashSet<>();
 
         for (Geometry geometry : in) {
+            if (usedPoints.add(geometry)) {
+                try {
+                    points.add(this.earthProjection.fromGeo(geometry.lon, geometry.lat));
+                } catch (OutOfProjectionBoundsException e) { //skip point
+                    throw new RuntimeException(geometry.toString(), e);
+                }
+            } else {
+                shapes.add(points.toArray(new double[0][]));
+                points.clear();
+                usedPoints.clear();
+            }
         }
 
         return shapes.isEmpty() ? null : shapes.toArray(new double[0][][]);
@@ -389,24 +438,28 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         invalid, node, way, relation, area
     }
 
+    @ToString
     public static class Member {
         EType type;
         long ref;
         String role;
     }
 
+    @ToString
     @EqualsAndHashCode
     public static class Geometry {
         double lat;
         double lon;
     }
 
+    @ToString
     public static class Element {
         EType type;
         long id;
         Map<String, String> tags;
         long[] nodes;
         Member[] members;
+        @ToString.Exclude
         Geometry[] geometry;
     }
 

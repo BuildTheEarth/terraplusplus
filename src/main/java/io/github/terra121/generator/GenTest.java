@@ -17,7 +17,7 @@ import static net.daporkchop.lib.common.math.PMath.*;
 //TODO: delete this before merge
 public class GenTest {
     static final int SIZE = 1024;
-    static final int BASE_CHUNK_X = (857742 >> 4) - 16;
+    static final int BASE_CHUNK_X = (857742 >> 4);
     static final int BASE_CHUNK_Z = (4721747 >> 4) - 16;
     static final int SCALE = 1;
 
@@ -28,35 +28,39 @@ public class GenTest {
     public static void main(String... args) {
         Http.configChanged();
 
+        while (true) {
+            doThing();
+        }
+    }
+
+    private static void doThing() { //allows hot-swapping
         EarthGeneratorSettings cfg = new EarthGeneratorSettings("{\"projection\":\"equirectangular\",\"orentation\":\"swapped\",\"scaleX\":100000.0,\"scaleY\":100000.0,\"smoothblend\":true,\"roads\":false,\"customcubic\":\"\",\"dynamicbaseheight\":true,\"osmwater\":true,\"buildings\":false,\"caves\":false,\"lidar\":false,\"customdataset\":\"Custom Terrain Directory\"}");
         //cfg = new EarthGeneratorSettings("");
         LOADER = new ChunkDataLoader(new GeneratorDatasets(cfg.getProjection(), cfg, true));
 
-        while (true) {
-            PorkUtil.simpleDisplayImage(true, tile(0, 0, SCALE)
-                    .thenApply(data -> {
-                        BufferedImage img = new BufferedImage(SIZE, SIZE, BufferedImage.TYPE_INT_ARGB);
+        PorkUtil.simpleDisplayImage(true, tile(0, 0, SCALE)
+                .thenApply(data -> {
+                    BufferedImage img = new BufferedImage(SIZE, SIZE, BufferedImage.TYPE_INT_ARGB);
 
-                        double minH = Arrays.stream(data[0]).min().getAsDouble();
-                        double maxH = Arrays.stream(data[0]).max().getAsDouble();
-                        double minW = Arrays.stream(data[1]).min().getAsDouble();
-                        double maxW = Arrays.stream(data[1]).max().getAsDouble();
-                        double minO = Arrays.stream(data[2]).min().getAsDouble();
-                        double maxO = Arrays.stream(data[2]).max().getAsDouble();
+                    double minH = Arrays.stream(data[0]).min().getAsDouble();
+                    double maxH = Arrays.stream(data[0]).max().getAsDouble();
+                    double minW = Arrays.stream(data[1]).min().getAsDouble();
+                    double maxW = Arrays.stream(data[1]).max().getAsDouble();
+                    double minO = Arrays.stream(data[2]).min().getAsDouble();
+                    double maxO = Arrays.stream(data[2]).max().getAsDouble();
 
-                        for (int x = 0; x < SIZE; x++) {
-                            for (int z = 0; z < SIZE; z++) {
-                                int h = clamp(floorI((data[0][x * SIZE + z] - minH) * 255.0d / (maxH - minH)), 0, 255);
-                                int w = clamp(floorI((data[1][x * SIZE + z] - minW) * 255.0d / (maxW - minW)), 0, 255);
-                                int o = clamp(floorI((data[2][x * SIZE + z] - minO) * 255.0d / (maxO - minO)), 0, 255);
+                    for (int x = 0; x < SIZE; x++) {
+                        for (int z = 0; z < SIZE; z++) {
+                            int h = clamp(floorI((data[0][x * SIZE + z] - minH) * 255.0d / (maxH - minH)), 0, 255);
+                            int w = clamp(floorI((data[1][x * SIZE + z] - minW) * 255.0d / (maxW - minW)), 0, 255);
+                            int o = clamp(floorI((data[2][x * SIZE + z] - minO) * 255.0d / (maxO - minO)), 0, 255);
 
-                                img.setRGB(x, z, 0xFF000000 | h << 16 | o << 8 | w);
-                            }
+                            img.setRGB(x, z, 0xFF000000 | h << 16 | o << 8 | w);
                         }
-                        return img;
-                    })
-                    .join());
-        }
+                    }
+                    return img;
+                })
+                .join());
     }
 
     static CompletableFuture<double[][]> tile(int tileX, int tileZ, int level) {
