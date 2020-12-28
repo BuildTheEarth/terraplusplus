@@ -10,6 +10,7 @@ import net.minecraft.util.math.ChunkPos;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 
@@ -118,6 +119,7 @@ public class Water implements ScalarDataset {
 
             double[] point = new double[2];
             double[] out = new double[sizeX * sizeZ];
+            Arrays.fill(out, Double.NaN);
 
             double fx = 0.0d;
             for (int i = 0, x = 0; x < sizeX; x++, fx += stepX) {
@@ -127,10 +129,12 @@ public class Water implements ScalarDataset {
                     point = bounds.point(point, fx, fz);
 
                     //sample value at point
-                    out[i++] = this.get(point[0], point[1]);
+                    //TODO: fix this
+                    // out[i++] = this.get(point[0], point[1]);
                 }
             }
-            return out;
+            //return out;
+            return null;
         });
     }
 }
