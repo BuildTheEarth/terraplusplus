@@ -26,6 +26,7 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGenerato
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicCaveGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicRavineGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.feature.CubicStrongholdGenerator;
+import io.github.terra121.TerraMod;
 import io.github.terra121.dataset.BlendMode;
 import io.github.terra121.dataset.ScalarDataset;
 import io.github.terra121.dataset.impl.Heights;
@@ -64,9 +65,15 @@ import static java.lang.Math.*;
 
 public class EarthGenerator extends BasicCubeGenerator {
     static {
-        //register async generation callbacks
-        CubeGeneratorsRegistry.registerColumnAsyncLoadingCallback((world, data) -> asyncCallback(world, data.getPos()));
-        CubeGeneratorsRegistry.registerCubeAsyncLoadingCallback((world, data) -> asyncCallback(world, data.getPos().chunkPos()));
+        try {
+            //register async generation callbacks
+            CubeGeneratorsRegistry.registerColumnAsyncLoadingCallback((world, data) -> asyncCallback(world, data.getPos()));
+            CubeGeneratorsRegistry.registerCubeAsyncLoadingCallback((world, data) -> asyncCallback(world, data.getPos().chunkPos()));
+        } catch (NoSuchMethodError e) {
+            //we're on an older version of CC that doesn't support async terrain
+            TerraMod.LOGGER.error("Async terrain not available!");
+            TerraMod.LOGGER.error("Consider updating to the latest version of Cubic Chunks for maximum performance.");
+        }
     }
 
     private static void asyncCallback(World world, ChunkPos pos) {
