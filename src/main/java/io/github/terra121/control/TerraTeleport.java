@@ -157,6 +157,4 @@ public class TerraTeleport extends Command {
         }
         return sender.canUseCommand(2, "");
     }
-
-
 }
