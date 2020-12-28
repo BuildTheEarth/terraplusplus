@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -150,13 +151,30 @@ public class EarthGenerator extends BasicCubeGenerator {
     }
 
     @Override
-    public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) { //legacy compat method
-        return this.generateCube(cubeX, cubeY, cubeZ, new CubePrimer());
+    public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) { //legacy compat method, no longer used
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer) {
-        CachedChunkData data = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ)).join();
+    public GeneratorReadyState pollAsyncCubeGenerator(int cubeX, int cubeY, int cubeZ) {
+        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ));
+        if (!future.isDone()) {
+            return GeneratorReadyState.WAITING;
+        } else if (future.isCompletedExceptionally()) {
+            return GeneratorReadyState.FAIL;
+        } else {
+            return GeneratorReadyState.READY;
+        }
+    }
+
+    @Override
+    public Optional<CubePrimer> tryGenerateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer) {
+        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ));
+        if (!future.isDone() || future.isCompletedExceptionally()) {
+            return Optional.empty();
+        }
+
+        CachedChunkData data = future.join();
 
         //build ground surfaces
         this.generateSurface(cubeX, cubeY, cubeZ, primer, data, this.world.getChunk(cubeX, cubeZ).getBiomeArray());
@@ -174,7 +192,7 @@ public class EarthGenerator extends BasicCubeGenerator {
             }
         }
 
-        return primer;
+        return Optional.of(primer);
     }
 
     private void generateSurface(int cubeX, int cubeY, int cubeZ, CubePrimer primer, CachedChunkData data, byte[] biomes) {
