@@ -20,6 +20,7 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.server.permission.PermissionAPI;
 
 import java.text.DecimalFormat;
+import java.util.concurrent.CompletableFuture;
 
 public class TerraTeleport extends Command {
 
@@ -125,20 +126,28 @@ public class TerraTeleport extends Command {
                 return;
             }
 
+            CompletableFuture<String> altFuture;
             if (alt == null) {
                 try {
-                    alt = String.valueOf(terrain.datasets.heights.getAsync(lon, lat).join() + 1);
+                    sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Computing destination altitude...", TextFormatting.GRAY)));
+                    altFuture = terrain.datasets.heights.getAsync(lon, lat)
+                            .thenApply(a -> String.valueOf(a + 1.0d));
                 } catch (OutOfProjectionBoundsException e) { //out of bounds, notify user
-                    sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Invalid coordinates!", TextFormatting.RED)));
+                    sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(TranslateUtil.translate("terra121.error.numbers"), TextFormatting.RED)));
                     return;
                 }
+            } else {
+                altFuture = CompletableFuture.completedFuture(alt);
             }
 
-            sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Teleported to ", TextFormatting.GRAY), new TextElement(new DecimalFormat("##.#####").format(lat), TextFormatting.BLUE),
-                    new TextElement(", ", TextFormatting.GRAY), new TextElement(new DecimalFormat("##.#####").format(lon), TextFormatting.BLUE)));
+            ICommandSender _sender = sender;
+            altFuture.thenAccept(s -> FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
+                _sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Teleported to ", TextFormatting.GRAY), new TextElement(new DecimalFormat("##.#####").format(lat), TextFormatting.BLUE),
+                        new TextElement(", ", TextFormatting.GRAY), new TextElement(new DecimalFormat("##.#####").format(lon), TextFormatting.BLUE)));
 
-            FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager().executeCommand(
-                    FMLCommonHandler.instance().getMinecraftServerInstance(), String.format("tp %s %s %s %s", sender.getName(), proj[0], alt, proj[1]));
+                FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager().executeCommand(
+                        FMLCommonHandler.instance().getMinecraftServerInstance(), String.format("tp %s %s %s %s", _sender.getName(), proj[0], s, proj[1]));
+            }));
         }
     }
 

@@ -14,7 +14,7 @@
     "urls": [
       "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${zoom}/${x}/${z}.png"
     ],
-    "zoom": 13,
+    "zoom": 10,
     "minX": -180.0,
     "minZ": -85,
     "maxX": 180.0,

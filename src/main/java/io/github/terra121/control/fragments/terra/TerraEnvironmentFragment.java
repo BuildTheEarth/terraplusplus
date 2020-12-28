@@ -2,7 +2,7 @@ package io.github.terra121.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import io.github.terra121.EarthBiomeProvider;
+import io.github.terra121.generator.EarthBiomeProvider;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.chat.ChatHelper;
 import io.github.terra121.chat.TextElement;

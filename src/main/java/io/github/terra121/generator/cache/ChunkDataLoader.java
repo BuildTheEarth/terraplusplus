@@ -96,9 +96,7 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
                         return new CachedChunkData(heights, wateroffs, segments, treeCover);
                     });
         } catch (OutOfProjectionBoundsException e) {
-            CompletableFuture<CachedChunkData> future = new CompletableFuture<>();
-            future.completeExceptionally(e);
-            return future;
+            return CompletableFuture.completedFuture(CachedChunkData.BLANK);
         }
     }
 }
