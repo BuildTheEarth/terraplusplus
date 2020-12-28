@@ -217,12 +217,16 @@ public class EarthGenerator extends BasicCubeGenerator {
     @Override
     public Optional<CubePrimer> tryGenerateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer) {
         CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ));
-        if (!future.isDone() || future.isCompletedExceptionally()) {
+        if (future.isCompletedExceptionally()) {
             return Optional.empty();
         }
 
-        this.generateCube(cubeX, cubeY, cubeZ, primer, future.join());
-        return Optional.of(primer);
+        try {
+            this.generateCube(cubeX, cubeY, cubeZ, primer, future.join());
+            return Optional.of(primer);
+        } catch (Exception e) { //probably caught from the future
+            return Optional.empty();
+        }
     }
 
     protected void generateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer, CachedChunkData data) {
