@@ -52,7 +52,7 @@ repositories {
 }
 
 dependencies {
-    deobfProvided ("com.github.OpenCubicChunks.CubicChunks:cubicchunks:0cc396a1e791a3a66da7b78ed3be02e460756d4b") {
+    deobfProvided ("com.github.OpenCubicChunks.CubicChunks:cubicchunks:59a3fdf30ed993d5f01bfa0857b4636f531aa278") {
         transitive = false
     }
     deobfProvided ("com.github.OpenCubicChunks:CubicWorldGen:27de56d2f792513873584b2f8fd9f3082fb259ec") {

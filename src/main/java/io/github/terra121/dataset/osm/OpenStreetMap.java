@@ -55,7 +55,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         this.earthProjection = earthProjection;
 
         try {
-            this.water = new Water(this, 256);
+            this.water = new Water(this);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

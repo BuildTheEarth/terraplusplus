@@ -28,7 +28,7 @@ public class OSMRegion {
         this.coord = coord;
         this.water = water;
 
-        this.lines = new LandLine[water.hres];
+        this.lines = new LandLine[Water.TILE_SIZE];
         for (int i = 0; i < this.lines.length; i++) {
             this.lines[i] = new LandLine();
         }
@@ -46,11 +46,11 @@ public class OSMRegion {
         slon -= this.west;
         elon -= this.west;
 
-        slon /= OpenStreetMap.TILE_SIZE / this.water.hres;
-        elon /= OpenStreetMap.TILE_SIZE / this.water.hres;
+        slon /= OpenStreetMap.TILE_SIZE / Water.TILE_SIZE;
+        elon /= OpenStreetMap.TILE_SIZE / Water.TILE_SIZE;
 
-        slat /= OpenStreetMap.TILE_SIZE / this.water.hres;
-        elat /= OpenStreetMap.TILE_SIZE / this.water.hres;
+        slat /= OpenStreetMap.TILE_SIZE / Water.TILE_SIZE;
+        elat /= OpenStreetMap.TILE_SIZE / Water.TILE_SIZE;
 
         if (slat <= 0 || elat <= 0 && (slat >= 0 || elat >= 0)) {
             if (slat == 0) {
@@ -75,8 +75,8 @@ public class OSMRegion {
             if (beg < 0) {
                 beg = 0;
             }
-            if (end >= this.water.hres) {
-                end = this.water.hres - 1;
+            if (end >= Water.TILE_SIZE) {
+                end = Water.TILE_SIZE - 1;
             }
 
             for (int x = beg; x <= end; x++) {
@@ -91,10 +91,10 @@ public class OSMRegion {
     }
 
     public void renderWater(Set<Long> ground) {
-        this.indexes = new short[this.water.hres][];
-        this.states = new byte[this.water.hres][];
+        this.indexes = new short[Water.TILE_SIZE][];
+        this.states = new byte[Water.TILE_SIZE][];
 
-        this.southLine.run(this.water.hres, ground, (status, x) -> this.addComp(this.lines[x].compileBreaks(new HashSet<>(status), this.water.hres), x));
+        this.southLine.run(Water.TILE_SIZE, ground, (status, x) -> this.addComp(this.lines[x].compileBreaks(new HashSet<>(status), Water.TILE_SIZE), x));
 
         //we are done with these resources, now that they are compiled
         this.lines = null;

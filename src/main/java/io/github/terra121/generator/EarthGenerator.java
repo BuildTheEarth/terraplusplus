@@ -170,23 +170,6 @@ public class EarthGenerator extends BasicCubeGenerator {
         biomeBlockReplacers.forEach((biome, replacers) -> this.biomeBlockReplacers[Biome.getIdForBiome(biome)] = replacers.toArray(new IBiomeBlockReplacer[0]));
     }
 
-    protected GeneratorReadyState columnState(int chunkX, int chunkZ) {
-        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(chunkX, chunkZ));
-        if (!future.isDone()) {
-            return GeneratorReadyState.WAITING;
-        } else if (future.isCompletedExceptionally()) {
-            return GeneratorReadyState.FAIL;
-        } else {
-            return GeneratorReadyState.READY;
-        }
-    }
-
-    @Override
-    public GeneratorReadyState pollAsyncColumnGenerator(int chunkX, int chunkZ) {
-        return GeneratorReadyState.READY; //TODO: this is still broken on cubic chunks' end
-        //return this.columnState(chunkX, chunkZ);
-    }
-
     @Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) { //legacy compat method
         CubePrimer primer = new CubePrimer();
@@ -200,6 +183,23 @@ public class EarthGenerator extends BasicCubeGenerator {
         CachedChunkData data = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ)).join();
         this.generateCube(cubeX, cubeY, cubeZ, primer, data);
         return primer;
+    }
+
+    protected GeneratorReadyState columnState(int chunkX, int chunkZ) {
+        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(chunkX, chunkZ));
+        if (!future.isDone()) {
+            return GeneratorReadyState.WAITING;
+        } else if (future.isCompletedExceptionally()) {
+            return GeneratorReadyState.FAIL;
+        } else {
+            return GeneratorReadyState.READY;
+        }
+    }
+
+    @Override
+    public GeneratorReadyState pollAsyncColumnGenerator(int chunkX, int chunkZ) {
+        return GeneratorReadyState.READY;
+        //return this.columnState(chunkX, chunkZ); //TODO: this is still broken on cubic chunks' end
     }
 
     @Override
