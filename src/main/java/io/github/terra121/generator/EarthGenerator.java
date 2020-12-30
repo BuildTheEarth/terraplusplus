@@ -192,8 +192,9 @@ public class EarthGenerator extends BasicCubeGenerator {
         return primer;
     }
 
-    protected GeneratorReadyState columnState(int chunkX, int chunkZ) {
-        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(chunkX, chunkZ));
+    @Override
+    public GeneratorReadyState pollAsyncCubeGenerator(int cubeX, int cubeY, int cubeZ) {
+        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ));
         if (!future.isDone()) {
             return GeneratorReadyState.WAITING;
         } else if (future.isCompletedExceptionally()) {
@@ -201,17 +202,6 @@ public class EarthGenerator extends BasicCubeGenerator {
         } else {
             return GeneratorReadyState.READY;
         }
-    }
-
-    @Override
-    public GeneratorReadyState pollAsyncColumnGenerator(int chunkX, int chunkZ) {
-        //return GeneratorReadyState.READY;
-        return this.columnState(chunkX, chunkZ); //TODO: this is still broken on cubic chunks' end
-    }
-
-    @Override
-    public GeneratorReadyState pollAsyncCubeGenerator(int cubeX, int cubeY, int cubeZ) {
-        return this.columnState(cubeX, cubeZ);
     }
 
     @Override
