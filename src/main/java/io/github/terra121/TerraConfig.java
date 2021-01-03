@@ -41,7 +41,7 @@ public class TerraConfig {
         };
 
         public String[] openstreetmap = {
-                "https://cloud.daporkchop.net/gis/osm/64/"
+                "https://cloud.daporkchop.net/gis/osm/"
         };
 
         @Comment({
