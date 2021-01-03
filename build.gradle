@@ -15,7 +15,7 @@ apply plugin: "net.minecraftforge.gradle.forge"
 apply plugin: "com.github.johnrengelman.shadow"
 apply plugin: "maven-publish"
 
-version = "0.1-1.12.2"
+version = "0.1." + ('git rev-list --count HEAD'.execute().text.trim()) + "-1.12.2"
 group = "net.buildtheearth"
 archivesBaseName = "terraplusplus"
 
@@ -52,7 +52,7 @@ repositories {
 }
 
 dependencies {
-    deobfProvided ("com.github.OpenCubicChunks.CubicChunks:cubicchunks:0cc396a1e791a3a66da7b78ed3be02e460756d4b") {
+    deobfProvided ("com.github.OpenCubicChunks.CubicChunks:cubicchunks:6e18a97abe31e1c7892ebcf8ed0f17a4ac379e10") {
         transitive = false
     }
     deobfProvided ("com.github.OpenCubicChunks:CubicWorldGen:27de56d2f792513873584b2f8fd9f3082fb259ec") {

@@ -165,8 +165,6 @@ final class HostManager extends Host {
             request = channel.attr(ATTR_REQUEST).getAndSet(null);
             checkState(request != null, "received response on inactive channel?!?");
 
-            TerraMod.LOGGER.info(this.host + " " + request.path + ": " + response);
-
             this.activeRequests--; //decrement active requests counter to enable another request to be made
 
             if (!HttpUtil.isKeepAlive(response)) { //response isn't keep-alive, close connection

@@ -2,6 +2,7 @@ package io.github.terra121.generator.cache;
 
 import com.google.common.cache.CacheLoader;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import io.github.terra121.TerraMod;
 import io.github.terra121.dataset.osm.OSMRegion;
 import io.github.terra121.dataset.osm.poly.Polygon;
 import io.github.terra121.dataset.osm.segment.Segment;
@@ -71,7 +72,7 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
             CompletableFuture<Double> treeCoverFuture = this.data.trees.getAsync(chunkBoundsGeo.point(null, 0.5d, 0.5d));
             CompletableFuture<OSMRegion[]> osmRegionsFuture = this.data.osm.getRegionsAsync(osmBoundsGeo);
 
-            return CompletableFuture.allOf(heightsFuture, treeCoverFuture, osmRegionsFuture)
+            CompletableFuture<CachedChunkData> future = CompletableFuture.allOf(heightsFuture, treeCoverFuture, osmRegionsFuture)
                     .thenApply(unused -> {
                         //dereference all futures
                         double[] heights = fixHeights(heightsFuture.join());
@@ -95,6 +96,12 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
 
                         return new CachedChunkData(heights, wateroffs, segments, treeCover);
                     });
+            future.whenComplete((data, t) -> {
+                if (t != null) {
+                    TerraMod.LOGGER.error("async exception while loading data", t);
+                }
+            });
+            return future;
         } catch (OutOfProjectionBoundsException e) {
             return CompletableFuture.completedFuture(CachedChunkData.BLANK);
         }

@@ -109,16 +109,6 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                 .thenApplyAsync(unused -> Arrays.stream(futures).map(CompletableFuture::join).toArray(OSMRegion[]::new));
     }
 
-    public OSMRegion regionCache(double[] corner) {
-        //bound check
-        if (!(corner[0] >= -180 && corner[0] <= 180 && corner[1] >= -80 && corner[1] <= 80)) {
-            return null;
-        }
-
-        ChunkPos coord = this.getRegion(corner[0], corner[1]);
-        return this.getTile(coord.x, coord.z);
-    }
-
     private void doGson(InputStream is, OSMRegion region) throws IOException {
         StringWriter writer = new StringWriter();
         IOUtils.copy(is, writer, StandardCharsets.UTF_8);

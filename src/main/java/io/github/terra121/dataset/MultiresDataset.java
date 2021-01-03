@@ -1,15 +1,20 @@
 package io.github.terra121.dataset;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import io.github.terra121.projection.EquirectangularProjection;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
 import io.github.terra121.util.bvh.BVH;
 import io.github.terra121.util.bvh.Bounds2d;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.UtilityClass;
 import net.daporkchop.lib.binary.oio.reader.UTF8FileReader;
 
 import java.io.IOException;
@@ -17,9 +22,14 @@ import java.io.Reader;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.DoublePredicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static java.lang.Math.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
@@ -44,40 +54,53 @@ public class MultiresDataset implements ScalarDataset {
         }
 
         this.bvh = new BVH<>(datasetsIn.stream()
-                .map(t -> t.toWrapped(mapper))
+                .flatMap(t -> t.toWrapped(mapper))
                 .collect(Collectors.toList()));
     }
 
     @Override
     public CompletableFuture<Double> getAsync(double lon, double lat) throws OutOfProjectionBoundsException {
-        CompletableFuture<Double>[] futures = uncheckedCast(this.bvh.getAllIntersecting(Bounds2d.of(lon, lon, lat, lat)).stream()
-                .sorted() //sort so that the array is ordered by priority
-                .map(w -> {
-                    try {
-                        return w.dataset.getAsync(lon, lat);
-                    } catch (OutOfProjectionBoundsException e) {
-                        return CompletableFuture.completedFuture(Double.NaN);
-                    }
-                })
-                .toArray(CompletableFuture[]::new));
-
-        if (futures.length == 0) { //no matching datasets!
+        WrappedDataset[] datasets = this.bvh.getAllIntersecting(Bounds2d.of(lon, lon, lat, lat)).toArray(new WrappedDataset[0]);
+        if (datasets.length == 0) { //no matching datasets!
             return CompletableFuture.completedFuture(Double.NaN);
-        } else if (futures.length == 1) { //only one dataset matches, there's no reason to do any merging
-            return futures[0];
+        } else if (datasets.length == 1) { //only one dataset matches
+            if (datasets[0].condition == null) { //if it doesn't have a condition, there's no reason to do any merging
+                return datasets[0].dataset.getAsync(lon, lat);
+            }
+        }
+        Arrays.sort(datasets); //ensure datasets are in priority order
+
+        class State implements BiConsumer<Double, Throwable> {
+            final CompletableFuture<Double> future = new CompletableFuture<>();
+            int i = -1;
+
+            @Override
+            public void accept(Double v, Throwable cause) {
+                if (cause != null) {
+                    this.future.completeExceptionally(cause);
+                } else if (!Double.isNaN(v) && datasets[this.i].test(v)) { //if the value in the input array is accepted, use it as the output
+                    this.future.complete(v);
+                } else { //sample the next dataset
+                    this.advance();
+                }
+            }
+
+            private void advance() {
+                if (++this.i < datasets.length) {
+                    try {
+                        datasets[this.i].dataset.getAsync(lon, lat).whenComplete(this);
+                    } catch (OutOfProjectionBoundsException e) {
+                        this.future.completeExceptionally(e);
+                    }
+                } else { //no datasets remain, complete the future successfully with whatever value we currently have
+                    this.future.complete(Double.NaN);
+                }
+            }
         }
 
-        return CompletableFuture.allOf(futures)
-                .thenApplyAsync(unused -> {
-                    for (CompletableFuture<Double> future : futures) { //iterate through requested datasets in order
-                        Double v = future.join();
-                        if (!Double.isNaN(v)) { //find first non-NaN value and return it
-                            return v;
-                        }
-                    }
-
-                    return Double.NaN;
-                });
+        State state = new State();
+        state.advance();
+        return state.future;
     }
 
     @Override
@@ -86,49 +109,66 @@ public class MultiresDataset implements ScalarDataset {
             return CompletableFuture.completedFuture(new double[0]);
         }
 
-        CompletableFuture<double[]>[] futures = uncheckedCast(this.bvh.getAllIntersecting(bounds).stream()
-                .sorted() //sort so that the array is ordered by priority
-                .map(w -> {
-                    try {
-                        return w.dataset.getAsync(bounds, sizeX, sizeZ);
-                    } catch (OutOfProjectionBoundsException e) {
-                        return CompletableFuture.completedFuture(null);
-                    }
-                })
-                .toArray(CompletableFuture[]::new));
-
-        if (futures.length == 0) { //no matching datasets!
+        WrappedDataset[] datasets = this.bvh.getAllIntersecting(bounds).toArray(new WrappedDataset[0]);
+        if (datasets.length == 0) { //no matching datasets!
             return CompletableFuture.completedFuture(null);
-        } else if (futures.length == 1) { //only one dataset matches, there's no reason to do any merging
-            return futures[0];
+        } else if (datasets.length == 1) { //only one dataset matches
+            if (datasets[0].condition == null) { //if it doesn't have a condition, there's no reason to do any merging
+                return datasets[0].dataset.getAsync(bounds, sizeX, sizeZ);
+            }
         }
+        Arrays.sort(datasets); //ensure datasets are in priority order
 
-        return CompletableFuture.allOf(futures)
-                .thenApplyAsync(unused -> {
-                    int len = sizeX * sizeZ;
-                    int remaining = len;
-                    double[] out = new double[len];
-                    Arrays.fill(out, Double.NaN);
+        class State implements BiConsumer<double[], Throwable> {
+            final CompletableFuture<double[]> future = new CompletableFuture<>();
+            double[] out;
+            int remaining = sizeX * sizeZ;
+            int i = -1;
 
-                    TOP:
-                    for (CompletableFuture<double[]> future : futures) { //iterate through requested datasets in order
-                        double[] data = future.join();
-                        checkState(data.length == len);
-                        for (int i = 0; i < len; i++) {
-                            if (Double.isNaN(out[i])) { //if value in output array is NaN, consider replacing it
-                                double v = data[i];
-                                if (!Double.isNaN(v)) { //if the value in the input array is not NaN, it's now the output
-                                    out[i] = v;
-                                    if (--remaining == 0) { //if no samples are left to process, break out early
-                                        break TOP;
-                                    }
+            @Override
+            public void accept(double[] data, Throwable cause) {
+                if (cause != null) {
+                    this.future.completeExceptionally(cause);
+                } else if (data != null) { //if the array is null, it's as if it were an array of NaNs - nothing would be set, we simply skip it
+                    double[] out = this.out;
+                    if (out == null) { //ensure the destination array is set
+                        Arrays.fill(this.out = out = new double[sizeX * sizeZ], Double.NaN);
+                    }
+
+                    WrappedDataset dataset = datasets[this.i];
+
+                    for (int i = 0; i < sizeX * sizeZ; i++) {
+                        if (Double.isNaN(out[i])) { //if value in output array is NaN, consider replacing it
+                            double v = data[i];
+                            if (!Double.isNaN(v) && dataset.test(v)) { //if the value in the input array is accepted, use it as the output
+                                out[i] = v;
+                                if (--this.remaining == 0) { //if no samples are left to process, we're done!
+                                    this.future.complete(out);
+                                    return;
                                 }
                             }
                         }
                     }
+                }
+                this.advance();
+            }
 
-                    return out;
-                });
+            private void advance() {
+                if (++this.i < datasets.length) {
+                    try {
+                        datasets[this.i].dataset.getAsync(bounds, sizeX, sizeZ).whenComplete(this);
+                    } catch (OutOfProjectionBoundsException e) {
+                        this.future.completeExceptionally(e);
+                    }
+                } else { //no datasets remain, complete the future successfully with whatever value we currently have
+                    this.future.complete(this.out);
+                }
+            }
+        }
+
+        State state = new State();
+        state.advance();
+        return state.future;
     }
 
     /**
@@ -138,28 +178,41 @@ public class MultiresDataset implements ScalarDataset {
      */
     private static final class TempWrappedDataset {
         private String[] urls;
-        private double minX = Double.NaN;
-        private double minZ = Double.NaN;
-        private double maxX = Double.NaN;
-        private double maxZ = Double.NaN;
+        private Bounds[] bounds;
         @Getter
         private int zoom = -1;
         private double priority = 0.0d;
 
-        public WrappedDataset toWrapped(@NonNull BiFunction<Integer, String[], ScalarDataset> mapper) {
+        private JsonObject condition;
+
+        public Stream<WrappedDataset> toWrapped(@NonNull BiFunction<Integer, String[], ScalarDataset> mapper) {
             checkState(this.urls != null && this.urls.length > 0, "urls must be set!");
-            checkState(!Double.isNaN(this.minX), "minX must be set!");
-            checkState(!Double.isNaN(this.minZ), "minZ must be set!");
-            checkState(!Double.isNaN(this.maxX), "maxX must be set!");
-            checkState(!Double.isNaN(this.maxZ), "maxZ must be set!");
+            checkState(this.bounds != null && this.bounds.length > 0, "bounds must be set!");
+            for (Bounds bounds : this.bounds) {
+                checkState(!Double.isNaN(bounds.minX), "minX must be set!");
+                checkState(!Double.isNaN(bounds.minZ), "minZ must be set!");
+                checkState(!Double.isNaN(bounds.maxX), "maxX must be set!");
+                checkState(!Double.isNaN(bounds.maxZ), "maxZ must be set!");
+            }
             checkState(this.zoom >= 0, "zoom must be set!");
 
-            double minX = min(this.minX, this.maxX);
-            double minZ = min(this.minZ, this.maxZ);
-            double maxX = max(this.minX, this.maxX);
-            double maxZ = max(this.minZ, this.maxZ);
+            DoublePredicate condition = Condition.parse(this.condition);
+            ScalarDataset dataset = mapper.apply(this.zoom, this.urls);
+            return Stream.of(this.bounds)
+                    .map(bounds -> {
+                        double minX = min(bounds.minX, bounds.maxX);
+                        double minZ = min(bounds.minZ, bounds.maxZ);
+                        double maxX = max(bounds.minX, bounds.maxX);
+                        double maxZ = max(bounds.minZ, bounds.maxZ);
+                        return new WrappedDataset(dataset, condition, minX, maxX, minZ, maxZ, this.zoom, this.priority);
+                    });
+        }
 
-            return new WrappedDataset(mapper.apply(this.zoom, this.urls), minX, maxX, minZ, maxZ, this.zoom, this.priority);
+        private static final class Bounds {
+            private double minX = Double.NaN;
+            private double minZ = Double.NaN;
+            private double maxX = Double.NaN;
+            private double maxZ = Double.NaN;
         }
     }
 
@@ -171,25 +224,106 @@ public class MultiresDataset implements ScalarDataset {
     @RequiredArgsConstructor
     @Getter
     @ToString
-    public static class WrappedDataset implements Bounds2d, Comparable<WrappedDataset> {
+    public static class WrappedDataset implements Bounds2d, Comparable<WrappedDataset>, DoublePredicate {
         @NonNull
+        @Getter(AccessLevel.NONE)
         protected final ScalarDataset dataset;
+        @Getter(AccessLevel.NONE)
+        protected final DoublePredicate condition;
 
         protected final double minX;
         protected final double maxX;
         protected final double minZ;
         protected final double maxZ;
 
+        @Getter(AccessLevel.NONE)
         protected final int zoom;
 
+        @Getter(AccessLevel.NONE)
         protected final double priority;
 
         @Override
         public int compareTo(WrappedDataset o) {
-            if (this.zoom != o.zoom) {
-                return -Integer.compare(this.zoom, o.zoom);
-            }
             return -Double.compare(this.priority, o.priority);
+        }
+
+        @Override
+        public boolean test(double value) {
+            return this.condition == null || this.condition.test(value);
+        }
+    }
+
+    /**
+     * Helper class for parsing usage conditions.
+     *
+     * @author DaPorkchop_
+     */
+    @UtilityClass
+    private static class Condition {
+        /**
+         * Parses a condition object.
+         *
+         * @param in the raw condition read from the config
+         * @return the parsed condition
+         */
+        public DoublePredicate parse(JsonObject in) {
+            if (in == null) {
+                return null;
+            }
+
+            checkArg(in.size() == 1, "condition has more than one operator: %s", in);
+            Map.Entry<String, JsonElement> entry = in.entrySet().iterator().next();
+            JsonElement element = entry.getValue();
+            checkArg(!element.isJsonNull(), "operator has null value: %s", in);
+            switch (entry.getKey()) {
+                case "and": {
+                    DoublePredicate[] delegates = parseMulti(in, element, "and");
+                    return v -> {
+                        for (DoublePredicate delegate : delegates) {
+                            if (!delegate.test(v)) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    };
+                }
+                case "or": {
+                    DoublePredicate[] delegates = parseMulti(in, element, "or");
+                    return v -> {
+                        for (DoublePredicate delegate : delegates) {
+                            if (delegate.test(v)) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    };
+                }
+                case "not":
+                    checkArg(element.isJsonObject(), "\"not\" requires an object: %s", in);
+                    return parse(element.getAsJsonObject()).negate();
+                case "lessThan": {
+                    checkArg(element.isJsonPrimitive(), "\"lessThan\" requires a primitive: %s", in);
+                    double threshold = element.getAsDouble();
+                    return v -> v < threshold;
+                }
+                case "greaterThan": {
+                    checkArg(element.isJsonPrimitive(), "\"greaterThan\" requires a primitive: %s", in);
+                    double threshold = element.getAsDouble();
+                    return v -> v > threshold;
+                }
+                default:
+                    throw new IllegalArgumentException("unknown operator: \"" + entry.getValue() + '"');
+            }
+        }
+
+        private DoublePredicate[] parseMulti(JsonObject root, JsonElement element, String modeName) {
+            checkArg(element.isJsonArray(), "\"%s\" requires an array: %s", modeName, root);
+            checkArg(element.getAsJsonArray().size() > 0, "\"%s\" requires at least one condition: %s", modeName, root);
+            return StreamSupport.stream(element.getAsJsonArray().spliterator(), false)
+                    .peek(child -> checkArg(child.isJsonObject(), "child condition not a json object: %s", child))
+                    .map(JsonElement::getAsJsonObject)
+                    .map(Condition::parse)
+                    .toArray(DoublePredicate[]::new);
         }
     }
 }

@@ -94,6 +94,7 @@ public class EarthGeneratorSettings {
         public boolean roads = true;
         public String customcubic = "";
         public boolean dynamicbaseheight = true;
+        @Deprecated
         public boolean osmwater = true;
         public boolean buildings = true;
     }
