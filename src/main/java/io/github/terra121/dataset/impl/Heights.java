@@ -21,73 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
-
-import static net.daporkchop.lib.common.math.PMath.*;
-import static net.daporkchop.lib.common.util.PValidation.*;
 
 public class Heights extends DoubleTiledDataset {
-    public static void main(String... args) throws OutOfProjectionBoundsException {
-        Http.configChanged();
-        ScalarDataset dataset = constructDataset(BlendMode.LINEAR);
-
-        int sizeX = 1024;
-        int sizeZ = 1024;
-        double baseX = 7;
-        double baseZ = 0;
-        double r = 1;
-        PorkUtil.simpleDisplayImage(true, get(dataset, sizeX, sizeZ, Bounds2d.of(baseX - r, baseX + r, baseZ - r, baseZ + r), 16)
-                .thenApply(data -> {
-                    BufferedImage img = new BufferedImage(sizeX, sizeZ, BufferedImage.TYPE_INT_ARGB);
-                    double min = Arrays.stream(data).min().getAsDouble();
-                    double max = Arrays.stream(data).max().getAsDouble();
-
-                    System.out.printf("min: %f, max: %f\n", min, max);
-
-                    for (int x = 0; x < sizeX; x++) {
-                        for (int z = 0; z < sizeZ; z++) {
-                            int h = clamp(floorI((data[x * sizeZ + z] - min) * 255.0d / (max - min)), 0, 255);
-                            img.setRGB(x, z, 0xFF000000 | h << 16 | h << 8 | h);
-                        }
-                    }
-
-                    return img;
-                })
-                .join());
-    }
-
-    private static CompletableFuture<double[]> get(ScalarDataset dataset, int sizeX, int sizeZ, Bounds2d bb, int parallelization) {
-        CompletableFuture[] futures = new CompletableFuture[positive(parallelization, "parallelization")];
-        CompletableFuture start = CompletableFuture.completedFuture(null);
-        double[] dst = new double[sizeX * sizeZ];
-        for (int thread = 0; thread < parallelization; thread++) {
-            int minX = (sizeX / parallelization) * thread;
-            int maxX = (sizeX / parallelization) * (thread + 1);
-            CompletableFuture future = start;
-            for (int _z = 0; _z < sizeZ; _z++) {
-                for (int _x = minX; _x < maxX; _x++) {
-                    int x = _x;
-                    int z = _z;
-                    double lon = lerp(bb.minX(), bb.maxX(), x / (double) sizeX);
-                    double lat = lerp(bb.minZ(), bb.maxZ(), z / (double) sizeZ);
-                    future = future.thenCompose(unused -> {
-                        try {
-                            return dataset.getAsync(lon, lat).thenAccept(v -> {
-                                checkState(v != null && !Double.isNaN(v), v);
-                                dst[x * sizeZ + z] = v;
-                            });
-                        } catch (OutOfProjectionBoundsException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-                }
-            }
-            futures[thread] = future;
-        }
-        return CompletableFuture.allOf(futures).thenApply(unused -> dst);
-    }
-
     public static ScalarDataset constructDataset(@NonNull BlendMode blend) {
         try {
             URL url = Heights.class.getResource("/heights_config_default.json");
