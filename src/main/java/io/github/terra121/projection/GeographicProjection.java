@@ -1,15 +1,14 @@
 package io.github.terra121.projection;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import io.github.terra121.TerraConstants;
 import io.github.terra121.projection.airocean.Airocean;
 import io.github.terra121.projection.airocean.ConformalEstimate;
 import io.github.terra121.projection.airocean.ModifiedAirocean;
 import io.github.terra121.projection.transform.InvertedOrientation;
 import io.github.terra121.projection.transform.UprightOrientation;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import io.github.terra121.TerraConstants;
 
 /**
  * Support for various projection types.
@@ -153,6 +152,7 @@ public abstract class GeographicProjection {
 
 	/**
 	 * Calculates the vector that goes a given distance north and a given distance east from the given point in the projected space.
+	 * This is useful to get a direction in the projected space, e.g. it is used to calculate the north vector used when sending eyes of ender.
 	 * 
 	 * @param x - x coordinate in the projected space
 	 * @param y - y coordinate in the projected space
@@ -165,7 +165,7 @@ public abstract class GeographicProjection {
 		double[] geo = this.toGeo(x, y);
 
 		//TODO: east may be slightly off because earth not a sphere
-		double[] off = this.fromGeo(geo[0] + east * 360.0 / (Math.cos(geo[1] * Math.PI / 180.0) * TerraConstants.EARTH_CIRCUMFERENCE),
+		double[] off = this.fromGeo(geo[0] + east * 360.0 / (Math.cos(Math.toRadians(geo[1])) * TerraConstants.EARTH_CIRCUMFERENCE),
 				geo[1] + north * 360.0 / TerraConstants.EARTH_POLAR_CIRCUMFERENCE);
 
 		return new double[]{ off[0] - x, off[1] - y };
@@ -181,12 +181,14 @@ public abstract class GeographicProjection {
 	 * @param d - a length differential in meters (a small quantity used to approximate partial derivatives)
 	 * 
 	 * @return {area inflation, maximum angular distortion, maximum scale factor, minimum scale factor}
+	 * @deprecated Prefer using {@link GeographicProjection#tissot(double, double)} for a default differential of 10^-7.
 	 */
+	@Deprecated
 	public double[] tissot(double longitude, double latitude, double d) throws OutOfProjectionBoundsException {
 
 		double R = TerraConstants.EARTH_CIRCUMFERENCE / (2 * Math.PI);
 
-		double ddeg = d * 180.0 / Math.PI;
+		double ddeg = Math.toDegrees(d);
 
 		double[] base = this.fromGeo(longitude, latitude);
 		double[] lonoff = this.fromGeo(longitude + ddeg, latitude);
@@ -197,7 +199,7 @@ public abstract class GeographicProjection {
 		double dydl = (lonoff[1] - base[1]) / d;
 		double dydp = (latoff[1] - base[1]) / d;
 
-		double cosp = Math.cos(latitude * Math.PI / 180.0);
+		double cosp = Math.cos(Math.toRadians(latitude));
 
 		double h = Math.sqrt(dxdp * dxdp + dydp * dydp) / R;
 		double k = Math.sqrt(dxdl * dxdl + dydl * dydl) / (cosp * R);
@@ -210,6 +212,66 @@ public abstract class GeographicProjection {
 		double b = (ap - bp) / 2;
 
 		return new double[]{ h * k * sint, 2 * Math.asin(bp / ap), a, b };
+	}
+	
+	/**
+	 * Computes the Tissot's indicatrix of this projection at the given point (i.e. the distortion).
+	 * 
+	 * @see <a href="https://en.wikipedia.org/wiki/Tissot's_indicatrix">Wikipedia's article on Tissot's indicatrix</a>
+	 * 
+	 * @param longitude - longitude in degrees
+	 * @param latitude - latitude in degrees
+	 * 
+	 * @return {area inflation, maximum angular distortion, maximum scale factor, minimum scale factor}
+	 */
+	public double[] tissot(double longitude, double latitude) throws OutOfProjectionBoundsException {
+		return this.tissot(longitude,  latitude, 1E-7);
+	}
+
+	/**
+	 * Converts an angle in the projected space to an azimuth in the geographic space, at a specific point.
+	 * This is useful to get the direction an entity is looking at, i.e. it will be used by Terramap to show the direction entities are facing.
+	 * With conformal projections, this should be equivalent to using {@link GeographicProjection#vector(double, double, double, double)} and computing the facing azimuth in the projected space,
+	 * but on non-conformal projections angles are not preserved when projecting and this will be right when using {@link GeographicProjection#vector(double, double, double, double)} is likely to be wrong.
+	 * 
+	 * @param x - x coordinate of the point in the projected space
+	 * @param y - y coordinate of the point in the projected space
+	 * @param angle - the angle to convert, in degrees, in minecraft's coordinate system (angular origin at the positive side of the Z axis, positive clockwise)
+	 * @param d - a length differential on the projected space
+	 * 
+	 * @return the corresponding azimuth, in degrees, counted positively clockwise, between 0° and 360°.
+	 * @throws OutOfProjectionBoundsException if the given point is outside the projection domain
+	 * @deprecated Prefer using {@link GeographicProjection#azimuth(double, double, float)} for a default differential of 10^-7. Smaller tends to give less accurate results.
+	 */
+	@Deprecated
+	public float azimuth(double x, double y, float angle, double d) throws OutOfProjectionBoundsException {
+		double x2 = x - d*Math.sin(Math.toRadians(angle));
+		double y2 = y + d*Math.cos(Math.toRadians(angle));
+		double[] geo1 = this.toGeo(x, y);
+		double[] geo2 = this.toGeo(x2, y2);
+		double dlon = geo2[0] - geo1[0];
+		double dlat = geo2[1] - geo1[1];
+		double a = Math.toDegrees(Math.atan2(dlat, dlon));
+		a = 90 - a;
+		if(a < 0) a += 360;
+		return (float) a;
+	}
+	
+	/**
+	 * Converts an angle in the projected space to an azimuth in the geographic space, at a specific point.
+	 * This is useful to get the direction an entity is looking at, i.e. it will be used by Terramap to show the direction entities are facing.
+	 * With conformal projections, this should be equivalent to using {@link GeographicProjection#vector(double, double, double, double)} and computing the facing azimuth in the projected space,
+	 * but on non-conformal projections angles are not preserved when projecting and this will be right when using {@link GeographicProjection#vector(double, double, double, double)} is likely to be wrong.
+	 * 
+	 * @param x - x coordinate of the point in the projected space
+	 * @param y - y coordinate of the point in the projected space
+	 * @param angle - the angle to convert, in degrees, in minecraft's coordinate system (angular origin at the positive side of the Z axis, positive clockwise)
+	 * 
+	 * @return the corresponding azimuth, in degrees, counted positively clockwise, between 0° and 360°.
+	 * @throws OutOfProjectionBoundsException if the given point is outside the projection domain
+	 */
+	public float azimuth(double x, double y, float angle) throws OutOfProjectionBoundsException {
+		return this.azimuth(x, y, angle, 1E-7);
 	}
 
 	public enum Orientation {

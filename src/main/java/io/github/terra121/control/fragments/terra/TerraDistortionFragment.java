@@ -40,7 +40,7 @@ public class TerraDistortionFragment extends CommandFragment {
         double[] c;
         try {
             c = projection.toGeo(sender.getPositionVector().x, sender.getPositionVector().z);
-            c = projection.tissot(c[0], c[1], 0.0000001);
+            c = projection.tissot(c[0], c[1]);
         } catch (OutOfProjectionBoundsException e) { //out of bounds, set c to null to print error message
             c = null;
         }
