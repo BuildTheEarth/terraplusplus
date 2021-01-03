@@ -23,15 +23,24 @@ package io.github.terra121.dataset.geojson;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import io.github.terra121.dataset.geojson.feature.Feature;
+import io.github.terra121.dataset.geojson.object.Feature;
+import io.github.terra121.dataset.geojson.object.FeatureCollection;
+import io.github.terra121.dataset.geojson.object.Reference;
+import lombok.Getter;
 
 import java.io.IOException;
+import java.sql.Ref;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+
+import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * @author DaPorkchop_
  */
 final class ObjectDeserializer extends AbstractGeoJSONDeserializer<GeoJSONObject> {
+    @Getter
     private final GeometryDeserializer geometryDeserializer = new GeometryDeserializer();
 
     public ObjectDeserializer() {
@@ -43,6 +52,10 @@ final class ObjectDeserializer extends AbstractGeoJSONDeserializer<GeoJSONObject
         switch (type) {
             case "Feature":
                 return this.readFeature(in);
+            case "FeatureCollection":
+                return this.readFeatureCollection(in);
+            case "Reference":
+                return this.readReference(in);
         }
 
         return super.readGeometry(type, in);
@@ -74,5 +87,32 @@ final class ObjectDeserializer extends AbstractGeoJSONDeserializer<GeoJSONObject
         }
 
         return new Feature(geometry, properties);
+    }
+
+    protected FeatureCollection readFeatureCollection(JsonReader in) throws IOException {
+        String fieldName = in.nextName();
+        checkState("features".equals(fieldName), "unexpected field \"%s\" in FeatureCollection object", fieldName);
+
+        List<Feature> features = new ArrayList<>();
+        in.beginArray();
+        while (in.peek() != JsonToken.END_ARRAY) {
+            in.beginObject();
+
+            checkState("type".equals(in.nextName()), "invalid FeatureCollection: doesn't start with type!");
+            String type = in.nextString();
+            checkState("Feature".equals(type), "FeatureCollection contains non-Feature element \"%s\"", type);
+            features.add(this.readFeature(in));
+            in.endObject();
+        }
+        in.endArray();
+
+        return new FeatureCollection(features.toArray(new Feature[0]));
+    }
+
+    protected Reference readReference(JsonReader in) throws IOException {
+        String fieldName = in.nextName();
+        checkState("location".equals(fieldName), "unexpected field \"%s\" in Reference object", fieldName);
+
+        return new Reference(in.nextString());
     }
 }

@@ -1,4 +1,4 @@
-package io.github.terra121.dataset.geojson.feature;
+package io.github.terra121.dataset.geojson.object;
 
 import io.github.terra121.dataset.geojson.GeoJSONObject;
 import io.github.terra121.dataset.geojson.Geometry;

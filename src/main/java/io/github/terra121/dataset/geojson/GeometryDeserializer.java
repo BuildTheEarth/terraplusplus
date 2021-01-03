@@ -36,4 +36,9 @@ final class GeometryDeserializer extends AbstractGeoJSONDeserializer<Geometry> {
     protected Geometry read0(String type, JsonReader in) throws IOException {
         return super.readGeometry(type, in);
     }
+
+    @Override
+    protected GeometryDeserializer geometryDeserializer() {
+        return this;
+    }
 }
