@@ -2,9 +2,10 @@ package io.github.terra121.dataset.osm;
 
 import io.github.terra121.dataset.impl.LandLine;
 import io.github.terra121.dataset.impl.Water;
-import io.github.terra121.dataset.osm.poly.Polygon;
-import io.github.terra121.dataset.osm.segment.Segment;
+import io.github.terra121.dataset.osm.poly.OSMPolygon;
+import io.github.terra121.dataset.osm.segment.OSMSegment;
 import io.github.terra121.util.bvh.BVH;
+import lombok.NonNull;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.HashSet;
@@ -21,12 +22,15 @@ public class OSMRegion {
     public short[][] indexes;
     public byte[][] states;
 
-    public BVH<Segment> segments;
-    public BVH<Polygon> polygons;
+    public final BVH<OSMSegment> segments;
+    public final BVH<OSMPolygon> polygons;
 
-    public OSMRegion(ChunkPos coord, Water water) {
+    public OSMRegion(ChunkPos coord, Water water, @NonNull BVH<OSMSegment> segments, @NonNull BVH<OSMPolygon> polygons) {
         this.coord = coord;
         this.water = water;
+
+        this.segments = segments;
+        this.polygons = polygons;
 
         this.lines = new LandLine[Water.TILE_SIZE];
         for (int i = 0; i < this.lines.length; i++) {
@@ -121,10 +125,12 @@ public class OSMRegion {
         return min;
     }
 
+    @Override
     public int hashCode() {
         return this.coord.hashCode();
     }
 
+    @Override
     public boolean equals(Object other) {
         return (other instanceof OSMRegion) && this.coord.equals(((OSMRegion) other).coord);
     }

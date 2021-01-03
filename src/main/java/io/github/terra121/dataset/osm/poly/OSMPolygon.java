@@ -1,7 +1,6 @@
 package io.github.terra121.dataset.osm.poly;
 
 import io.github.terra121.util.bvh.Bounds2d;
-import io.github.terra121.util.interval.Interval;
 import io.github.terra121.util.interval.IntervalTree;
 import lombok.Getter;
 import lombok.NonNull;
@@ -21,7 +20,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  * @author DaPorkchop_
  */
 @Getter
-public class Polygon implements Bounds2d, Comparable<Polygon> {
+public class OSMPolygon implements Bounds2d, Comparable<OSMPolygon> {
     protected static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
 
     protected static Segment toSegment(@NonNull double[][] points, int i0, int i1) {
@@ -38,7 +37,7 @@ public class Polygon implements Bounds2d, Comparable<Polygon> {
         int size = 135;
         int shift = 2;
         BufferedImage img = new BufferedImage(size << shift, size << shift, BufferedImage.TYPE_INT_ARGB);
-        Polygon polygon = new Polygon(new double[][][]{
+        OSMPolygon polygon = new OSMPolygon(new double[][][]{
                 { { -16, 64 }, { 8, 8 }, { 64, -16 }, { 128, 64 }, { 140, 72 }, { 128, 128 }, { 72, 140 }, { 64, 128 } },
                 //{ { 16, 16 }, { 16, 32 }, { 32, 32 }, { 32, 16 } }
                 { { 16.5, 16.5 }, { 16.5, 31 }, { 32.5, 32.5 }, { 32.5, 15 } }
@@ -75,7 +74,7 @@ public class Polygon implements Bounds2d, Comparable<Polygon> {
     protected final double minZ;
     protected final double maxZ;
 
-    public Polygon(@NonNull double[][][] shapes) {
+    public OSMPolygon(@NonNull double[][][] shapes) {
         checkArg(shapes.length >= 1, "must provide at least one shape!");
         for (double[][] shape : shapes) {
             checkArg(shape.length >= 3, "a polygon must contain at least 3 points!");
@@ -227,7 +226,7 @@ public class Polygon implements Bounds2d, Comparable<Polygon> {
     }
 
     @Override
-    public int compareTo(Polygon o) {
+    public int compareTo(OSMPolygon o) {
         //TODO: implement this
         return 0;
     }

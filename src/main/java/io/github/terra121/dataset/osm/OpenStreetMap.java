@@ -1,30 +1,37 @@
 package io.github.terra121.dataset.osm;
 
-import com.google.gson.Gson;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterators;
 import io.github.terra121.TerraConfig;
 import io.github.terra121.dataset.TiledDataset;
+import io.github.terra121.dataset.geojson.GeoJSON;
+import io.github.terra121.dataset.geojson.GeoJSONObject;
+import io.github.terra121.dataset.geojson.object.Reference;
 import io.github.terra121.dataset.impl.Water;
-import io.github.terra121.dataset.osm.poly.Polygon;
-import io.github.terra121.dataset.osm.segment.Segment;
+import io.github.terra121.dataset.osm.poly.OSMPolygon;
+import io.github.terra121.dataset.osm.segment.OSMSegment;
 import io.github.terra121.dataset.osm.segment.SegmentType;
 import io.github.terra121.projection.EquirectangularProjection;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
-import io.github.terra121.util.bvh.BVH;
 import io.github.terra121.util.bvh.Bounds2d;
+import io.github.terra121.util.http.Http;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import lombok.NonNull;
 import net.minecraft.util.math.ChunkPos;
-import org.apache.commons.io.IOUtils;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +39,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static net.daporkchop.lib.common.math.PMath.*;
 import static net.daporkchop.lib.common.util.PorkUtil.*;
@@ -43,10 +52,19 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
 
     protected final GeographicProjection earthProjection;
 
+    protected final LoadingCache<String, CompletableFuture<OSMBlob>> referencedBlobs = CacheBuilder.newBuilder()
+            .softValues()
+            .expireAfterAccess(5L, TimeUnit.MINUTES)
+            .build(CacheLoader.from(location -> {
+                //suffix urls with location
+                String[] urls = Arrays.stream(TerraConfig.data.openstreetmap).map(s -> s + location).toArray(String[]::new);
+
+                return Http.getFirst(urls, this::parseGeoJSON).thenApply(CompletableFuture::join);
+            }));
+
     public final Water water;
-    private final List<Segment> allSegments = new ArrayList<>();
-    private final List<Polygon> allPolygons = new ArrayList<>();
-    private final Gson gson = new Gson();
+    private final List<OSMSegment> allSegments = new ArrayList<>();
+    private final List<OSMPolygon> allPolygons = new ArrayList<>();
     private final boolean doRoad;
     private final boolean doWater;
     private final boolean doBuildings;
@@ -73,24 +91,51 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
     }
 
     @Override
-    protected synchronized OSMRegion decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception {
-        //TODO: make this able to run concurrently without a shared state
-
-        OSMRegion region = new OSMRegion(new ChunkPos(tileX, tileZ), this.water);
-        this.doGson(new ByteBufInputStream(data), region);
-
-        region.segments = new BVH<>(this.allSegments);
-        this.allSegments.clear();
-
-        region.polygons = new BVH<>(this.allPolygons);
-        this.allPolygons.clear();
-
-        return region;
+    @Deprecated
+    protected OSMRegion decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception {
+        throw new UnsupportedOperationException("decode"); //this method shouldn't be being used
     }
 
     @Override
-    protected CompletableFuture<OSMRegion> sendRequest(@NonNull ChunkPos pos, @NonNull String[] urls, @NonNull Map<String, String> properties) throws Exception {
-        return super.sendRequest(pos, urls, properties);
+    @Deprecated
+    public CompletableFuture<OSMRegion> load(@NonNull ChunkPos pos) throws Exception {
+        String location = Http.formatUrl(ImmutableMap.of("x", String.valueOf(pos.x), "z", String.valueOf(pos.z)), TILE_SUFFIX);
+
+        return this.referencedBlobs.getUnchecked(location).thenApply(blob -> this.toRegion(pos, blob));
+    }
+
+    protected CompletableFuture<OSMBlob> parseGeoJSON(@NonNull ByteBuf json) throws IOException {
+        GeoJSONObject[] objects; //parse each line as a GeoJSON object
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteBufInputStream(json)))) {
+            objects = reader.lines().map(GeoJSON::parse).toArray(GeoJSONObject[]::new);
+        }
+
+        if (Arrays.stream(objects).anyMatch(o -> o instanceof Reference)) { //resolve references
+            List<CompletableFuture<OSMBlob>> referencedObjectFutures = new ArrayList<>();
+
+            //add all non-reference objects as a single stream at once to make iteration faster
+            referencedObjectFutures.add(CompletableFuture.completedFuture(OSMBlob.fromGeoJSON(
+                    Arrays.stream(objects).filter(o -> !(o instanceof Reference)).toArray(GeoJSONObject[]::new))));
+
+            for (GeoJSONObject object : objects) {
+                if (object instanceof Reference) {
+                    //suffix urls with location
+                    String location = ((Reference) object).location();
+                    String[] urls = Arrays.stream(TerraConfig.data.openstreetmap).map(s -> s + location).toArray(String[]::new);
+
+                    //actually send request
+                    referencedObjectFutures.add(Http.getFirst(urls, this::parseGeoJSON).thenApply(CompletableFuture::join));
+                }
+            }
+
+            return CompletableFuture.allOf(referencedObjectFutures.toArray(new CompletableFuture[0]))
+                    .thenApply(unused -> OSMBlob.merge(referencedObjectFutures.stream().map(CompletableFuture::join).toArray(OSMBlob[]::new)));
+        }
+
+        return CompletableFuture.completedFuture(OSMBlob.fromGeoJSON(objects));
+    }
+
+    protected OSMRegion toRegion(@NonNull ChunkPos pos, @NonNull OSMBlob blob) {
     }
 
     public ChunkPos getRegion(double lon, double lat) {
@@ -107,10 +152,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                 .thenApplyAsync(unused -> Arrays.stream(futures).map(CompletableFuture::join).toArray(OSMRegion[]::new));
     }
 
-    private void doGson(InputStream is, OSMRegion region) throws IOException {
-        StringWriter writer = new StringWriter();
-        IOUtils.copy(is, writer, StandardCharsets.UTF_8);
-
+    protected void doGson(InputStream is, OSMRegion region) throws IOException {
         Data data = this.gson.fromJson(writer.toString(), Data.class);
 
         Map<Long, Element> allWays = new HashMap<>();
@@ -312,7 +354,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                         double[] proj = this.earthProjection.fromGeo(geom.lon, geom.lat);
 
                         if (lastProj != null) { //register as a road edge
-                            this.allSegments.add(new Segment(lastProj[0], lastProj[1], proj[0], proj[1], type, lanes, region, attributes, layer));
+                            this.allSegments.add(new OSMSegment(lastProj[0], lastProj[1], proj[0], proj[1], type, lanes, region, attributes, layer));
                         }
 
                         lastProj = proj;
@@ -327,7 +369,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
     Geometry waterway(Element way, long id, OSMRegion region) {
         Geometry last = null;
         if (way.geometry != null) {
-            this.allPolygons.add(new Polygon(new double[][][]{
+            this.allPolygons.add(new OSMPolygon(new double[][][]{
                     Arrays.stream(way.geometry).filter(Objects::nonNull).map(geom -> new double[]{ geom.lon, geom.lat }).toArray(double[][]::new)
             }));
 

@@ -15,7 +15,7 @@ import static net.daporkchop.lib.common.math.PMath.*;
 public enum PolygonFill {
     SURFACE {
         @Override
-        public void fill(double[] heights, CubePrimer primer, Polygon p, int cubeX, int cubeY, int cubeZ) {
+        public void fill(double[] heights, CubePrimer primer, OSMPolygon p, int cubeX, int cubeY, int cubeZ) {
             IBlockState state = Blocks.WATER.getDefaultState();
 
             int baseX = Coords.cubeToMinBlock(cubeX);
@@ -35,5 +35,5 @@ public enum PolygonFill {
         }
     };
 
-    public abstract void fill(double[] heights, CubePrimer primer, Polygon p, int cubeX, int cubeY, int cubeZ);
+    public abstract void fill(double[] heights, CubePrimer primer, OSMPolygon p, int cubeX, int cubeY, int cubeZ);
 }

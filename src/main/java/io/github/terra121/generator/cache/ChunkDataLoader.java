@@ -4,8 +4,8 @@ import com.google.common.cache.CacheLoader;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.terra121.TerraMod;
 import io.github.terra121.dataset.osm.OSMRegion;
-import io.github.terra121.dataset.osm.poly.Polygon;
-import io.github.terra121.dataset.osm.segment.Segment;
+import io.github.terra121.dataset.osm.poly.OSMPolygon;
+import io.github.terra121.dataset.osm.segment.OSMSegment;
 import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
@@ -121,8 +121,8 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
                         }
 
                         //find all segments and polygons that intersect the chunk
-                        Set<Segment> segments = new HashSet<>();
-                        Set<Polygon> polygons = Collections.emptySet();
+                        Set<OSMSegment> segments = new HashSet<>();
+                        Set<OSMPolygon> polygons = Collections.emptySet();
                         for (OSMRegion region : osmRegions) {
                             region.segments.forEachIntersecting(osmBounds, segments::add);
                         }

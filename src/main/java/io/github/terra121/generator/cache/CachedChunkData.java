@@ -1,10 +1,9 @@
 package io.github.terra121.generator.cache;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.terra121.dataset.osm.poly.Polygon;
-import io.github.terra121.dataset.osm.segment.Segment;
+import io.github.terra121.dataset.osm.poly.OSMPolygon;
+import io.github.terra121.dataset.osm.segment.OSMSegment;
 import io.github.terra121.generator.EarthGenerator;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -37,21 +36,21 @@ public class CachedChunkData {
     public final double[] heights;
     public final double[] wateroffs;
 
-    private final Segment[] segments;
-    private final Polygon[] polygons;
+    private final OSMSegment[] segments;
+    private final OSMPolygon[] polygons;
 
     private final int surfaceMinCube;
     private final int surfaceMaxCube;
 
     private final double treeCover;
 
-    public CachedChunkData(@NonNull double[] heights, @NonNull double[] wateroffs, Set<Segment> segments, Set<Polygon> polygons, double treeCover) {
+    public CachedChunkData(@NonNull double[] heights, @NonNull double[] wateroffs, Set<OSMSegment> segments, Set<OSMPolygon> polygons, double treeCover) {
         this.heights = heights;
         this.wateroffs = wateroffs;
         this.treeCover = treeCover;
 
-        Arrays.sort(this.segments = segments.toArray(new Segment[0]));
-        Arrays.sort(this.polygons = polygons.toArray(new Polygon[0]));
+        Arrays.sort(this.segments = segments.toArray(new OSMSegment[0]));
+        Arrays.sort(this.polygons = polygons.toArray(new OSMPolygon[0]));
 
         double min = Double.POSITIVE_INFINITY;
         double max = Double.NEGATIVE_INFINITY;

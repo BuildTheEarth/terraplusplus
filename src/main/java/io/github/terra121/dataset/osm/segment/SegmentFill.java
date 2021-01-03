@@ -16,13 +16,13 @@ import static java.lang.Math.*;
 public enum SegmentFill {
     NONE {
         @Override
-        public void fill(double[] heights, CubePrimer primer, Segment s, int cubeX, int cubeY, int cubeZ) {
+        public void fill(double[] heights, CubePrimer primer, OSMSegment s, int cubeX, int cubeY, int cubeZ) {
             //no-op
         }
     },
     WIDE {
         @Override
-        public void fill(double[] heights, CubePrimer primer, Segment s, int cubeX, int cubeY, int cubeZ) {
+        public void fill(double[] heights, CubePrimer primer, OSMSegment s, int cubeX, int cubeY, int cubeZ) {
             IBlockState state = s.type.state();
 
             double radius = s.type.computeRadius(s.lanes);
@@ -60,7 +60,7 @@ public enum SegmentFill {
     },
     NARROW {
         @Override
-        public void fill(double[] heights, CubePrimer primer, Segment s, int cubeX, int cubeY, int cubeZ) {
+        public void fill(double[] heights, CubePrimer primer, OSMSegment s, int cubeX, int cubeY, int cubeZ) {
             IBlockState state = s.type.state();
 
             double start = s.lon0;
@@ -107,5 +107,5 @@ public enum SegmentFill {
         }
     };
 
-    public abstract void fill(double[] heights, CubePrimer primer, Segment s, int cubeX, int cubeY, int cubeZ);
+    public abstract void fill(double[] heights, CubePrimer primer, OSMSegment s, int cubeX, int cubeY, int cubeZ);
 }

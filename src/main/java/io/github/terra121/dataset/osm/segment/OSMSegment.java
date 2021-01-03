@@ -11,7 +11,7 @@ import static java.lang.Math.*;
  * @author DaPorkchop_
  */
 @ToString(exclude = "region")
-public class Segment implements Bounds2d, Comparable<Segment> {
+public class OSMSegment implements Bounds2d, Comparable<OSMSegment> {
     public SegmentType type;
     public double lat0;
     public double lon0;
@@ -26,7 +26,7 @@ public class Segment implements Bounds2d, Comparable<Segment> {
 
     OSMRegion region;
 
-    public Segment(double lon0, double lat0, double lon1, double lat1, SegmentType type, byte lanes, OSMRegion region, OpenStreetMap.Attributes att, byte ly) {
+    public OSMSegment(double lon0, double lat0, double lon1, double lat1, SegmentType type, byte lanes, OSMRegion region, OpenStreetMap.Attributes att, byte ly) {
         //slope must not be infinity, slight inaccuracy shouldn't even be noticible unless you go looking for it
         double dif = lon1 - lon0;
         if (abs(dif) < 0.01d) {
@@ -54,7 +54,7 @@ public class Segment implements Bounds2d, Comparable<Segment> {
 
     @Override
     public boolean equals(Object o) {
-        Segment e = (Segment) o;
+        OSMSegment e = (OSMSegment) o;
         return e.lat0 == this.lat0 && e.lon0 == this.lon0 && e.lat1 == this.lat1 && e.lon1 == e.lon1;
     }
 
@@ -79,7 +79,7 @@ public class Segment implements Bounds2d, Comparable<Segment> {
     }
 
     @Override
-    public int compareTo(Segment o) {
+    public int compareTo(OSMSegment o) {
         if (this.layer_number != o.layer_number) {
             return Integer.compare(this.lanes, o.layer_number);
         }

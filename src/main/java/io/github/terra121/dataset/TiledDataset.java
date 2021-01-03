@@ -75,10 +75,6 @@ public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, CompletableF
         this.addProperties(pos.x, pos.z, builder);
         Map<String, String> properties = builder.build();
 
-        return this.sendRequest(pos, urls, builder.build());
-    }
-
-    protected CompletableFuture<T> sendRequest(@NonNull ChunkPos pos, @NonNull String[] urls, @NonNull Map<String, String> properties) throws Exception {
         return Http.getFirst(
                 Arrays.stream(urls).map(url -> Http.formatUrl(properties, url)).toArray(String[]::new),
                 data -> this.decode(pos.x, pos.z, data));
