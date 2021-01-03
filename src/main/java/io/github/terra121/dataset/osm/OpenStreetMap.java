@@ -37,6 +37,8 @@ import static net.daporkchop.lib.common.math.PMath.*;
 import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 public class OpenStreetMap extends TiledDataset<OSMRegion> {
+    protected static final String TILE_SUFFIX = "${x}/${z}.json";
+
     public static final double TILE_SIZE = 1 / 60.0;//250*(360.0/40075000.0);
 
     protected final GeographicProjection earthProjection;
@@ -67,7 +69,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
 
     @Override
     protected String[] urls(int tileX, int tileZ) {
-        return TerraConfig.data.overpass;
+        return Arrays.stream(TerraConfig.data.openstreetmap).map(s -> s + TILE_SUFFIX).toArray(String[]::new);
     }
 
     @Override
@@ -84,6 +86,11 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         this.allPolygons.clear();
 
         return region;
+    }
+
+    @Override
+    protected CompletableFuture<OSMRegion> sendRequest(@NonNull ChunkPos pos, @NonNull String[] urls, @NonNull Map<String, String> properties) throws Exception {
+        return super.sendRequest(pos, urls, properties);
     }
 
     public ChunkPos getRegion(double lon, double lat) {

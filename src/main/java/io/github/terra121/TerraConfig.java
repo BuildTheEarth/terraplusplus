@@ -40,9 +40,8 @@ public class TerraConfig {
                 "http://gis-treecover.wri.org/arcgis/rest/services/TreeCover2000/ImageServer/exportImage?f=image&bbox=${lon.min},${lat.min},${lon.max},${lat.max}&imageSR=4152&bboxSR=4152&format=tiff&adjustAspectRatio=false&&interpolation=RSP_CubicConvolution&size=256,256"
         };
 
-        public String[] overpass = {
-                "https://overpass.kumi.systems/api/interpreter/?data=[out:json];way(${lat.min},${lon.min},${lat.max},${lon.max});out%20geom(${lat.min},${lon.min},${lat.max},${lon.max})%20tags%20qt;(._<;);out%20body%20qt;is_in(${lat.min},${lon.min});area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;",
-                "https://lz4.overpass-api.de/api/interpreter/?data=[out:json];way(${lat.min},${lon.min},${lat.max},${lon.max});out%20geom(${lat.min},${lon.min},${lat.max},${lon.max})%20tags%20qt;(._<;);out%20body%20qt;is_in(${lat.min},${lon.min});area._[~\"natural|waterway\"~\"water|riverbank\"];out%20ids;"
+        public String[] openstreetmap = {
+                "https://cloud.daporkchop.net/gis/osm/64/"
         };
 
         @Comment({
