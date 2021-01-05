@@ -18,13 +18,13 @@ import static java.lang.Math.*;
 public enum SegmentFill {
     NONE {
         @Override
-        public void fill(CachedChunkData data, CubePrimer primer, Segment s, int cubeX, int cubeY, int cubeZ) {
+        public void fill(CachedChunkData data, CubePrimer primer, OSMSegment s, int cubeX, int cubeY, int cubeZ) {
             //no-op
         }
     },
     WIDE {
         @Override
-        public void fill(CachedChunkData data, CubePrimer primer, Segment s, int cubeX, int cubeY, int cubeZ) {
+        public void fill(CachedChunkData data, CubePrimer primer, OSMSegment s, int cubeX, int cubeY, int cubeZ) {
             IBlockState state = s.type.state();
             boolean allowInWater = s.type.allowInWater();
 
@@ -67,7 +67,7 @@ public enum SegmentFill {
     },
     NARROW {
         @Override
-        public void fill(CachedChunkData data, CubePrimer primer, Segment s, int cubeX, int cubeY, int cubeZ) {
+        public void fill(CachedChunkData data, CubePrimer primer, OSMSegment s, int cubeX, int cubeY, int cubeZ) {
             IBlockState state = s.type.state();
             boolean allowInWater = s.type.allowInWater();
 
@@ -119,5 +119,5 @@ public enum SegmentFill {
         }
     };
 
-    public abstract void fill(CachedChunkData data, CubePrimer primer, Segment s, int cubeX, int cubeY, int cubeZ);
+    public abstract void fill(CachedChunkData data, CubePrimer primer, OSMSegment s, int cubeX, int cubeY, int cubeZ);
 }

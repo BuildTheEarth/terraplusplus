@@ -45,15 +45,16 @@ public class EarthGeneratorSettings {
     }
 
     public CustomGeneratorSettings getCustomCubic() {
+        CustomGeneratorSettings cfg;
         if (Strings.isNullOrEmpty(this.settings.customcubic)) { //use new minimal defaults
-            CustomGeneratorSettings cfg = new CustomGeneratorSettings();
+            cfg = new CustomGeneratorSettings();
             cfg.mineshafts = cfg.caves = cfg.strongholds = cfg.dungeons = cfg.ravines = false;
             cfg.lakes.clear();
-            cfg.waterLevel = 0;
-            return cfg;
         } else {
-            return this.customCubicFromJson(this.settings.customcubic);
+            cfg = this.customCubicFromJson(this.settings.customcubic);
         }
+        cfg.waterLevel = 0;
+        return cfg;
     }
 
     //Crappy attempt to coerce custom cubic settings
@@ -87,7 +88,7 @@ public class EarthGeneratorSettings {
     //json template to be filled by Gson
     public static class JsonSettings {
         public String projection = "equirectangular";
-        public GeographicProjection.Orientation orentation = GeographicProjection.Orientation.swapped;
+        public GeographicProjection.Orientation orentation = GeographicProjection.Orientation.none;
         public double scaleX = 100000.0d;
         public double scaleY = 100000.0d;
         public boolean smoothblend = true;

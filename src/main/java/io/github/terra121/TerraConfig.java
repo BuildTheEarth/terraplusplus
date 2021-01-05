@@ -40,16 +40,15 @@ public class TerraConfig {
                 "http://gis-treecover.wri.org/arcgis/rest/services/TreeCover2000/ImageServer/exportImage?f=image&bbox=${lon.min},${lat.min},${lon.max},${lat.max}&imageSR=4152&bboxSR=4152&format=tiff&adjustAspectRatio=false&&interpolation=RSP_CubicConvolution&size=256,256"
         };
 
-        public String[] overpass = {
-                "https://overpass.kumi.systems/api/interpreter/",
-                "https://lz4.overpass-api.de/api/interpreter/"
+        public String[] openstreetmap = {
+                "https://cloud.daporkchop.net/gis/osm/"
         };
 
         @Comment({
                 "Configures the maximum permitted number of concurrent HTTP requests to each of the given hosts.",
                 "Each line is an entry, given in the following format:",
                 "  \"<number>: <host>\"",
-                "Example: \"3: https://example.com/\" will permit up to 8 requests to URLs starting with \"https://example.com/\" to be made at once.",
+                "Example: \"3: https://example.com/\" will permit up to 3 requests to URLs starting with \"https://example.com/\" to be made at once.",
                 "",
                 "You are strongly advised not to modify the default settings. Many of these services do not have the capacity to deal with thousands"
                 + " of concurrent requests, and raising the limits will only make them slower for everyone while not actually providing any noticeable performance"

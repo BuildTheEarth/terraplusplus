@@ -64,7 +64,7 @@ public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, CompletableF
      */
     @Deprecated
     @Override
-    public CompletableFuture<T> load(ChunkPos pos) throws Exception {
+    public CompletableFuture<T> load(@NonNull ChunkPos pos) throws Exception {
         String[] urls = this.urls(pos.x, pos.z);
 
         if (urls == null || urls.length == 0) { //no urls for tile

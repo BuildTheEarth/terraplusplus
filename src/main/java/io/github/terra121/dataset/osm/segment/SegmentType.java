@@ -7,7 +7,11 @@ import net.minecraft.block.BlockColored;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.EnumDyeColor;
-import net.minecraft.util.math.BlockPos;
+
+import java.util.EnumSet;
+import java.util.Set;
+
+import static java.lang.Math.*;
 
 @AllArgsConstructor
 @Getter
@@ -42,7 +46,7 @@ public enum SegmentType {
     INTERCHANGE(SegmentFill.WIDE, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.GRAY), true) {
         @Override
         public double computeRadius(int lanes) {
-            return (3 * lanes) >> 1;
+            return (3 * max(2, lanes)) >> 1;
         }
     },
     LIMITEDACCESS(SegmentFill.WIDE, Blocks.CONCRETE.getDefaultState().withProperty(BlockColored.COLOR, EnumDyeColor.GRAY), true) {
@@ -59,6 +63,11 @@ public enum SegmentType {
     },
     BUILDING(SegmentFill.NARROW, Blocks.BRICK_BLOCK.getDefaultState(), true),
     RAIL(SegmentFill.NONE, null, true);
+
+    public static final Set<SegmentType> USABLE_TYPES = EnumSet.complementOf(EnumSet.of(IGNORE, RAIL));
+    public static final Set<SegmentType> NOT_BUILDING_TYPES = EnumSet.complementOf(EnumSet.of(BUILDING));
+    public static final Set<SegmentType> NOT_WATER_TYPES = EnumSet.complementOf(EnumSet.of(STREAM, RIVER));
+    public static final Set<SegmentType> NOT_ROAD_TYPES = EnumSet.of(BUILDING, STREAM, RIVER);
 
     @NonNull
     private final SegmentFill fillType;

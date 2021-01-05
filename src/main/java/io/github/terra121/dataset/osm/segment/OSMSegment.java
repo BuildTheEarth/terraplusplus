@@ -1,7 +1,5 @@
 package io.github.terra121.dataset.osm.segment;
 
-import io.github.terra121.dataset.osm.OSMRegion;
-import io.github.terra121.dataset.osm.OpenStreetMap;
 import io.github.terra121.util.bvh.Bounds2d;
 import lombok.ToString;
 
@@ -10,23 +8,20 @@ import static java.lang.Math.*;
 /**
  * @author DaPorkchop_
  */
-@ToString(exclude = "region")
-public class Segment implements Bounds2d, Comparable<Segment> {
-    public SegmentType type;
-    public double lat0;
-    public double lon0;
-    public double lat1;
-    public double lon1;
-    public OpenStreetMap.Attributes attribute;
-    public byte layer_number;
-    public double slope;
-    public double offset;
+@ToString
+public class OSMSegment implements Bounds2d, Comparable<OSMSegment> {
+    public final SegmentType type;
+    public final double lat0;
+    public final double lon0;
+    public final double lat1;
+    public final double lon1;
+    public final double slope;
+    public final double offset;
 
-    public byte lanes;
+    public final byte lanes;
+    public final byte layer;
 
-    OSMRegion region;
-
-    public Segment(double lon0, double lat0, double lon1, double lat1, SegmentType type, byte lanes, OSMRegion region, OpenStreetMap.Attributes att, byte ly) {
+    public OSMSegment(double lon0, double lat0, double lon1, double lat1, SegmentType type, int lanes, int layer) {
         //slope must not be infinity, slight inaccuracy shouldn't even be noticible unless you go looking for it
         double dif = lon1 - lon0;
         if (abs(dif) < 0.01d) {
@@ -38,10 +33,8 @@ public class Segment implements Bounds2d, Comparable<Segment> {
         this.lat1 = lat1;
         this.lon1 = lon1;
         this.type = type;
-        this.attribute = att;
-        this.lanes = lanes;
-        this.region = region;
-        this.layer_number = ly;
+        this.lanes = (byte) min(8, lanes);
+        this.layer = (byte) layer;
 
         this.slope = (lat1 - lat0) / (lon1 - lon0);
         this.offset = lat0 - this.slope * lon0;
@@ -54,7 +47,7 @@ public class Segment implements Bounds2d, Comparable<Segment> {
 
     @Override
     public boolean equals(Object o) {
-        Segment e = (Segment) o;
+        OSMSegment e = (OSMSegment) o;
         return e.lat0 == this.lat0 && e.lon0 == this.lon0 && e.lat1 == this.lat1 && e.lon1 == e.lon1;
     }
 
@@ -79,9 +72,9 @@ public class Segment implements Bounds2d, Comparable<Segment> {
     }
 
     @Override
-    public int compareTo(Segment o) {
-        if (this.layer_number != o.layer_number) {
-            return Integer.compare(this.lanes, o.layer_number);
+    public int compareTo(OSMSegment o) {
+        if (this.layer != o.layer) {
+            return Integer.compare(this.lanes, o.layer);
         }
         return this.type.compareTo(o.type);
     }

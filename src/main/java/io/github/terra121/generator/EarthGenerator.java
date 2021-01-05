@@ -27,7 +27,8 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.Cubi
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicRavineGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.feature.CubicStrongholdGenerator;
 import io.github.terra121.TerraMod;
-import io.github.terra121.dataset.osm.segment.Segment;
+import io.github.terra121.dataset.osm.segment.OSMSegment;
+import io.github.terra121.dataset.osm.segment.SegmentType;
 import io.github.terra121.generator.cache.CachedChunkData;
 import io.github.terra121.generator.cache.ChunkDataLoader;
 import io.github.terra121.generator.populate.IEarthPopulator;
@@ -142,7 +143,7 @@ public class EarthGenerator extends BasicCubeGenerator {
             this.biomePopulators.put(biome, cubicBiome.getDecorator(this.cubiccfg));
         }
 
-        BiomeBlockReplacerConfig conf = this.cubiccfg.replacerConfig;
+        BiomeBlockReplacerConfig conf = this.cubiccfg.createBiomeBlockReplacerConfig();
         Map<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers = new IdentityHashMap<>();
         for (Biome biome : ForgeRegistries.BIOMES) {
             CubicBiome cubicBiome = CubicBiome.getCubic(biome);
@@ -208,7 +209,7 @@ public class EarthGenerator extends BasicCubeGenerator {
 
         if (data.intersectsSurface(cubeY)) { //render complex geometry onto cube surface
             //segments (roads, building outlines, streams, etc.)
-            for (Segment s : data.segments()) {
+            for (OSMSegment s : data.segments()) {
                 s.type.fillType().fill(data, primer, s, cubeX, cubeY, cubeZ);
             }
         }

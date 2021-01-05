@@ -35,6 +35,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -232,7 +234,7 @@ public class Http {
 
         class State implements BiConsumer<T, Throwable> {
             final CompletableFuture<T> future = new CompletableFuture<>();
-            RuntimeException e = null;
+            List<Throwable> suppressed;
 
             /**
              * The current iteration index.
@@ -247,7 +249,10 @@ public class Http {
             @Override
             public void accept(T value, Throwable cause) {
                 if (cause != null) {
-                    this.e().addSuppressed(cause);
+                    if (this.suppressed == null) {
+                        this.suppressed = new ArrayList<>();
+                    }
+                    this.suppressed.add(new RuntimeException(urls[this.i], cause));
                 } else if (value == null) { //remember that one of the URLs 404'd
                     this.foundMissing = true;
                 } else { //complete the future successfully with the retrieved value
@@ -262,9 +267,16 @@ public class Http {
                 if (++this.i < urls.length) {
                     getSingle(urls[this.i], parseFunction).whenComplete(this);
                 } else if (this.foundMissing) { //the best result from any of the URLs was a 404
+                    if (this.suppressed != null) {
+                        RuntimeException e = new RuntimeException();
+                        this.suppressed.forEach(e::addSuppressed);
+                        TerraMod.LOGGER.error("Some URLs completed exceptionally", e);
+                    }
                     this.future.complete(null);
                 } else {
-                    this.future.completeExceptionally(this.e());
+                    RuntimeException e = new RuntimeException("All URLs completed exceptionally!");
+                    this.suppressed.forEach(e::addSuppressed);
+                    this.future.completeExceptionally(e);
                 }
             }
 
