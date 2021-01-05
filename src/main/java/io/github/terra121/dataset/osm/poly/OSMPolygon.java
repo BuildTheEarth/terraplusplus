@@ -105,40 +105,13 @@ public class OSMPolygon implements Bounds2d, Comparable<OSMPolygon> {
 
         List<Segment> segments = new ArrayList<>(Arrays.stream(shapes).mapToInt(arr -> arr.length).sum());
         for (double[][] shape : shapes) {
-            int first = 0;
-            for (; first < shape.length; first++) { //find first non-null segment
-                if (shape[first] != null) {
-                    break;
-                }
-            }
-            if (first == shape.length) { //all segments are null
-                continue;
-            }
-
-            int i = first + 1;
-            int prev = first;
-            for (; i < shape.length; i++) {
-                if (shape[i] != null) {
-                    if (prev != -1) {
-                        segments.add(toSegment(shape, prev, i));
-                    }
-                    prev = i;
-                } else {
-                    prev = -1;
-                }
-            }
-
-            if (prev != -1 && first == 0) {
-                segments.add(toSegment(shape, 0, prev));
+            double[] prev = shape[0];
+            for (int i = 1; i < shape.length; i++) {
+                double[] point = shape[i];
+                segments.add(new Segment(prev[0], prev[1], point[0], point[1]));
+                prev = point;
             }
         }
-        /*for (double[][] shape : shapes) {
-            for (int i = 1; i < shape.length; i++) {
-                segments.add(toSegment(shape, i - 1, i));
-            }
-            segments.add(toSegment(shape, 0, shape.length - 1));
-        }*/
-        //segments.removeIf(s -> s.lon0 == s.lon1);
 
         checkArg(segments.size() >= 3, "polygon must contain at least 3 valid segments!");
 

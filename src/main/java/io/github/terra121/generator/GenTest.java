@@ -1,7 +1,5 @@
 package io.github.terra121.generator;
 
-import io.github.terra121.TerraMod;
-import io.github.terra121.dataset.osm.poly.Polygon;
 import io.github.terra121.generator.cache.ChunkDataLoader;
 import io.github.terra121.util.http.Http;
 import net.daporkchop.lib.common.util.PorkUtil;
@@ -26,6 +24,7 @@ public class GenTest {
     static ChunkDataLoader LOADER;
 
     public static void main(String... args) {
+        Bootstrap.register();
         Http.configChanged();
 
         while (true) {

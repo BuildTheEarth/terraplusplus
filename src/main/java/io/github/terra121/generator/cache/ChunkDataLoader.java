@@ -6,7 +6,6 @@ import io.github.terra121.TerraMod;
 import io.github.terra121.dataset.osm.OSMRegion;
 import io.github.terra121.dataset.osm.poly.OSMPolygon;
 import io.github.terra121.dataset.osm.segment.OSMSegment;
-import io.github.terra121.dataset.osm.segment.SegmentType;
 import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.generator.GeneratorDatasets;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
@@ -43,7 +42,7 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
         return heights;
     }
 
-    protected static void renderPolygon(int baseX, int baseZ, @NonNull double[] wateroffs, @NonNull Polygon polygon) {
+    protected static void renderPolygon(int baseX, int baseZ, @NonNull double[] wateroffs, @NonNull OSMPolygon polygon) {
         polygon.rasterizeDistance(baseX, 16, baseZ, 16, 5, (x, z, dist) -> {
             int i = (x - baseX) * 16 + (z - baseZ);
             wateroffs[i] = max(wateroffs[i], dist);

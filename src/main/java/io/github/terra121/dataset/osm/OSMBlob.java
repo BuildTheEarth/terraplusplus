@@ -154,20 +154,14 @@ public final class OSMBlob {
 
             if (tags.containsKey("building")) { //this area is a building, and we want buildings to be rendered as an outline rather than a filled polygon
                 toSegments(projection, segments, polygon.outerRing(), SegmentType.BUILDING, 1, 0);
+                for (LineString innerRing : polygon.innerRings()) {
+                    toSegments(projection, segments, innerRing, SegmentType.BUILDING, 1, 0);
+                }
                 return;
             }
 
             if (tags.containsKey("water") || "water".equals(tags.get("natural")) || "riverbank".equals(tags.get("waterway"))) {
-                if (true) {
-                    toSegments(projection, segments, polygon.outerRing(), SegmentType.RIVER, 1, 0);
-                    for (LineString lineString : polygon.innerRings()) {
-                        toSegments(projection, segments, lineString, SegmentType.RIVER, 1, 0);
-                    }
-                    return;
-                }
-                //TODO: output this as an OSMPolygon instead
-                waterEdges.add(polygon.outerRing());
-                waterEdges.addAll(Arrays.asList(polygon.innerRings()));
+                toPolygons(projection, polygons, polygon);
             }
         }
     }
@@ -191,12 +185,36 @@ public final class OSMBlob {
         }
     }
 
+    private static void toPolygons(GeographicProjection projection, List<OSMPolygon> polygons, Polygon polygon) {
+        try {
+            double[][][] shapes = new double[1 + polygon.innerRings().length][][];
+            int i = 0;
+            shapes[i++] = projectPoints(projection, polygon.outerRing().points());
+            for (LineString line : polygon.innerRings()) {
+                shapes[i++] = projectPoints(projection, line.points());
+            }
+            polygons.add(new OSMPolygon(shapes));
+        } catch (OutOfProjectionBoundsException e) {
+            //out of projection bounds, we don't want to output only part of the polygon so we just give up and do nothing
+        }
+    }
+
+    private static double[][] projectPoints(GeographicProjection projection, Point[] points) throws OutOfProjectionBoundsException {
+        double[][] out = new double[points.length][];
+        for (int i = 0; i < points.length; i++) {
+            Point point = points[i];
+            out[i] = projection.fromGeo(point.lon(), point.lat());
+        }
+        return out;
+    }
+
     public static OSMBlob merge(@NonNull OSMBlob... blobs) {
         return new OSMBlob(
                 Arrays.stream(blobs).map(OSMBlob::segments).flatMap(Arrays::stream).toArray(OSMSegment[]::new),
                 Arrays.stream(blobs).map(OSMBlob::polygons).flatMap(Arrays::stream).toArray(OSMPolygon[]::new),
                 Arrays.stream(blobs).map(OSMBlob::waterEdges).flatMap(Arrays::stream).toArray(LineString[]::new));
     }
+
     @NonNull
     private final OSMSegment[] segments;
     @NonNull

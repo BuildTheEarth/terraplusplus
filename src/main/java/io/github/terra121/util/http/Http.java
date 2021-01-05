@@ -279,10 +279,6 @@ public class Http {
                     this.future.completeExceptionally(e);
                 }
             }
-
-            protected RuntimeException e() {
-                return this.e != null ? this.e : (this.e = new RuntimeException("All URLs completed exceptionally!"));
-            }
         }
 
         State state = new State();

@@ -116,7 +116,7 @@ abstract class AbstractGeoJSONDeserializer<T extends GeoJSONObject> extends Type
 
     protected Polygon readPolygon(JsonReader in) throws IOException {
         LineString[] lines = this.readLineStrings(in);
-        return new Polygon(lines[0], Arrays.copyOfRange(lines, 0, lines.length));
+        return new Polygon(lines[0], Arrays.copyOfRange(lines, 1, lines.length));
     }
 
     protected Polygon[] readPolygons(JsonReader in) throws IOException {
