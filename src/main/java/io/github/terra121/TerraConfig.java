@@ -49,7 +49,7 @@ public class TerraConfig {
                 "Configures the maximum permitted number of concurrent HTTP requests to each of the given hosts.",
                 "Each line is an entry, given in the following format:",
                 "  \"<number>: <host>\"",
-                "Example: \"3: https://example.com/\" will permit up to 8 requests to URLs starting with \"https://example.com/\" to be made at once.",
+                "Example: \"3: https://example.com/\" will permit up to 3 requests to URLs starting with \"https://example.com/\" to be made at once.",
                 "",
                 "You are strongly advised not to modify the default settings. Many of these services do not have the capacity to deal with thousands"
                 + " of concurrent requests, and raising the limits will only make them slower for everyone while not actually providing any noticeable performance"
