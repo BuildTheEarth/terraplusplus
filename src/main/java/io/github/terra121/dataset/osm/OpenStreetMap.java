@@ -137,7 +137,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         Stream<OSMSegment> segments = Arrays.stream(blob.segments()).filter(s -> SegmentType.USABLE_TYPES.contains(s.type));
         Stream<OSMPolygon> polygons = Arrays.stream(blob.polygons());
 
-        /*if (!this.doBuildings) {
+        if (!this.doBuildings) {
             segments = segments.filter(s -> SegmentType.NOT_BUILDING_TYPES.contains(s.type));
         }
         if (!this.doWater) {
@@ -145,7 +145,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         }
         if (!this.doRoad) {
             segments = segments.filter(s -> SegmentType.NOT_ROAD_TYPES.contains(s.type));
-        }*/
+        }
 
         OSMRegion region = new OSMRegion(pos, this.water, new BVH<>(segments.collect(Collectors.toList())), new BVH<>(polygons.collect(Collectors.toList())));
 

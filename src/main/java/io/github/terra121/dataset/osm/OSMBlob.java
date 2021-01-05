@@ -47,12 +47,10 @@ public final class OSMBlob {
             for (GeoJSONObject child : PorkUtil.<Iterable<? extends GeoJSONObject>>uncheckedCast(object)) {
                 _fromGeoJSON(projection, segments, polygons, waterEdges, tags, child);
             }
-            return;
         } else if (object instanceof Feature) {
             //process child using properties from feature
             Feature feature = (Feature) object;
             _fromGeoJSON(projection, segments, polygons, waterEdges, feature.properties(), feature.geometry());
-            return;
         } else if (object instanceof LineString) {
             LineString lineString = (LineString) object;
             String natural = tags.get("natural");
@@ -158,6 +156,13 @@ public final class OSMBlob {
             }
 
             if (tags.containsKey("water") || "water".equals(tags.get("natural")) || "riverbank".equals(tags.get("waterway"))) {
+                if (true) {
+                    toSegments(projection, segments, polygon.outerRing(), SegmentType.RIVER, 1, 0);
+                    for (LineString lineString : polygon.innerRings()) {
+                        toSegments(projection, segments, lineString, SegmentType.RIVER, 1, 0);
+                    }
+                    return;
+                }
                 //TODO: output this as an OSMPolygon instead
                 waterEdges.add(polygon.outerRing());
                 waterEdges.addAll(Arrays.asList(polygon.innerRings()));

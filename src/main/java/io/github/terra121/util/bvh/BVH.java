@@ -86,6 +86,12 @@ public class BVH<V extends Bounds2d> {
         }
     }
 
+    public void forEach(@NonNull Consumer<V> callback) {
+        if (this.root != null) {
+            this.root.forEach(callback);
+        }
+    }
+
     protected static class Node<V extends Bounds2d> extends Bounds2dImpl {
         protected Node<V>[] children;
 
@@ -184,6 +190,23 @@ public class BVH<V extends Bounds2d> {
                             callback.accept((V) value);
                         }
                     }
+                }
+            }
+        }
+
+        @SuppressWarnings("unchecked")
+        protected void forEach(Consumer<V> callback) {
+            if (this.children != null) { //not a leaf node
+                for (Node<V> child : this.children) {
+                    if (child != null) {
+                        child.forEach(callback);
+                    }
+                }
+            }
+
+            if (this.values != null) { //this node contains some values
+                for (Object value : this.values) {
+                    callback.accept((V) value);
                 }
             }
         }

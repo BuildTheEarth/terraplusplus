@@ -6,6 +6,7 @@ import io.github.terra121.TerraMod;
 import io.github.terra121.dataset.osm.OSMRegion;
 import io.github.terra121.dataset.osm.poly.OSMPolygon;
 import io.github.terra121.dataset.osm.segment.OSMSegment;
+import io.github.terra121.dataset.osm.segment.SegmentType;
 import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
@@ -126,6 +127,12 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
                         for (OSMRegion region : osmRegions) {
                             region.segments.forEachIntersecting(osmBounds, segments::add);
                         }
+
+                        segments.forEach(s -> {
+                            if (s.type == SegmentType.RIVER) {
+                                int i = 0;
+                            }
+                        });
 
                         return new CachedChunkData(heights, wateroffs, segments, polygons, treeCover);
                     });

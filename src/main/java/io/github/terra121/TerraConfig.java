@@ -41,6 +41,7 @@ public class TerraConfig {
         };
 
         public String[] openstreetmap = {
+                "http://10.0.0.20/gis/switzerland.tiles/",
                 "https://cloud.daporkchop.net/gis/osm/"
         };
 
