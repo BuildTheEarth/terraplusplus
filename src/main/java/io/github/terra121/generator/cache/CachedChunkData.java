@@ -70,8 +70,8 @@ public class CachedChunkData {
         this.wateroffs = wateroffs;
         this.treeCover = treeCover;
 
-        this.segments = approximateSort(segments, new EqualsTieBreakComparator<Segment>(Comparator.naturalOrder(), true, true)).toArray(new OSMSegment[0]);
-        this.polygons = approximateSort(polygons, new EqualsTieBreakComparator<Polygon>(Comparator.naturalOrder(), true, true)).toArray(new OSMPolygon[0]);
+        this.segments = approximateSort(segments, new EqualsTieBreakComparator<OSMSegment>(Comparator.naturalOrder(), true, true)).toArray(new OSMSegment[0]);
+        this.polygons = approximateSort(polygons, new EqualsTieBreakComparator<OSMPolygon>(Comparator.naturalOrder(), true, true)).toArray(new OSMPolygon[0]);
 
         double min = Double.POSITIVE_INFINITY;
         double max = Double.NEGATIVE_INFINITY;

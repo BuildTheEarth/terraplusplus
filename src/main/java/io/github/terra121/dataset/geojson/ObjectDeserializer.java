@@ -31,6 +31,7 @@ import lombok.Getter;
 import java.io.IOException;
 import java.sql.Ref;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -64,6 +65,7 @@ final class ObjectDeserializer extends AbstractGeoJSONDeserializer<GeoJSONObject
     protected Feature readFeature(JsonReader in) throws IOException {
         Geometry geometry = null;
         Map<String, String> properties = null;
+        String id = null;
 
         while (in.peek() == JsonToken.NAME) {
             switch (in.nextName()) {
@@ -81,12 +83,15 @@ final class ObjectDeserializer extends AbstractGeoJSONDeserializer<GeoJSONObject
                         properties = builder.build();
                     }
                     break;
+                case "id":
+                    id = in.nextString();
+                    break;
                 default:
-                    throw new IllegalArgumentException();
+                    throw new IllegalArgumentException("invalid field name ");
             }
         }
 
-        return new Feature(geometry, properties);
+        return new Feature(geometry, properties, id);
     }
 
     protected FeatureCollection readFeatureCollection(JsonReader in) throws IOException {

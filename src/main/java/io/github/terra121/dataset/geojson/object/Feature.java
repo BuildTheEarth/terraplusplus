@@ -15,4 +15,5 @@ public final class Feature implements GeoJSONObject {
     @NonNull
     protected final Geometry geometry;
     protected final Map<String, String> properties;
+    protected final String id;
 }

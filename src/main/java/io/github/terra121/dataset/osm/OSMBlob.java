@@ -29,6 +29,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Getter
 public final class OSMBlob {
+    public static final OSMBlob EMPTY_BLOB = new OSMBlob(new OSMSegment[0], new OSMPolygon[0], new LineString[0]);
+
     public static OSMBlob fromGeoJSON(@NonNull GeographicProjection projection, @NonNull GeoJSONObject... objects) {
         List<OSMSegment> segments = new ArrayList<>();
         List<OSMPolygon> polygons = new ArrayList<>();
@@ -50,7 +52,7 @@ public final class OSMBlob {
         } else if (object instanceof Feature) {
             //process child using properties from feature
             Feature feature = (Feature) object;
-            _fromGeoJSON(projection, segments, polygons, waterEdges, feature.properties(), feature.geometry());
+            _fromGeoJSON(projection, segments, polygons, waterEdges, feature.properties() != null ? feature.properties() : tags, feature.geometry());
         } else if (object instanceof LineString) {
             LineString lineString = (LineString) object;
             String natural = tags.get("natural");
@@ -195,7 +197,6 @@ public final class OSMBlob {
                 Arrays.stream(blobs).map(OSMBlob::polygons).flatMap(Arrays::stream).toArray(OSMPolygon[]::new),
                 Arrays.stream(blobs).map(OSMBlob::waterEdges).flatMap(Arrays::stream).toArray(LineString[]::new));
     }
-
     @NonNull
     private final OSMSegment[] segments;
     @NonNull

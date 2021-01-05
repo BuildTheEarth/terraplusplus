@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -46,6 +47,9 @@ import static net.daporkchop.lib.common.math.PMath.*;
 import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 public class OpenStreetMap extends TiledDataset<OSMRegion> {
+    protected static final Function<CompletableFuture<OSMBlob>, CompletableFuture<OSMBlob>> COMPOSE_FUNCTION =
+            blob -> blob != null ? blob : CompletableFuture.completedFuture(null);
+
     protected static final String TILE_SUFFIX = "tile/${x}/${z}.json";
 
     public static final double TILE_SIZE = 1 / 64.0;
@@ -59,7 +63,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                 //suffix urls with location
                 String[] urls = Arrays.stream(TerraConfig.data.openstreetmap).map(s -> s + location).toArray(String[]::new);
 
-                return Http.getFirst(urls, this::parseGeoJSON).thenCompose(PFunctions.identity());
+                return Http.getFirst(urls, this::parseGeoJSON).thenCompose(COMPOSE_FUNCTION);
             }));
 
     public final Water water;
@@ -122,7 +126,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                     String[] urls = Arrays.stream(TerraConfig.data.openstreetmap).map(s -> s + location).toArray(String[]::new);
 
                     //actually send request
-                    referencedObjectFutures.add(Http.getFirst(urls, this::parseGeoJSON).thenCompose(PFunctions.identity()));
+                    referencedObjectFutures.add(Http.getFirst(urls, this::parseGeoJSON).thenCompose(COMPOSE_FUNCTION));
                 }
             }
 
@@ -133,7 +137,11 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         return CompletableFuture.completedFuture(OSMBlob.fromGeoJSON(this.earthProjection, objects));
     }
 
-    protected OSMRegion toRegion(@NonNull ChunkPos pos, @NonNull OSMBlob blob) {
+    protected OSMRegion toRegion(@NonNull ChunkPos pos, OSMBlob blob) {
+        if (blob == null) {
+            blob = OSMBlob.EMPTY_BLOB;
+        }
+
         Stream<OSMSegment> segments = Arrays.stream(blob.segments()).filter(s -> SegmentType.USABLE_TYPES.contains(s.type));
         Stream<OSMPolygon> polygons = Arrays.stream(blob.polygons());
 
