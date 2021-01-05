@@ -159,7 +159,7 @@ public class EarthGenerator extends BasicCubeGenerator {
             this.biomePopulators.put(biome, cubicBiome.getDecorator(this.cubiccfg));
         }
 
-        BiomeBlockReplacerConfig conf = this.cubiccfg.replacerConfig;
+        BiomeBlockReplacerConfig conf = this.cubiccfg.createBiomeBlockReplacerConfig();
         Map<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers = new IdentityHashMap<>();
         for (Biome biome : ForgeRegistries.BIOMES) {
             CubicBiome cubicBiome = CubicBiome.getCubic(biome);
