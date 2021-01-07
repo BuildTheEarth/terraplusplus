@@ -271,7 +271,7 @@ public abstract class GeographicProjection {
 	 * @throws OutOfProjectionBoundsException if the given point is outside the projection domain
 	 */
 	public float azimuth(double x, double y, float angle) throws OutOfProjectionBoundsException {
-		return this.azimuth(x, y, angle, 1E-7);
+		return this.azimuth(x, y, angle, 1E-6);
 	}
 
 	public enum Orientation {
