@@ -12,8 +12,7 @@ import java.util.List;
 public class TerraAdminCommand extends FragmentManager {
 
     public TerraAdminCommand() {
-        setTitle(TranslateUtil.translate("terra121.commands.terraadmin.title"));
-        setCommandBase("terraadmin");
+        super(TranslateUtil.translate("terra121.commands.terraadmin.title"), "terraadmin");
     }
 
     @Override
@@ -49,6 +48,7 @@ public class TerraAdminCommand extends FragmentManager {
             sender.sendMessage(TerraConstants.TextConstants.getNoPermission());
             return;
         }
+
         executeFragment(server, sender, args);
     }
 }

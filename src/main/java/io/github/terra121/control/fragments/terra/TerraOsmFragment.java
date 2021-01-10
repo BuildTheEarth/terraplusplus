@@ -4,8 +4,6 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.TerraConstants;
-import io.github.terra121.chat.ChatHelper;
-import io.github.terra121.chat.TextElement;
 import io.github.terra121.control.fragments.CommandFragment;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
@@ -50,7 +48,7 @@ public class TerraOsmFragment extends CommandFragment {
         if (args.length > 0) {
             if(hasAdminPermission(sender)) e = sender.getEntityWorld().getPlayerEntityByName(args[0]);
             if (e == null) {
-                sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.unknownplayer"), TextFormatting.RED)));
+                sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.RED + TranslateUtil.translate("terra121.error.unknownplayer")));
                 return;
             }
 
@@ -63,13 +61,13 @@ public class TerraOsmFragment extends CommandFragment {
 
         try {
             double[] result = projection.toGeo(pos.x, pos.z);
-            sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Location of ", TextFormatting.GRAY), new TextElement(senderName, TextFormatting.BLUE), new TextElement(" on maps:", TextFormatting.GRAY)));
-            sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Google Maps: ", TextFormatting.GRAY)).appendSibling(new TextComponentString("Click Here").setStyle(
+            sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.GRAY + "Location of " + TextFormatting.BLUE + senderName + TextFormatting.GRAY + " on maps:"));
+            sender.sendMessage(new TextComponentString(TextFormatting.GRAY + "Google Maps: ").appendSibling(new TextComponentString("Click Here").setStyle(
                     new Style().setUnderlined(true).setColor(TextFormatting.BLUE).setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.google.com/maps/search/?api=1&query=" + result[1] + "," + result[0])))));
-            sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("OSM: ", TextFormatting.GRAY)).appendSibling(new TextComponentString("Click Here").setStyle(
+            sender.sendMessage(new TextComponentString(TextFormatting.GRAY + "OSM: ").appendSibling(new TextComponentString("Click Here").setStyle(
                     new Style().setUnderlined(true).setColor(TextFormatting.BLUE).setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, String.format("https://www.openstreetmap.org/#map=17/%.5f/%.5f", result[1], result[0]))))));
         } catch (OutOfProjectionBoundsException e1) { //out of bounds, print error
-            sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Unknown position!", TextFormatting.RED)));
+            sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.RED + "Unknown position!"));
         }
     }
 

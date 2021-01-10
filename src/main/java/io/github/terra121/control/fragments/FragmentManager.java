@@ -1,7 +1,5 @@
 package io.github.terra121.control.fragments;
 
-import io.github.terra121.chat.ChatHelper;
-import io.github.terra121.chat.TextElement;
 import io.github.terra121.control.Command;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
@@ -13,13 +11,14 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public abstract class FragmentManager extends Command {
 
-    public FragmentManager() {
-        registerCommandFragment(new CommandFragment() {
+    public FragmentManager(String title, String command) {
+        this.title = String.format(" %s", title);
+        this.commandBase = String.format("/%s ", command);
+        register(new CommandFragment() {
             @Override
             public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
                 displayCommands(sender, args);
@@ -47,32 +46,20 @@ public abstract class FragmentManager extends Command {
         });
     }
 
-    private List<ICommandFragment> commandFragments = new ArrayList<>();
-    private String title = "";
-    private String commandBase = "";
+    private List<ICommandFragment> fragments = new ArrayList<>();
+    private final String title;
+    private final String commandBase;
 
-    protected void registerCommandFragment(ICommandFragment c) {
-        commandFragments.add(c);
-    }
-
-    protected void setTitle(String t) {
-        this.title = " "+t;
-    }
-
-    protected void setCommandBase(String b) {
-        this.commandBase = "/"+b+" ";
+    protected void register(ICommandFragment c) {
+        fragments.add(c);
     }
 
     protected void executeFragment(MinecraftServer server, ICommandSender sender, String[] args) {
         if (args.length != 0) {
-            ArrayList<String> dataList = new ArrayList<>();
-            for (int x = 1; x < args.length; x++) dataList.add(args[x]);
-
-            String[] data = dataList.toArray(new String[dataList.size()]);
-            for (ICommandFragment f : commandFragments) {
+            for (ICommandFragment f : fragments) {
                 for(String c : f.getName()) {
                     if (c.equalsIgnoreCase(args[0])) {
-                        f.execute(server, sender, data);
+                        f.execute(server, sender, selectArray(args, 1));
                         return;
                     }
                 }
@@ -88,12 +75,12 @@ public abstract class FragmentManager extends Command {
             try {
                 page = Integer.parseInt(args[0]);
             } catch (Exception e) { }
-            if(page > Math.ceil(commandFragments.size() / 7.0)) page = 1;
+            if(page > Math.ceil(fragments.size() / 7.0)) page = 1;
         }
 
         sender.sendMessage(new TextComponentString(title + ":").setStyle(new Style().setColor(TextFormatting.GRAY)));
-        for(int xf = (page - 1) * 7; xf < Math.min(((page - 1) * 7) + 7, commandFragments.size()); xf++) {
-            ICommandFragment f = commandFragments.get(xf);
+        for(int xf = (page - 1) * 7; xf < Math.min(((page - 1) * 7) + 7, fragments.size()); xf++) {
+            ICommandFragment f = fragments.get(xf);
 
             ITextComponent message = new TextComponentString(commandBase).setStyle(new Style().setColor(TextFormatting.YELLOW));
             message.appendSibling(new TextComponentString(f.getName()[0] + " ").setStyle(new Style().setColor(TextFormatting.GREEN)));
@@ -113,18 +100,18 @@ public abstract class FragmentManager extends Command {
             sender.sendMessage(message);
         }
 
-        if(Math.ceil(commandFragments.size() / 7.0) < 2) return;
+        if(Math.ceil(fragments.size() / 7.0) < 2) return;
 
-        String end = page >= Math.ceil(commandFragments.size() / 7.0) ? "Use '" + commandBase + "help " + (page - 1) + "' to see the previous page."
+        String end = page >= Math.ceil(fragments.size() / 7.0) ? "Use '" + commandBase + "help " + (page - 1) + "' to see the previous page."
                 : "Use '" + commandBase + "help " + (page + 1) + "' to see the next page.";
-        sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(end, TextFormatting.GOLD)));
+        sender.sendMessage(new TextComponentString(TextFormatting.GOLD + end));
     }
 
     @Override
     public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos targetPos) {
         List<String> tabCompletions = new ArrayList<>();
 
-        for(ICommandFragment fragment : commandFragments)
+        for(ICommandFragment fragment : fragments)
             for(String s : fragment.getName())
                 if(args.length == 0)
                     tabCompletions.add(s);
@@ -132,5 +119,13 @@ public abstract class FragmentManager extends Command {
                     tabCompletions.add(s);
 
         return tabCompletions;
+    }
+
+    private String[] selectArray(String[] args, int index) {
+        List<String> array = new ArrayList<>();
+        for(int i = index; i < args.length; i++)
+            array.add(args[i]);
+
+        return array.toArray(array.toArray(new String[array.size()]));
     }
 }

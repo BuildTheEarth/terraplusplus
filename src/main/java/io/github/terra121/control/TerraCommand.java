@@ -20,7 +20,6 @@ public class TerraCommand extends FragmentManager {
 
     public TerraCommand() {
         setTitle(TranslateUtil.translate("terra121.commands.terra.title"));
-        setCommandBase("terra");
         registerCommandFragment(new TerraInfoFragment());
         registerCommandFragment(new TerraWhereFragment());
         registerCommandFragment(new TerraWorldFragment());

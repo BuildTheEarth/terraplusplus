@@ -66,7 +66,7 @@ public class EarthGenerator extends BasicCubeGenerator {
             //register async generation callbacks
             CubeGeneratorsRegistry.registerColumnAsyncLoadingCallback((world, data) -> asyncCallback(world, data.getPos()));
             CubeGeneratorsRegistry.registerCubeAsyncLoadingCallback((world, data) -> asyncCallback(world, data.getPos().chunkPos()));
-        } catch (NoSuchMethodError e) {
+        } catch (NoClassDefFoundError | NoSuchMethodError e) {
             //we're on an older version of CC that doesn't support async terrain
             TerraMod.LOGGER.error("Async terrain not available!");
             TerraMod.LOGGER.error("Consider updating to the latest version of Cubic Chunks for maximum performance.");
