@@ -30,8 +30,8 @@ terra121.commands.tpll.usage=/tpll latitud longitud [altitud] [jugador]
 terra121.commands.terra.usage=/terra [where:ou] [jugador]\n/terra world\n/terra osm\n/terra conv[ert] [x z]:[latitud longitud]
 
 terra121.commands.terra.gensettings=Configuración del Generador: 
-terra121.commands.terra.latlon=latitud longitud: ph_.7f ph_.7f
-terra121.commands.terra.xy=x y: ph_.7f ph_.7f
+terra121.commands.terra.latlon=latitud longitud: %.7f %.7f
+terra121.commands.terra.xy=x y: %.7f %.7f
 
 ## command errors
 terra121.error.notcc=¡Tienes que estar en un mundo Cubic Chunks!

@@ -4,8 +4,6 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.terra121.generator.EarthBiomeProvider;
 import io.github.terra121.TerraConstants;
-import io.github.terra121.chat.ChatHelper;
-import io.github.terra121.chat.TextElement;
 import io.github.terra121.control.fragments.CommandFragment;
 import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.GeographicProjection;
@@ -14,6 +12,7 @@ import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeProvider;
@@ -49,10 +48,10 @@ public class TerraEnvironmentFragment extends CommandFragment {
         double[] c = this.getCoordArgs(sender, args, projection);
 
         c = ((EarthBiomeProvider) bp).getEnv(c[0], c[1]);
-        sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Environment Data: ", TextFormatting.GRAY)));
-        sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(String.format("%.1f \\U+00B0C", c[1]), TextFormatting.RED)));
-        sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(String.format("%.1f mm/yr", c[2]), TextFormatting.RED)));
-        sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(String.format("Soil Id: %d", (int) c[0]), TextFormatting.RED)));
+        sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.GRAY + "Environment Data:"));
+        sender.sendMessage(new TextComponentString(TextFormatting.RED + String.format("%.1f \\U+00B0C", c[1])));
+        sender.sendMessage(new TextComponentString(TextFormatting.RED + String.format("%.1f mm/yr", c[2])));
+        sender.sendMessage(new TextComponentString(TextFormatting.RED + String.format("Soil Id: %d", (int) c[0])));
     }
 
     @Override

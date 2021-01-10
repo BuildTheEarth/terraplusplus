@@ -52,9 +52,9 @@ terra121.commands.terra.usage=/terra [where:ou] [玩家]\n/terra world\n/terra o
 
 terra121.commands.terra.gensettings=Generator Settings: 
 
-terra121.commands.terra.latlon=纬度 经度: ph_.7f ph_.7f
+terra121.commands.terra.latlon=纬度 经度: %.7f %.7f
 
-terra121.commands.terra.xy=x y: ph_.7f ph_.7f
+terra121.commands.terra.xy=x y: %.7f %.7f
 
 ## command errors
 terra121.error.notcc=必须在Cubic Chunks世界中执行！
