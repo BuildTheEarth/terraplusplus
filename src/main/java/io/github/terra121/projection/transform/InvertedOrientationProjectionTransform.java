@@ -6,12 +6,12 @@ import io.github.terra121.projection.OutOfProjectionBoundsException;
 /**
  * Inverses the warped projection such that x becomes y and y becomes x.
  */
-public class InvertedOrientation extends ProjectionTransform {
+public class InvertedOrientationProjectionTransform extends ProjectionTransform {
 
 	/**
 	 * @param input - projection to transform
 	 */
-    public InvertedOrientation(GeographicProjection input) {
+    public InvertedOrientationProjectionTransform(GeographicProjection input) {
         super(input);
     }
 

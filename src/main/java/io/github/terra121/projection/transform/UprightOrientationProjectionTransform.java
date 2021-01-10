@@ -7,12 +7,12 @@ import io.github.terra121.projection.OutOfProjectionBoundsException;
  * Mirrors the warped projection vertically.
  * I.E. x' = x and y' = -y
  */
-public class UprightOrientation extends ProjectionTransform {
+public class UprightOrientationProjectionTransform extends ProjectionTransform {
 
     /**
      * @param input - projection to transform
      */
-    public UprightOrientation(GeographicProjection input) {
+    public UprightOrientationProjectionTransform(GeographicProjection input) {
         super(input);
     }
 

@@ -1,5 +1,7 @@
 package io.github.terra121.projection.transform;
 
+import com.google.common.base.Preconditions;
+
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 
@@ -7,19 +9,21 @@ import io.github.terra121.projection.OutOfProjectionBoundsException;
  * Scales the warps projection's projected space up or down.
  * More specifically, it multiplies x and y by there respective scale factors.
  */
-public class ScaleProjection extends ProjectionTransform {
+public class ScaleProjectionTransform extends ProjectionTransform {
     private final double scaleX;
     private final double scaleY;
 
     /**
-     * Creates a new ScaleProjection with different scale factor for the x and y axis.
+     * Creates a new ScaleProjection with different scale factors for the x and y axis.
      *
      * @param input - projection to transform
      * @param scaleX - scaling to apply along the x axis
      * @param scaleY - scaling to apply along the y axis
      */
-    public ScaleProjection(GeographicProjection input, double scaleX, double scaleY) {
+    public ScaleProjectionTransform(GeographicProjection input, double scaleX, double scaleY) {
         super(input);
+        Preconditions.checkArgument(Double.isFinite(scaleX) && Double.isFinite(scaleY), "Projection scales should be finite");
+        Preconditions.checkArgument(scaleX != 0 && scaleY != 0, "Projection scale cannot be 0!");
         this.scaleX = scaleX;
         this.scaleY = scaleY;
     }
@@ -30,7 +34,7 @@ public class ScaleProjection extends ProjectionTransform {
      * @param input - projection to transform
      * @param scale - scale factor to apply on both axis
      */
-    public ScaleProjection(GeographicProjection input, double scale) {
+    public ScaleProjectionTransform(GeographicProjection input, double scale) {
         this(input, scale, scale);
     }
 
@@ -66,4 +70,20 @@ public class ScaleProjection extends ProjectionTransform {
     public double metersPerUnit() {
         return this.input.metersPerUnit() / Math.sqrt((this.scaleX * this.scaleX + this.scaleY * this.scaleY) / 2); //TODO: better transform
     }
+
+	/**
+	 * @return the scaleX
+	 */
+	public double getScaleX() {
+		return scaleX;
+	}
+
+	/**
+	 * @return the scaleY
+	 */
+	public double getScaleY() {
+		return scaleY;
+	}
+    
+    
 }

@@ -7,8 +7,8 @@ import io.github.terra121.TerraConstants;
 import io.github.terra121.projection.airocean.Airocean;
 import io.github.terra121.projection.airocean.ConformalEstimate;
 import io.github.terra121.projection.airocean.ModifiedAirocean;
-import io.github.terra121.projection.transform.InvertedOrientation;
-import io.github.terra121.projection.transform.UprightOrientation;
+import io.github.terra121.projection.transform.InvertedOrientationProjectionTransform;
+import io.github.terra121.projection.transform.UprightOrientationProjectionTransform;
 
 /**
  * Support for various projection types.
@@ -58,13 +58,13 @@ public abstract class GeographicProjection {
 			if (orientation == Orientation.upright) {
 				return base;
 			}
-			base = new UprightOrientation(base);
+			base = new UprightOrientationProjectionTransform(base);
 		}
 
 		if (orientation == Orientation.swapped) {
-			return new InvertedOrientation(base);
+			return new InvertedOrientationProjectionTransform(base);
 		} else if (orientation == Orientation.upright) {
-			base = new UprightOrientation(base);
+			base = new UprightOrientationProjectionTransform(base);
 		}
 
 		return base;
