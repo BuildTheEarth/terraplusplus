@@ -67,7 +67,7 @@ public class TerraOsmFragment extends CommandFragment {
             sender.sendMessage(new TextComponentString(TextFormatting.GRAY + "OSM: ").appendSibling(new TextComponentString("Click Here").setStyle(
                     new Style().setUnderlined(true).setColor(TextFormatting.BLUE).setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, String.format("https://www.openstreetmap.org/#map=17/%.5f/%.5f", result[1], result[0]))))));
         } catch (OutOfProjectionBoundsException e1) { //out of bounds, print error
-            sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Unknown position!", TextFormatting.RED)));
+            sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.RED + "Unknown position!"));
         }
     }
 

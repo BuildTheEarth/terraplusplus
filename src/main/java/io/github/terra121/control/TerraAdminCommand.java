@@ -13,7 +13,6 @@ public class TerraAdminCommand extends FragmentManager {
 
     public TerraAdminCommand() {
         super(TranslateUtil.translate("terra121.commands.terraadmin.title"), "terraadmin");
-        register(new AdminOverpassFragment());
     }
 
     @Override

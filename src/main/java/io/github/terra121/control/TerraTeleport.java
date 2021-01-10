@@ -4,8 +4,6 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.TerraConstants;
-import io.github.terra121.chat.ChatHelper;
-import io.github.terra121.chat.TextElement;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.CommandException;
@@ -130,11 +128,11 @@ public class TerraTeleport extends Command {
             CompletableFuture<String> altFuture;
             if (alt == null) {
                 try {
-                    sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Computing destination altitude...", TextFormatting.GRAY)));
+                    sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.GRAY + "Computing destination altitude..."));
                     altFuture = terrain.heights.getAsync(lon, lat)
                             .thenApply(a -> String.valueOf(a + 1.0d));
                 } catch (OutOfProjectionBoundsException e) { //out of bounds, notify user
-                    sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(TranslateUtil.translate("terra121.error.numbers"), TextFormatting.RED)));
+                    sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.RED + TranslateUtil.translate("terra121.error.numbers")));
                     return;
                 }
             } else {

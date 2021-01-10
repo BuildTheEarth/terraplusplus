@@ -37,7 +37,7 @@ public class TerraConvertFragment extends CommandFragment{
         GeographicProjection projection = terrain.projection;
 
         if(args.length < 2) {
-            sender.sendMessage(TerraConstants.TextConstants.title(new TextComponentString(TextFormatting.RED + "Usage: /terra convert <x/lat> <z/lon>")));
+            sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.RED + "Usage: /terra convert <x/lat> <z/lon>"));
             return;
         }
 
@@ -47,25 +47,25 @@ public class TerraConvertFragment extends CommandFragment{
             x = Double.parseDouble(args[0]);
             y = Double.parseDouble(args[1]);
         } catch (Exception e) {
-            sender.sendMessage(TerraConstants.TextConstants.title(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.error.numbers"))));
+            sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.RED + TranslateUtil.translate("terra121.error.numbers")));
             return;
         }
 
 
-        double[] c = new double[]{x, y};
+        double[] c = {x, y};
 
         try {
             if (-180 <= c[1] && c[1] <= 180 && -90 <= c[0] && c[0] <= 90) {
                 c = projection.fromGeo(c[1], c[0]);
-                sender.sendMessage(TerraConstants.TextConstants.title(new TextComponentString(TextFormatting.GRAY + "Result: "
-            + TextFormatting.BLUE + c[0] + TextFormatting.GRAY + ", " + TextFormatting.BLUE + c[1])));
+                sender.sendMessage(TerraConstants.TextConstants.title(
+                        TextFormatting.GRAY + "Result: " + TextFormatting.BLUE + c[0] + TextFormatting.GRAY + ", " + TextFormatting.BLUE + c[1]));
             } else {
                 c = projection.toGeo(c[0], c[1]);
-                sender.sendMessage(TerraConstants.TextConstants.title(new TextComponentString(TextFormatting.GRAY + "Result: "
-                                                                                          + TextFormatting.BLUE + c[1] + TextFormatting.GRAY + ", " + TextFormatting.BLUE + c[0])));
+                sender.sendMessage(TerraConstants.TextConstants.title(
+                        TextFormatting.GRAY + "Result: " + TextFormatting.BLUE + c[1] + TextFormatting.GRAY + ", " + TextFormatting.BLUE + c[0]));
             }
         } catch (OutOfProjectionBoundsException e) { //out of bounds, print error
-            sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Invalid coordinats!", TextFormatting.RED)));
+            sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.RED + "Invalid coordinates!"));
         }
     }
 

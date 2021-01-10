@@ -48,9 +48,7 @@ public class TerraWorldFragment extends CommandFragment {
         sender.sendMessage(boolComponent("Roads", projectionSettings.roads));
         sender.sendMessage(boolComponent("Buildings", projectionSettings.buildings));
         sender.sendMessage(boolComponent("OSM Water", projectionSettings.osmwater));
-        sender.sendMessage(boolComponent("Smooth Blend", projectionSettings.smoothblend));
-        sender.sendMessage(boolComponent("Caves", projectionSettings.caves));
-        sender.sendMessage(boolComponent("Lidar", projectionSettings.lidar));
+        sender.sendMessage(boolComponent("Smooth Blending", projectionSettings.smoothblend));
     }
 
     @Override
