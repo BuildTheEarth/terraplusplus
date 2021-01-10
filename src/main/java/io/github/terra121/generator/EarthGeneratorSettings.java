@@ -1,8 +1,6 @@
 package io.github.terra121.generator;
 
 import com.google.common.base.Strings;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.api.DeserializationException;
 import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.api.SyntaxError;
@@ -10,6 +8,7 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGenerato
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.CustomGenSettingsSerialization;
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.fixer.PresetLoadError;
 import io.github.terra121.TerraConfig;
+import io.github.terra121.TerraConstants;
 import io.github.terra121.TerraMod;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.transform.OffsetProjectionTransform;
@@ -17,9 +16,6 @@ import io.github.terra121.projection.transform.ScaleProjectionTransform;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public class EarthGeneratorSettings {
-
-	private static final Gson GSON = new GsonBuilder().create();
-
     public JsonSettings settings;
 
     public EarthGeneratorSettings(String generatorSettings) {
@@ -31,7 +27,7 @@ public class EarthGeneratorSettings {
             this.settings = new JsonSettings();
         } else {
             try {
-                this.settings = GSON.fromJson(generatorSettings, JsonSettings.class);
+                this.settings = TerraConstants.GSON.fromJson(generatorSettings, JsonSettings.class);
             } catch (JsonSyntaxException e) {
                 TerraMod.LOGGER.error("Invalid Earth Generator Settings, using default settings");
                 this.settings = new JsonSettings();
@@ -41,7 +37,7 @@ public class EarthGeneratorSettings {
 
     @Override
     public String toString() {
-        return GSON.toJson(this.settings, JsonSettings.class);
+        return TerraConstants.GSON.toJson(this.settings, JsonSettings.class);
     }
 
     public CustomGeneratorSettings getCustomCubic() {
@@ -91,6 +87,9 @@ public class EarthGeneratorSettings {
     }
 
     //json template to be filled by Gson
+
+    //what moron made this a separate inner class?
+    // - DaPorkchop_, 2021
     public static class JsonSettings {
         public String projection = "equirectangular";
         public GeographicProjection.Orientation orentation = GeographicProjection.Orientation.none; // This typo is unfortunate, but let's keep it for backward compatibility

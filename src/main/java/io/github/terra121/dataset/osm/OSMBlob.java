@@ -119,11 +119,6 @@ public final class OSMBlob {
                     } catch (NumberFormatException ignored) {
                     }
                 }
-
-                //upgrade road type if many lanes (and the road was important enough to include a lanes tag)
-                if (lanes > 2 && type == SegmentType.MINOR) {
-                    type = SegmentType.MAIN;
-                }
             }
 
             String building = tags.get("building");

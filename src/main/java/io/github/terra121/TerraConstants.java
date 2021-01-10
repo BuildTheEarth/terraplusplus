@@ -1,5 +1,6 @@
 package io.github.terra121;
 
+import com.google.gson.Gson;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
@@ -14,6 +15,9 @@ public class TerraConstants {
     public static final String adminCommandNode = modID + ".admin";
 
     public static final String version = "1.0";
+
+    public static final Gson GSON = new Gson();
+
     public static class TextConstants {
         // Live update not final
         public static ITextComponent getNotCC() {

@@ -25,9 +25,9 @@ import java.net.URL;
 public class Heights extends DoubleTiledDataset {
     public static ScalarDataset constructDataset(@NonNull BlendMode blend) {
         try {
-            URL url = Heights.class.getResource("/heights_config_default.json");
+            URL url = Heights.class.getResource("/heights_config_default.json5");
             if (TerraConfig.data.customHeights) {
-                File configFile = Disk.configFile("heights_config.json").toFile();
+                File configFile = Disk.configFile("heights_config.json5").toFile();
                 if (!PFiles.checkFileExists(configFile)) { //config file doesn't exist, create default one
                     try (InputStream in = url.openStream();
                          OutputStream out = new FileOutputStream(PFiles.ensureFileExists(configFile))) {
