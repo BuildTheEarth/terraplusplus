@@ -5,7 +5,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import io.github.terra121.projection.GeographicProjection;
-import io.github.terra121.projection.transform.ScaleProjection;
 import io.github.terra121.util.http.Http;
 import io.netty.buffer.ByteBuf;
 import lombok.NonNull;

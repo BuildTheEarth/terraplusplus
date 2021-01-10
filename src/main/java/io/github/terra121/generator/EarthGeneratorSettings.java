@@ -12,26 +12,26 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.preset.fixer.PresetLoadErr
 import io.github.terra121.TerraConfig;
 import io.github.terra121.TerraMod;
 import io.github.terra121.projection.GeographicProjection;
-import io.github.terra121.projection.transform.ScaleProjection;
+import io.github.terra121.projection.transform.OffsetProjectionTransform;
+import io.github.terra121.projection.transform.ScaleProjectionTransform;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public class EarthGeneratorSettings {
 
+	private static final Gson GSON = new GsonBuilder().create();
+
     public JsonSettings settings;
-    private Gson gson;
 
     public EarthGeneratorSettings(String generatorSettings) {
         if (!TerraConfig.reducedConsoleMessages) {
             TerraMod.LOGGER.info(generatorSettings);
         }
 
-        this.gson = new GsonBuilder().create();
-
-        if (generatorSettings.isEmpty()) { //blank string means default
+        if (Strings.isNullOrEmpty(generatorSettings)) { //blank string means default
             this.settings = new JsonSettings();
         } else {
             try {
-                this.settings = this.gson.fromJson(generatorSettings, JsonSettings.class);
+                this.settings = GSON.fromJson(generatorSettings, JsonSettings.class);
             } catch (JsonSyntaxException e) {
                 TerraMod.LOGGER.error("Invalid Earth Generator Settings, using default settings");
                 this.settings = new JsonSettings();
@@ -41,7 +41,7 @@ public class EarthGeneratorSettings {
 
     @Override
     public String toString() {
-        return this.gson.toJson(this.settings, JsonSettings.class);
+        return GSON.toJson(this.settings, JsonSettings.class);
     }
 
     public CustomGeneratorSettings getCustomCubic() {
@@ -70,14 +70,19 @@ public class EarthGeneratorSettings {
     }
 
     public GeographicProjection getProjection() {
-        GeographicProjection p = GeographicProjection.orientProjection(
-                GeographicProjection.projections.get(this.settings.projection), this.settings.orentation);
 
+    	GeographicProjection projection  = GeographicProjection.projections.get(this.settings.projection);
+        projection = GeographicProjection.orientProjection(projection, this.settings.orentation);
+
+        //FIXME Figure out what that is for and remove it, this is a terrible way to fail (if anything fails at this point)
         if (this.settings.scaleX == 1 && this.settings.scaleY == 1) {
             FMLCommonHandler.instance().exitJava(-1, false);
         }
 
-        return new ScaleProjection(p, this.settings.scaleX, this.settings.scaleY);
+        projection = new ScaleProjectionTransform(projection, this.settings.scaleX, this.settings.scaleY);
+        projection = new OffsetProjectionTransform(projection, this.settings.offsetX, this.settings.offsetY);
+
+        return projection;
     }
 
     public GeographicProjection getNormalizedProjection() {
@@ -88,9 +93,11 @@ public class EarthGeneratorSettings {
     //json template to be filled by Gson
     public static class JsonSettings {
         public String projection = "equirectangular";
-        public GeographicProjection.Orientation orentation = GeographicProjection.Orientation.none;
+        public GeographicProjection.Orientation orentation = GeographicProjection.Orientation.none; // This typo is unfortunate, but let's keep it for backward compatibility
         public double scaleX = 100000.0d;
         public double scaleY = 100000.0d;
+        public double offsetX = 0;
+        public double offsetY = 0;
         public boolean smoothblend = true;
         public boolean roads = true;
         public String customcubic = "";

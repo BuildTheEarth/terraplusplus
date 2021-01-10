@@ -2,7 +2,7 @@ package io.github.terra121.dataset;
 
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
-import io.github.terra121.projection.transform.ScaleProjection;
+import io.github.terra121.projection.transform.ScaleProjectionTransform;
 import io.github.terra121.util.CornerBoundingBox2d;
 import io.github.terra121.util.IntToDoubleBiFunction;
 import io.github.terra121.util.bvh.Bounds2d;
@@ -32,7 +32,7 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
     public final BlendMode blend;
 
     public DoubleTiledDataset(GeographicProjection proj, double scale, @NonNull BlendMode blend) {
-        super(new ScaleProjection(proj, scale), 1.0d / scale * TILE_SIZE);
+        super(new ScaleProjectionTransform(proj, scale), 1.0d / scale * TILE_SIZE);
 
         this.blend = blend;
     }
