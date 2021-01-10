@@ -15,7 +15,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
 
 public class TerraWorldFragment extends CommandFragment {
-    @Override
+
+	@Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.fragment.terra.world.header"), TextFormatting.GRAY)));
 
@@ -41,6 +42,7 @@ public class TerraWorldFragment extends CommandFragment {
         sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Projection: ", TextFormatting.BLUE), new TextElement(projectionSettings.projection, TextFormatting.GREEN),
                 new TextElement(" ["+ projectionSettings.orentation.name() + "]", TextFormatting.GRAY)));
         sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Scale: ", TextFormatting.BLUE), new TextElement("[" + projectionSettings.scaleX + ", " + projectionSettings.scaleY + "]", TextFormatting.GRAY)));
+        sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Offset: ", TextFormatting.BLUE), new TextElement("[" + projectionSettings.offsetX + ", " + projectionSettings.offsetY + "]", TextFormatting.GRAY)));
 
         sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("", TextFormatting.RESET)));
 
