@@ -14,6 +14,6 @@ public class TranslateUtil {
 
     public static String format(String key, Object... args) {
         if(FMLCommonHandler.instance().getMinecraftServerInstance().isSinglePlayer()) return I18n.format(key, args);
-        return String.format(translate(key).replaceAll("ph_", "%"), args);
+        return new TextComponentTranslation(key, args).getUnformattedComponentText();
     }
 }
