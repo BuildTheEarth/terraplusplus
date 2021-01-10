@@ -16,7 +16,8 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
 
 public class TerraWorldFragment extends CommandFragment {
-    @Override
+
+	@Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.RED + TranslateUtil.translate("terra121.fragment.terra.world.header")));
 
@@ -43,6 +44,8 @@ public class TerraWorldFragment extends CommandFragment {
                                                    TextFormatting.GRAY + String.format(" [%s]", projectionSettings.orentation.name())));
         sender.sendMessage(new TextComponentString(TextFormatting.BLUE + "Scale: " + TextFormatting.GRAY +
                                                    String.format("[%s, %s]", projectionSettings.scaleX, projectionSettings.scaleY)));
+        sender.sendMessage(new TextComponentString(TextFormatting.BLUE + "Offset: " + TextFormatting.GRAY +
+                                                   String.format("[%s, %s]", projectionSettings.offsetX, projectionSettings.offsetY)));
         sender.sendMessage(new TextComponentString(TextFormatting.RESET + ""));
 
         sender.sendMessage(boolComponent("Roads", projectionSettings.roads));
