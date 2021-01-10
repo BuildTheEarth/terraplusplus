@@ -33,8 +33,8 @@ terra121.commands.tpll.usage=/tpll szerokość długość [wysokość] [gracz]
 terra121.commands.terra.usage=/terra [where:ou] [gracz]\n/terra world\n/terra osm\n/terra conv[ert] [x z]:[szerokość długość]
 
 terra121.commands.terra.gensettings=Ustawienia generatora: 
-terra121.commands.terra.latlon=szerokość długość: ph_.7f ph_.7f
-terra121.commands.terra.xy=x y: ph_.7f ph_.7f
+terra121.commands.terra.latlon=szerokość długość: %.7f %.7f
+terra121.commands.terra.xy=x y: %.7f %.7f
 
 ## command errors
 terra121.error.notcc=Wymagany świat Cubic Chunks!

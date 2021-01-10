@@ -3,8 +3,6 @@ package io.github.terra121.control.fragments.terra;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.terra121.TerraConstants;
-import io.github.terra121.chat.ChatHelper;
-import io.github.terra121.chat.TextElement;
 import io.github.terra121.control.fragments.CommandFragment;
 import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.GeographicProjection;
@@ -14,6 +12,7 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
@@ -49,7 +48,7 @@ public class TerraWhereFragment extends CommandFragment {
                 e = sender.getEntityWorld().getPlayerEntityByName(args[0]);
             }
             if (e == null) {
-                sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement(TranslateUtil.translate("terra121.error.unknownplayer"), TextFormatting.RED)));
+                sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.RED + TranslateUtil.translate("terra121.error.unknownplayer")));
                 return;
             }
 
@@ -67,14 +66,13 @@ public class TerraWhereFragment extends CommandFragment {
         } catch (OutOfProjectionBoundsException e1) { //out of bounds, set to null to print error
             result = null;
         }
-        sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Location of ", TextFormatting.GRAY), new TextElement(senderName, TextFormatting.BLUE)));
+        sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.GRAY + "Location of " + TextFormatting.BLUE + senderName));
         if (result == null || Double.isNaN(result[0])) {
-            sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(TranslateUtil.translate("terra121.fragment.terra.where.notproj"), TextFormatting.RED)));
+            sender.sendMessage(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.fragment.terra.where.notproj")));
             return;
         }
-
-        sender.sendMessage(ChatHelper.makeTextComponent(new TextElement("Location: ", TextFormatting.GRAY), new TextElement("" + result[1], TextFormatting.BLUE),
-                new TextElement(", ", TextFormatting.GRAY), new TextElement("" + result[0], TextFormatting.BLUE)));
+        sender.sendMessage(new TextComponentString(TextFormatting.GRAY + "Location: " + TextFormatting.BLUE + result[1]
+        + TextFormatting.GRAY + ", " + TextFormatting.BLUE + result[0]));
     }
 
     @Override

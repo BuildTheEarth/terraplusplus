@@ -20,16 +20,15 @@ import java.util.List;
 public class TerraCommand extends FragmentManager {
 
     public TerraCommand() {
-        setTitle(TranslateUtil.translate("terra121.commands.terra.title"));
-        setCommandBase("terra");
-        registerCommandFragment(new TerraInfoFragment());
-        registerCommandFragment(new TerraWhereFragment());
-        registerCommandFragment(new TerraWorldFragment());
-        registerCommandFragment(new TerraOsmFragment());
-        registerCommandFragment(new TerraConvertFragment());
-        registerCommandFragment(new TerraEnvironmentFragment());
-        registerCommandFragment(new TerraDistortionFragment());
-        registerCommandFragment(new TerraInvertWaterFragment());
+        super(TranslateUtil.translate("terra121.commands.terra.title"), "terra");
+        register(new TerraInfoFragment());
+        register(new TerraWhereFragment());
+        register(new TerraWorldFragment());
+        register(new TerraOsmFragment());
+        register(new TerraConvertFragment());
+        register(new TerraEnvironmentFragment());
+        register(new TerraDistortionFragment());
+        register(new TerraInvertWaterFragment());
     }
 
     @Override

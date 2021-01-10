@@ -13,6 +13,7 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
@@ -68,7 +69,7 @@ public class TerraTeleport extends Command {
             EarthGenerator terrain = (EarthGenerator) gen;
 
             if (args.length == 0) {
-                sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(TranslateUtil.translate("terra121.commands.tpll.usage"), TextFormatting.RED)));
+                sender.sendMessage(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.commands.tpll.usage")));
                 return;
             }
 
@@ -106,7 +107,7 @@ public class TerraTeleport extends Command {
                 args[1] = args[1].substring(0, args[1].length() - 1);
             }
             if (args.length != 2 && args.length != 3 && args.length != 4) {
-                sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(TranslateUtil.translate("terra121.commands.tpll.usage"), TextFormatting.RED)));
+                sender.sendMessage(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.commands.tpll.usage")));
                 return;
             }
 
@@ -122,7 +123,7 @@ public class TerraTeleport extends Command {
                 }
                 proj = terrain.projection.fromGeo(lon, lat);
             } catch (Exception e) {
-                sender.sendMessage(ChatHelper.makeTextComponent(new TextElement(TranslateUtil.translate("terra121.error.numbers"), TextFormatting.RED)));
+                sender.sendMessage(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.error.numbers")));
                 return;
             }
 
@@ -142,8 +143,8 @@ public class TerraTeleport extends Command {
 
             ICommandSender _sender = sender;
             altFuture.thenAccept(s -> FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
-                _sender.sendMessage(ChatHelper.makeTitleTextComponent(new TextElement("Teleported to ", TextFormatting.GRAY), new TextElement(new DecimalFormat("##.#####").format(lat), TextFormatting.BLUE),
-                        new TextElement(", ", TextFormatting.GRAY), new TextElement(new DecimalFormat("##.#####").format(lon), TextFormatting.BLUE)));
+                _sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.GRAY + "Teleported to " + TextFormatting.BLUE + new DecimalFormat("##.#####").format(lat)
+                        + TextFormatting.GRAY + ", " + TextFormatting.BLUE + new DecimalFormat("##.#####").format(lon)));
 
                 FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager().executeCommand(
                         FMLCommonHandler.instance().getMinecraftServerInstance(), String.format("tp %s %s %s %s", _sender.getName(), proj[0], s, proj[1]));
