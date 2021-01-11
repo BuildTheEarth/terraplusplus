@@ -18,9 +18,10 @@ class DValueParser extends JsonParser.Typed<DValue> {
         TYPES.put("/", BiOp.Divide.class);
 
         TYPES.put("constant", Constant.class);
-        TYPES.put("tag", Tag.class);
+        TYPES.put("floor_div", BiOp.FloorDiv.class);
         TYPES.put("min", BiOp.Min.class);
         TYPES.put("max", BiOp.Max.class);
+        TYPES.put("tag", Tag.class);
     }
 
     public DValueParser() {

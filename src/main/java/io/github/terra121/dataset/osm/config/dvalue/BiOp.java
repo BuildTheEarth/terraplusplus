@@ -108,6 +108,25 @@ abstract class BiOp implements DValue {
         }
     }
 
+    @JsonAdapter(FloorDiv.Parser.class)
+    static final class FloorDiv extends BiOp {
+        public FloorDiv(DValue first, DValue second) {
+            super(first, second);
+        }
+
+        @Override
+        public double apply(@NonNull Map<String, String> tags) {
+            return Math.floor(this.first.apply(tags) / this.second.apply(tags));
+        }
+
+        static class Parser extends BiOp.Parser {
+            @Override
+            protected DValue construct(@NonNull DValue first, @NonNull DValue second) {
+                return new FloorDiv(first, second);
+            }
+        }
+    }
+
     @JsonAdapter(Min.Parser.class)
     static final class Min extends BiOp {
         public Min(DValue first, DValue second) {
