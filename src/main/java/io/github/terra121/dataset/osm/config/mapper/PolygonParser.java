@@ -12,8 +12,11 @@ final class PolygonParser extends JsonParser.Typed<PolygonMapper> {
     private static final Map<String, Class<? extends PolygonMapper>> TYPES = new Object2ObjectOpenHashMap<>();
 
     static {
-        TYPES.put(null, Condition.Polygon.class);
+        TYPES.put("all", All.Polygon.class);
+        TYPES.put("any", Any.Polygon.class);
         TYPES.put("condition", Condition.Polygon.class);
+        TYPES.put("first", First.Polygon.class);
+        TYPES.put("nothing", Nothing.Polygon.class);
     }
 
     public PolygonParser() {

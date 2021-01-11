@@ -52,13 +52,7 @@ public abstract class JsonParser<T> extends TypeAdapter<T> {
 
         in.beginObject();
         while (in.peek() != JsonToken.END_OBJECT) {
-            String name;
-            if (in.peek() == JsonToken.NAME) {
-                name = in.nextName();
-            } else {
-                name = null;
-            }
-            list.add(elementParser.applyThrowing(name, in));
+            list.add(elementParser.applyThrowing(in.nextName(), in));
         }
         in.endObject();
 
@@ -102,13 +96,7 @@ public abstract class JsonParser<T> extends TypeAdapter<T> {
 
         @Override
         public T read(JsonReader in) throws IOException {
-            String name;
-            if (in.peek() == JsonToken.NAME) {
-                name = in.nextName();
-            } else {
-                name = null;
-            }
-            return this.applyThrowing(name, in);
+            return this.applyThrowing(in.nextName(), in);
         }
     }
 }

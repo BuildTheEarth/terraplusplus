@@ -21,6 +21,8 @@ import java.util.Map;
 import static io.github.terra121.TerraConstants.*;
 
 /**
+ * Forwards elements to another mapper if a given {@link MatchCondition} matches.
+ *
  * @author DaPorkchop_
  */
 @AllArgsConstructor
@@ -39,11 +41,11 @@ abstract class Condition<G extends Geometry, M extends OSMMapper<G>> implements 
         return this.emit.apply(id, tags, geometry);
     }
 
-    static abstract class Parser<G extends Geometry, M extends OSMMapper<G>, C extends Condition<?, ?>> extends JsonParser<C> {
+    static abstract class Parser<G extends Geometry, M extends OSMMapper<G>, I extends Condition<?, ?>> extends JsonParser<I> {
         protected final Class<M> mapperClass = GenericMatcher.uncheckedFind(this.getClass(), Parser.class, "M");
 
         @Override
-        public C read(JsonReader in) throws IOException {
+        public I read(JsonReader in) throws IOException {
             MatchCondition match = null;
             M emit = null;
 
@@ -52,10 +54,14 @@ abstract class Condition<G extends Geometry, M extends OSMMapper<G>> implements 
                 String name = in.nextName();
                 switch (name) {
                     case "match":
+                        in.beginObject();
                         match = GSON.fromJson(in, MatchCondition.class);
+                        in.endObject();
                         break;
                     case "emit":
+                        in.beginObject();
                         emit = GSON.fromJson(in, this.mapperClass);
+                        in.endObject();
                         break;
                     default:
                         throw new IllegalStateException("invalid property: " + name);
@@ -65,7 +71,7 @@ abstract class Condition<G extends Geometry, M extends OSMMapper<G>> implements 
             return this.construct(match, emit);
         }
 
-        protected abstract C construct(@NonNull MatchCondition match, @NonNull M emit);
+        protected abstract I construct(@NonNull MatchCondition match, @NonNull M emit);
     }
 
     @JsonAdapter(Line.Parser.class)

@@ -76,10 +76,11 @@ interface Tag extends MatchCondition {
         @Override
         public MatchCondition read(JsonReader in) throws IOException {
             MatchCondition result;
+            in.beginObject();
             String key = in.nextName().intern();
 
-            in.beginObject();
             if (in.peek() == JsonToken.NULL) { //only check if key is set, ignore value
+                in.nextNull();
                 result = new All(key);
             } else if (in.peek() == JsonToken.BEGIN_ARRAY) { //check if key is set to any one of the given values
                 Set<String> expectedValues = ImmutableSet.copyOf(readList(in, reader -> reader.nextString().intern()));
@@ -93,8 +94,8 @@ interface Tag extends MatchCondition {
             } else { //check if key is set to exactly the given value
                 result = new Exactly(key, in.nextString().intern());
             }
-            in.endObject();
 
+            in.endObject();
             return result;
         }
     }

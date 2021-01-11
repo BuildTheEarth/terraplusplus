@@ -5,335 +5,338 @@
  */
 
 {
-    "line": [
-        //tunnels shouldn't be generated, ever
-        {
-            "match": {
-                "tag": {
-                    "tunnel": "yes"
+    "line": {
+        "first": {
+            //tunnels shouldn't be generated, ever
+            "condition": {
+                "match": {
+                    "tag": {
+                        "tunnel": "yes"
+                    }
+                },
+                "emit": {
+                    "nothing": {}
                 }
             },
-            //emit nothing
-            "emit": null
-        },
-        //functionally equivalent to old FREEWAY/LIMITEDACCESS behavior
-        {
-            "match": {
-                "tag": {
-                    "highway": [
-                        //matches tags with either value
-                        "motorway",
-                        "trunk"
-                    ]
+            //functionally equivalent to old FREEWAY/LIMITEDACCESS behavior
+            "condition": {
+                "match": {
+                    "tag": {
+                        "highway": [
+                            //matches tags with either value
+                            "motorway",
+                            "trunk"
+                        ]
+                    }
+                },
+                "emit": {
+                    "wide": {
+                        "block": {
+                            "id": "minecraft:concrete",
+                            "properties": {
+                                "color": "gray"
+                            }
+                        },
+                        "width": {
+                            "+": {
+                                "/": {
+                                    "*": {
+                                        "tag": {
+                                            "key": "lanes",
+                                            "fallback": 2
+                                        },
+                                        "constant": 3
+                                    },
+                                    "constant": 2
+                                },
+                                "constant": 2
+                            }
+                        },
+                        "crossWater": true
+                    }
                 }
             },
-            "emit": {
-                "wide": {
-                    "block": {
-                        "id": "minecraft:concrete",
-                        "properties": {
-                            "color": "grey"
-                        }
-                    },
-                    "width": {
-                        "+": {
+            //functionally equivalent to old INTERCHANGE behavior
+            "condition": {
+                "match": {
+                    "tag": {
+                        "highway": [
+                            //matches tags with either value
+                            "motorway_link",
+                            "trunk_link"
+                        ]
+                    }
+                },
+                "emit": {
+                    "wide": {
+                        "block": {
+                            "id": "minecraft:concrete",
+                            "properties": {
+                                "color": "gray"
+                            }
+                        },
+                        "width": {
                             "/": {
                                 "*": {
-                                    "tag": {
-                                        "key": "lanes",
-                                        "fallback": 2
+                                    "max": {
+                                        "tag": {
+                                            "key": "lanes",
+                                            "fallback": 2
+                                        },
+                                        "constant": 2
                                     },
-                                    "value": 3
+                                    "constant": 3
                                 },
-                                "value": 2
-                            },
-                            "value": 2
-                        }
-                    },
-                    "crossWater": true
-                }
-            }
-        },
-        //functionally equivalent to old INTERCHANGE behavior
-        {
-            "match": {
-                "tag": {
-                    "highway": [
-                        //matches tags with either value
-                        "motorway_link",
-                        "trunk_link"
-                    ]
+                                "constant": 2
+                            }
+                        },
+                        "crossWater": true
+                    }
                 }
             },
-            "emit": {
-                "wide": {
-                    "block": {
-                        "id": "minecraft:concrete",
-                        "properties": {
-                            "color": "grey"
-                        }
-                    },
-                    "width": {
-                        "/": {
+            //functionally equivalent to old MAIN behavior
+            "condition": {
+                "match": {
+                    "tag": {
+                        "highway": [
+                            //matches tags with either value
+                            "primary",
+                            "raceway"
+                        ]
+                    }
+                },
+                "emit": {
+                    "wide": {
+                        "block": {
+                            "id": "minecraft:concrete",
+                            "properties": {
+                                "color": "gray"
+                            }
+                        },
+                        "width": {
                             "*": {
-                                "max": {
-                                    "tag": {
-                                        "key": "lanes",
-                                        "fallback": 2
-                                    },
-                                    "value": 2
+                                "tag": {
+                                    "key": "lanes",
+                                    "fallback": 2
                                 },
-                                "value": 3
-                            },
-                            "value": 2
-                        }
-                    },
-                    "crossWater": true
-                }
-            }
-        },
-        //functionally equivalent to old MAIN behavior
-        {
-            "match": {
-                "tag": {
-                    "highway": [
-                        //matches tags with either value
-                        "primary",
-                        "raceway"
-                    ]
+                                "constant": 2
+                            }
+                        },
+                        "crossWater": true
+                    }
                 }
             },
-            "emit": {
-                "wide": {
-                    "block": {
-                        "id": "minecraft:concrete",
-                        "properties": {
-                            "color": "grey"
-                        }
-                    },
-                    "width": {
-                        "*": {
+            //functionally equivalent to old MINOR behavior
+            "condition": {
+                "match": {
+                    "tag": {
+                        "highway": [
+                            //matches tags with either value
+                            "tertiary",
+                            "residential"
+                        ]
+                    }
+                },
+                "emit": {
+                    "wide": {
+                        "block": {
+                            "id": "minecraft:concrete",
+                            "properties": {
+                                "color": "gray"
+                            }
+                        },
+                        "width": {
                             "tag": {
                                 "key": "lanes",
                                 "fallback": 2
-                            },
-                            "value": 2
-                        }
-                    },
-                    "crossWater": true
-                }
-            }
-        },
-        //functionally equivalent to old MINOR behavior
-        {
-            "match": {
-                "tag": {
-                    "highway": [
-                        //matches tags with either value
-                        "tertiary",
-                        "residential"
-                    ]
+                            }
+                        },
+                        "crossWater": true
+                    }
                 }
             },
-            "emit": {
-                "wide": {
-                    "block": {
-                        "id": "minecraft:concrete",
-                        "properties": {
-                            "color": "grey"
-                        }
-                    },
-                    "width": {
-                        "tag": {
-                            "key": "lanes",
-                            "fallback": 2
-                        }
-                    },
-                    "crossWater": true
-                }
-            }
-        },
-        //functionally equivalent to old SIDE behavior
-        {
-            "match": {
-                "tag": {
-                    "highway": [
-                        //matches tags with either value
-                        "secondary",
-                        "primary_link",
-                        "secondary_link",
-                        "living_street",
-                        "bus_guideway",
-                        "service",
-                        "unclassified"
-                    ]
-                }
-            },
-            "emit": {
-                "wide": {
-                    "block": {
-                        "id": "minecraft:concrete",
-                        "properties": {
-                            "color": "grey"
-                        }
-                    },
-                    "width": {
-                        "/": {
-                            "+": {
-                                "*": {
-                                    "tag": {
-                                        "key": "lanes",
-                                        "fallback": 2
-                                    },
-                                    "value": 3
-                                },
-                                "value": 1
-                            },
-                            "value": 2
-                        }
-                    },
-                    "crossWater": true
-                }
-            }
-        },
-        //functionally equivalent to old ROAD behavior
-        {
-            "match": {
-                "tag": {
-                    //matches anything tagged as "highway" that didn't match any previous filters
-                    "highway": null
-                }
-            },
-            "emit": {
-                "wide": {
-                    "block": {
-                        "id": "minecraft:concrete",
-                        "properties": {
-                            "color": "grey"
-                        }
-                    },
-                    "width": {
-                        "value": 1
-                    },
-                    "crossWater": true
-                }
-            }
-        },
-        //functionally equivalent to old BUILDING behavior
-        {
-            "match": {
-                "tag": {
-                    //matches anything tagged as "building"
-                    "building": null
-                }
-            },
-            "emit": {
-                "narrow": {
-                    "block": {
-                        "id": "minecraft:brick"
-                    },
-                    "crossWater": false
-                }
-            }
-        },
-        //functionally equivalent to old STREAM behavior
-        {
-            "match": {
-                "tag": {
-                    "natural": "stream"
-                }
-            },
-            "emit": {
-                "narrow": {
-                    "block": {
-                        "id": "minecraft:water"
-                    },
-                    "crossWater": false
-                }
-            }
-        },
-        //functionally equivalent to old RIVER behavior
-        {
-            "match": {
-                "tag": {
-                    "natural": [
-                        "river",
-                        "canal"
-                    ]
-                }
-            },
-            "emit": {
-                "block": {
-                    "id": "minecraft:water"
+            //functionally equivalent to old SIDE behavior
+            "condition": {
+                "match": {
+                    "tag": {
+                        "highway": [
+                            //matches tags with either value
+                            "secondary",
+                            "primary_link",
+                            "secondary_link",
+                            "living_street",
+                            "bus_guideway",
+                            "service",
+                            "unclassified"
+                        ]
+                    }
                 },
-                "style": {
+                "emit": {
                     "wide": {
+                        "block": {
+                            "id": "minecraft:concrete",
+                            "properties": {
+                                "color": "gray"
+                            }
+                        },
                         "width": {
-                            "value": 5
+                            "/": {
+                                "+": {
+                                    "*": {
+                                        "tag": {
+                                            "key": "lanes",
+                                            "fallback": 2
+                                        },
+                                        "constant": 3
+                                    },
+                                    "constant": 1
+                                },
+                                "constant": 2
+                            }
+                        },
+                        "crossWater": true
+                    }
+                }
+            },
+            //functionally equivalent to old ROAD behavior
+            "condition": {
+                "match": {
+                    "tag": {
+                        //matches anything tagged as "highway" that didn't match any previous filters
+                        "highway": null
+                    }
+                },
+                "emit": {
+                    "wide": {
+                        "block": {
+                            "id": "minecraft:concrete",
+                            "properties": {
+                                "color": "gray"
+                            }
+                        },
+                        "width": {
+                            "constant": 1
+                        },
+                        "crossWater": true
+                    }
+                }
+            },
+            //functionally equivalent to old BUILDING behavior
+            "condition": {
+                "match": {
+                    "tag": {
+                        //matches anything tagged as "building"
+                        "building": null
+                    }
+                },
+                "emit": {
+                    "narrow": {
+                        "block": {
+                            "id": "minecraft:brick"
+                        },
+                        "crossWater": false
+                    }
+                }
+            },
+            //functionally equivalent to old STREAM behavior
+            "condition": {
+                "match": {
+                    "tag": {
+                        "natural": "stream"
+                    }
+                },
+                "emit": {
+                    "narrow": {
+                        "block": {
+                            "id": "minecraft:water"
+                        },
+                        "crossWater": false
+                    }
+                }
+            },
+            //functionally equivalent to old RIVER behavior
+            "condition": {
+                "match": {
+                    "tag": {
+                        "natural": [
+                            "river",
+                            "canal"
+                        ]
+                    }
+                },
+                "emit": {
+                    "wide": {
+                        "block": {
+                            "id": "minecraft:water"
+                        },
+                        "width": {
+                            "constant": 5
                         },
                         "crossWater": false
                     }
                 }
             }
         }
-    ],
-    "polygon": [
-        //functionally equivalent to old BUILDING behavior
-        {
-            "match": {
-                "tag": {
-                    //matches anything tagged as "building"
-                    "building": null
-                }
-            },
-            "emit": {
-                "convert": {
-                    "line": {
-                        "narrow": {
-                            "block": {
-                                "id": "minecraft:brick"
-                            },
-                            "crossWater": false
+    },
+    "polygon": {
+        "first": {
+            //functionally equivalent to old BUILDING behavior
+            "condition": {
+                "match": {
+                    "tag": {
+                        //matches anything tagged as "building"
+                        "building": null
+                    }
+                },
+                "emit": {
+                    "convert": {
+                        "line": {
+                            "narrow": {
+                                "block": {
+                                    "id": "minecraft:brick"
+                                },
+                                "crossWater": false
+                            }
                         }
                     }
                 }
-            }
-        },
-        {
-            "match": {
-                "or": {
-                    "tag": {
-                        //matches anything tagged as "water"
-                        "water": null
-                    },
-                    "tag": {
-                        //matches anything tagged as "natural=water"
-                        "natural": "water"
-                    },
-                    "tag": {
-                        //matches anything tagged as "waterway=riverbank"
-                        "waterway": "riverbank"
+            },
+            "condition": {
+                "match": {
+                    "or": {
+                        "tag": {
+                            //matches anything tagged as "water"
+                            "water": null
+                        },
+                        "tag": {
+                            //matches anything tagged as "natural=water"
+                            "natural": "water"
+                        },
+                        "tag": {
+                            //matches anything tagged as "waterway=riverbank"
+                            "waterway": "riverbank"
+                        }
+                    }
+                },
+                "emit": {
+                    "distance": {
+                        "target": "water_depth"
                     }
                 }
             },
-            "emit": {
-                "distance": {
-                    "target": "water_depth"
-                }
-            }
-        },
-        {
-            "match": {
-                "tag": {
-                    //matches anything tagged as "natural=coastline"
-                    "natural": "coastline"
-                }
-            },
-            "emit": {
-                "fill": {
-                    "target": "ocean"
+            "condition": {
+                "match": {
+                    "tag": {
+                        //matches anything tagged as "natural=coastline"
+                        "natural": "coastline"
+                    }
+                },
+                "emit": {
+                    "fill": {
+                        "target": "ocean"
+                    }
                 }
             }
         }
-    ]
+    }
 }

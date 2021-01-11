@@ -1,10 +1,9 @@
 package io.github.terra121;
 
 import com.google.gson.Gson;
-import io.github.terra121.util.TranslateUtil;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.TextFormatting;
+import com.google.gson.GsonBuilder;
+import io.github.terra121.dataset.osm.config.BlockStateParser;
+import net.minecraft.block.state.IBlockState;
 
 public class TerraConstants {
     public static final String prefix = "&2&lT++ &8&l> ";
@@ -16,7 +15,9 @@ public class TerraConstants {
 
     public static final String version = "1.0";
 
-    public static final Gson GSON = new Gson();
+    public static final Gson GSON = new GsonBuilder()
+            .registerTypeAdapter(IBlockState.class, BlockStateParser.INSTANCE)
+            .create();
 
     /**
      * Earth's circumference around the equator, in meters.

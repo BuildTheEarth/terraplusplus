@@ -70,10 +70,14 @@ final class Root implements OSMMapper<Geometry> {
                 String name = in.nextName();
                 switch (name) {
                     case "line":
+                        in.beginObject();
                         builder.line(GSON.fromJson(in, LineMapper.class));
+                        in.endObject();
                         break;
                     case "polygon":
+                        in.beginObject();
                         builder.polygon(GSON.fromJson(in, PolygonMapper.class));
+                        in.endObject();
                         break;
                     default:
                         throw new IllegalStateException("invalid property: " + name);

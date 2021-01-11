@@ -81,6 +81,8 @@ final class ObjectDeserializer extends AbstractGeoJSONDeserializer<GeoJSONObject
                         }
                         in.endObject();
                         properties = builder.build();
+                    } else {
+                        in.nextNull();
                     }
                     break;
                 case "id":
