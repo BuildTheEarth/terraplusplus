@@ -8,6 +8,7 @@ import io.github.terra121.control.fragments.CommandFragment;
 import io.github.terra121.dataset.OpenStreetMaps;
 import io.github.terra121.dataset.Water;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -23,14 +24,14 @@ public class TerraInvertWaterFragment extends CommandFragment {
         IChunkProvider cp = world.getChunkProvider();
 
         if (!(cp instanceof CubeProviderServer)) {
-            sender.sendMessage(TerraConstants.TextConstants.getNotCC());
+            sender.sendMessage(ChatUtil.getNotCC());
             return;
         }
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
         if (!(gen instanceof EarthTerrainProcessor)) {
-            sender.sendMessage(TerraConstants.TextConstants.getNotTerra());
+            sender.sendMessage(ChatUtil.getNotTerra());
             return;
         }
 
@@ -68,7 +69,7 @@ public class TerraInvertWaterFragment extends CommandFragment {
             return;
         }
 
-        sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.RED + TranslateUtil.format("terra121.error.invwtr", region.x, region.y)));
+        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.format("terra121.error.invwtr", region.x, region.y)));
     }
 
     @Override

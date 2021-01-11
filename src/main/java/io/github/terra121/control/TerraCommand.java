@@ -10,6 +10,7 @@ import io.github.terra121.control.fragments.terra.TerraInvertWaterFragment;
 import io.github.terra121.control.fragments.terra.TerraOsmFragment;
 import io.github.terra121.control.fragments.terra.TerraWhereFragment;
 import io.github.terra121.control.fragments.terra.TerraWorldFragment;
+import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -61,7 +62,7 @@ public class TerraCommand extends FragmentManager {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         if(!hasPermission(TerraConstants.controlCommandNode + "terra", sender)) {
-            sender.sendMessage(TerraConstants.TextConstants.getNoPermission());
+            sender.sendMessage(ChatUtil.getNoPermission());
             return;
         }
         executeFragment(server, sender, args);

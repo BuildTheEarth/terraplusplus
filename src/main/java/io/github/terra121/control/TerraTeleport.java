@@ -4,6 +4,7 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.terra121.EarthTerrainProcessor;
 import io.github.terra121.TerraConstants;
+import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -44,7 +45,7 @@ public class TerraTeleport extends Command {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
         if(!hasPermission(TerraConstants.controlCommandNode + "tpll", sender)) {
-            sender.sendMessage(TerraConstants.TextConstants.getNoPermission());
+            sender.sendMessage(ChatUtil.getNoPermission());
             return;
         }
 
@@ -65,7 +66,7 @@ public class TerraTeleport extends Command {
             EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
 
             if (args.length == 0) {
-                sender.sendMessage(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.commands.tpll.usage")));
+                sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.commands.tpll.usage")));
                 return;
             }
 
@@ -103,7 +104,7 @@ public class TerraTeleport extends Command {
                 args[1] = args[1].substring(0, args[1].length() - 1);
             }
             if (args.length != 2 && args.length != 3 && args.length != 4) {
-                sender.sendMessage(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.commands.tpll.usage")));
+                sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.commands.tpll.usage")));
                 return;
             }
 
@@ -117,7 +118,7 @@ public class TerraTeleport extends Command {
                     alt = Double.toString(Double.parseDouble(alt));
                 }
             } catch (Exception e) {
-                sender.sendMessage(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.error.numbers")));
+                sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.error.numbers")));
                 return;
             }
 
@@ -127,8 +128,8 @@ public class TerraTeleport extends Command {
                 alt = String.valueOf(terrain.heights.estimateLocal(lon, lat, false) + 1);
             }
 
-            sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.GRAY + "Teleported to " + TextFormatting.BLUE + new DecimalFormat("##.#####").format(lat)
-            + TextFormatting.GRAY + ", " + TextFormatting.BLUE + new DecimalFormat("##.#####").format(lon)));
+            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Teleported to ", TextFormatting.BLUE, new DecimalFormat("##.#####").format(lat),
+                    TextFormatting.GRAY, ", ", TextFormatting.BLUE, new DecimalFormat("##.#####").format(lon)));
 
             FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager().executeCommand(
                     FMLCommonHandler.instance().getMinecraftServerInstance(), String.format("tp %s %s %s %s", sender.getName(), proj[0], alt, proj[1]));

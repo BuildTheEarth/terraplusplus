@@ -14,34 +14,4 @@ public class TerraConstants {
     public static final String adminCommandNode = modID + ".admin";
 
     public static final String version = "1.0";
-    public static class TextConstants {
-        // Live update not final
-        public static ITextComponent getNotCC() {
-            return title(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.error.notcc")));
-        }
-
-        public static ITextComponent getNotTerra() {
-            return title(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.error.noterra")));
-        }
-
-        public static ITextComponent getNoPermission() {
-            return title(new TextComponentString(TextFormatting.RED + "You do not have permission to use this command"));
-        }
-
-        public static ITextComponent getPlayerOnly() {
-            return title(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.error.playeronly")));
-        }
-
-        public static ITextComponent title() {
-            return new TextComponentString(TerraConstants.prefix.replace("&","\u00A7"));
-        }
-
-        public static ITextComponent title(ITextComponent component) {
-            return title().appendSibling(component);
-        }
-
-        public static ITextComponent title(String s) {
-            return title(new TextComponentString(s));
-        }
-    }
 }

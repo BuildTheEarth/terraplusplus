@@ -7,6 +7,7 @@ import io.github.terra121.EarthTerrainProcessor;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.control.fragments.CommandFragment;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -23,21 +24,21 @@ public class TerraEnvironmentFragment extends CommandFragment {
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         BiomeProvider bp = sender.getEntityWorld().getBiomeProvider();
         if (!(bp instanceof EarthBiomeProvider)) { //must have normal biome provider
-            sender.sendMessage(TerraConstants.TextConstants.getNotTerra());
+            sender.sendMessage(ChatUtil.getNotTerra());
         }
 
         World world = sender.getEntityWorld();
         IChunkProvider cp = world.getChunkProvider();
 
         if (!(cp instanceof CubeProviderServer)) {
-            sender.sendMessage(TerraConstants.TextConstants.getNotCC());
+            sender.sendMessage(ChatUtil.getNotCC());
             return;
         }
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
         if (!(gen instanceof EarthTerrainProcessor)) {
-            sender.sendMessage(TerraConstants.TextConstants.getNotTerra());
+            sender.sendMessage(ChatUtil.getNotTerra());
             return;
         }
 
@@ -47,7 +48,7 @@ public class TerraEnvironmentFragment extends CommandFragment {
         double[] c = this.getCoordArgs(sender, args, projection);
 
         c = ((EarthBiomeProvider) bp).getEnv(c[0], c[1]);
-        sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.GRAY + "Environment Data:"));
+        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Environment Data:"));
         sender.sendMessage(new TextComponentString(TextFormatting.RED + String.format("%.1f \\U+00B0C", c[1])));
         sender.sendMessage(new TextComponentString(TextFormatting.RED + String.format("%.1f mm/yr", c[2])));
         sender.sendMessage(new TextComponentString(TextFormatting.RED + String.format("Soil Id: %d", (int) c[0])));

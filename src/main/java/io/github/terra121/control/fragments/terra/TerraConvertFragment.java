@@ -6,6 +6,7 @@ import io.github.terra121.EarthTerrainProcessor;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.control.fragments.CommandFragment;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -21,14 +22,14 @@ public class TerraConvertFragment extends CommandFragment{
         IChunkProvider cp = world.getChunkProvider();
 
         if (!(cp instanceof CubeProviderServer)) {
-            sender.sendMessage(TerraConstants.TextConstants.getNotCC());
+            sender.sendMessage(ChatUtil.getNotCC());
             return;
         }
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
         if (!(gen instanceof EarthTerrainProcessor)) {
-            sender.sendMessage(TerraConstants.TextConstants.getNotTerra());
+            sender.sendMessage(ChatUtil.getNotTerra());
             return;
         }
 
@@ -36,7 +37,7 @@ public class TerraConvertFragment extends CommandFragment{
         GeographicProjection projection = terrain.projection;
 
         if(args.length < 2) {
-            sender.sendMessage(TerraConstants.TextConstants.title(new TextComponentString(TextFormatting.RED + "Usage: /terra convert <x/lat> <z/lon>")));
+            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, "Usage: /terra convert <x/lat> <z/lon>"));
             return;
         }
 
@@ -46,7 +47,7 @@ public class TerraConvertFragment extends CommandFragment{
             x = Double.parseDouble(args[0]);
             y = Double.parseDouble(args[1]);
         } catch (Exception e) {
-            sender.sendMessage(TerraConstants.TextConstants.title(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.error.numbers"))));
+            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.error.numbers")));
             return;
         }
 
@@ -55,12 +56,12 @@ public class TerraConvertFragment extends CommandFragment{
 
         if (-180 <= c[1] && c[1] <= 180 && -90 <= c[0] && c[0] <= 90) {
             c = projection.fromGeo(c[1], c[0]);
-            sender.sendMessage(TerraConstants.TextConstants.title(new TextComponentString(TextFormatting.GRAY + "Result: "
-            + TextFormatting.BLUE + c[0] + TextFormatting.GRAY + ", " + TextFormatting.BLUE + c[1])));
+            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Result: ",
+                    TextFormatting.BLUE, c[0], TextFormatting.GRAY, ", ", TextFormatting.BLUE, c[1]));
         } else {
             c = projection.toGeo(c[0], c[1]);
-            sender.sendMessage(TerraConstants.TextConstants.title(new TextComponentString(TextFormatting.GRAY + "Result: "
-                                                                                          + TextFormatting.BLUE + c[1] + TextFormatting.GRAY + ", " + TextFormatting.BLUE + c[0])));
+            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Result: ",
+                    TextFormatting.BLUE, c[1], TextFormatting.GRAY, ", ", TextFormatting.BLUE, c[0]));
         }
     }
 

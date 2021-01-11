@@ -6,6 +6,7 @@ import io.github.terra121.EarthTerrainProcessor;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.control.fragments.CommandFragment;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -21,14 +22,14 @@ public class TerraDistortionFragment extends CommandFragment {
         IChunkProvider cp = world.getChunkProvider();
 
         if (!(cp instanceof CubeProviderServer)) {
-            sender.sendMessage(TerraConstants.TextConstants.getNotCC());
+            sender.sendMessage(ChatUtil.getNotCC());
             return;
         }
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
         if (!(gen instanceof EarthTerrainProcessor)) {
-            sender.sendMessage(TerraConstants.TextConstants.getNotTerra());
+            sender.sendMessage(ChatUtil.getNotTerra());
             return;
         }
 
@@ -39,11 +40,11 @@ public class TerraDistortionFragment extends CommandFragment {
         c = projection.tissot(c[0], c[1], 0.0000001);
 
         if(c == null || Double.isNaN(c[0])) {
-            sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.RED + TranslateUtil.translate("terra121.fragment.terra.where.notproj")));
+            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.fragment.terra.where.notproj")));
             return;
         }
-        sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.GRAY + "Distortion:"));
-        sender.sendMessage(new TextComponentString(TextFormatting.RED + TranslateUtil.format("terra121.commands.terra.tissot", Math.sqrt(Math.abs(c[0])), c[1] * 180.0 / Math.PI)));
+        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Distortion:"));
+        sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.format("terra121.commands.terra.tissot", Math.sqrt(Math.abs(c[0])), c[1] * 180.0 / Math.PI)));
     }
 
     @Override
