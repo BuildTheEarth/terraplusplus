@@ -84,7 +84,7 @@ public class TerraTeleport extends Command {
                 EarthGenerator terrain = (EarthGenerator) gen;
 
                 if (args.length == 0) {
-                    sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.commands.tpll.usage")));
+                    usage(sender);
                     return;
                 }
 
@@ -98,7 +98,7 @@ public class TerraTeleport extends Command {
                 }
 
                 if(!receivers.isEmpty() && args.length < 2) {
-                    sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.commands.tpll.usage")));
+                    usage(sender);
                     return;
                 }
 
@@ -135,7 +135,7 @@ public class TerraTeleport extends Command {
 
 
                 if(defaultCoords == null) {
-                    sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.commands.tpll.usage")));
+                    usage(sender);
                     return;
                 }
 
@@ -236,6 +236,14 @@ public class TerraTeleport extends Command {
             arguments.append(" ").append(args[x].replace((char) 176, (char) 32).trim());
 
         return arguments.toString();
+    }
+
+    private void usage(ICommandSender sender) {
+        if(hasPermission(null, sender)) {
+            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.commands.tpll.admin.usage")));
+        } else {
+            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.commands.tpll.usage")));
+        }
     }
 
     public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos)
