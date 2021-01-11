@@ -2,9 +2,17 @@ package io.github.terra121.util;
 
 import io.github.terra121.TerraConstants;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 
+import java.util.Objects;
+
+/**
+ * A set of chat utilities for forge
+ *
+ * @author Noah Husby
+ */
 public class ChatUtil {
     public static ITextComponent title() {
         return new TextComponentString(TerraConstants.prefix.replace("&","\u00A7"));
@@ -21,6 +29,7 @@ public class ChatUtil {
     public static ITextComponent combine(boolean title, Object... objects) {
         ITextComponent textComponent = title ? title() : new TextComponentString("");
         StringBuilder builder = null;
+        TextFormatting lastFormat = null;
         for(Object o : objects) {
             if(o instanceof ITextComponent) {
                 if(builder != null) {
@@ -28,8 +37,17 @@ public class ChatUtil {
                     builder = null;
                 }
 
-                textComponent.appendSibling((ITextComponent) o);
+                ITextComponent component = (ITextComponent) o;
+                if(component.getStyle().getColor() == null && lastFormat != null)
+                    component.setStyle(new Style().setColor(lastFormat));
+
+
+                System.out.println(textComponent.getSiblings().get(textComponent.getSiblings().size() - 1).getStyle().getFormattingCode() + "test");
+
+                textComponent.appendSibling(component);
             } else {
+                if(o instanceof TextFormatting)
+                    lastFormat = (TextFormatting) o;
                 if(builder == null) builder = new StringBuilder();
                 builder.append(o);
             }
@@ -55,5 +73,4 @@ public class ChatUtil {
     public static ITextComponent getPlayerOnly() {
         return titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.error.playeronly"));
     }
-
 }

@@ -76,7 +76,7 @@ public class TerraWhereFragment extends CommandFragment {
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate("terra121.fragment.terra.where.purpose");
+        return TranslateUtil.translate("terra121.fragment.terra.where.purpose").getUnformattedComponentText();
     }
 
     @Override

@@ -75,7 +75,7 @@ public class TerraOsmFragment extends CommandFragment {
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate("terra121.fragment.terra.osm.purpose");
+        return TranslateUtil.translate("terra121.fragment.terra.osm.purpose").getUnformattedComponentText();
     }
 
     @Override

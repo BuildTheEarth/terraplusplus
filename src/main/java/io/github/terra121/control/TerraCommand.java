@@ -21,7 +21,7 @@ import java.util.List;
 public class TerraCommand extends FragmentManager {
 
     public TerraCommand() {
-        super(TranslateUtil.translate("terra121.commands.terra.title"), "terra");
+        super(TranslateUtil.translate("terra121.commands.terra.title").getUnformattedComponentText(), "terra");
         register(new TerraInfoFragment());
         register(new TerraWhereFragment());
         register(new TerraWorldFragment());

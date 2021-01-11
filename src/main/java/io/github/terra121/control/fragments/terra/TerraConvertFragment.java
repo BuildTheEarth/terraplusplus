@@ -72,7 +72,7 @@ public class TerraConvertFragment extends CommandFragment{
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate("terra121.fragment.terra.convert.purpose");
+        return TranslateUtil.translate("terra121.fragment.terra.convert.purpose").getUnformattedComponentText();
     }
 
     @Override

@@ -24,7 +24,7 @@ public class TerraInfoFragment extends CommandFragment {
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate("terra121.fragment.terra.info.purpose");
+        return TranslateUtil.translate("terra121.fragment.terra.info.purpose").getUnformattedComponentText();
     }
 
     @Override

@@ -54,7 +54,7 @@ public class TerraDistortionFragment extends CommandFragment {
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate("terra121.fragment.terra.distortion.purpose");
+        return TranslateUtil.translate("terra121.fragment.terra.distortion.purpose").getUnformattedComponentText();
     }
 
     @Override

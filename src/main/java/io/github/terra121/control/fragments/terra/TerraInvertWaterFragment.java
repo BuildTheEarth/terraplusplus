@@ -39,14 +39,14 @@ public class TerraInvertWaterFragment extends CommandFragment {
         GeographicProjection projection = terrain.projection;
 
         if (!terrain.cfg.settings.osmwater || terrain.osm == null || terrain.osm.water == null) {
-            sender.sendMessage(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.error.nowtr")));
+            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.error.nowtr")));
             return;
         }
 
         double[] c = projection.toGeo(sender.getPositionVector().x, sender.getPositionVector().z);
 
         if(c == null || Double.isNaN(c[0])) {
-            sender.sendMessage(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.fragment.terra.where.notproj")));
+            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.fragment.terra.where.notproj")));
             return;
         }
 
@@ -65,7 +65,7 @@ public class TerraInvertWaterFragment extends CommandFragment {
             }
 
         if (restore ? water.inverts.remove(region) : water.inverts.add(region)) {
-            sender.sendMessage(new TextComponentString(TextFormatting.RED + TranslateUtil.format(restore ? "terra121.commands.terra.rstwtr" : "terra121.commands.terra.invwtr", region.x, region.y)));
+            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.format(restore ? "terra121.commands.terra.rstwtr" : "terra121.commands.terra.invwtr", region.x, region.y)));
             return;
         }
 
@@ -79,7 +79,7 @@ public class TerraInvertWaterFragment extends CommandFragment {
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate("terra121.fragment.terra.winvert.purpose");
+        return TranslateUtil.translate("terra121.fragment.terra.winvert.purpose").getUnformattedComponentText();
     }
 
     @Override
