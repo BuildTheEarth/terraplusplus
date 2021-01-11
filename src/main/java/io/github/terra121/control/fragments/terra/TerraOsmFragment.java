@@ -1,5 +1,7 @@
 package io.github.terra121.control.fragments.terra;
 
+import java.util.Locale;
+
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.terra121.control.fragments.CommandFragment;
@@ -69,7 +71,7 @@ public class TerraOsmFragment extends CommandFragment {
         sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY, "Google Maps: ", new TextComponentString("Click Here").setStyle(
                 new Style().setUnderlined(true).setColor(TextFormatting.BLUE).setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.google.com/maps/search/?api=1&query=" + result[1] + "," + result[0])))));
         sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY + "OSM: ", new TextComponentString("Click Here").setStyle(
-                new Style().setUnderlined(true).setColor(TextFormatting.BLUE).setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, String.format("https://www.openstreetmap.org/#map=17/%.5f/%.5f", result[1], result[0]))))));
+                new Style().setUnderlined(true).setColor(TextFormatting.BLUE).setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, String.format(Locale.US, "https://www.openstreetmap.org/#map=17/%.5f/%.5f", result[1], result[0]))))));
 
     }
 

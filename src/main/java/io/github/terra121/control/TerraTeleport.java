@@ -1,9 +1,17 @@
 package io.github.terra121.control;
 
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+
+import javax.annotation.Nullable;
+
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.terra121.TerraConstants;
-import io.github.terra121.TerraMod;
 import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.ChatUtil;
@@ -11,26 +19,16 @@ import io.github.terra121.util.TranslateUtil;
 import io.github.terra121.util.geo.CoordinateParseUtils;
 import io.github.terra121.util.geo.LatLng;
 import net.minecraft.command.CommandException;
-import net.minecraft.command.EntityNotFoundException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.server.permission.PermissionAPI;
-
-import javax.annotation.Nullable;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
 
 public class TerraTeleport extends Command {
 
@@ -183,7 +181,7 @@ public class TerraTeleport extends Command {
                         }
 
                         FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager().executeCommand(
-                                FMLCommonHandler.instance().getMinecraftServerInstance(), String.format("tp %s %s %s %s", p.getName(), proj[0], s, proj[1]));
+                                FMLCommonHandler.instance().getMinecraftServerInstance(), String.format(Locale.US, "tp %s %s %s %s", p.getName(), proj[0], s, proj[1]));
 
                     }
                 }));
@@ -246,7 +244,8 @@ public class TerraTeleport extends Command {
         }
     }
 
-    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos)
+    @Override
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos)
     {
         return args.length >= 1 ? getListOfStringsMatchingLastWord(args, server.getOnlinePlayerNames()) : Collections.emptyList();
     }
