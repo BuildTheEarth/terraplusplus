@@ -2,10 +2,10 @@ package io.github.terra121.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import io.github.terra121.EarthTerrainProcessor;
-import io.github.terra121.TerraConstants;
 import io.github.terra121.control.fragments.CommandFragment;
+import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
@@ -28,16 +28,21 @@ public class TerraDistortionFragment extends CommandFragment {
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
-        if (!(gen instanceof EarthTerrainProcessor)) {
+        if (!(gen instanceof EarthGenerator)) {
             sender.sendMessage(ChatUtil.getNotTerra());
             return;
         }
 
-        EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
+        EarthGenerator terrain = (EarthGenerator) gen;
         GeographicProjection projection = terrain.projection;
 
-        double[] c = projection.toGeo(sender.getPositionVector().x, sender.getPositionVector().z);
-        c = projection.tissot(c[0], c[1], 0.0000001);
+        double[] c = new double[0];
+        try {
+            c = projection.toGeo(sender.getPositionVector().x, sender.getPositionVector().z);
+            c = projection.tissot(c[0], c[1], 0.0000001);
+        } catch (OutOfProjectionBoundsException e) {
+            e.printStackTrace();
+        }
 
         if(c == null || Double.isNaN(c[0])) {
             sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.fragment.terra.where.notproj")));

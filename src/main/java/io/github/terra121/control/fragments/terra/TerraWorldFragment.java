@@ -2,10 +2,9 @@ package io.github.terra121.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import io.github.terra121.EarthGeneratorSettings;
-import io.github.terra121.EarthTerrainProcessor;
-import io.github.terra121.TerraConstants;
 import io.github.terra121.control.fragments.CommandFragment;
+import io.github.terra121.generator.EarthGenerator;
+import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
@@ -25,18 +24,18 @@ public class TerraWorldFragment extends CommandFragment {
         IChunkProvider cp = world.getChunkProvider();
 
         if (!(cp instanceof CubeProviderServer)) {
-            sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "World Type: ", TextFormatting.RED, "Vanilla"));
+            sender.sendMessage(new TextComponentString(TextFormatting.BLUE + "World Type: " + TextFormatting.RED + "Vanilla"));
             return;
         }
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
-        if (!(gen instanceof EarthTerrainProcessor)) {
-            sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "World Type: ", TextFormatting.RED, "Not Earth World"));
+        if (!(gen instanceof EarthGenerator)) {
+            sender.sendMessage(new TextComponentString(TextFormatting.BLUE + "World Type: " + TextFormatting.RED + "Not Earth World"));
             return;
         }
 
-        EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
+        EarthGenerator terrain = (EarthGenerator) gen;
         EarthGeneratorSettings.JsonSettings projectionSettings = terrain.cfg.settings;
 
         sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "World Type: ", TextFormatting.GREEN, "Earth World"));
@@ -44,14 +43,14 @@ public class TerraWorldFragment extends CommandFragment {
                                                    TextFormatting.GRAY, String.format(" [%s]", projectionSettings.orentation.name())));
         sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "Scale: ", TextFormatting.GRAY,
                                                    String.format("[%s, %s]", projectionSettings.scaleX, projectionSettings.scaleY)));
-        sender.sendMessage(ChatUtil.combine(TextFormatting.RESET + ""));
+        sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "Offset: ", TextFormatting.GRAY,
+                                                   String.format("[%s, %s]", projectionSettings.offsetX, projectionSettings.offsetY)));
+        sender.sendMessage(ChatUtil.combine(TextFormatting.RESET));
 
         sender.sendMessage(boolComponent("Roads", projectionSettings.roads));
         sender.sendMessage(boolComponent("Buildings", projectionSettings.buildings));
         sender.sendMessage(boolComponent("OSM Water", projectionSettings.osmwater));
-        sender.sendMessage(boolComponent("Smooth Blend", projectionSettings.smoothblend));
-        sender.sendMessage(boolComponent("Caves", projectionSettings.caves));
-        sender.sendMessage(boolComponent("Lidar", projectionSettings.lidar));
+        sender.sendMessage(boolComponent("Smooth Blending", projectionSettings.smoothblend));
     }
 
     @Override
