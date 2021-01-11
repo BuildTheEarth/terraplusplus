@@ -1,5 +1,6 @@
 package io.github.terra121;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
 import io.github.terra121.control.TerraCommand;
@@ -22,6 +23,8 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.server.permission.DefaultPermissionLevel;
 import net.minecraftforge.server.permission.PermissionAPI;
+import org.apache.logging.log4j.simple.SimpleLogger;
+import org.apache.logging.log4j.util.PropertiesUtil;
 
 @Mod(modid = TerraMod.MODID, name = TerraMod.NAME, version = TerraMod.VERSION, dependencies = "required-after:cubicchunks; required-after:cubicgen", acceptableRemoteVersions = "*")
 public class TerraMod implements ILetsEncryptMod {
@@ -31,7 +34,7 @@ public class TerraMod implements ILetsEncryptMod {
     public static final String USERAGENT = TerraMod.MODID + '/' + TerraMod.VERSION;
     public static final boolean CUSTOM_PROVIDER = false; //could potentially interfere with other mods and is relatively untested, leaving off for now
 
-    public static Logger LOGGER;
+    public static Logger LOGGER = new SimpleLogger("[terra++ bootstrap]", Level.INFO, true, false, true, false, "[yyyy/MM/dd HH:mm:ss:SSS]", null, new PropertiesUtil("log4j2.simplelog.properties"), System.out);
 
     //set custom provider
     private static void setupProvider() {

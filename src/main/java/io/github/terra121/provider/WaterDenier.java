@@ -1,7 +1,7 @@
 package io.github.terra121.provider;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
-import io.github.terra121.EarthBiomeProvider;
+import io.github.terra121.generator.EarthBiomeProvider;
 import io.github.terra121.TerraConfig;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDynamicLiquid;

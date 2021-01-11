@@ -1,10 +1,12 @@
 package io.github.terra121.projection;
 
+import io.github.terra121.util.MathUtils;
+
 public class InvertableVectorField {
-    protected static double ROOT3 = Math.sqrt(3);
-    protected double[][] VECTOR_X;
-    protected double[][] VECTOR_Y;
-    public int sideLength;
+	
+    private double[][] VECTOR_X;
+    private double[][] VECTOR_Y;
+    private int sideLength;
 
     public InvertableVectorField(double[][] vx, double[][] vy) {
         this.sideLength = vx.length - 1;
@@ -19,7 +21,7 @@ public class InvertableVectorField {
         y *= this.sideLength;
 
         //convert to triangle units
-        double v = 2 * y / ROOT3;
+        double v = 2 * y / MathUtils.ROOT3;
         double u = x - v * 0.5;
 
         int u1 = (int) u;
@@ -48,7 +50,7 @@ public class InvertableVectorField {
 
         double flip = 1;
 
-        if (y < -ROOT3 * (x - u1 - v1 - 1) || v1 == this.sideLength - u1 - 1) {
+        if (y < -MathUtils.ROOT3 * (x - u1 - v1 - 1) || v1 == this.sideLength - u1 - 1) {
             valx1 = this.VECTOR_X[u1][v1];
             valy1 = this.VECTOR_Y[u1][v1];
             valx2 = this.VECTOR_X[u1][v1 + 1];
@@ -56,7 +58,7 @@ public class InvertableVectorField {
             valx3 = this.VECTOR_X[u1 + 1][v1];
             valy3 = this.VECTOR_Y[u1 + 1][v1];
 
-            y3 = 0.5 * ROOT3 * v1;
+            y3 = 0.5 * MathUtils.ROOT3 * v1;
             x3 = (u1 + 1) + 0.5 * v1;
         } else {
             valx1 = this.VECTOR_X[u1][v1 + 1];
@@ -69,18 +71,18 @@ public class InvertableVectorField {
             flip = -1;
             y = -y;
 
-            y3 = -(0.5 * ROOT3 * (v1 + 1));
+            y3 = -(0.5 * MathUtils.ROOT3 * (v1 + 1));
             x3 = (u1 + 1) + 0.5 * (v1 + 1);
         }
 
         //TODO: not sure if weights are right (but weirdly mirrors stuff so there may be simplifcation yet)
-        double w1 = -(y - y3) / ROOT3 - (x - x3);
-        double w2 = 2 * (y - y3) / ROOT3;
+        double w1 = -(y - y3) / MathUtils.ROOT3 - (x - x3);
+        double w2 = 2 * (y - y3) / MathUtils.ROOT3;
         double w3 = 1 - w1 - w2;
 
         return new double[]{ valx1 * w1 + valx2 * w2 + valx3 * w3, valy1 * w1 + valy2 * w2 + valy3 * w3,
-                (valx3 - valx1) * this.sideLength, this.sideLength * flip * (2 * valx2 - valx1 - valx3) / ROOT3,
-                (valy3 - valy1) * this.sideLength, this.sideLength * flip * (2 * valy2 - valy1 - valy3) / ROOT3 };
+                (valx3 - valx1) * this.sideLength, this.sideLength * flip * (2 * valx2 - valx1 - valx3) / MathUtils.ROOT3,
+                (valy3 - valy1) * this.sideLength, this.sideLength * flip * (2 * valy2 - valy1 - valy3) / MathUtils.ROOT3 };
     }
 
     public double[] applyNewtonsMethod(double expectedf, double expectedg, double xest, double yest, int iter) {
@@ -102,4 +104,10 @@ public class InvertableVectorField {
 
         return new double[]{ xest, yest };
     }
+
+
+	public int getSideLength() {
+		return sideLength;
+	}
+    
 }

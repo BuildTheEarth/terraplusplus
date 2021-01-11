@@ -12,15 +12,13 @@ buildscript {
     }
 }
 apply plugin: "net.minecraftforge.gradle.forge"
-//Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: "com.github.johnrengelman.shadow"
 apply plugin: "maven-publish"
 
-version = "0.1"
-group = "io.github.terra121" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "terra121"
+version = "0.1." + ('git rev-list --count HEAD'.execute().text.trim()) + "-1.12.2"
+group = "net.buildtheearth"
+archivesBaseName = "terraplusplus"
 
-sourceCompatibility = targetCompatibility = "1.8" // Need this here so eclipse task generates correctly.
 compileJava {
     sourceCompatibility = targetCompatibility = "1.8"
 }
@@ -30,7 +28,7 @@ minecraft {
     runDir = "run"
 
     mappings = "stable_39"
-    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+    makeObfSourceJar = false
 }
 
 configurations {
@@ -39,6 +37,14 @@ configurations {
 }
 
 repositories {
+    maven { //used for leveldb
+        name = "DaPorkchop_"
+        url = "https://maven.daporkchop.net/"
+    }
+    maven { //used for leveldb
+        name = "OpenCollab Snapshots"
+        url = "https://repo.opencollab.dev/snapshot/"
+    }
     maven {
         name = "JitPack"
         url = "https://jitpack.io/"
@@ -46,7 +52,7 @@ repositories {
 }
 
 dependencies {
-    deobfProvided ("com.github.OpenCubicChunks.CubicChunks:cubicchunks:0d61d787ed052ad53391c3ebe9799e4ed2da3659") {
+    deobfProvided ("com.github.OpenCubicChunks.CubicChunks:cubicchunks:6e18a97abe31e1c7892ebcf8ed0f17a4ac379e10") {
         transitive = false
     }
     deobfProvided ("com.github.OpenCubicChunks:CubicWorldGen:27de56d2f792513873584b2f8fd9f3082fb259ec") {
@@ -54,6 +60,13 @@ dependencies {
     }
 
     shade "org.apache.commons:commons-imaging:1.0-alpha2"
+
+    shade("net.daporkchop.lib:binary:0.5.5-SNAPSHOT")  {
+        exclude group: "io.netty"
+    }
+
+    compileOnly "org.projectlombok:lombok:1.18.0"
+    annotationProcessor "org.projectlombok:lombok:1.18.0"
 }
 
 processResources {

@@ -2,10 +2,11 @@ package io.github.terra121.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import io.github.terra121.EarthTerrainProcessor;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.control.fragments.CommandFragment;
+import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
@@ -28,12 +29,12 @@ public class TerraConvertFragment extends CommandFragment{
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
-        if (!(gen instanceof EarthTerrainProcessor)) {
+        if (!(gen instanceof EarthGenerator)) {
             sender.sendMessage(ChatUtil.getNotTerra());
             return;
         }
 
-        EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
+        EarthGenerator terrain = (EarthGenerator) gen;
         GeographicProjection projection = terrain.projection;
 
         if(args.length < 2) {
@@ -55,11 +56,19 @@ public class TerraConvertFragment extends CommandFragment{
         double[] c = new double[]{x, y};
 
         if (-180 <= c[1] && c[1] <= 180 && -90 <= c[0] && c[0] <= 90) {
-            c = projection.fromGeo(c[1], c[0]);
+            try {
+                c = projection.fromGeo(c[1], c[0]);
+            } catch (OutOfProjectionBoundsException e) {
+                e.printStackTrace();
+            }
             sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Result: ",
                     TextFormatting.BLUE, c[0], TextFormatting.GRAY, ", ", TextFormatting.BLUE, c[1]));
         } else {
-            c = projection.toGeo(c[0], c[1]);
+            try {
+                c = projection.toGeo(c[0], c[1]);
+            } catch (OutOfProjectionBoundsException e) {
+                e.printStackTrace();
+            }
             sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Result: ",
                     TextFormatting.BLUE, c[1], TextFormatting.GRAY, ", ", TextFormatting.BLUE, c[0]));
         }

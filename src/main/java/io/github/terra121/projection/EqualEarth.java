@@ -1,9 +1,15 @@
 package io.github.terra121.projection;
 
+import io.github.terra121.TerraConstants;
+import io.github.terra121.util.MathUtils;
+
+/**
+ * Implementation of the Equal Earth projection
+ * 
+ * @see <a href="https://en.wikipedia.org/wiki/Equal_Earth_projection"> Wikipedia's article on the Equal Earth projection</a>
+ */
 public class EqualEarth extends GeographicProjection {
 
-    private static final double TO_RADIANS = Math.PI / 180.0;
-    private static final double ROOT3 = Math.sqrt(3);
     private static final double A1 = 1.340264;
     private static final double A2 = -0.081106;
     private static final double A3 = 0.000893;
@@ -42,13 +48,13 @@ public class EqualEarth extends GeographicProjection {
         dx += 7 * A3 * (tpow *= thetasquare * thetasquare); //7 A3 t^6
         dx += 9 * A4 * (tpow *= thetasquare); //9 A4 t^8
 
-        return new double[]{ x * dx * 3 / (TO_RADIANS * 2 * ROOT3 * Math.cos(theta)),
-                Math.asin(Math.sin(theta) * 2 / ROOT3) / TO_RADIANS };
+        return new double[]{ Math.toDegrees(x * dx * 3 / (2 * MathUtils.ROOT3 * Math.cos(theta))),
+                Math.toDegrees(Math.asin(Math.sin(theta) * 2 / MathUtils.ROOT3))};
     }
 
     @Override
-    public double[] fromGeo(double lon, double lat) {
-        double sintheta = ROOT3 * Math.sin(lat * TO_RADIANS) / 2;
+    public double[] fromGeo(double longitude, double latitude) {
+        double sintheta = MathUtils.ROOT3 * Math.sin(Math.toRadians(latitude)) / 2;
         double theta = Math.asin(sintheta);
         double tpow = theta;
 
@@ -63,11 +69,11 @@ public class EqualEarth extends GeographicProjection {
 
         double costheta = Math.sqrt(1 - sintheta * sintheta);
 
-        return new double[]{ (2 * ROOT3 * TO_RADIANS * lon * costheta / 3) / x, y };
+        return new double[]{ (2 * MathUtils.ROOT3 * Math.toRadians(longitude) * costheta / 3) / x, y };
     }
 
     @Override
     public double metersPerUnit() {
-        return EARTH_CIRCUMFERENCE / (2 * this.bounds()[2]);
+        return TerraConstants.EARTH_CIRCUMFERENCE / (2 * this.bounds()[2]);
     }
 }

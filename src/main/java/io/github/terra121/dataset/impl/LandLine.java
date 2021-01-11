@@ -1,0 +1,92 @@
+package io.github.terra121.dataset.impl;
+
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.function.BiConsumer;
+
+public class LandLine {
+    public TreeMap<Double, Long> breaks;
+
+    public LandLine() {
+        this.breaks = new TreeMap<>();
+    }
+
+    public void add(double pos, long type) {
+        if (this.breaks.containsKey(pos)) {
+            pos += 0.00000001;
+        }
+
+        this.breaks.put(pos, type);
+    }
+
+    public void run(int size, Set<Long> current, BiConsumer<Set<Long>, Integer> consumer) {
+        int idx = 0;
+
+        for (Entry<Double, Long> e : this.breaks.entrySet()) {
+            double pos = e.getKey();
+
+            if (pos >= 0) {
+                while (pos > idx) {
+                    if (idx < size) {
+                        consumer.accept(current, idx);
+                    }
+                    idx++;
+                }
+
+                Long flag = e.getValue();
+                if (current.contains(flag)) {
+                    current.remove(flag);
+                } else {
+                    current.add(flag);
+                }
+            }
+        }
+
+        while (idx < size) {
+            consumer.accept(current, idx++);
+        }
+    }
+
+    public Object[] compileBreaks(Set<Long> current, int max) {
+
+        short[] index = new short[this.breaks.size() + 1];
+        byte[] value = new byte[this.breaks.size() + 1];
+
+        index[0] = 0;
+        value[0] = (byte) (current.isEmpty() ? 0 : current.contains(-1L) ? 2 : 1);
+
+        int idx = 1;
+
+        for (Entry<Double, Long> e : this.breaks.entrySet()) {
+            double pos = e.getKey();
+            if (pos >= 0 && pos < max) {
+
+                Long flag = e.getValue();
+                if (current.contains(flag)) {
+                    current.remove(flag);
+                } else {
+                    current.add(flag);
+                }
+
+                index[idx] = (short) pos;
+                value[idx] = (byte) (current.isEmpty() ? 0 : current.contains(-1L) ? 2 : 1);
+
+                idx++;
+            }
+        }
+
+        //trim extra capacity
+        if (index.length > idx) {
+            short[] oindex = index;
+            index = new short[idx];
+            System.arraycopy(oindex, 0, index, 0, idx);
+
+            byte[] oval = value;
+            value = new byte[idx];
+            System.arraycopy(oval, 0, value, 0, idx);
+        }
+
+        return new Object[]{ index, value };
+    }
+}

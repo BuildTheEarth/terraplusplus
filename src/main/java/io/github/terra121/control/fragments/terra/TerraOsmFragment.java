@@ -2,10 +2,10 @@ package io.github.terra121.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import io.github.terra121.EarthTerrainProcessor;
-import io.github.terra121.TerraConstants;
 import io.github.terra121.control.fragments.CommandFragment;
+import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
@@ -37,7 +37,7 @@ public class TerraOsmFragment extends CommandFragment {
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
-        if (!(gen instanceof EarthTerrainProcessor)) {
+        if (!(gen instanceof EarthGenerator)) {
             sender.sendMessage(ChatUtil.getNotTerra());
             return;
         }
@@ -56,10 +56,15 @@ public class TerraOsmFragment extends CommandFragment {
             senderName = e.getName();
         }
 
-        EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
+        EarthGenerator terrain = (EarthGenerator) gen;
         GeographicProjection projection = terrain.projection;
 
-        double[] result = projection.toGeo(pos.x, pos.z);
+        double[] result = new double[0];
+        try {
+            result = projection.toGeo(pos.x, pos.z);
+        } catch (OutOfProjectionBoundsException outOfProjectionBoundsException) {
+            outOfProjectionBoundsException.printStackTrace();
+        }
         sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY , "Location of ", TextFormatting.BLUE, senderName, TextFormatting.GRAY, " on maps:"));
         sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY, "Google Maps: ", new TextComponentString("Click Here").setStyle(
                 new Style().setUnderlined(true).setColor(TextFormatting.BLUE).setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.google.com/maps/search/?api=1&query=" + result[1] + "," + result[0])))));

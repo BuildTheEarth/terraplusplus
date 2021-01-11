@@ -2,17 +2,16 @@ package io.github.terra121.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import io.github.terra121.EarthTerrainProcessor;
-import io.github.terra121.TerraConstants;
 import io.github.terra121.control.fragments.CommandFragment;
+import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
@@ -35,7 +34,7 @@ public class TerraWhereFragment extends CommandFragment {
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
-        if (!(gen instanceof EarthTerrainProcessor)) {
+        if (!(gen instanceof EarthGenerator)) {
             sender.sendMessage(ChatUtil.getNotTerra());
             return;
         }
@@ -54,14 +53,18 @@ public class TerraWhereFragment extends CommandFragment {
             senderName = e.getName();
         }
 
-        EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
+        EarthGenerator terrain = (EarthGenerator) gen;
         GeographicProjection projection = terrain.projection;
 
 
-
-        double[] result = projection.toGeo(pos.x, pos.z);
+        double[] result;
+        try {
+            result = projection.toGeo(pos.x, pos.z);
+        } catch (OutOfProjectionBoundsException e1) { //out of bounds, set to null to print error
+            result = null;
+        }
         sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Location of ", TextFormatting.BLUE, senderName));
-        if(Double.isNaN(result[0])) {
+        if (result == null || Double.isNaN(result[0])) {
             sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.fragment.terra.where.notproj")));
             return;
         }

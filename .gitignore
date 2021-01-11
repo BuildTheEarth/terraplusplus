@@ -28,5 +28,8 @@ build.bat
 # other
 eclipse
 run
+*.log
 =======
 gradlew
+
+/logs/

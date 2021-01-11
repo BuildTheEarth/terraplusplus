@@ -1,33 +1,45 @@
 package io.github.terra121.projection;
 
-public class MapsProjection extends GeographicProjection {
+import io.github.terra121.util.MathUtils;
 
-    private static final double TO_RADIANS = Math.PI / 180.0;
-    private static final double TAU = (2 * Math.PI);
+/**
+ * Implementation of the Mercator projection, with projected space is normalized between 0 and 1 (as with the web Mercator variant).
+ * The Greenwich meridian and the equator are at x=0 and y=0 respectively.
+ * 
+ * @see io.github.terra121.projection.CenteredMapsProjection
+ * @see <a href="https://en.wikipedia.org/wiki/Mercator_projection"> Wikipedia's article on the Mercator projection</a>
+ * @see <a href="https://en.wikipedia.org/wiki/Web_Mercator_projection"> Wikipedia's article on the Web Mercator projection</a>
+ */
+public class MapsProjection extends GeographicProjection {
 
     @Override
     public double[] toGeo(double x, double y) {
         return new double[]{
-                (x * TAU - Math.PI) / TO_RADIANS,
-                (Math.atan(Math.exp(Math.PI - y * TAU)) * 2 - Math.PI / 2) / TO_RADIANS
+                Math.toDegrees(x * MathUtils.TAU - Math.PI),
+                Math.toDegrees(Math.atan(Math.exp(Math.PI - y * MathUtils.TAU)) * 2 - Math.PI / 2)
         };
     }
 
     @Override
-    public double[] fromGeo(double lon, double lat) {
+    public double[] fromGeo(double longitude, double latitude) {
         return new double[]{
-                (lon * TO_RADIANS + Math.PI) / TAU,
-                (Math.PI - Math.log(Math.tan((Math.PI / 2 + lat * TO_RADIANS) / 2))) / TAU
+                (Math.toRadians(longitude) + Math.PI) / MathUtils.TAU,
+                (Math.PI - Math.log(Math.tan((Math.PI / 2 + Math.toRadians(latitude)) / 2))) / MathUtils.TAU
         };
     }
 
     @Override
     public double[] bounds() {
-        return new double[]{ 0, 0, 1, 1 };
+        return new double[]{ 0, 0, 1, 1};
     }
 
     @Override
     public boolean upright() {
         return true;
     }
+
+	@Override
+	public double metersPerUnit() {
+		return 100000;
+	}
 }

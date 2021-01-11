@@ -2,11 +2,11 @@ package io.github.terra121.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import io.github.terra121.EarthBiomeProvider;
-import io.github.terra121.EarthTerrainProcessor;
-import io.github.terra121.TerraConstants;
 import io.github.terra121.control.fragments.CommandFragment;
+import io.github.terra121.generator.EarthBiomeProvider;
+import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
@@ -37,12 +37,12 @@ public class TerraEnvironmentFragment extends CommandFragment {
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
-        if (!(gen instanceof EarthTerrainProcessor)) {
+        if (!(gen instanceof EarthGenerator)) {
             sender.sendMessage(ChatUtil.getNotTerra());
             return;
         }
 
-        EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
+        EarthGenerator terrain = (EarthGenerator) gen;
         GeographicProjection projection = terrain.projection;
 
         double[] c = this.getCoordArgs(sender, args, projection);
@@ -103,6 +103,12 @@ public class TerraEnvironmentFragment extends CommandFragment {
 
     private double[] getPlayerCoords(ICommandSender sender, String arg, GeographicProjection projection) {
         Vec3d pos = sender.getCommandSenderEntity().getPositionVector();
-        return projection.toGeo(pos.x, pos.z);
+        try {
+            return projection.toGeo(pos.x, pos.z);
+        } catch (OutOfProjectionBoundsException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }
