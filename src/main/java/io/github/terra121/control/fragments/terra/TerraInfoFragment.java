@@ -12,7 +12,7 @@ import net.minecraft.util.text.TextFormatting;
 public class TerraInfoFragment extends CommandFragment {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, "Terra++ v" + TerraConstants.version,
+        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, "Terra++ v", TerraConstants.version,
                 TextFormatting.GRAY, " by the ", TextFormatting.BLUE, "BTE Development Community"));
         sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Original mod by orangeadam3 and shejan0"));
     }

@@ -11,23 +11,32 @@ public class ChatUtil {
     }
 
     public static ITextComponent titleAndCombine(Object... objects) {
-        return combine(title(), objects);
+        return combine(true, objects);
     }
 
     public static ITextComponent combine(Object... objects) {
-        ITextComponent textComponent = new TextComponentString("");
+        return combine(false, objects);
+    }
+
+    public static ITextComponent combine(boolean title, Object... objects) {
+        ITextComponent textComponent = title ? title() : new TextComponentString("");
+        StringBuilder builder = null;
         for(Object o : objects) {
             if(o instanceof ITextComponent) {
+                if(builder != null) {
+                    textComponent.appendSibling(new TextComponentString(builder.toString()));
+                    builder = null;
+                }
+
                 textComponent.appendSibling((ITextComponent) o);
-            } else if(o instanceof String) {
-                textComponent.appendSibling(new TextComponentString((String) o));
-            } else if(o instanceof TextFormatting) {
-                textComponent.appendSibling(new TextComponentString(((TextFormatting) o).toString()));
             } else {
-                textComponent.appendSibling(new TextComponentString(String.valueOf(o)));
+                if(builder == null) builder = new StringBuilder();
+                builder.append(o);
             }
         }
 
+        if(builder != null)
+            textComponent.appendSibling(new TextComponentString(builder.toString()));
         return textComponent;
     }
 
