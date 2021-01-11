@@ -2,6 +2,7 @@ package io.github.terra121.generator;
 
 import com.google.common.base.Strings;
 import com.google.gson.JsonSyntaxException;
+
 import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.api.DeserializationException;
 import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.api.SyntaxError;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGeneratorSettings;
@@ -13,7 +14,6 @@ import io.github.terra121.TerraMod;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.transform.OffsetProjectionTransform;
 import io.github.terra121.projection.transform.ScaleProjectionTransform;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public class EarthGeneratorSettings {
     public JsonSettings settings;
@@ -66,15 +66,8 @@ public class EarthGeneratorSettings {
     }
 
     public GeographicProjection getProjection() {
-
     	GeographicProjection projection  = GeographicProjection.projections.get(this.settings.projection);
         projection = GeographicProjection.orientProjection(projection, this.settings.orentation);
-
-        //FIXME Figure out what that is for and remove it, this is a terrible way to fail (if anything fails at this point)
-        if (this.settings.scaleX == 1 && this.settings.scaleY == 1) {
-            FMLCommonHandler.instance().exitJava(-1, false);
-        }
-
         projection = new ScaleProjectionTransform(projection, this.settings.scaleX, this.settings.scaleY);
         projection = new OffsetProjectionTransform(projection, this.settings.offsetX, this.settings.offsetY);
 

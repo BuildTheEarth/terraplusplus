@@ -18,45 +18,13 @@ public class TerraConstants {
 
     public static final Gson GSON = new Gson();
 
-    public static class TextConstants {
-        // Live update not final
-        public static ITextComponent getNotCC() {
-            return title(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.error.notcc")));
-        }
-
-        public static ITextComponent getNotTerra() {
-            return title(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.error.noterra")));
-        }
-
-        public static ITextComponent getNoPermission() {
-            return title(new TextComponentString(TextFormatting.RED + "You do not have permission to use this command"));
-        }
-
-        public static ITextComponent getPlayerOnly() {
-            return title(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.error.playeronly")));
-        }
-
-        public static ITextComponent title() {
-            return new TextComponentString(TerraConstants.prefix.replace("&","\u00A7"));
-        }
-
-        public static ITextComponent title(ITextComponent component) {
-            return title().appendSibling(component);
-        }
-
-        public static ITextComponent title(String s) {
-            return title(new TextComponentString(s));
-        }
-    }
-    
-	/**
-	 * Earth's circumference around the equator, in meters.
-	 */
+    /**
+     * Earth's circumference around the equator, in meters.
+     */
     public static final double EARTH_CIRCUMFERENCE = 40075017;
-    
+
     /**
      * Earth's circumference around the poles, in meters.
      */
     public static final double EARTH_POLAR_CIRCUMFERENCE = 40008000;
-    
 }

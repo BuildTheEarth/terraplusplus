@@ -3,7 +3,6 @@ package io.github.terra121;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
-import io.github.terra121.control.TerraAdminCommand;
 import io.github.terra121.control.TerraCommand;
 import io.github.terra121.control.TerraTeleport;
 import io.github.terra121.letsencryptcraft.ILetsEncryptMod;
@@ -82,7 +81,6 @@ public class TerraMod implements ILetsEncryptMod {
     public void serverLoad(FMLServerStartingEvent event) {
         event.registerServerCommand(new TerraTeleport());
         event.registerServerCommand(new TerraCommand());
-        event.registerServerCommand(new TerraAdminCommand());
     }
 
     //stuff to implement ILetsEncryptMod
