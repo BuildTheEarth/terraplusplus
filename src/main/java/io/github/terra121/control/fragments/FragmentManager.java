@@ -31,7 +31,7 @@ public abstract class FragmentManager extends Command {
 
             @Override
             public String getPurpose() {
-                return TranslateUtil.translate("terra121.fragment.help.purpose");
+                return TranslateUtil.translate("terra121.fragment.help.purpose").getUnformattedComponentText();
             }
 
             @Override

@@ -2,12 +2,12 @@ package io.github.terra121.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import io.github.terra121.generator.EarthBiomeProvider;
+import io.github.terra121.EarthBiomeProvider;
+import io.github.terra121.EarthTerrainProcessor;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.control.fragments.CommandFragment;
-import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.GeographicProjection;
-import io.github.terra121.projection.OutOfProjectionBoundsException;
+import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -24,31 +24,31 @@ public class TerraEnvironmentFragment extends CommandFragment {
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         BiomeProvider bp = sender.getEntityWorld().getBiomeProvider();
         if (!(bp instanceof EarthBiomeProvider)) { //must have normal biome provider
-            sender.sendMessage(TerraConstants.TextConstants.getNotTerra());
+            sender.sendMessage(ChatUtil.getNotTerra());
         }
 
         World world = sender.getEntityWorld();
         IChunkProvider cp = world.getChunkProvider();
 
         if (!(cp instanceof CubeProviderServer)) {
-            sender.sendMessage(TerraConstants.TextConstants.getNotCC());
+            sender.sendMessage(ChatUtil.getNotCC());
             return;
         }
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
-        if (!(gen instanceof EarthGenerator)) {
-            sender.sendMessage(TerraConstants.TextConstants.getNotTerra());
+        if (!(gen instanceof EarthTerrainProcessor)) {
+            sender.sendMessage(ChatUtil.getNotTerra());
             return;
         }
 
-        EarthGenerator terrain = (EarthGenerator) gen;
+        EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
         GeographicProjection projection = terrain.projection;
 
         double[] c = this.getCoordArgs(sender, args, projection);
 
         c = ((EarthBiomeProvider) bp).getEnv(c[0], c[1]);
-        sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.GRAY + "Environment Data:"));
+        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Environment Data:"));
         sender.sendMessage(new TextComponentString(TextFormatting.RED + String.format("%.1f \\U+00B0C", c[1])));
         sender.sendMessage(new TextComponentString(TextFormatting.RED + String.format("%.1f mm/yr", c[2])));
         sender.sendMessage(new TextComponentString(TextFormatting.RED + String.format("Soil Id: %d", (int) c[0])));
@@ -56,12 +56,12 @@ public class TerraEnvironmentFragment extends CommandFragment {
 
     @Override
     public String[] getName() {
-        return new String[]{ "environment", "env" };
+        return new String[]{"environment", "env"};
     }
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate("terra121.fragment.terra.environment.purpose");
+        return TranslateUtil.translate("terra121.fragment.terra.environment.purpose").getUnformattedComponentText();
     }
 
     @Override
@@ -79,9 +79,13 @@ public class TerraEnvironmentFragment extends CommandFragment {
             return this.getNumbers(args[2], args[1]);
         } else if (args.length == 2) {
             double[] c = this.getPlayerCoords(sender, args[1], projection);
+            if (c == null) {
+            }
             return c;
         } else {
             double[] c = this.getPlayerCoords(sender, null, projection);
+            if (c == null) {
+            }
             return c;
         }
     }
@@ -92,18 +96,13 @@ public class TerraEnvironmentFragment extends CommandFragment {
         try {
             x = Double.parseDouble(s1);
             y = Double.parseDouble(s2);
-        } catch (Exception e) {
-        }
+        } catch (Exception e) { }
 
         return new double[]{ x, y };
     }
 
     private double[] getPlayerCoords(ICommandSender sender, String arg, GeographicProjection projection) {
         Vec3d pos = sender.getCommandSenderEntity().getPositionVector();
-        try {
-            return projection.toGeo(pos.x, pos.z);
-        } catch (OutOfProjectionBoundsException e) { //out of bounds, return NaN
-            return new double[]{ Double.NaN, Double.NaN };
-        }
+        return projection.toGeo(pos.x, pos.z);
     }
 }

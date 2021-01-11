@@ -2,11 +2,11 @@ package io.github.terra121.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
+import io.github.terra121.EarthTerrainProcessor;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.control.fragments.CommandFragment;
-import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.GeographicProjection;
-import io.github.terra121.projection.OutOfProjectionBoundsException;
+import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
@@ -20,8 +20,8 @@ import net.minecraft.world.chunk.IChunkProvider;
 public class TerraWhereFragment extends CommandFragment {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-        if (sender instanceof MinecraftServer && args.length < 1) {
-            sender.sendMessage(TerraConstants.TextConstants.getPlayerOnly());
+        if(sender instanceof MinecraftServer && args.length < 1) {
+            sender.sendMessage(ChatUtil.getPlayerOnly());
             return;
         }
 
@@ -29,14 +29,14 @@ public class TerraWhereFragment extends CommandFragment {
         IChunkProvider cp = world.getChunkProvider();
 
         if (!(cp instanceof CubeProviderServer)) {
-            sender.sendMessage(TerraConstants.TextConstants.getNotCC());
+            sender.sendMessage(ChatUtil.getNotCC());
             return;
         }
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
-        if (!(gen instanceof EarthGenerator)) {
-            sender.sendMessage(TerraConstants.TextConstants.getNotTerra());
+        if (!(gen instanceof EarthTerrainProcessor)) {
+            sender.sendMessage(ChatUtil.getNotTerra());
             return;
         }
 
@@ -44,11 +44,9 @@ public class TerraWhereFragment extends CommandFragment {
         Entity e = sender.getCommandSenderEntity();
         String senderName = sender.getName();
         if (args.length > 0) {
-            if (hasAdminPermission(sender)) {
-                e = sender.getEntityWorld().getPlayerEntityByName(args[0]);
-            }
+            if(hasAdminPermission(sender)) e = sender.getEntityWorld().getPlayerEntityByName(args[0]);
             if (e == null) {
-                sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.RED + TranslateUtil.translate("terra121.error.unknownplayer")));
+                sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.error.unknownplayer")));
                 return;
             }
 
@@ -56,38 +54,34 @@ public class TerraWhereFragment extends CommandFragment {
             senderName = e.getName();
         }
 
-        EarthGenerator terrain = (EarthGenerator) gen;
+        EarthTerrainProcessor terrain = (EarthTerrainProcessor) gen;
         GeographicProjection projection = terrain.projection;
 
 
-        double[] result;
-        try {
-            result = projection.toGeo(pos.x, pos.z);
-        } catch (OutOfProjectionBoundsException e1) { //out of bounds, set to null to print error
-            result = null;
-        }
-        sender.sendMessage(TerraConstants.TextConstants.title(TextFormatting.GRAY + "Location of " + TextFormatting.BLUE + senderName));
-        if (result == null || Double.isNaN(result[0])) {
-            sender.sendMessage(new TextComponentString(TextFormatting.RED + TranslateUtil.translate("terra121.fragment.terra.where.notproj")));
+
+        double[] result = projection.toGeo(pos.x, pos.z);
+        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Location of ", TextFormatting.BLUE, senderName));
+        if(Double.isNaN(result[0])) {
+            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.fragment.terra.where.notproj")));
             return;
         }
-        sender.sendMessage(new TextComponentString(TextFormatting.GRAY + "Location: " + TextFormatting.BLUE + result[1]
-        + TextFormatting.GRAY + ", " + TextFormatting.BLUE + result[0]));
+        sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY, "Location: ", TextFormatting.BLUE, result[1],
+                TextFormatting.GRAY, ", ", TextFormatting.BLUE, result[0]));
     }
 
     @Override
     public String[] getName() {
-        return new String[]{ "where", "ou" };
+        return new String[]{"where", "ou"};
     }
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate("terra121.fragment.terra.where.purpose");
+        return TranslateUtil.translate("terra121.fragment.terra.where.purpose").getUnformattedComponentText();
     }
 
     @Override
     public String[] getArguments() {
-        return new String[]{ "[player]" };
+        return new String[]{"[player]"};
     }
 
     @Override

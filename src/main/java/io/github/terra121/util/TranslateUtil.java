@@ -1,17 +1,19 @@
 package io.github.terra121.util;
 
-import net.minecraft.client.resources.I18n;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public class TranslateUtil {
-    public static String translate(String key) {
-        if(FMLCommonHandler.instance().getMinecraftServerInstance().isSinglePlayer()) return I18n.format(key, new Object[0]);
-        return new TextComponentTranslation(key).getFormattedText();
+    public static ITextComponent translate(String key) {
+        if(FMLCommonHandler.instance().getMinecraftServerInstance().isSinglePlayer()) return new TextComponentTranslation(key);
+        return new TextComponentString(net.minecraft.util.text.translation.I18n.translateToLocal(key));
     }
 
-    public static String format(String key, Object... args) {
-        if(FMLCommonHandler.instance().getMinecraftServerInstance().isSinglePlayer()) return I18n.format(key, args);
-        return new TextComponentTranslation(key, args).getUnformattedComponentText();
+    public static ITextComponent format(String key, Object... args) {
+        if(FMLCommonHandler.instance().getMinecraftServerInstance().isSinglePlayer()) return new TextComponentTranslation(key, args);
+        return new TextComponentString(I18n.translateToLocalFormatted(key, args));
     }
 }
