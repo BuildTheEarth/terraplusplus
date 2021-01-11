@@ -28,31 +28,29 @@
                 }
             },
             "emit": {
-                "line": {
-                    "wide": {
-                        "block": {
-                            "id": "minecraft:concrete",
-                            "properties": {
-                                "color": "grey"
-                            }
-                        },
-                        "width": {
-                            "+": {
-                                "/": {
-                                    "*": {
-                                        "tag": {
-                                            "key": "lanes",
-                                            "fallback": 2
-                                        },
-                                        "value": 3
+                "wide": {
+                    "block": {
+                        "id": "minecraft:concrete",
+                        "properties": {
+                            "color": "grey"
+                        }
+                    },
+                    "width": {
+                        "+": {
+                            "/": {
+                                "*": {
+                                    "tag": {
+                                        "key": "lanes",
+                                        "fallback": 2
                                     },
-                                    "value": 2
+                                    "value": 3
                                 },
                                 "value": 2
-                            }
-                        },
-                        "crossWater": true
-                    }
+                            },
+                            "value": 2
+                        }
+                    },
+                    "crossWater": true
                 }
             }
         },
@@ -68,31 +66,29 @@
                 }
             },
             "emit": {
-                "line": {
-                    "wide": {
-                        "block": {
-                            "id": "minecraft:concrete",
-                            "properties": {
-                                "color": "grey"
-                            }
-                        },
-                        "width": {
-                            "/": {
-                                "*": {
-                                    "max": {
-                                        "tag": {
-                                            "key": "lanes",
-                                            "fallback": 2
-                                        },
-                                        "value": 2
+                "wide": {
+                    "block": {
+                        "id": "minecraft:concrete",
+                        "properties": {
+                            "color": "grey"
+                        }
+                    },
+                    "width": {
+                        "/": {
+                            "*": {
+                                "max": {
+                                    "tag": {
+                                        "key": "lanes",
+                                        "fallback": 2
                                     },
-                                    "value": 3
+                                    "value": 2
                                 },
-                                "value": 2
-                            }
-                        },
-                        "crossWater": true
-                    }
+                                "value": 3
+                            },
+                            "value": 2
+                        }
+                    },
+                    "crossWater": true
                 }
             }
         },
@@ -108,25 +104,23 @@
                 }
             },
             "emit": {
-                "line": {
-                    "wide": {
-                        "block": {
-                            "id": "minecraft:concrete",
-                            "properties": {
-                                "color": "grey"
-                            }
-                        },
-                        "width": {
-                            "*": {
-                                "tag": {
-                                    "key": "lanes",
-                                    "fallback": 2
-                                },
-                                "value": 2
-                            }
-                        },
-                        "crossWater": true
-                    }
+                "wide": {
+                    "block": {
+                        "id": "minecraft:concrete",
+                        "properties": {
+                            "color": "grey"
+                        }
+                    },
+                    "width": {
+                        "*": {
+                            "tag": {
+                                "key": "lanes",
+                                "fallback": 2
+                            },
+                            "value": 2
+                        }
+                    },
+                    "crossWater": true
                 }
             }
         },
@@ -142,22 +136,20 @@
                 }
             },
             "emit": {
-                "line": {
-                    "wide": {
-                        "block": {
-                            "id": "minecraft:concrete",
-                            "properties": {
-                                "color": "grey"
-                            }
-                        },
-                        "width": {
-                            "tag": {
-                                "key": "lanes",
-                                "fallback": 2
-                            }
-                        },
-                        "crossWater": true
-                    }
+                "wide": {
+                    "block": {
+                        "id": "minecraft:concrete",
+                        "properties": {
+                            "color": "grey"
+                        }
+                    },
+                    "width": {
+                        "tag": {
+                            "key": "lanes",
+                            "fallback": 2
+                        }
+                    },
+                    "crossWater": true
                 }
             }
         },
@@ -178,31 +170,29 @@
                 }
             },
             "emit": {
-                "line": {
-                    "wide": {
-                        "block": {
-                            "id": "minecraft:concrete",
-                            "properties": {
-                                "color": "grey"
-                            }
-                        },
-                        "width": {
-                            "/": {
-                                "+": {
-                                    "*": {
-                                        "tag": {
-                                            "key": "lanes",
-                                            "fallback": 2
-                                        },
-                                        "value": 3
+                "wide": {
+                    "block": {
+                        "id": "minecraft:concrete",
+                        "properties": {
+                            "color": "grey"
+                        }
+                    },
+                    "width": {
+                        "/": {
+                            "+": {
+                                "*": {
+                                    "tag": {
+                                        "key": "lanes",
+                                        "fallback": 2
                                     },
-                                    "value": 1
+                                    "value": 3
                                 },
-                                "value": 2
-                            }
-                        },
-                        "crossWater": true
-                    }
+                                "value": 1
+                            },
+                            "value": 2
+                        }
+                    },
+                    "crossWater": true
                 }
             }
         },
@@ -215,19 +205,17 @@
                 }
             },
             "emit": {
-                "line": {
-                    "wide": {
-                        "block": {
-                            "id": "minecraft:concrete",
-                            "properties": {
-                                "color": "grey"
-                            }
-                        },
-                        "width": {
-                            "value": 1
-                        },
-                        "crossWater": true
-                    }
+                "wide": {
+                    "block": {
+                        "id": "minecraft:concrete",
+                        "properties": {
+                            "color": "grey"
+                        }
+                    },
+                    "width": {
+                        "value": 1
+                    },
+                    "crossWater": true
                 }
             }
         },
@@ -240,13 +228,11 @@
                 }
             },
             "emit": {
-                "line": {
-                    "narrow": {
-                        "block": {
-                            "id": "minecraft:brick"
-                        },
-                        "crossWater": false
-                    }
+                "narrow": {
+                    "block": {
+                        "id": "minecraft:brick"
+                    },
+                    "crossWater": false
                 }
             }
         },
@@ -258,13 +244,11 @@
                 }
             },
             "emit": {
-                "line": {
-                    "narrow": {
-                        "block": {
-                            "id": "minecraft:water"
-                        },
-                        "crossWater": false
-                    }
+                "narrow": {
+                    "block": {
+                        "id": "minecraft:water"
+                    },
+                    "crossWater": false
                 }
             }
         },
@@ -279,17 +263,15 @@
                 }
             },
             "emit": {
-                "line": {
-                    "block": {
-                        "id": "minecraft:water"
-                    },
-                    "style": {
-                        "wide": {
-                            "width": {
-                                "value": 5
-                            },
-                            "crossWater": false
-                        }
+                "block": {
+                    "id": "minecraft:water"
+                },
+                "style": {
+                    "wide": {
+                        "width": {
+                            "value": 5
+                        },
+                        "crossWater": false
                     }
                 }
             }
@@ -305,12 +287,14 @@
                 }
             },
             "emit": {
-                "line": {
-                    "narrow": {
-                        "block": {
-                            "id": "minecraft:brick"
-                        },
-                        "crossWater": false
+                "convert": {
+                    "line": {
+                        "narrow": {
+                            "block": {
+                                "id": "minecraft:brick"
+                            },
+                            "crossWater": false
+                        }
                     }
                 }
             }
@@ -333,10 +317,8 @@
                 }
             },
             "emit": {
-                "area": {
-                    "distance": {
-                        "target": "water_depth"
-                    }
+                "distance": {
+                    "target": "water_depth"
                 }
             }
         },
@@ -348,10 +330,8 @@
                 }
             },
             "emit": {
-                "area": {
-                    "shape": {
-                        "target": "ocean"
-                    }
+                "fill": {
+                    "target": "ocean"
                 }
             }
         }

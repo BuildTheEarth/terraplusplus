@@ -1,5 +1,6 @@
 package io.github.terra121.dataset.osm;
 
+import io.github.terra121.dataset.osm.config.OSMConfig;
 import io.github.terra121.dataset.osm.segment.OSMSegment;
 import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.projection.EquirectangularProjection;
@@ -14,13 +15,23 @@ import net.daporkchop.lib.common.misc.string.PStrings;
 import net.minecraft.init.Bootstrap;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static io.github.terra121.TerraConstants.*;
 
 /**
  * @author DaPorkchop_
  */
 public class OSMTest {
-    public static void main(String... args) throws OutOfProjectionBoundsException {
+    public static void main(String... args) throws OutOfProjectionBoundsException, IOException {
+        OSMConfig config;
+        try (InputStream in = OSMTest.class.getResourceAsStream("osm_config_default.json5")) {
+            config = GSON.fromJson(new InputStreamReader(in), OSMConfig.class);
+        }
+
         Bootstrap.register();
         GeographicProjection projection = new EarthGeneratorSettings("").getProjection();
         Bounds2d bounds2d = Bounds2d.of(8.57707d, 8.57707d, 47.21767d, 47.21767d).expand(0.001d);
