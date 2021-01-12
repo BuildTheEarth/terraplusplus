@@ -9,7 +9,7 @@ public enum CardinalDirection {
 	SW (202.5, 247.5, "Southwest", "terra121.cardinal_directions.southwest"),
 	SE (112.5, 157.5, "Southeast", "terra121.cardinal_directions.southeast"),
 	NE (22.5, 67.5, "Northeast", "terra121.cardinal_directions.northeast"),
-	UNKNOWN (360.5, 10000000.0, "Unknown", "terra121.cardinal_directions.north");
+	UNKNOWN (360.5, 10000000.0, "Unknown", "terra121.cardinal_directions.unknown");
 	
 	private final double min;
 	
