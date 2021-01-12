@@ -9,6 +9,7 @@ import io.github.terra121.projection.airocean.ConformalEstimate;
 import io.github.terra121.projection.airocean.ModifiedAirocean;
 import io.github.terra121.projection.transform.InvertedOrientationProjectionTransform;
 import io.github.terra121.projection.transform.UprightOrientationProjectionTransform;
+import io.github.terra121.util.CardinalDirection;
 
 /**
  * Support for various projection types.
@@ -277,42 +278,23 @@ public abstract class GeographicProjection {
 	public enum Orientation {
 		none, upright, swapped
 	}
-	public enum Facing {
-		N (337.5, 360, "North"),
-		N2 (0, 22.5, "North"),
-		S (157.5, 202.5, "South"),
-		E (67.5, 112.5, "East"),
-		W (247.5, 292.5, "West"),
-		NW (292.5, 337.5, "Northwest"),
-		SW (202.5, 247.5, "Southwest"),
-		SE (112.5, 157.5, "Southeast"),
-		NE (22.5, 67.5, "Northeast"),
-		Unknown (360.5, 10000000.0, "Unknown");
-	    private final double min;
-	    private final double max;
-	    private final String realName;
-	    private Facing(double min, double max, String realName) {
-	        this.min = min;
-	        this.max = max;
-	        this.realName = realName;
-	    }
-	    public double getMin() {
-	    	return min;
-	    }
-	    public double getMax() {
-	    	return max;
-	    }
-	    public String getRealName() {
-	    	return realName;
-	    }
-    }
-	public static String azimuthToFacing(float azimuth) {
-		for (Facing facingToBeTestedFor : Facing.values()) {
-			if (azimuth >= facingToBeTestedFor.getMin() && azimuth <= facingToBeTestedFor.getMax()) {
-				return facingToBeTestedFor.getRealName();
+	public static boolean cardinalDirectionCheck(CardinalDirection direction, float azimuth) {
+		return azimuthToFacing(azimuth) == direction;
+		
+	}
+	public static CardinalDirection azimuthToFacing(float azimuth) {
+		for (CardinalDirection facingToBeTestedFor : CardinalDirection.values()) {
+			if (facingToBeTestedFor == CardinalDirection.N) {
+				if (azimuth >= facingToBeTestedFor.getMin() && azimuth <= 360) {
+					return facingToBeTestedFor;
+				} else if (azimuth >= 0 && azimuth <= facingToBeTestedFor.getMax()) {
+					return facingToBeTestedFor;
+				}
+			} else if (azimuth >= facingToBeTestedFor.getMin() && azimuth <= facingToBeTestedFor.getMax()) {
+				return facingToBeTestedFor;
 			}
 		}
-		return Facing.Unknown.getRealName();
+		return CardinalDirection.UNKNOWN;
 	}
 	
 }
