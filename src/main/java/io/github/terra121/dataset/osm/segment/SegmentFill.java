@@ -44,11 +44,11 @@ public enum SegmentFill {
             double segmentLengthSq = (lon1 - lon0) * (lon1 - lon0) + (lat1 - lat0) * (lat1 - lat0);
             for (int x = minX; x < maxX; x++) {
                 for (int z = minZ; z < maxZ; z++) {
-                    if (!allowInWater && data.wateroffs[x * 16 + z] > 0.0d) {
+                    if (!allowInWater && data.wateroffs[x * 16 + z] > 0) {
                         continue; //don't generate in water
                     }
 
-                    int y = (int) floor(data.heights[x * 16 + z]) - Coords.cubeToMinBlock(cubeY);
+                    int y = data.heights[x * 16 + z] - Coords.cubeToMinBlock(cubeY);
                     if ((y & 0xF) != y) { //if not in this range, someone else will handle it
                         continue;
                     }
@@ -106,11 +106,11 @@ public enum SegmentFill {
                 to = min(to, 15);
 
                 for (int z = max(0, from); z <= to; z++) {
-                    if (!allowInWater && data.wateroffs[x * 16 + z] > 0.0) {
+                    if (!allowInWater && data.wateroffs[x * 16 + z] > 0) {
                         continue; //don't generate in water
                     }
 
-                    int y = (int) floor(data.heights[x * 16 + z]) - Coords.cubeToMinBlock(cubeY);
+                    int y = data.heights[x * 16 + z] - Coords.cubeToMinBlock(cubeY);
                     if ((y & 0xF) == y) {
                         primer.setBlockState(x, y, z, state);
                     }

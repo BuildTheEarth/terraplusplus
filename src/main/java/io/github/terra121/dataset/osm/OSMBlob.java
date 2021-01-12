@@ -156,6 +156,12 @@ public final class OSMBlob {
             }
 
             if (tags.containsKey("water") || "water".equals(tags.get("natural")) || "riverbank".equals(tags.get("waterway"))) {
+                if (true) { //TODO: delete this debug code
+                    toSegments(projection, segments, polygon.outerRing(), SegmentType.RIVER, 1, 0);
+                    for (LineString innerRing : polygon.innerRings()) {
+                        toSegments(projection, segments, innerRing, SegmentType.RIVER, 1, 0);
+                    }
+                }
                 toPolygons(projection, polygons, polygon);
             }
         }

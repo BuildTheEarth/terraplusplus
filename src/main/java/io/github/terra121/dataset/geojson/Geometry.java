@@ -21,10 +21,14 @@
 package io.github.terra121.dataset.geojson;
 
 import com.google.gson.annotations.JsonAdapter;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
+import io.github.terra121.projection.ProjectionFunction;
+import lombok.NonNull;
 
 /**
  * @author DaPorkchop_
  */
 @JsonAdapter(GeometryDeserializer.class)
 public interface Geometry extends GeoJSONObject {
+    Geometry project(@NonNull ProjectionFunction projection) throws OutOfProjectionBoundsException;
 }

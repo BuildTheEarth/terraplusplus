@@ -1,6 +1,8 @@
 package io.github.terra121.dataset.geojson.geometry;
 
 import io.github.terra121.dataset.geojson.Geometry;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
+import io.github.terra121.projection.ProjectionFunction;
 import lombok.Data;
 import lombok.NonNull;
 
@@ -22,5 +24,14 @@ public final class LineString implements Geometry {
 
     public boolean isLinearRing() {
         return this.points.length >= 4 && Objects.equals(this.points[0], this.points[this.points.length - 1]);
+    }
+
+    @Override
+    public LineString project(@NonNull ProjectionFunction projection) throws OutOfProjectionBoundsException {
+        Point[] out = this.points.clone();
+        for (int i = 0; i < out.length; i++) {
+            out[i] = out[i].project(projection);
+        }
+        return new LineString(out);
     }
 }

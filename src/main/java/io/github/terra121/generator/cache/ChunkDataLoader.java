@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Math.*;
+import static net.daporkchop.lib.common.math.PMath.*;
 
 /**
  * {@link CacheLoader} implementation for {@link EarthGenerator} which asynchronously aggregates information from multiple datasets and stores it
@@ -29,20 +30,18 @@ import static java.lang.Math.*;
  */
 @RequiredArgsConstructor
 public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<CachedChunkData>> {
-    private static double[] fixHeights(double[] heights) {
+    private static void applyHeights(@NonNull CachedChunkData.Builder builder, double[] heights) {
         if (heights == null) { //consider heights array to be filled with NaNs
-            return CachedChunkData.BLANK.heights;
+            return; //we assume the builder's heights are already all set to the blank height value
         }
 
+        int[] heightsOut = builder.heights;
         for (int i = 0; i < 16 * 16; i++) { //replace NaNs with blank height value
-            if (Double.isNaN(heights[i])) {
-                heights[i] = CachedChunkData.BLANK_HEIGHT;
-            }
+            heightsOut[i] = Double.isNaN(heights[i]) ? CachedChunkData.BLANK_HEIGHT : floorI(heights[i]);
         }
-        return heights;
     }
 
-    protected static void renderPolygon(int baseX, int baseZ, @NonNull double[] wateroffs, @NonNull OSMPolygon polygon) {
+    protected static void renderPolygon(int baseX, int baseZ, @NonNull int[] wateroffs, @NonNull OSMPolygon polygon) {
         polygon.rasterizeDistance(baseX, 16, baseZ, 16, 5, (x, z, dist) -> {
             int i = (x - baseX) * 16 + (z - baseZ);
             wateroffs[i] = max(wateroffs[i], dist);
@@ -75,11 +74,14 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
             CompletableFuture<CachedChunkData> future = CompletableFuture.allOf(heightsFuture, treeCoverFuture, osmRegionsFuture)
                     .thenApply(unused -> {
                         //dereference all futures
-                        double[] heights = fixHeights(heightsFuture.join());
+                        double[] heights = heightsFuture.join();
                         double treeCover = treeCoverFuture.join();
                         OSMRegion[] osmRegions = osmRegionsFuture.join();
 
-                        double[] wateroffs = CachedChunkData.NULL_ISLAND.wateroffs.clone();
+                        CachedChunkData.Builder builder = CachedChunkData.builder()
+                                .treeCover(Double.isNaN(treeCover) ? 0.0d : treeCover);
+
+                        applyHeights(builder, heights);
 
                         //find all segments and polygons that intersect the chunk
                         Set<OSMSegment> segments = new HashSet<>();
@@ -87,14 +89,10 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
                             region.segments.forEachIntersecting(osmBounds, segments::add);
 
                             //render polygons to create water offsets
-                            region.polygons.forEachIntersecting(osmBounds, polygon -> renderPolygon(baseX, baseZ, wateroffs, polygon));
+                            region.polygons.forEachIntersecting(osmBounds, polygon -> renderPolygon(baseX, baseZ, builder.wateroffs(), polygon));
                         }
 
-                        if (Double.isNaN(treeCover)) { //ensure that treeCover is set
-                            treeCover = 0.0d;
-                        }
-
-                        return new CachedChunkData(heights, wateroffs, segments, treeCover);
+                        return builder.build();
                     });
             future.whenComplete((data, t) -> {
                 if (t != null) {

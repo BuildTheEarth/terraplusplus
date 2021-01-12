@@ -28,8 +28,6 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.Cubi
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicRavineGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.feature.CubicStrongholdGenerator;
 import io.github.terra121.TerraMod;
-import io.github.terra121.dataset.osm.segment.OSMSegment;
-import io.github.terra121.dataset.osm.segment.SegmentType;
 import io.github.terra121.generator.cache.CachedChunkData;
 import io.github.terra121.generator.cache.ChunkDataLoader;
 import io.github.terra121.generator.populate.IEarthPopulator;
@@ -37,6 +35,7 @@ import io.github.terra121.generator.populate.SnowPopulator;
 import io.github.terra121.generator.populate.TreePopulator;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
+import io.github.terra121.util.ImmutableBlockStateArray;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -62,12 +61,12 @@ import java.util.concurrent.TimeUnit;
 import static java.lang.Math.*;
 
 public class EarthGenerator extends BasicCubeGenerator {
-    public static final double WATEROFF_TRANSITION = -1.0d;
+    public static final int WATEROFF_TRANSITION = -1;
 
     static {
         ModContainer cubicchunks = Loader.instance().getIndexedModList().get(CubicChunks.MODID);
         String asyncVersion = "1.12.2-0.0.1175.0"; //the version at which async terrain gen was added
-        if (asyncVersion.compareTo(cubicchunks.getVersion()) <= 0) {
+        if (cubicchunks != null && asyncVersion.compareTo(cubicchunks.getVersion()) <= 0) {
             //async terrain is supported on this version! register async generation callbacks
             CubeGeneratorsRegistry.registerColumnAsyncLoadingCallback((world, data) -> asyncCallback(world, data.getPos()));
             CubeGeneratorsRegistry.registerCubeAsyncLoadingCallback((world, data) -> asyncCallback(world, data.getPos().chunkPos()));
@@ -212,10 +211,18 @@ public class EarthGenerator extends BasicCubeGenerator {
         //generate structures
         this.structureGenerators.forEach(gen -> gen.generate(this.world, primer, new CubePos(cubeX, cubeY, cubeZ)));
 
-        if (data.intersectsSurface(cubeY)) { //render complex geometry onto cube surface
-            //segments (roads, building outlines, streams, etc.)
-            for (OSMSegment s : data.segments()) {
-                s.type.fillType().fill(data, primer, s, cubeX, cubeY, cubeZ);
+        if (data.intersectsSurface(cubeY)) { //render surface blocks onto cube surface
+            ImmutableBlockStateArray surfaceBlocks = data.surfaceBlocks();
+            int[] heights = data.heights();
+            for (int x = 0; x < 16; x++) {
+                for (int z = 0; z < 16; z++) {
+                    int y = heights[x * 16 + z] - Coords.cubeToMinBlock(cubeY);
+                    IBlockState state;
+                    if ((y & 0xF) == y //don't set surface blocks outside of this cube
+                        && (state = surfaceBlocks.get(x * 16 + z)) != null) {
+                        primer.setBlockState(x, y, z, state);
+                    }
+                }
             }
         }
     }
@@ -244,17 +251,17 @@ public class EarthGenerator extends BasicCubeGenerator {
                 }
             }
         } else {
-            double[] heights = data.heights();
+            int[] heights = data.heights();
 
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
-                    double waterSurfaceHeight = max(heights[x * 16 + z] + WATEROFF_TRANSITION, 0.0d);
-                    double height = data.heightWithWater(x, z);
+                    int waterSurfaceHeight = max(heights[x * 16 + z] + WATEROFF_TRANSITION, 0);
+                    int height = data.heightWithWater(x, z);
                     double dx = x == 15 ? height - data.heightWithWater(x - 1, z) : data.heightWithWater(x + 1, z) - height;
                     double dz = z == 15 ? height - data.heightWithWater(x, z - 1) : data.heightWithWater(x, z + 1) - height;
 
-                    int solidTop = min((int) ceil(height) - Coords.cubeToMinBlock(cubeY), 16);
-                    int waterTop = min((int) ceil(waterSurfaceHeight) - Coords.cubeToMinBlock(cubeY), 16);
+                    int solidTop = min(height - Coords.cubeToMinBlock(cubeY), 16);
+                    int waterTop = min(waterSurfaceHeight - Coords.cubeToMinBlock(cubeY), 16);
 
                     //if we're currently in the actual body of water, offset density by 1 to prevent underwater grass
                     double densityOffset = height < waterSurfaceHeight ? 1.0d : 0.0d;

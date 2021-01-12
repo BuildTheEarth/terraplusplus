@@ -1,7 +1,7 @@
 package io.github.terra121.dataset.geojson.object;
 
 import com.google.common.collect.Iterators;
-import io.github.terra121.dataset.geojson.Geometry;
+import io.github.terra121.dataset.geojson.GeoJSONObject;
 import lombok.Data;
 import lombok.NonNull;
 
@@ -11,7 +11,7 @@ import java.util.Iterator;
  * @author DaPorkchop_
  */
 @Data
-public final class FeatureCollection implements Geometry, Iterable<Feature> {
+public final class FeatureCollection implements GeoJSONObject, Iterable<Feature> {
     @NonNull
     protected final Feature[] features;
 

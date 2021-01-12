@@ -25,10 +25,10 @@ public class OSMTest {
     public static void main(String... args) throws OutOfProjectionBoundsException, IOException {
         Bootstrap.register();
 
-        OSMMapper config;
+        /*OSMMapper config;
         try (InputStream in = OSMTest.class.getResourceAsStream("/default_config/osm.json5")) {
             config = OSMMapper.load(in);
-        }
+        }*/
 
         GeographicProjection projection = new EarthGeneratorSettings("").getProjection();
         Bounds2d bounds2d = Bounds2d.of(8.57707d, 8.57707d, 47.21767d, 47.21767d).expand(0.001d);

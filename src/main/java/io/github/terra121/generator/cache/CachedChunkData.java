@@ -1,19 +1,18 @@
 package io.github.terra121.generator.cache;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.terra121.dataset.osm.Element;
-import io.github.terra121.dataset.osm.segment.OSMSegment;
 import io.github.terra121.generator.EarthGenerator;
-import io.github.terra121.util.EqualsTieBreakComparator;
+import io.github.terra121.util.ImmutableBlockStateArray;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import net.daporkchop.lib.common.ref.Ref;
+import net.daporkchop.lib.common.ref.ThreadRef;
+import net.minecraft.block.state.IBlockState;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.Set;
 import java.util.TreeSet;
 
 /**
@@ -23,22 +22,24 @@ import java.util.TreeSet;
  */
 @Getter
 public class CachedChunkData {
-    public static final double BLANK_HEIGHT = -2.0d;
+    private static final Ref<Builder> BUILDER_CACHE = ThreadRef.soft(Builder::new);
+
+    public static final int BLANK_HEIGHT = -2;
 
     public static final CachedChunkData BLANK;
     public static final CachedChunkData NULL_ISLAND;
 
     static {
-        double[] defaultWateroffs = new double[16 * 16];
-        Arrays.fill(defaultWateroffs, EarthGenerator.WATEROFF_TRANSITION);
+        Builder builder = builder();
 
-        double[] defaultHeights = new double[16 * 16];
-        Arrays.fill(defaultHeights, BLANK_HEIGHT);
-        BLANK = new CachedChunkData(defaultHeights, defaultWateroffs, Collections.emptySet(), 0.0d);
+        BLANK = builder.build();
 
-        defaultHeights = new double[16 * 16];
-        Arrays.fill(defaultHeights, 1.0d);
-        NULL_ISLAND = new CachedChunkData(defaultHeights, defaultWateroffs, Collections.emptySet(), 0.0d);
+        Arrays.fill(builder.heights(), 1);
+        NULL_ISLAND = builder.build();
+    }
+
+    public static Builder builder() {
+        return BUILDER_CACHE.get().reset();
     }
 
     /**
@@ -58,31 +59,33 @@ public class CachedChunkData {
         return out;
     }
 
-    public final double[] heights;
-    public final double[] wateroffs;
+    public final int[] heights;
+    public final int[] wateroffs;
 
-    private final Element.Cube[] segments;
+    private final ImmutableBlockStateArray surfaceBlocks;
 
     private final int surfaceMinCube;
     private final int surfaceMaxCube;
 
     private final double treeCover;
 
-    public CachedChunkData(@NonNull double[] heights, @NonNull double[] wateroffs, @NonNull Collection<Element.Cube> elements, double treeCover) {
+    private CachedChunkData(@NonNull int[] heights, @NonNull int[] wateroffs, @NonNull ImmutableBlockStateArray surfaceBlocks, double treeCover) {
         this.heights = heights;
         this.wateroffs = wateroffs;
         this.treeCover = treeCover;
 
-        this.segments = approximateSort(elements, new EqualsTieBreakComparator<Element.Cube>(Comparator.naturalOrder(), true, true)).toArray(new Element.Cube[0]);
+        this.surfaceBlocks = surfaceBlocks;
 
-        double min = Double.POSITIVE_INFINITY;
-        double max = Double.NEGATIVE_INFINITY;
+        //this.segments = approximateSort(elements, new EqualsTieBreakComparator<Element.Cube>(Comparator.naturalOrder(), true, true)).toArray(new Element.Cube[0]);
+
+        int min = Integer.MAX_VALUE;
+        int max = Integer.MIN_VALUE;
         for (int i = 0; i < 16 * 16; i++) {
             min = Math.min(min, heights[i]);
             max = Math.max(max, heights[i]);
         }
         this.surfaceMinCube = Coords.blockToCube(min);
-        this.surfaceMaxCube = Coords.blockToCube(Math.ceil(max));
+        this.surfaceMaxCube = Coords.blockToCube(max + 1);
     }
 
     public boolean intersectsSurface(int cubeY) {
@@ -97,13 +100,47 @@ public class CachedChunkData {
         return cubeY < this.surfaceMinCube;
     }
 
-    public double heightWithWater(int x, int z) {
+    public int heightWithWater(int x, int z) {
         int i = x * 16 + z;
-        double height = this.heights[i];
-        double wateroff = this.wateroffs[i];
+        int height = this.heights[i];
+        int wateroff = this.wateroffs[i];
         if (wateroff >= EarthGenerator.WATEROFF_TRANSITION) {
             height = height - wateroff + EarthGenerator.WATEROFF_TRANSITION;
         }
         return height;
+    }
+
+    /**
+     * Builder class for {@link CachedChunkData}.
+     *
+     * @author DaPorkchop_
+     */
+    @Getter
+    @Setter
+    public static final class Builder {
+        protected final int[] heights = new int[16 * 16];
+        protected final int[] wateroffs = new int[16 * 16];
+        protected final IBlockState[] surfaceBlocks = new IBlockState[16 * 16];
+        protected double treeCover = 0.0d;
+
+        /**
+         * @deprecated use {@link #builder()} unless you have a specific reason to invoke this constructor directly
+         */
+        @Deprecated
+        public Builder() {
+            this.reset();
+        }
+
+        public Builder reset() {
+            Arrays.fill(this.heights, BLANK_HEIGHT);
+            Arrays.fill(this.wateroffs, EarthGenerator.WATEROFF_TRANSITION);
+            Arrays.fill(this.surfaceBlocks, null);
+            this.treeCover = 0.0d;
+            return this;
+        }
+
+        public CachedChunkData build() {
+            return new CachedChunkData(this.heights.clone(), this.wateroffs.clone(), new ImmutableBlockStateArray(this.surfaceBlocks), this.treeCover);
+        }
     }
 }
