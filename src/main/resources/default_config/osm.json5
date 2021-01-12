@@ -8,7 +8,7 @@
     "line": {
         "first": {
             //TODO: remove this
-            "condition": {
+            /*"condition": {
                 "match": {
                     "tag": {
                         "highway": null
@@ -20,19 +20,7 @@
                             "water": {}
                         },
                         "radius": {
-                            "+": {
-                                "floor_div": {
-                                    "*": {
-                                        "tag": {
-                                            "key": "lanes",
-                                            "fallback": 2
-                                        },
-                                        "constant": 3
-                                    },
-                                    "constant": 2
-                                },
-                                "constant": 2
-                            }
+                            "constant": 4
                         },
                         "layer": {
                             "tag": {
@@ -42,7 +30,7 @@
                         }
                     }
                 }
-            },
+            },*/
             //tunnels shouldn't be generated, ever
             "condition": {
                 "match": {
@@ -416,44 +404,43 @@
                         }
                     }
                 }
-            }
-            /*,
-                        "condition": {
-                            "match": {
-                                "or": {
-                                    "tag": {
-                                        //matches anything tagged as "water"
-                                        "water": null
-                                    },
-                                    "tag": {
-                                        //matches anything tagged as "natural=water"
-                                        "natural": "water"
-                                    },
-                                    "tag": {
-                                        //matches anything tagged as "waterway=riverbank"
-                                        "waterway": "riverbank"
-                                    }
-                                }
-                            },
-                            "emit": {
-                                "rasterize": {
-                                    "distance": "water_depth"
-                                }
-                            }
+            },
+            /*"condition": {
+                "match": {
+                    "or": {
+                        "tag": {
+                            //matches anything tagged as "water"
+                            "water": null
                         },
-                        "condition": {
-                            "match": {
-                                "tag": {
-                                    //matches anything tagged as "natural=coastline"
-                                    "natural": "coastline"
-                                }
-                            },
-                            "emit": {
-                                "rasterize": {
-                                    "fill": "ocean"
-                                }
-                            }
-                        }*/
+                        "tag": {
+                            //matches anything tagged as "natural=water"
+                            "natural": "water"
+                        },
+                        "tag": {
+                            //matches anything tagged as "waterway=riverbank"
+                            "waterway": "riverbank"
+                        }
+                    }
+                },
+                "emit": {
+                    "rasterize": {
+                        "distance": "water_depth"
+                    }
+                }
+            },*/
+            /*"condition": {
+                "match": {
+                    "tag": {
+                        //matches anything tagged as "natural=coastline"
+                        "natural": "coastline"
+                    }
+                },
+                "emit": {
+                    "rasterize": {
+                        "fill": "ocean"
+                    }
+                }
+            }*/
         }
     }
 }

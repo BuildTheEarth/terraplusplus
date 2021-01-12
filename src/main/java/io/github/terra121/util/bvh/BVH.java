@@ -1,5 +1,6 @@
 package io.github.terra121.util.bvh;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -17,7 +18,8 @@ import static java.lang.Math.*;
  * @author DaPorkchop_
  */
 //this could probably be made even faster by using an STR/OTR-based R-tree, but it's already quite fast
-public class BVH<V extends Bounds2d> {
+@Getter
+public class BVH<V extends Bounds2d> implements Bounds2d {
     /**
      * The number of values that must be present in a node in order for it to become eligible for splitting.
      */
@@ -33,9 +35,14 @@ public class BVH<V extends Bounds2d> {
         return (Node<V>[]) new Node[length];
     }
 
+    @Getter(AccessLevel.NONE)
     protected final Node<V> root;
-    @Getter
     protected final int size;
+
+    protected final double minX;
+    protected final double maxX;
+    protected final double minZ;
+    protected final double maxZ;
 
     public BVH(@NonNull Iterable<V> values) {
         double minX = Double.POSITIVE_INFINITY;
@@ -51,6 +58,11 @@ public class BVH<V extends Bounds2d> {
             maxZ = max(maxZ, value.maxZ());
             size++;
         }
+
+        this.minX = minX;
+        this.maxX = maxX;
+        this.minZ = minZ;
+        this.maxZ = maxZ;
 
         if ((this.size = size) == 0) {
             this.root = null;

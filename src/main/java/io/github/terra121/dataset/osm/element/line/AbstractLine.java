@@ -38,4 +38,24 @@ public abstract class AbstractLine implements Element {
         }
         this.segments = new BVH<>(segments);
     }
+
+    @Override
+    public double minX() {
+        return this.segments.minX();
+    }
+
+    @Override
+    public double maxX() {
+        return this.segments.maxX();
+    }
+
+    @Override
+    public double minZ() {
+        return this.segments.minZ();
+    }
+
+    @Override
+    public double maxZ() {
+        return this.segments.maxZ();
+    }
 }

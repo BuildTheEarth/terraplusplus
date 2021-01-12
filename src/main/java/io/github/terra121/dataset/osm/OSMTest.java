@@ -34,7 +34,7 @@ public class OSMTest {
         Bounds2d bounds2d = Bounds2d.of(8.57707d, 8.57707d, 47.21767d, 47.21767d).expand(0.001d);
         Bounds2d intersectionBounds = bounds2d.toCornerBB(projection, true).fromGeo().axisAlign();
 
-        new OpenStreetMap(projection, true, true, true)
+        /*new OpenStreetMap(projection)
                 .getRegionsAsync(bounds2d.toCornerBB(projection, true))
                 .thenAccept((IOConsumer<OSMRegion[]>) regions -> {
                     try (PAppendable out = new UTF8FileWriter(PFiles.ensureFileExists(new File("/home/daporkchop/Desktop/tpp.json")))) {
@@ -52,6 +52,6 @@ public class OSMTest {
                         out.appendLn("]}");
                     }
                 })
-                .join();
+                .join();*/
     }
 }

@@ -45,6 +45,8 @@ public class GenTest {
                     double maxH = Arrays.stream(data[0]).max().getAsDouble();
                     double minW = Arrays.stream(data[1]).min().getAsDouble();
                     double maxW = Arrays.stream(data[1]).max().getAsDouble();
+                    double minB = Arrays.stream(data[2]).min().getAsDouble();
+                    double maxB = Arrays.stream(data[2]).max().getAsDouble();
 
                     System.out.println(minW + " " + maxW);
 
@@ -52,8 +54,9 @@ public class GenTest {
                         for (int z = 0; z < SIZE; z++) {
                             int h = clamp(floorI((data[0][x * SIZE + z] - minH) * 255.0d / (maxH - minH)), 0, 255);
                             int w = clamp(floorI((data[1][x * SIZE + z] - minW) * 255.0d / (maxW - minW)), 0, 255);
+                            int b = clamp(floorI((data[2][x * SIZE + z] - minB) * 255.0d / (maxB - minB)), 0, 255);
 
-                            img.setRGB(x, z, 0xFF000000 | h << 16 | w);
+                            img.setRGB(x, z, 0xFF000000 | h << 16 | w | b << 8);
                         }
                     }
                     return img;
@@ -62,7 +65,7 @@ public class GenTest {
     }
 
     static CompletableFuture<double[][]> tile(int tileX, int tileZ, int level) {
-        double[][] dst = new double[2][SIZE * SIZE];
+        double[][] dst = new double[3][SIZE * SIZE];
         CompletableFuture[] futures;
         if (level == 0) {
             futures = new CompletableFuture[CHUNKS * CHUNKS];
@@ -77,6 +80,7 @@ public class GenTest {
                                         int j = (offX + x) * SIZE + offZ + z;
                                         dst[0][j] = data.heights[x * 16 + z];
                                         dst[1][j] = data.wateroffs[x * 16 + z];
+                                        dst[2][j] = data.surfaceBlocks().get(x * 16 + z) == null ? 0.0d : 1.0d;
                                     }
                                 }
                             });

@@ -23,7 +23,7 @@ public class GeneratorDatasets {
     public GeneratorDatasets(@NonNull GeographicProjection projection,  @NonNull EarthGeneratorSettings cfg, boolean features) {
         this.projection = projection;
 
-        this.osm = new OpenStreetMap(projection, features && cfg.settings.roads, cfg.settings.osmwater, features && cfg.settings.buildings);
+        this.osm = new OpenStreetMap(projection);
         this.heights = Heights.constructDataset(cfg.settings.smoothblend ? BlendMode.SMOOTH : BlendMode.LINEAR);
         this.trees = new Trees();
     }

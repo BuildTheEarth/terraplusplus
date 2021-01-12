@@ -4,19 +4,23 @@ import com.google.common.cache.CacheLoader;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.terra121.TerraMod;
 import io.github.terra121.dataset.osm.OSMRegion;
+import io.github.terra121.dataset.osm.element.Element;
 import io.github.terra121.dataset.osm.poly.OSMPolygon;
 import io.github.terra121.dataset.osm.segment.OSMSegment;
 import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.generator.GeneratorDatasets;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
+import io.github.terra121.util.EqualsTieBreakComparator;
 import io.github.terra121.util.bvh.Bounds2d;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.util.math.ChunkPos;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Math.*;
@@ -84,13 +88,12 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
                         applyHeights(builder, heights);
 
                         //find all segments and polygons that intersect the chunk
-                        Set<OSMSegment> segments = new HashSet<>();
+                        Set<Element> elements = new TreeSet<>(new EqualsTieBreakComparator<Element>(Comparator.naturalOrder(), true, true));
                         for (OSMRegion region : osmRegions) {
-                            region.segments.forEachIntersecting(osmBounds, segments::add);
-
-                            //render polygons to create water offsets
-                            region.polygons.forEachIntersecting(osmBounds, polygon -> renderPolygon(baseX, baseZ, builder.wateroffs(), polygon));
+                            region.elements.forEachIntersecting(chunkBounds, elements::add);
                         }
+
+                        elements.forEach(element -> element.apply(builder, pos.x, pos.z, chunkBounds));
 
                         return builder.build();
                     });

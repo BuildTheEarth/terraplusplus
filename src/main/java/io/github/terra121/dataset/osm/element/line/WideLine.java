@@ -50,10 +50,30 @@ public final class WideLine extends AbstractLine {
                     double dz = MathUtil.lerp(r, lat0, lat1) - z;
                     double dSq = dx * dx + dz * dz;
                     if (dSq < radiusSq) {
-                        this.draw.drawOnto(builder, x, z, -floorI(sqrt(dSq)));
+                        this.draw.drawOnto(builder, x, z, floorI(radius - sqrt(dSq)));
                     }
                 }
             }
         });
+    }
+
+    @Override
+    public double minX() {
+        return super.minX() - this.radius;
+    }
+
+    @Override
+    public double maxX() {
+        return super.maxX() + this.radius;
+    }
+
+    @Override
+    public double minZ() {
+        return super.minZ() - this.radius;
+    }
+
+    @Override
+    public double maxZ() {
+        return super.maxZ() + this.radius;
     }
 }

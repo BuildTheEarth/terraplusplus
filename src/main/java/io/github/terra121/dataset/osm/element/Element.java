@@ -9,13 +9,14 @@ import lombok.NonNull;
  *
  * @author DaPorkchop_
  */
-public interface Element extends Comparable<Element> {
+public interface Element extends Comparable<Element>, Bounds2d {
     /**
      * Modifies the given {@link CachedChunkData.Builder} for the given chunk
-     *  @param builder      the {@link CachedChunkData.Builder}
-     * @param chunkX       the chunk's X coordinate
-     * @param chunkZ       the chunk's Z coordinate
-     * @param bounds       the chunk's bounding box
+     *
+     * @param builder the {@link CachedChunkData.Builder}
+     * @param chunkX  the chunk's X coordinate
+     * @param chunkZ  the chunk's Z coordinate
+     * @param bounds  the chunk's bounding box
      */
     void apply(@NonNull CachedChunkData.Builder builder, int chunkX, int chunkZ, @NonNull Bounds2d bounds);
 
