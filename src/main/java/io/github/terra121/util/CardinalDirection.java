@@ -1,4 +1,5 @@
 package io.github.terra121.util;
+
 public enum CardinalDirection {
 	N (337.5, 22.5, "North", "terra121.cardinal_directions.north"),
 	S (157.5, 202.5, "South", "terra121.cardinal_directions.south"),
@@ -9,10 +10,15 @@ public enum CardinalDirection {
 	SE (112.5, 157.5, "Southeast", "terra121.cardinal_directions.southeast"),
 	NE (22.5, 67.5, "Northeast", "terra121.cardinal_directions.northeast"),
 	UNKNOWN (360.5, 10000000.0, "Unknown", "terra121.cardinal_directions.north");
+	
 	private final double min;
+	
 	private final double max;
+	
 	private final String realName;
+	
 	private final String translationKey;
+	
 	private CardinalDirection(double min, double max, String realName, String translationKey) {
 		this.min = min;
 		this.max = max;
@@ -45,11 +51,14 @@ public enum CardinalDirection {
 	public static CardinalDirection azimuthToFacing(float azimuth) {
 		for (CardinalDirection facingToBeTestedFor : CardinalDirection.values()) {
 			if (facingToBeTestedFor == CardinalDirection.N) {
+				
 				if (azimuth >= facingToBeTestedFor.getMin() && azimuth <= 360) {
 					return facingToBeTestedFor;
+					
 				} else if (azimuth >= 0 && azimuth <= facingToBeTestedFor.getMax()) {
 					return facingToBeTestedFor;
 				}
+				
 			} else if (azimuth >= facingToBeTestedFor.getMin() && azimuth <= facingToBeTestedFor.getMax()) {
 				return facingToBeTestedFor;
 			}
