@@ -25,18 +25,23 @@ public enum CardinalDirection {
 		this.realName = realName;
 		this.translationKey = translationKey;
 	}
+	
 	public double getMin() {
 		return min;
 	}
+	
 	public double getMax() {
 		return max;
 	}
+	
 	public String getRealName() {
 		return realName;
 	}
+	
 	public String getTranslationKey() {
 		return translationKey;
 	}
+	
 	/**
 	 * @param azimuth - an azimuth
 	 * @return true if the given azimuth faces this cardinal direction
@@ -44,6 +49,7 @@ public enum CardinalDirection {
 	public boolean matches(float azimuth) {
 		return azimuthToFacing(azimuth) == this;
 	}
+	
 	/**
 	 * @param azimuth - an azimuth
 	 * @return the CardinalDirection the given azimuth faces
