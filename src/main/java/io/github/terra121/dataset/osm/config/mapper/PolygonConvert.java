@@ -6,7 +6,7 @@ import io.github.terra121.dataset.geojson.geometry.LineString;
 import io.github.terra121.dataset.geojson.geometry.MultiLineString;
 import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
 import io.github.terra121.dataset.geojson.geometry.Polygon;
-import io.github.terra121.dataset.osm.Generatable;
+import io.github.terra121.dataset.osm.Element;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.NonNull;
@@ -53,7 +53,7 @@ interface PolygonConvert extends PolygonMapper {
         protected final LineMapper next;
 
         @Override
-        public Collection<Generatable> apply(String id, @NonNull Map<String, String> tags, @NonNull MultiPolygon geometry) {
+        public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull MultiPolygon geometry) {
             //convert multipolygon to multilinestring
             List<LineString> lines = new ArrayList<>();
             for (Polygon polygon : geometry.polygons()) {

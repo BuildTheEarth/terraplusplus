@@ -4,7 +4,7 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import io.github.terra121.dataset.geojson.geometry.MultiLineString;
-import io.github.terra121.dataset.osm.Generatable;
+import io.github.terra121.dataset.osm.Element;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import io.github.terra121.dataset.osm.config.dvalue.DValue;
 import lombok.Builder;
@@ -30,7 +30,7 @@ final class LineWide implements LineMapper {
     protected final boolean crossWater;
 
     @Override
-    public Collection<Generatable> apply(String id, @NonNull Map<String, String> tags, @NonNull MultiLineString geometry) {
+    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull MultiLineString geometry) {
         return null; //TODO
     }
 

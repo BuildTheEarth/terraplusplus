@@ -1,12 +1,13 @@
 package io.github.terra121.generator.cache;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.terra121.dataset.osm.poly.OSMPolygon;
+import io.github.terra121.dataset.osm.Element;
 import io.github.terra121.dataset.osm.segment.OSMSegment;
 import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.util.EqualsTieBreakComparator;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,8 +15,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeSet;
-
-import static io.github.terra121.generator.EarthGenerator.*;
 
 /**
  * A collection of data cached per-column by {@link EarthGenerator}.
@@ -62,19 +61,19 @@ public class CachedChunkData {
     public final double[] heights;
     public final double[] wateroffs;
 
-    private final OSMSegment[] segments;
+    private final Element.Cube[] segments;
 
     private final int surfaceMinCube;
     private final int surfaceMaxCube;
 
     private final double treeCover;
 
-    public CachedChunkData(@NonNull double[] heights, @NonNull double[] wateroffs, Set<OSMSegment> segments, double treeCover) {
+    public CachedChunkData(@NonNull double[] heights, @NonNull double[] wateroffs, @NonNull Collection<Element.Cube> elements, double treeCover) {
         this.heights = heights;
         this.wateroffs = wateroffs;
         this.treeCover = treeCover;
 
-        this.segments = approximateSort(segments, new EqualsTieBreakComparator<OSMSegment>(Comparator.naturalOrder(), true, true)).toArray(new OSMSegment[0]);
+        this.segments = approximateSort(elements, new EqualsTieBreakComparator<Element.Cube>(Comparator.naturalOrder(), true, true)).toArray(new Element.Cube[0]);
 
         double min = Double.POSITIVE_INFINITY;
         double max = Double.NEGATIVE_INFINITY;

@@ -5,19 +5,15 @@ import com.google.gson.stream.JsonReader;
 import io.github.terra121.dataset.geojson.Geometry;
 import io.github.terra121.dataset.geojson.geometry.MultiLineString;
 import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
-import io.github.terra121.dataset.osm.Generatable;
+import io.github.terra121.dataset.osm.Element;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import io.github.terra121.dataset.osm.config.OSMMapper;
 import lombok.NonNull;
-import net.daporkchop.lib.common.util.GenericMatcher;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-
-import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * Returns a non-null, empty list.
@@ -26,7 +22,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 abstract class Nothing<G extends Geometry, M extends OSMMapper<G>> implements OSMMapper<G> {
     @Override
-    public Collection<Generatable> apply(String id, @NonNull Map<String, String> tags, @NonNull G geometry) {
+    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull G geometry) {
         return Collections.emptyList();
     }
 

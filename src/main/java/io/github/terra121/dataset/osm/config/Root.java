@@ -10,7 +10,7 @@ import io.github.terra121.dataset.geojson.geometry.MultiPoint;
 import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
 import io.github.terra121.dataset.geojson.geometry.Point;
 import io.github.terra121.dataset.geojson.geometry.Polygon;
-import io.github.terra121.dataset.osm.Generatable;
+import io.github.terra121.dataset.osm.Element;
 import io.github.terra121.dataset.osm.config.mapper.LineMapper;
 import io.github.terra121.dataset.osm.config.mapper.PolygonMapper;
 import lombok.Builder;
@@ -39,7 +39,7 @@ final class Root implements OSMMapper<Geometry> {
     protected final PolygonMapper polygon;
 
     @Override
-    public Collection<Generatable> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry geometry) {
+    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry geometry) {
         if (geometry instanceof Point || geometry instanceof MultiPoint) { //points can't be generated
             return null;
         }

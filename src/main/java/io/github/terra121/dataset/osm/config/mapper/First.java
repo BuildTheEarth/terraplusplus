@@ -5,10 +5,9 @@ import com.google.gson.stream.JsonReader;
 import io.github.terra121.dataset.geojson.Geometry;
 import io.github.terra121.dataset.geojson.geometry.MultiLineString;
 import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
-import io.github.terra121.dataset.osm.Generatable;
+import io.github.terra121.dataset.osm.Element;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import io.github.terra121.dataset.osm.config.OSMMapper;
-import io.github.terra121.dataset.osm.config.match.MatchCondition;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import net.daporkchop.lib.common.util.GenericMatcher;
@@ -31,9 +30,9 @@ abstract class First<G extends Geometry, M extends OSMMapper<G>> implements OSMM
     protected final M[] children;
 
     @Override
-    public Collection<Generatable> apply(String id, @NonNull Map<String, String> tags, @NonNull G geometry) {
+    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull G geometry) {
         for (M child : this.children) {
-            Collection<Generatable> result = child.apply(id, tags, geometry);
+            Collection<Element> result = child.apply(id, tags, geometry);
             if (result != null) {
                 return result;
             }

@@ -319,8 +319,8 @@
                     }
                 },
                 "emit": {
-                    "distance": {
-                        "target": "water_depth"
+                    "rasterize": {
+                        "distance": "water_depth"
                     }
                 }
             },
@@ -332,8 +332,8 @@
                     }
                 },
                 "emit": {
-                    "fill": {
-                        "target": "ocean"
+                    "rasterize": {
+                        "fill": "ocean"
                     }
                 }
             }

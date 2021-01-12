@@ -5,7 +5,7 @@ import com.google.gson.stream.JsonReader;
 import io.github.terra121.dataset.geojson.Geometry;
 import io.github.terra121.dataset.geojson.geometry.MultiLineString;
 import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
-import io.github.terra121.dataset.osm.Generatable;
+import io.github.terra121.dataset.osm.Element;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import io.github.terra121.dataset.osm.config.OSMMapper;
 import lombok.AllArgsConstructor;
@@ -31,10 +31,10 @@ abstract class All<G extends Geometry, M extends OSMMapper<G>> implements OSMMap
     protected final M[] children;
 
     @Override
-    public Collection<Generatable> apply(String id, @NonNull Map<String, String> tags, @NonNull G geometry) {
-        List<Generatable> out = new ArrayList<>();
+    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull G geometry) {
+        List<Element> out = new ArrayList<>();
         for (M child : this.children) {
-            Collection<Generatable> result = child.apply(id, tags, geometry);
+            Collection<Element> result = child.apply(id, tags, geometry);
             if (result == null) { //don't bother processing further children
                 return null;
             }

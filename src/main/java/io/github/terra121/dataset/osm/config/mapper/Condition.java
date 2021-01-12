@@ -6,7 +6,7 @@ import com.google.gson.stream.JsonToken;
 import io.github.terra121.dataset.geojson.Geometry;
 import io.github.terra121.dataset.geojson.geometry.MultiLineString;
 import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
-import io.github.terra121.dataset.osm.Generatable;
+import io.github.terra121.dataset.osm.Element;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import io.github.terra121.dataset.osm.config.OSMMapper;
 import io.github.terra121.dataset.osm.config.match.MatchCondition;
@@ -33,7 +33,7 @@ abstract class Condition<G extends Geometry, M extends OSMMapper<G>> implements 
     protected final M emit;
 
     @Override
-    public Collection<Generatable> apply(String id, @NonNull Map<String, String> tags, @NonNull G geometry) {
+    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull G geometry) {
         if (!this.match.test(id, tags)) { //element doesn't match, emit nothing
             return null;
         }
