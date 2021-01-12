@@ -74,11 +74,5 @@ public class TerraConfig {
                 "Default: 1440 minutes (1 day)"
         })
         public int cacheTTL = 1440;
-
-        @Comment({
-                "Allows you to configure custom datasets for elevation data.",
-                "When enabled, the custom dataset configuration is stored in <minecraft_root>/terraplusplus/config/heights_config.json"
-        })
-        public boolean customHeights = false;
     }
 }
