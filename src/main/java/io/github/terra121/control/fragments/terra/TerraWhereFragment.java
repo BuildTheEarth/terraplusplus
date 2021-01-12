@@ -8,7 +8,6 @@ import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
-import io.github.terra121.util.AzimuthUtils;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
@@ -67,15 +66,19 @@ public class TerraWhereFragment extends CommandFragment {
             azimuth = projection.azimuth(pos.x, pos.z, yaw);
         } catch (OutOfProjectionBoundsException e1) { //out of bounds, set to null to print error
             result = null;
-            azimuth = (Float) null;
+            azimuth = Float.NaN;
         }
         sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Location of ", TextFormatting.BLUE, senderName));
         if (result == null || Double.isNaN(result[0])) {
             sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.fragment.terra.where.notproj")));
             return;
         }
+        if (!Float.isFinite(azimuth)) {
+            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.fragment.terra.where.notproj")));
+            return;
+        }
         sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY, "Location: ", TextFormatting.BLUE, result[1],
-                TextFormatting.GRAY, ", ", TextFormatting.BLUE, result[0], TextFormatting.GRAY, " Facing: ", TextFormatting.BLUE, AzimuthUtils.azimuthToFacing(azimuth), TextFormatting.GRAY, " (", TextFormatting.BLUE, azimuth, TextFormatting.GRAY, ")"));
+                TextFormatting.GRAY, ", ", TextFormatting.BLUE, result[0], TextFormatting.GRAY, " Facing: ", TextFormatting.BLUE, GeographicProjection.azimuthToFacing(azimuth), TextFormatting.GRAY, " (", TextFormatting.BLUE, azimuth, TextFormatting.GRAY, ")"));
     }
 
     @Override

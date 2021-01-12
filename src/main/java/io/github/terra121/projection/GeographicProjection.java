@@ -277,4 +277,37 @@ public abstract class GeographicProjection {
 	public enum Orientation {
 		none, upright, swapped
 	}
+	public enum Facing {
+		North, South, East, West, Northwest, Southwest, Southeast, Northeast, Unknown
+    }
+	public static Facing azimuthToFacing(float azimuth) {
+		if (azimuth > 270 && azimuth < 360) {
+			return Facing.Northwest;
+		}
+		else if (azimuth > 180 && azimuth < 270) {
+			return Facing.Southwest;
+		}
+		else if (azimuth > 90 && azimuth < 180) {
+			return Facing.Southeast;
+		}
+		else if (azimuth > 0 && azimuth < 90) {
+			return Facing.Northeast;
+		}
+		else if (azimuth == 0) {
+			return Facing.North;
+		}
+		else if (azimuth == 270) {
+			return Facing.West;
+		}
+		else if (azimuth == 180) {
+			return Facing.South;
+		}
+		else if (azimuth == 90) {
+			return Facing.East;
+		}
+		else {
+			return Facing.Unknown;
+		}
+	}
+	
 }
