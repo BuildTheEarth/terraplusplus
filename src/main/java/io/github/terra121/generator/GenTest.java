@@ -3,6 +3,8 @@ package io.github.terra121.generator;
 import io.github.terra121.generator.cache.ChunkDataLoader;
 import io.github.terra121.util.http.Http;
 import net.daporkchop.lib.common.util.PorkUtil;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.util.math.ChunkPos;
 
@@ -15,8 +17,8 @@ import static net.daporkchop.lib.common.math.PMath.*;
 //TODO: delete this before merge
 public class GenTest {
     static final int SIZE = 1024;
-    static final int BASE_CHUNK_X = (857742 >> 4);
-    static final int BASE_CHUNK_Z = (4721747 >> 4) - 16;
+    static final int BASE_CHUNK_X = (857742 >> 4) - 8;
+    static final int BASE_CHUNK_Z = (4721747 >> 4) - 4;
     static final int SCALE = 0;
 
     static final int CHUNKS = SIZE >> 4;
@@ -80,7 +82,8 @@ public class GenTest {
                                         int j = (offX + x) * SIZE + offZ + z;
                                         dst[0][j] = data.heights[x * 16 + z];
                                         dst[1][j] = data.wateroffs[x * 16 + z];
-                                        dst[2][j] = data.surfaceBlocks().get(x * 16 + z) == null ? 0.0d : 1.0d;
+                                        IBlockState state = data.surfaceBlocks().get(x * 16 + z);
+                                        dst[2][j] = state == null ? 0.0d : state.getBlock() == Blocks.CONCRETE ? 1.0d : 2.0d;
                                     }
                                 }
                             });

@@ -88,7 +88,7 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
                         applyHeights(builder, heights);
 
                         //find all segments and polygons that intersect the chunk
-                        Set<Element> elements = new TreeSet<>(new EqualsTieBreakComparator<Element>(Comparator.naturalOrder(), true, true));
+                        Set<Element> elements = new TreeSet<>();
                         for (OSMRegion region : osmRegions) {
                             region.elements.forEachIntersecting(chunkBounds, elements::add);
                         }

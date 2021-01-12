@@ -1,6 +1,7 @@
 package io.github.terra121.dataset.osm.poly;
 
 import io.github.opencubicchunks.cubicchunks.api.util.MathUtil;
+import io.github.terra121.TerraConstants;
 import io.github.terra121.util.bvh.Bounds2d;
 import io.github.terra121.util.interval.IntervalTree;
 import lombok.Getter;
@@ -11,7 +12,6 @@ import net.minecraft.util.math.MathHelper;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -24,12 +24,6 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @Getter
 public class OSMPolygon implements Bounds2d, Comparable<OSMPolygon> {
-    protected static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
-
-    protected static Segment toSegment(@NonNull double[][] points, int i0, int i1) {
-        return new Segment(points[i0][0], points[i0][1], points[i1][0], points[i1][1]);
-    }
-
     public static void main(String... args) {
         while (true) {
             debugThing();
@@ -127,7 +121,7 @@ public class OSMPolygon implements Bounds2d, Comparable<OSMPolygon> {
             if ((segments.size() & 1) == 0) { //if there's an even count, this was successful
                 int size = segments.size();
                 if (size == 0) {
-                    return EMPTY_DOUBLE_ARRAY;
+                    return TerraConstants.EMPTY_DOUBLE_ARRAY;
                 } else {
                     double[] arr = new double[size];
 
@@ -147,7 +141,7 @@ public class OSMPolygon implements Bounds2d, Comparable<OSMPolygon> {
         } while (retries++ < 3);
 
         //retried multiple times with different offsets and it still failed, abort...
-        return EMPTY_DOUBLE_ARRAY;
+        return TerraConstants.EMPTY_DOUBLE_ARRAY;
     }
 
     public void rasterizeDistance(int baseX, int sizeX, int baseZ, int sizeZ, int maxDist, @NonNull DistRasterizationCallback callback) {

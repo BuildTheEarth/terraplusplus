@@ -18,8 +18,8 @@ import static net.daporkchop.lib.common.math.PMath.*;
 public final class WideLine extends AbstractLine {
     protected final double radius;
 
-    public WideLine(@NonNull MultiLineString lines, @NonNull DrawFunction draw, double layer, double radius) {
-        super(lines, draw, layer);
+    public WideLine(@NonNull String id, double layer, @NonNull DrawFunction draw, @NonNull MultiLineString lines, double radius) {
+        super(id, layer, draw, lines);
 
         this.radius = radius;
     }

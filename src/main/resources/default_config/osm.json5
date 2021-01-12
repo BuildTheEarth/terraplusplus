@@ -7,30 +7,6 @@
 {
     "line": {
         "first": {
-            //TODO: remove this
-            /*"condition": {
-                "match": {
-                    "tag": {
-                        "highway": null
-                    }
-                },
-                "emit": {
-                    "wide": {
-                        "draw": {
-                            "water": {}
-                        },
-                        "radius": {
-                            "constant": 4
-                        },
-                        "layer": {
-                            "tag": {
-                                "key": "layer",
-                                "fallback": 0
-                            }
-                        }
-                    }
-                }
-            },*/
             //tunnels shouldn't be generated, ever
             "condition": {
                 "match": {
@@ -322,15 +298,16 @@
             "condition": {
                 "match": {
                     "tag": {
-                        "natural": "stream"
+                        "waterway": "stream"
                     }
                 },
                 "emit": {
-                    "narrow": {
+                    "wide": {
                         "draw": {
-                            "block": {
-                                "id": "minecraft:water"
-                            }
+                            "water": {}
+                        },
+                        "radius": {
+                            "constant": 1.5
                         },
                         "layer": {
                             "tag": {
@@ -346,7 +323,7 @@
             "condition": {
                 "match": {
                     "tag": {
-                        "natural": [
+                        "waterway": [
                             "river",
                             "canal"
                         ]
@@ -355,9 +332,7 @@
                 "emit": {
                     "wide": {
                         "draw": {
-                            "block": {
-                                "id": "minecraft:water"
-                            }
+                            "water": {}
                         },
                         "radius": {
                             "constant": 5
@@ -405,7 +380,7 @@
                     }
                 }
             },
-            /*"condition": {
+            "condition": {
                 "match": {
                     "or": {
                         "tag": {
@@ -423,12 +398,21 @@
                     }
                 },
                 "emit": {
-                    "rasterize": {
-                        "distance": "water_depth"
+                    "distance": {
+                        "draw": {
+                            "water": {}
+                        },
+                        "layer": {
+                            "tag": {
+                                "key": "layer",
+                                "fallback": 0
+                            }
+                        },
+                        "maxDist": 6
                     }
                 }
-            },*/
-            /*"condition": {
+            }/*,
+            "condition": {
                 "match": {
                     "tag": {
                         //matches anything tagged as "natural=coastline"

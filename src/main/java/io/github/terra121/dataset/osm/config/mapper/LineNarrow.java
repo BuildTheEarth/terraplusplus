@@ -8,12 +8,13 @@ import io.github.terra121.dataset.osm.config.dvalue.DValue;
 import io.github.terra121.dataset.osm.draw.DrawFunction;
 import io.github.terra121.dataset.osm.element.Element;
 import io.github.terra121.dataset.osm.config.JsonParser;
+import io.github.terra121.dataset.osm.element.line.NarrowLine;
 import lombok.Builder;
 import lombok.NonNull;
-import net.minecraft.block.state.IBlockState;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import static io.github.terra121.TerraConstants.*;
@@ -32,7 +33,7 @@ final class LineNarrow implements LineMapper {
 
     @Override
     public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull MultiLineString geometry) {
-        return null; //TODO
+        return Collections.singletonList(new NarrowLine(id, this.layer.apply(tags), this.draw, geometry));
     }
 
     static final class Parser extends JsonParser<LineNarrow> {

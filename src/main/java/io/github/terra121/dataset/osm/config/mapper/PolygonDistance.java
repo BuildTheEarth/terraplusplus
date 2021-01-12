@@ -4,11 +4,13 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import io.github.terra121.dataset.geojson.geometry.MultiLineString;
+import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import io.github.terra121.dataset.osm.config.dvalue.DValue;
 import io.github.terra121.dataset.osm.draw.DrawFunction;
 import io.github.terra121.dataset.osm.element.Element;
-import io.github.terra121.dataset.osm.element.line.WideLine;
+import io.github.terra121.dataset.osm.element.line.NarrowLine;
+import io.github.terra121.dataset.osm.element.polygon.DistancePolygon;
 import lombok.Builder;
 import lombok.NonNull;
 
@@ -22,26 +24,25 @@ import static io.github.terra121.TerraConstants.*;
 /**
  * @author DaPorkchop_
  */
-@JsonAdapter(LineWide.Parser.class)
+@JsonAdapter(PolygonDistance.Parser.class)
 @Builder
-final class LineWide implements LineMapper {
+final class PolygonDistance implements PolygonMapper {
     @NonNull
     protected final DrawFunction draw;
     @NonNull
     protected final DValue layer;
-    @NonNull
-    protected final DValue radius;
-    protected final boolean crossWater;
+    @Builder.Default
+    protected final int maxDist = 2;
 
     @Override
-    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull MultiLineString geometry) {
-        return Collections.singleton(new WideLine(id, this.layer.apply(tags), this.draw, geometry, this.radius.apply(tags)));
+    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull MultiPolygon geometry) {
+        return Collections.singletonList(new DistancePolygon(id, this.layer.apply(tags), this.draw, geometry, this.maxDist));
     }
 
-    static final class Parser extends JsonParser<LineWide> {
+    static final class Parser extends JsonParser<PolygonDistance> {
         @Override
-        public LineWide read(JsonReader in) throws IOException {
-            LineWideBuilder builder = builder();
+        public PolygonDistance read(JsonReader in) throws IOException {
+            PolygonDistanceBuilder builder = builder();
 
             in.beginObject();
             while (in.peek() != JsonToken.END_OBJECT) {
@@ -57,13 +58,8 @@ final class LineWide implements LineMapper {
                         builder.layer(GSON.fromJson(in, DValue.class));
                         in.endObject();
                         break;
-                    case "radius":
-                        in.beginObject();
-                        builder.radius(GSON.fromJson(in, DValue.class));
-                        in.endObject();
-                        break;
-                    case "crossWater":
-                        builder.crossWater(in.nextBoolean());
+                    case "maxDist":
+                        builder.maxDist(in.nextInt());
                         break;
                     default:
                         throw new IllegalStateException("invalid property: " + name);

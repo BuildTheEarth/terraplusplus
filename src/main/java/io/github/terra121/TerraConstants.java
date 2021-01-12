@@ -28,4 +28,6 @@ public class TerraConstants {
      * Earth's circumference around the poles, in meters.
      */
     public static final double EARTH_POLAR_CIRCUMFERENCE = 40008000;
+
+    public static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
 }

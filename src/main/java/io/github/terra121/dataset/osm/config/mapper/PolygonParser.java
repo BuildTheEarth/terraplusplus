@@ -18,6 +18,8 @@ class PolygonParser extends JsonParser.Typed<PolygonMapper> {
         TYPES.put("convert", PolygonConvert.class);
         TYPES.put("first", First.Polygon.class);
         TYPES.put("nothing", Nothing.Polygon.class);
+
+        TYPES.put("distance", PolygonDistance.class);
     }
 
     public PolygonParser() {
