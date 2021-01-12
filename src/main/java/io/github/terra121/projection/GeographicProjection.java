@@ -278,23 +278,4 @@ public abstract class GeographicProjection {
 	public enum Orientation {
 		none, upright, swapped
 	}
-	public static boolean cardinalDirectionCheck(CardinalDirection direction, float azimuth) {
-		return azimuthToFacing(azimuth) == direction;
-		
-	}
-	public static CardinalDirection azimuthToFacing(float azimuth) {
-		for (CardinalDirection facingToBeTestedFor : CardinalDirection.values()) {
-			if (facingToBeTestedFor == CardinalDirection.N) {
-				if (azimuth >= facingToBeTestedFor.getMin() && azimuth <= 360) {
-					return facingToBeTestedFor;
-				} else if (azimuth >= 0 && azimuth <= facingToBeTestedFor.getMax()) {
-					return facingToBeTestedFor;
-				}
-			} else if (azimuth >= facingToBeTestedFor.getMin() && azimuth <= facingToBeTestedFor.getMax()) {
-				return facingToBeTestedFor;
-			}
-		}
-		return CardinalDirection.UNKNOWN;
-	}
-	
 }

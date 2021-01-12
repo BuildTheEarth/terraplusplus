@@ -6,6 +6,7 @@ import io.github.terra121.control.fragments.CommandFragment;
 import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
+import io.github.terra121.util.CardinalDirection;
 import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
@@ -78,7 +79,7 @@ public class TerraWhereFragment extends CommandFragment {
             return;
         }
         sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY, "Location: ", TextFormatting.BLUE, result[1],
-                TextFormatting.GRAY, ", ", TextFormatting.BLUE, result[0], TextFormatting.GRAY, " Facing: ", TextFormatting.BLUE, GeographicProjection.azimuthToFacing(azimuth).getRealName(), TextFormatting.GRAY, " (", TextFormatting.BLUE, azimuth, TextFormatting.GRAY, ")"));
+                TextFormatting.GRAY, ", ", TextFormatting.BLUE, result[0], TextFormatting.GRAY, " Facing: ", TextFormatting.BLUE, CardinalDirection.azimuthToFacing(azimuth).getRealName(), TextFormatting.GRAY, " (", TextFormatting.BLUE, azimuth, TextFormatting.GRAY, ")"));
     }
 
     @Override
