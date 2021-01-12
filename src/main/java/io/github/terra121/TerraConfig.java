@@ -74,5 +74,11 @@ public class TerraConfig {
                 "Default: 1440 minutes (1 day)"
         })
         public int cacheTTL = 1440;
+
+        @Comment({
+                "Allows you to override the default elevation datasets.",
+                "The default elevation datasets are configured in <minecraft_root>/terraplusplus/config/heights/default.json5"
+        })
+        public boolean overrideDefaultElevation = false;
     }
 }
