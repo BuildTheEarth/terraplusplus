@@ -178,7 +178,7 @@ public class Http {
                                 break;
                             }
                         default: //failure
-                            future.completeExceptionally(new IOException("response from server: " + response.status()));
+                            future.completeExceptionally(new IOException("response from server: " + response.status() + " for url " + this.parsed));
                             return;
                     }
 
