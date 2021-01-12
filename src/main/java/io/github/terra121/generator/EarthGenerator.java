@@ -15,6 +15,7 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopula
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.structure.ICubicStructureGenerator;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.structure.event.InitCubicStructureGeneratorEvent;
+import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.cubicgen.BasicCubeGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.BiomeBlockReplacerConfig;
 import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.CubicBiome;
@@ -45,6 +46,8 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.InitMapGenEvent;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.ArrayList;
@@ -62,11 +65,13 @@ public class EarthGenerator extends BasicCubeGenerator {
     public static final double WATEROFF_TRANSITION = -1.0d;
 
     static {
-        try {
-            //register async generation callbacks
+        ModContainer cubicchunks = Loader.instance().getIndexedModList().get(CubicChunks.MODID);
+        String asyncVersion = "1.12.2-0.0.1175.0"; //the version at which async terrain gen was added
+        if (asyncVersion.compareTo(cubicchunks.getVersion()) <= 0) {
+            //async terrain is supported on this version! register async generation callbacks
             CubeGeneratorsRegistry.registerColumnAsyncLoadingCallback((world, data) -> asyncCallback(world, data.getPos()));
             CubeGeneratorsRegistry.registerCubeAsyncLoadingCallback((world, data) -> asyncCallback(world, data.getPos().chunkPos()));
-        } catch (NoClassDefFoundError | NoSuchMethodError e) {
+        } else {
             //we're on an older version of CC that doesn't support async terrain
             TerraMod.LOGGER.error("Async terrain not available!");
             TerraMod.LOGGER.error("Consider updating to the latest version of Cubic Chunks for maximum performance.");

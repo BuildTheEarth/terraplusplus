@@ -3,23 +3,33 @@ package io.github.terra121.dataset;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import io.github.terra121.dataset.impl.Heights;
 import io.github.terra121.projection.EquirectangularProjection;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.MapsProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
 import io.github.terra121.util.bvh.BVH;
 import io.github.terra121.util.bvh.Bounds2d;
+import io.github.terra121.util.http.Disk;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.UtilityClass;
+import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.binary.oio.reader.UTF8FileReader;
+import net.daporkchop.lib.common.function.io.IOFunction;
+import net.daporkchop.lib.common.function.throwing.EFunction;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
+import java.net.URI;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -41,17 +51,42 @@ import static net.daporkchop.lib.common.util.PorkUtil.*;
  * @author DaPorkchop_
  */
 public class MultiresDataset implements ScalarDataset {
+    public static URL[] configSources(@NonNull String name) throws IOException {
+        Path configDir = Files.createDirectories(Disk.configFile(name));
+
+        Path defaultConfig = configDir.resolve("default.json5");
+        if (!Files.isRegularFile(defaultConfig)) { //config file doesn't exist, create default one
+            Path oldDefaultConfig = configDir.resolveSibling(name + "_config.json");
+            if (Files.isRegularFile(oldDefaultConfig)) { //old config file exists, move it to directory
+                Files.move(oldDefaultConfig, defaultConfig);
+            } else {
+                try (InputStream in = MultiresDataset.class.getResourceAsStream("/default_config/" + name + ".json5")) {
+                    Files.write(defaultConfig, StreamUtil.toByteArray(in));
+                }
+            }
+        }
+
+        try (Stream<Path> stream = Files.list(configDir)) {
+            return stream.map(Path::toUri).map((EFunction<URI, URL>) URI::toURL).toArray(URL[]::new);
+        }
+    }
+
     protected final GeographicProjection projection;
 
     protected final BVH<WrappedDataset> bvh;
 
-    public MultiresDataset(@NonNull GeographicProjection projection, @NonNull URL configSource, @NonNull BiFunction<Integer, String[], ScalarDataset> mapper) throws IOException {
+    public MultiresDataset(@NonNull GeographicProjection projection, @NonNull URL[] configSources, @NonNull BiFunction<Integer, String[], ScalarDataset> mapper) throws IOException {
         this.projection = projection;
 
-        List<TempWrappedDataset> datasetsIn;
-        try (Reader reader = new UTF8FileReader(configSource.openStream())) {
-            datasetsIn = Arrays.asList(new GsonBuilder().setLenient().create().fromJson(reader, TempWrappedDataset[].class));
-        }
+        List<TempWrappedDataset> datasetsIn = Arrays.stream(configSources)
+                .map((IOFunction<URL, TempWrappedDataset[]>) url -> {
+                    try (Reader reader = new UTF8FileReader(url.openStream())) {
+                        //TODO: use TerraConstants.GSON once fast-osm is merged
+                        return new GsonBuilder().setLenient().create().fromJson(reader, TempWrappedDataset[].class);
+                    }
+                })
+                .flatMap(Arrays::stream)
+                .collect(Collectors.toList());
 
         this.bvh = new BVH<>(datasetsIn.stream()
                 .flatMap(t -> t.toWrapped(mapper))

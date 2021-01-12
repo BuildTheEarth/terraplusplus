@@ -41,9 +41,6 @@ public class ChatUtil {
                 if(component.getStyle().getColor() == null && lastFormat != null)
                     component.setStyle(new Style().setColor(lastFormat));
 
-
-                System.out.println(textComponent.getSiblings().get(textComponent.getSiblings().size() - 1).getStyle().getFormattingCode() + "test");
-
                 textComponent.appendSibling(component);
             } else {
                 if(o instanceof TextFormatting)

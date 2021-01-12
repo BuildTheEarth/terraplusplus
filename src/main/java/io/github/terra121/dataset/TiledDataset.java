@@ -1,21 +1,21 @@
 package io.github.terra121.dataset;
 
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
+
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.util.http.Http;
 import io.netty.buffer.ByteBuf;
 import lombok.NonNull;
 import net.minecraft.util.math.ChunkPos;
-
-import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-
-import static net.daporkchop.lib.common.math.PMath.*;
 
 public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, CompletableFuture<T>> {
     protected final LoadingCache<ChunkPos, CompletableFuture<T>> cache = CacheBuilder.newBuilder()
@@ -37,10 +37,10 @@ public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, CompletableF
     protected void addProperties(int tileX, int tileZ, @NonNull ImmutableMap.Builder<String, String> builder) {
         builder.put("x", String.valueOf(tileX))
                 .put("z", String.valueOf(tileZ))
-                .put("lon.min", String.format("%.12f", tileX * this.tileSize))
-                .put("lon.max", String.format("%.12f", (tileX + 1) * this.tileSize))
-                .put("lat.min", String.format("%.12f", tileZ * this.tileSize))
-                .put("lat.max", String.format("%.12f", (tileZ + 1) * this.tileSize));
+                .put("lon.min", String.format(Locale.US, "%.12f", tileX * this.tileSize))
+                .put("lon.max", String.format(Locale.US, "%.12f", (tileX + 1) * this.tileSize))
+                .put("lat.min", String.format(Locale.US, "%.12f", tileZ * this.tileSize))
+                .put("lat.max", String.format(Locale.US, "%.12f", (tileZ + 1) * this.tileSize));
     }
 
     protected abstract T decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception;

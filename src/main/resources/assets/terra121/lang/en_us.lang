@@ -32,7 +32,8 @@ terra121.orientation.none=No Orientation
 terra121.orientation.swapped=Flipped Axis
 
 ## command messages
-terra121.commands.tpll.usage=/tpll <latitude> <longitude> [altitude] [player]
+terra121.commands.tpll.usage=Usage: /tpll <latitude> <longitude> [altitude]
+terra121.commands.tpll.admin.usage=Usage: /tpll [target player] <latitude> <longitude> [altitude]
 terra121.commands.dataset.usage=/dataset [dataset folder path]
 
 terra121.commands.terra.usage=/terra

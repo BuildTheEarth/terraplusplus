@@ -1,5 +1,14 @@
 package io.github.terra121.control;
 
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+
+import javax.annotation.Nullable;
+
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.terra121.TerraConstants;
@@ -7,20 +16,19 @@ import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
+import io.github.terra121.util.geo.CoordinateParseUtils;
+import io.github.terra121.util.geo.LatLng;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.server.permission.PermissionAPI;
-
-import java.text.DecimalFormat;
-import java.util.concurrent.CompletableFuture;
 
 public class TerraTeleport extends Command {
 
@@ -74,85 +82,108 @@ public class TerraTeleport extends Command {
                 EarthGenerator terrain = (EarthGenerator) gen;
 
                 if (args.length == 0) {
-                    sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.commands.tpll.usage")));
+                    usage(sender);
                     return;
                 }
 
-                String[] splitCoords = args[0].split(",");
-                String alt = null;
-                if (splitCoords.length == 2 && args.length < 4) { // lat and long in single arg
-                    if (args.length > 1) {
-                        alt = args[1];
+                List<EntityPlayerMP> receivers = new ArrayList<>();
+
+                if(hasPermission(null, sender)) {
+                    try {
+                        receivers = getPlayers(server, sender, args[0]);
+                    } catch (CommandException ignored) { }
+
+                }
+
+                if(!receivers.isEmpty() && args.length < 2) {
+                    usage(sender);
+                    return;
+                }
+
+                double altitude = Double.NaN;
+                LatLng defaultCoords = CoordinateParseUtils.parseVerbatimCoordinates(getRawArguments(args).trim());
+
+                if(defaultCoords == null) {
+                    LatLng possiblePlayerCoords = CoordinateParseUtils.parseVerbatimCoordinates(getRawArguments(selectArray(args, 1)));
+                    if(possiblePlayerCoords != null) {
+                        defaultCoords = possiblePlayerCoords;
                     }
-                    if (args.length > 2) {
-                        EntityPlayerMP player = server.getPlayerList().getPlayerByUsername(args[2]);
-                        if (player != null) {
-                            sender = player;
+                }
+
+                    LatLng possibleHeightCoords = CoordinateParseUtils.parseVerbatimCoordinates(getRawArguments(inverseSelectArray(args, args.length - 1)));
+                    if(possibleHeightCoords != null) {
+                        defaultCoords = possibleHeightCoords;
+                        try {
+                            altitude = Double.parseDouble(args[args.length - 1]);
+                        } catch (Exception e) {
+                            altitude = Double.NaN;
                         }
                     }
-                    args = splitCoords;
-                } else if (args.length == 3) {
-                    EntityPlayerMP player = server.getPlayerList().getPlayerByUsername(args[2]);
-                    if (player != null) {
-                        sender = player;
-                    } else {
-                        alt = args[2];
+
+
+                    LatLng possibleHeightNameCoords = CoordinateParseUtils.parseVerbatimCoordinates(getRawArguments(inverseSelectArray(selectArray(args, 1), selectArray(args, 1).length - 1)));
+                    if(possibleHeightNameCoords != null) {
+                        defaultCoords = possibleHeightNameCoords;
+                        try {
+                            altitude = Double.parseDouble(selectArray(args, 1)[selectArray(args, 1).length - 1]);
+                        } catch (Exception e) {
+                            altitude = Double.NaN;
+                        }
                     }
-                } else if (args.length == 4) {
-                    EntityPlayerMP player = server.getPlayerList().getPlayerByUsername(args[3]);
-                    if (player != null) {
-                        sender = player;
-                    }
-                    alt = args[2];
-                }
-                if (args[0].endsWith(",")) {
-                    args[0] = args[0].substring(0, args[0].length() - 1);
-                }
-                if (args.length > 1 && args[1].endsWith(",")) {
-                    args[1] = args[1].substring(0, args[1].length() - 1);
-                }
-                if (args.length != 2 && args.length != 3 && args.length != 4) {
-                    sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.commands.tpll.usage")));
+
+
+                if(defaultCoords == null) {
+                    usage(sender);
                     return;
                 }
 
-                double lon;
-                double lat;
                 double[] proj;
 
                 try {
-                    lat = Double.parseDouble(args[0]);
-                    lon = Double.parseDouble(args[1]);
-                    if (alt != null) {
-                        alt = Double.toString(Double.parseDouble(alt));
-                    }
-                    proj = terrain.projection.fromGeo(lon, lat);
+                    proj = terrain.projection.fromGeo(defaultCoords.getLng(), defaultCoords.getLat());
                 } catch (Exception e) {
                     sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.error.numbers")));
                     return;
                 }
 
-                CompletableFuture<String> altFuture;
-                if (alt == null) {
+                CompletableFuture<Double> altFuture;
+                if (Double.isNaN(altitude)) {
                     try {
-                        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Computing destination altitude..."));
-                        altFuture = terrain.datasets.heights.getAsync(lon, lat)
-                                .thenApply(a -> String.valueOf(a + 1.0d));
+                        altFuture = terrain.datasets.heights.getAsync(defaultCoords.getLng(), defaultCoords.getLat())
+                                .thenApply(a -> a + 1.0d);
                     } catch (OutOfProjectionBoundsException e) { //out of bounds, notify user
                         sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.error.numbers")));
                         return;
                     }
                 } else {
-                    altFuture = CompletableFuture.completedFuture(alt);
+                    altFuture = CompletableFuture.completedFuture(altitude);
                 }
 
-                ICommandSender _sender = sender;
+                if(receivers.isEmpty() && sender instanceof EntityPlayerMP) receivers.add((EntityPlayerMP) sender);
+                List<EntityPlayerMP> finalReceivers = receivers;
+                LatLng finalDefaultCoords = defaultCoords;
                 altFuture.thenAccept(s -> FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
-                    _sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Teleported to ", TextFormatting.BLUE, new DecimalFormat("##.#####").format(lat),
-                                                                           TextFormatting.GRAY, ", ", TextFormatting.BLUE, new DecimalFormat("##.#####").format(lon)));
+                    for(EntityPlayerMP p : finalReceivers) {
+                        if(p.getName().equalsIgnoreCase(sender.getName())) {
+                            p.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Teleporting to ", TextFormatting.BLUE,
+                                    new DecimalFormat("##.#####").format(finalDefaultCoords.getLat()),
+                                    TextFormatting.GRAY, ", ", TextFormatting.BLUE, new DecimalFormat("##.#####").format(finalDefaultCoords.getLng())));
+                        } else if(!sender.getName().equalsIgnoreCase("@")) {
+                            p.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Summoned to ", TextFormatting.BLUE,
+                                    new DecimalFormat("##.#####").format(finalDefaultCoords.getLat()),
+                                    TextFormatting.GRAY, ", ", TextFormatting.BLUE, new DecimalFormat("##.#####").format(finalDefaultCoords.getLng()),
+                                    TextFormatting.GRAY, " by ", TextFormatting.RED, sender.getDisplayName()));
+                        } else {
+                            p.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Summoned to ", TextFormatting.BLUE,
+                                    new DecimalFormat("##.#####").format(finalDefaultCoords.getLat()),
+                                    TextFormatting.GRAY, ", ", TextFormatting.BLUE, new DecimalFormat("##.#####").format(finalDefaultCoords.getLng()),
+                                    TextFormatting.GRAY));
+                        }
 
-                    FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager().executeCommand(
-                            FMLCommonHandler.instance().getMinecraftServerInstance(), String.format("tp %s %s %s %s", _sender.getName(), proj[0], s, proj[1]));
+                        FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager().executeCommand(
+                                FMLCommonHandler.instance().getMinecraftServerInstance(), String.format(Locale.US, "tp %s %s %s %s", p.getName(), proj[0], s, proj[1]));
+
+                    }
                 }));
             }
         }
@@ -165,5 +196,57 @@ public class TerraTeleport extends Command {
         return sender.canUseCommand(2, "");
     }
 
+    /**
+     * Gets all objects in a string array above a given index
+     * @param args Initial array
+     * @param index Starting index
+     * @return Selected array
+     */
+    private String[] selectArray(String[] args, int index) {
+        List<String> array = new ArrayList<>();
+        for(int i = index; i < args.length; i++)
+            array.add(args[i]);
 
+        return array.toArray(array.toArray(new String[array.size()]));
+    }
+
+    private String[] inverseSelectArray(String[] args, int index) {
+        List<String> array = new ArrayList<>();
+        for(int i = 0; i < index; i++)
+            array.add(args[i]);
+
+        return array.toArray(array.toArray(new String[array.size()]));
+
+    }
+
+    /**
+     * Gets a space seperated string from an array
+     * @param args A string array
+     * @return The space seperated String
+     */
+    private String getRawArguments(String[] args) {
+        if(args.length == 0) return "";
+        if(args.length == 1) return args[0];
+
+        StringBuilder arguments = new StringBuilder(args[0].replace((char) 176, (char) 32).trim());
+
+        for(int x = 1; x < args.length; x++)
+            arguments.append(" ").append(args[x].replace((char) 176, (char) 32).trim());
+
+        return arguments.toString();
+    }
+
+    private void usage(ICommandSender sender) {
+        if(hasPermission(null, sender)) {
+            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.commands.tpll.admin.usage")));
+        } else {
+            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.commands.tpll.usage")));
+        }
+    }
+
+    @Override
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos)
+    {
+        return args.length >= 1 ? getListOfStringsMatchingLastWord(args, server.getOnlinePlayerNames()) : Collections.emptyList();
+    }
 }

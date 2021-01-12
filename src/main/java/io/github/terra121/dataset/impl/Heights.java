@@ -1,7 +1,6 @@
 package io.github.terra121.dataset.impl;
 
 import com.google.common.collect.ImmutableMap;
-import io.github.terra121.TerraConfig;
 import io.github.terra121.dataset.BlendMode;
 import io.github.terra121.dataset.DoubleTiledDataset;
 import io.github.terra121.dataset.MultiresDataset;
@@ -12,31 +11,28 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import lombok.NonNull;
 import net.daporkchop.lib.binary.oio.StreamUtil;
-import net.daporkchop.lib.common.misc.file.PFiles;
+import net.daporkchop.lib.common.function.throwing.EFunction;
+import net.daporkchop.lib.common.util.PorkUtil;
 
 import javax.imageio.ImageIO;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.net.URI;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
+
+import static net.daporkchop.lib.common.math.PMath.*;
+import static net.daporkchop.lib.common.util.PValidation.*;
 
 public class Heights extends DoubleTiledDataset {
     public static ScalarDataset constructDataset(@NonNull BlendMode blend) {
         try {
-            URL url = Heights.class.getResource("/heights_config_default.json5");
-            if (TerraConfig.data.customHeights) {
-                File configFile = Disk.configFile("heights_config.json5").toFile();
-                if (!PFiles.checkFileExists(configFile)) { //config file doesn't exist, create default one
-                    try (InputStream in = url.openStream();
-                         OutputStream out = new FileOutputStream(PFiles.ensureFileExists(configFile))) {
-                        out.write(StreamUtil.toByteArray(in));
-                    }
-                }
-                url = configFile.toURI().toURL();
-            }
-            return new MultiresDataset(new MapsProjection(), url, (zoom, urls) -> new Heights(zoom, urls, blend));
+            return new MultiresDataset(new MapsProjection(), MultiresDataset.configSources("heights"), (zoom, urls) -> new Heights(zoom, urls, blend));
         } catch (IOException e) {
             throw new RuntimeException("unable to load heights dataset config", e);
         }
