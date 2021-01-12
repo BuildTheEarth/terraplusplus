@@ -6,7 +6,7 @@ import io.github.terra121.dataset.geojson.geometry.LineString;
 import io.github.terra121.dataset.geojson.geometry.MultiLineString;
 import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
 import io.github.terra121.dataset.geojson.geometry.Polygon;
-import io.github.terra121.dataset.osm.Element;
+import io.github.terra121.dataset.osm.element.Element;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.NonNull;

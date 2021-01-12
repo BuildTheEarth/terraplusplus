@@ -5,7 +5,7 @@ import com.google.gson.stream.JsonReader;
 import io.github.terra121.dataset.geojson.Geometry;
 import io.github.terra121.dataset.geojson.geometry.MultiLineString;
 import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
-import io.github.terra121.dataset.osm.Element;
+import io.github.terra121.dataset.osm.element.Element;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import io.github.terra121.dataset.osm.config.OSMMapper;
 import lombok.AllArgsConstructor;

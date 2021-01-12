@@ -4,15 +4,17 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import io.github.terra121.dataset.geojson.geometry.MultiLineString;
-import io.github.terra121.dataset.osm.Element;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import io.github.terra121.dataset.osm.config.dvalue.DValue;
+import io.github.terra121.dataset.osm.draw.DrawFunction;
+import io.github.terra121.dataset.osm.element.Element;
+import io.github.terra121.dataset.osm.element.line.WideLine;
 import lombok.Builder;
 import lombok.NonNull;
-import net.minecraft.block.state.IBlockState;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import static io.github.terra121.TerraConstants.*;
@@ -24,14 +26,16 @@ import static io.github.terra121.TerraConstants.*;
 @Builder
 final class LineWide implements LineMapper {
     @NonNull
-    protected final IBlockState block;
+    protected final DrawFunction draw;
     @NonNull
-    protected final DValue width;
+    protected final DValue layer;
+    @NonNull
+    protected final DValue radius;
     protected final boolean crossWater;
 
     @Override
     public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull MultiLineString geometry) {
-        return null; //TODO
+        return Collections.singleton(new WideLine(geometry, this.draw, this.layer.apply(tags), this.radius.apply(tags)));
     }
 
     static final class Parser extends JsonParser<LineWide> {
@@ -43,12 +47,19 @@ final class LineWide implements LineMapper {
             while (in.peek() != JsonToken.END_OBJECT) {
                 String name = in.nextName();
                 switch (name) {
-                    case "block":
-                        builder.block(GSON.fromJson(in, IBlockState.class));
-                        break;
-                    case "width":
+                    case "draw":
                         in.beginObject();
-                        builder.width(GSON.fromJson(in, DValue.class));
+                        builder.draw(GSON.fromJson(in, DrawFunction.class));
+                        in.endObject();
+                        break;
+                    case "layer":
+                        in.beginObject();
+                        builder.layer(GSON.fromJson(in, DValue.class));
+                        in.endObject();
+                        break;
+                    case "radius":
+                        in.beginObject();
+                        builder.radius(GSON.fromJson(in, DValue.class));
                         in.endObject();
                         break;
                     case "crossWater":

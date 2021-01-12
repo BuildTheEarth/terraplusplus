@@ -10,7 +10,7 @@ import io.github.terra121.dataset.geojson.geometry.MultiPoint;
 import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
 import io.github.terra121.dataset.geojson.geometry.Point;
 import io.github.terra121.dataset.geojson.geometry.Polygon;
-import io.github.terra121.dataset.osm.Element;
+import io.github.terra121.dataset.osm.element.Element;
 import io.github.terra121.dataset.osm.config.mapper.LineMapper;
 import io.github.terra121.dataset.osm.config.mapper.PolygonMapper;
 import lombok.Builder;

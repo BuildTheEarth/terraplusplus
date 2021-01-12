@@ -4,7 +4,9 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import io.github.terra121.dataset.geojson.geometry.MultiLineString;
-import io.github.terra121.dataset.osm.Element;
+import io.github.terra121.dataset.osm.config.dvalue.DValue;
+import io.github.terra121.dataset.osm.draw.DrawFunction;
+import io.github.terra121.dataset.osm.element.Element;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import lombok.Builder;
 import lombok.NonNull;
@@ -23,7 +25,9 @@ import static io.github.terra121.TerraConstants.*;
 @Builder
 final class LineNarrow implements LineMapper {
     @NonNull
-    protected final IBlockState block;
+    protected final DrawFunction draw;
+    @NonNull
+    protected final DValue layer;
     protected final boolean crossWater;
 
     @Override
@@ -40,8 +44,15 @@ final class LineNarrow implements LineMapper {
             while (in.peek() != JsonToken.END_OBJECT) {
                 String name = in.nextName();
                 switch (name) {
-                    case "block":
-                        builder.block(GSON.fromJson(in, IBlockState.class));
+                    case "draw":
+                        in.beginObject();
+                        builder.draw(GSON.fromJson(in, DrawFunction.class));
+                        in.endObject();
+                        break;
+                    case "layer":
+                        in.beginObject();
+                        builder.layer(GSON.fromJson(in, DValue.class));
+                        in.endObject();
                         break;
                     case "crossWater":
                         builder.crossWater(in.nextBoolean());
