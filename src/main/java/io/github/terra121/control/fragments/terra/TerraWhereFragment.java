@@ -79,7 +79,7 @@ public class TerraWhereFragment extends CommandFragment {
 			return;
 		}
 		sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY, "Location: ", TextFormatting.BLUE, result[1],
-				TextFormatting.GRAY, ", ", TextFormatting.BLUE, result[0], TextFormatting.GRAY, " Facing: ", TextFormatting.BLUE, CardinalDirection.azimuthToFacing(azimuth).getRealName(), TextFormatting.GRAY, " (", TextFormatting.BLUE, azimuth, TextFormatting.GRAY, ")"));
+				TextFormatting.GRAY, ", ", TextFormatting.BLUE, result[0], TextFormatting.GRAY, " Facing: ", TextFormatting.BLUE, CardinalDirection.azimuthToFacing(azimuth).realName(), TextFormatting.GRAY, " (", TextFormatting.BLUE, azimuth, TextFormatting.GRAY, ")"));
 	}
 
 	@Override
