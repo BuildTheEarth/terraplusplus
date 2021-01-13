@@ -15,14 +15,22 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.TreeSet;
 
+import static java.lang.Math.*;
+
 /**
  * A collection of data cached per-column by {@link EarthGenerator}.
  *
  * @author DaPorkchop_
  */
-@Getter
 public class CachedChunkData {
     private static final Ref<Builder> BUILDER_CACHE = ThreadRef.soft(Builder::new);
+
+    public static final int EXTRA_WATERDEPTH = 0;
+    public static final int EXTRA_OCEANDIST = 1;
+
+    public static final int EXTRA_UNSET = 0xFFFFFF80; //unset value for extra data
+    public static final int EXTRA_UNSET_UNEXTENDED = EXTRA_UNSET & 0xFF; //unset value, but without sign extension
+    public static final int EXTRA_UNSET_WORD = (EXTRA_UNSET_UNEXTENDED << 24) | (EXTRA_UNSET_UNEXTENDED << 16) | (EXTRA_UNSET_UNEXTENDED << 8) | EXTRA_UNSET_UNEXTENDED;
 
     public static final int BLANK_HEIGHT = -2;
 
@@ -59,19 +67,23 @@ public class CachedChunkData {
         return out;
     }
 
+    @Getter
     public final int[] heights;
-    public final int[] wateroffs;
+    @Getter
+    public final int[] extra;
 
+    @Getter
     private final ImmutableBlockStateArray surfaceBlocks;
 
     private final int surfaceMinCube;
     private final int surfaceMaxCube;
 
+    @Getter
     private final double treeCover;
 
-    private CachedChunkData(@NonNull int[] heights, @NonNull int[] wateroffs, @NonNull ImmutableBlockStateArray surfaceBlocks, double treeCover) {
+    private CachedChunkData(@NonNull int[] heights, @NonNull int[] extra, @NonNull ImmutableBlockStateArray surfaceBlocks, double treeCover) {
         this.heights = heights;
-        this.wateroffs = wateroffs;
+        this.extra = extra;
         this.treeCover = treeCover;
 
         this.surfaceBlocks = surfaceBlocks;
@@ -82,7 +94,7 @@ public class CachedChunkData {
         int max = Integer.MIN_VALUE;
         for (int i = 0; i < 16 * 16; i++) {
             min = Math.min(min, heights[i]);
-            max = Math.max(max, heights[i]);
+            max = max(max, heights[i]);
         }
         this.surfaceMinCube = Coords.blockToCube(min);
         this.surfaceMaxCube = Coords.blockToCube(max + 1);
@@ -100,14 +112,23 @@ public class CachedChunkData {
         return cubeY < this.surfaceMinCube;
     }
 
-    public int heightWithWater(int x, int z) {
-        int i = x * 16 + z;
-        int height = this.heights[i];
-        int wateroff = this.wateroffs[i];
-        if (wateroff >= EarthGenerator.WATEROFF_TRANSITION) {
-            height = height - wateroff + EarthGenerator.WATEROFF_TRANSITION;
-        }
-        return height;
+    public int surfaceHeight(int x, int z) {
+        return this.heights[x * 16 + z];
+    }
+
+    public int getExtra(int x, int z, int slot) {
+        return ((this.extra[x * 16 + z] << ((3 - slot) << 3)) >> 24);
+    }
+
+    public int groundHeight(int x, int z) {
+        int surfaceHeight = this.surfaceHeight(x, z);
+        int waterDepth = this.getExtra(x, z, EXTRA_WATERDEPTH);
+
+        return surfaceHeight - (waterDepth == EXTRA_UNSET ? 0 : waterDepth + EarthGenerator.WATER_DEPTH_OFFSET);
+    }
+
+    public int waterHeight(int x, int z) {
+        return this.surfaceHeight(x, z) - EarthGenerator.WATER_DEPTH_OFFSET;
     }
 
     /**
@@ -119,7 +140,7 @@ public class CachedChunkData {
     @Setter
     public static final class Builder {
         protected final int[] heights = new int[16 * 16];
-        protected final int[] wateroffs = new int[16 * 16];
+        protected final int[] extra = new int[16 * 16];
         protected final IBlockState[] surfaceBlocks = new IBlockState[16 * 16];
         protected double treeCover = 0.0d;
 
@@ -131,16 +152,28 @@ public class CachedChunkData {
             this.reset();
         }
 
+        public int getExtra(int x, int z, int slot) {
+            return ((this.extra[x * 16 + z] << ((3 - slot) << 3)) >> 24);
+        }
+
+        public Builder setExtra(int x, int z, int slot, int value) {
+            int i = x * 16 + z;
+            int extra = this.extra[i];
+            int shift = slot << 3;
+            this.extra[i] = (extra & ~(0xFF << shift)) | ((value & 0xFF) << shift);
+            return this;
+        }
+
         public Builder reset() {
             Arrays.fill(this.heights, BLANK_HEIGHT);
-            Arrays.fill(this.wateroffs, EarthGenerator.WATEROFF_TRANSITION);
+            Arrays.fill(this.extra, EXTRA_UNSET_WORD);
             Arrays.fill(this.surfaceBlocks, null);
             this.treeCover = 0.0d;
             return this;
         }
 
         public CachedChunkData build() {
-            return new CachedChunkData(this.heights.clone(), this.wateroffs.clone(), new ImmutableBlockStateArray(this.surfaceBlocks), this.treeCover);
+            return new CachedChunkData(this.heights.clone(), this.extra.clone(), new ImmutableBlockStateArray(this.surfaceBlocks), this.treeCover);
         }
     }
 }

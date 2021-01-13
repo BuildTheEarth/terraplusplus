@@ -32,7 +32,7 @@ public final class ImmutableBlockStateArray {
         }
 
         this.palette = paletteBuilder.toArray(new IBlockState[0]);
-        this.data = new PaddedBitArray(Integer.bitCount(idCounter), data.length);
+        this.data = new PaddedBitArray(31 - Integer.numberOfLeadingZeros(idCounter + 1), data.length);
 
         for (int i = 0; i < data.length; i++) { //set values
             this.data.set(i, stateIds.get(data[i]));

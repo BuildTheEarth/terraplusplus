@@ -1,22 +1,14 @@
 package io.github.terra121.dataset.osm;
 
 import io.github.terra121.dataset.osm.config.OSMMapper;
-import io.github.terra121.dataset.osm.segment.OSMSegment;
 import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.bvh.Bounds2d;
-import net.daporkchop.lib.binary.oio.appendable.PAppendable;
-import net.daporkchop.lib.binary.oio.writer.UTF8FileWriter;
-import net.daporkchop.lib.common.function.io.IOConsumer;
-import net.daporkchop.lib.common.misc.file.PFiles;
-import net.daporkchop.lib.common.misc.string.PStrings;
 import net.minecraft.init.Bootstrap;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author DaPorkchop_

@@ -247,17 +247,11 @@
                     }
                 },
                 "emit": {
-                    "wide": {
+                    "narrow": {
                         "draw": {
                             "block": {
-                                "id": "minecraft:concrete",
-                                "properties": {
-                                    "color": "gray"
-                                }
+                                "id": "minecraft:grass_path"
                             }
-                        },
-                        "radius": {
-                            "constant": 1
                         },
                         "layer": {
                             "tag": {
@@ -400,7 +394,9 @@
                 "emit": {
                     "distance": {
                         "draw": {
-                            "water": {}
+                            "water": {
+                                "minDepth": -1
+                            }
                         },
                         "layer": {
                             "tag": {

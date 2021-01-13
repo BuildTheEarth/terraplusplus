@@ -28,9 +28,11 @@ final class Water implements DrawFunction {
 
     @Override
     public void drawOnto(@NonNull CachedChunkData.Builder data, int x, int z, int weight) {
-        int i = x * 16 + z;
-        int[] wateroffs = data.wateroffs();
-        wateroffs[i] = max(wateroffs[i], clamp(weight, this.minDepth, this.maxDepth));
+        weight = clamp(weight, this.minDepth, this.maxDepth);
+        int waterDepth = data.getExtra(x, z, CachedChunkData.EXTRA_WATERDEPTH);
+        if (weight > waterDepth) {
+            data.setExtra(x, z, CachedChunkData.EXTRA_WATERDEPTH, weight);
+        }
     }
 
     static class Parser extends JsonParser<Water> {

@@ -36,8 +36,10 @@ import io.github.terra121.generator.populate.TreePopulator;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.ImmutableBlockStateArray;
+import net.minecraft.block.BlockStainedGlass;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.EnumDyeColor;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -61,7 +63,7 @@ import java.util.concurrent.TimeUnit;
 import static java.lang.Math.*;
 
 public class EarthGenerator extends BasicCubeGenerator {
-    public static final int WATEROFF_TRANSITION = -1;
+    public static final int WATER_DEPTH_OFFSET = 1;
 
     static {
         ModContainer cubicchunks = Loader.instance().getIndexedModList().get(CubicChunks.MODID);
@@ -213,10 +215,9 @@ public class EarthGenerator extends BasicCubeGenerator {
 
         if (data.intersectsSurface(cubeY)) { //render surface blocks onto cube surface
             ImmutableBlockStateArray surfaceBlocks = data.surfaceBlocks();
-            int[] heights = data.heights();
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
-                    int y = heights[x * 16 + z] - Coords.cubeToMinBlock(cubeY);
+                    int y = data.surfaceHeight(x, z) - Coords.cubeToMinBlock(cubeY);
                     IBlockState state;
                     if ((y & 0xF) == y //don't set surface blocks outside of this cube
                         && (state = surfaceBlocks.get(x * 16 + z)) != null) {
@@ -251,27 +252,28 @@ public class EarthGenerator extends BasicCubeGenerator {
                 }
             }
         } else {
-            int[] heights = data.heights();
+            IBlockState grass = Blocks.GRASS.getDefaultState();
+            IBlockState dirt = Blocks.DIRT.getDefaultState();
 
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
-                    int waterSurfaceHeight = max(heights[x * 16 + z] + WATEROFF_TRANSITION, 0);
-                    int height = data.heightWithWater(x, z);
-                    double dx = x == 15 ? height - data.heightWithWater(x - 1, z) : data.heightWithWater(x + 1, z) - height;
-                    double dz = z == 15 ? height - data.heightWithWater(x, z - 1) : data.heightWithWater(x, z + 1) - height;
+                    int groundHeight = data.groundHeight(x, z);
+                    int waterHeight = data.waterHeight(x, z);
 
-                    int solidTop = min(height - Coords.cubeToMinBlock(cubeY), 16);
-                    int waterTop = min(waterSurfaceHeight - Coords.cubeToMinBlock(cubeY), 16);
+                    //horizontal density change is calculated using the surface height rather than the ground height
+                    int surfaceHeight = data.surfaceHeight(x, z);
+                    double dx = x == 15 ? surfaceHeight - data.surfaceHeight(x - 1, z) : data.surfaceHeight(x + 1, z) - surfaceHeight;
+                    double dz = z == 15 ? surfaceHeight - data.surfaceHeight(x, z - 1) : data.surfaceHeight(x, z + 1) - surfaceHeight;
 
-                    //if we're currently in the actual body of water, offset density by 1 to prevent underwater grass
-                    double densityOffset = height < waterSurfaceHeight ? 1.0d : 0.0d;
+                    int groundTop = min(groundHeight - Coords.cubeToMinBlock(cubeY), 15);
+                    int waterTop = min(waterHeight - Coords.cubeToMinBlock(cubeY), 15);
 
                     int blockX = Coords.cubeToMinBlock(cubeX) + x;
                     int blockZ = Coords.cubeToMinBlock(cubeZ) + z;
                     IBiomeBlockReplacer[] replacers = this.biomeBlockReplacers[biomes[x * 16 + z] & 0xFF];
-                    for (int y = 0; y < solidTop; y++) {
+                    for (int y = 0; y <= groundTop; y++) {
                         int blockY = Coords.cubeToMinBlock(cubeY) + y;
-                        double density = height - blockY + densityOffset;
+                        double density = groundTop - y;
                         IBlockState state = stone;
                         for (IBiomeBlockReplacer replacer : replacers) {
                             state = replacer.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
@@ -281,11 +283,15 @@ public class EarthGenerator extends BasicCubeGenerator {
                         //(for reference: previously, CliffReplacer was manually added to each biome as the last replacer)
                         state = CliffReplacer.INSTANCE.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
 
+                        if (groundHeight < waterHeight && state == grass) { //hacky workaround for underwater grass
+                            state = dirt;
+                        }
+
                         primer.setBlockState(x, y, z, state);
                     }
 
                     //fill water
-                    for (int y = max(solidTop, 0); y < waterTop; y++) {
+                    for (int y = max(groundTop + 1, 0); y <= waterTop; y++) {
                         primer.setBlockState(x, y, z, water);
                     }
                 }
