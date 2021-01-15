@@ -1,16 +1,16 @@
-package io.github.terra121.dataset.geojson;
+package io.github.terra121.dataset.osm.geojson;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
-import io.github.terra121.dataset.geojson.geometry.GeometryCollection;
-import io.github.terra121.dataset.geojson.geometry.LineString;
-import io.github.terra121.dataset.geojson.geometry.MultiLineString;
-import io.github.terra121.dataset.geojson.geometry.MultiPoint;
-import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
-import io.github.terra121.dataset.geojson.geometry.Point;
-import io.github.terra121.dataset.geojson.geometry.Polygon;
+import io.github.terra121.dataset.osm.geojson.geometry.GeometryCollection;
+import io.github.terra121.dataset.osm.geojson.geometry.LineString;
+import io.github.terra121.dataset.osm.geojson.geometry.MultiLineString;
+import io.github.terra121.dataset.osm.geojson.geometry.MultiPoint;
+import io.github.terra121.dataset.osm.geojson.geometry.MultiPolygon;
+import io.github.terra121.dataset.osm.geojson.geometry.Point;
+import io.github.terra121.dataset.osm.geojson.geometry.Polygon;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 

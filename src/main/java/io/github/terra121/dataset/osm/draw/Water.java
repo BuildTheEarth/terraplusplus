@@ -4,6 +4,7 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import io.github.terra121.dataset.osm.config.JsonParser;
+import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.generator.cache.CachedChunkData;
 import lombok.Builder;
 import lombok.NonNull;
@@ -28,10 +29,11 @@ final class Water implements DrawFunction {
 
     @Override
     public void drawOnto(@NonNull CachedChunkData.Builder data, int x, int z, int weight) {
-        weight = clamp(weight, this.minDepth, this.maxDepth);
-        int waterDepth = data.getExtra(x, z, CachedChunkData.EXTRA_WATERDEPTH);
-        if (weight > waterDepth) {
-            data.setExtra(x, z, CachedChunkData.EXTRA_WATERDEPTH, weight);
+        weight = clamp(weight + EarthGenerator.WATER_DEPTH_OFFSET, this.minDepth, this.maxDepth);
+        int topHeight = data.topHeight(x, z);
+        int groundHeight = data.groundHeight(x, z);
+        if (topHeight - weight < groundHeight) {
+            data.groundHeight(x, z, topHeight - weight);
         }
     }
 

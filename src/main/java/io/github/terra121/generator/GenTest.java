@@ -50,7 +50,9 @@ public class GenTest {
                     double minB = Arrays.stream(data[2]).min().getAsDouble();
                     double maxB = Arrays.stream(data[2]).max().getAsDouble();
 
-                    System.out.println(minW + " " + maxW);
+                    System.out.printf("H: %.4f %.4f\n", minH, maxH);
+                    System.out.printf("W: %.4f %.4f\n", minW, maxW);
+                    System.out.printf("B: %.4f %.4f\n", minB, maxB);
 
                     for (int x = 0; x < SIZE; x++) {
                         for (int z = 0; z < SIZE; z++) {
@@ -80,8 +82,8 @@ public class GenTest {
                                 for (int x = 0; x < 16; x++) {
                                     for (int z = 0; z < 16; z++) {
                                         int j = (offX + x) * SIZE + offZ + z;
-                                        dst[0][j] = data.heights[x * 16 + z];
-                                        dst[1][j] = data.extra[x * 16 + z];
+                                        dst[0][j] = data.topHeight(x, z);
+                                        dst[1][j] = data.topHeight(x, z) - data.groundHeight(x, z);
                                         IBlockState state = data.surfaceBlocks().get(x * 16 + z);
                                         dst[2][j] = state == null ? 0.0d : state.getBlock() == Blocks.CONCRETE ? 1.0d : 2.0d;
                                     }

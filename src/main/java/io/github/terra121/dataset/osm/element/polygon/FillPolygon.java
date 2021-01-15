@@ -1,17 +1,13 @@
 package io.github.terra121.dataset.osm.element.polygon;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
+import io.github.terra121.dataset.osm.geojson.geometry.MultiPolygon;
 import io.github.terra121.dataset.osm.draw.DrawFunction;
 import io.github.terra121.generator.cache.CachedChunkData;
 import io.github.terra121.util.bvh.Bounds2d;
 import lombok.NonNull;
 
-import java.util.Arrays;
-
-import static java.lang.Math.*;
 import static net.daporkchop.lib.common.math.PMath.*;
-import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * @author DaPorkchop_

@@ -1,7 +1,7 @@
 package io.github.terra121.dataset.osm.element;
 
-import io.github.terra121.dataset.geojson.geometry.LineString;
-import io.github.terra121.dataset.geojson.geometry.Point;
+import io.github.terra121.dataset.osm.geojson.geometry.LineString;
+import io.github.terra121.dataset.osm.geojson.geometry.Point;
 import io.github.terra121.dataset.osm.draw.DrawFunction;
 import lombok.Getter;
 import lombok.NonNull;

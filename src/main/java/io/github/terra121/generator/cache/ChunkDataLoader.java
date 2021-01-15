@@ -5,7 +5,6 @@ import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.terra121.TerraMod;
 import io.github.terra121.dataset.osm.OSMRegion;
 import io.github.terra121.dataset.osm.element.Element;
-import io.github.terra121.dataset.osm.poly.OSMPolygon;
 import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.generator.GeneratorDatasets;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
@@ -19,7 +18,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 
-import static java.lang.Math.*;
 import static net.daporkchop.lib.common.math.PMath.*;
 
 /**
@@ -35,17 +33,13 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
             return; //we assume the builder's heights are already all set to the blank height value
         }
 
-        int[] heightsOut = builder.heights;
-        for (int i = 0; i < 16 * 16; i++) { //replace NaNs with blank height value
-            heightsOut[i] = Double.isNaN(heights[i]) ? CachedChunkData.BLANK_HEIGHT : floorI(heights[i]);
+        for (int  x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++) {
+                double height = heights[x * 16 + z];
+                builder.topHeight(x, z, Double.isNaN(height) ? CachedChunkData.BLANK_HEIGHT : floorI(height));
+            }
         }
-    }
-
-    protected static void renderPolygon(int baseX, int baseZ, @NonNull int[] wateroffs, @NonNull OSMPolygon polygon) {
-        polygon.rasterizeDistance(baseX, 16, baseZ, 16, 5, (x, z, dist) -> {
-            int i = (x - baseX) * 16 + (z - baseZ);
-            wateroffs[i] = max(wateroffs[i], dist);
-        });
+        builder.copyTopHeightToGroundAndWater();
     }
 
     @NonNull
@@ -83,7 +77,7 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
 
                         applyHeights(builder, heights);
 
-                        //find all segments and polygons that intersect the chunk
+                        //find all OpenStreetMap geometry that intersects the chunk
                         Set<Element> elements = new TreeSet<>();
                         for (OSMRegion region : osmRegions) {
                             region.elements.forEachIntersecting(chunkBounds, elements::add);

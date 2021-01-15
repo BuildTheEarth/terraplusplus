@@ -1,6 +1,6 @@
-package io.github.terra121.dataset.geojson.geometry;
+package io.github.terra121.dataset.osm.geojson.geometry;
 
-import io.github.terra121.dataset.geojson.Geometry;
+import io.github.terra121.dataset.osm.geojson.Geometry;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.projection.ProjectionFunction;
 import lombok.Data;

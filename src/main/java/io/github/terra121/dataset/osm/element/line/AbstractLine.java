@@ -1,7 +1,7 @@
 package io.github.terra121.dataset.osm.element.line;
 
-import io.github.terra121.dataset.geojson.geometry.LineString;
-import io.github.terra121.dataset.geojson.geometry.MultiLineString;
+import io.github.terra121.dataset.osm.geojson.geometry.LineString;
+import io.github.terra121.dataset.osm.geojson.geometry.MultiLineString;
 import io.github.terra121.dataset.osm.draw.DrawFunction;
 import io.github.terra121.dataset.osm.element.AbstractElement;
 import io.github.terra121.dataset.osm.element.Segment;

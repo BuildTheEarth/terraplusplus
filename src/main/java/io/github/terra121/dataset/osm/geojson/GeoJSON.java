@@ -1,4 +1,4 @@
-package io.github.terra121.dataset.geojson;
+package io.github.terra121.dataset.osm.geojson;
 
 import com.google.gson.Gson;
 import lombok.NonNull;

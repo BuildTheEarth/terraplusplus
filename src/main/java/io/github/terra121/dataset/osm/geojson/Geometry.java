@@ -18,27 +18,17 @@
  *
  */
 
-package io.github.terra121.dataset.geojson;
+package io.github.terra121.dataset.osm.geojson;
 
-import com.google.gson.stream.JsonReader;
-
-import java.io.IOException;
+import com.google.gson.annotations.JsonAdapter;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
+import io.github.terra121.projection.ProjectionFunction;
+import lombok.NonNull;
 
 /**
  * @author DaPorkchop_
  */
-final class GeometryDeserializer extends AbstractGeoJSONDeserializer<Geometry> {
-    public GeometryDeserializer() {
-        super("geometry");
-    }
-
-    @Override
-    protected Geometry read0(String type, JsonReader in) throws IOException {
-        return super.readGeometry(type, in);
-    }
-
-    @Override
-    protected GeometryDeserializer geometryDeserializer() {
-        return this;
-    }
+@JsonAdapter(GeometryDeserializer.class)
+public interface Geometry extends GeoJSONObject {
+    Geometry project(@NonNull ProjectionFunction projection) throws OutOfProjectionBoundsException;
 }

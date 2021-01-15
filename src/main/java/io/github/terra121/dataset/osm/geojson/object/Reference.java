@@ -1,6 +1,6 @@
-package io.github.terra121.dataset.geojson.object;
+package io.github.terra121.dataset.osm.geojson.object;
 
-import io.github.terra121.dataset.geojson.GeoJSONObject;
+import io.github.terra121.dataset.osm.geojson.GeoJSONObject;
 import lombok.Data;
 import lombok.NonNull;
 

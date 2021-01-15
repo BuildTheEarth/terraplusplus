@@ -3,7 +3,7 @@ package io.github.terra121.dataset.osm.config.mapper;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import io.github.terra121.dataset.geojson.geometry.MultiLineString;
+import io.github.terra121.dataset.osm.geojson.geometry.MultiLineString;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import io.github.terra121.dataset.osm.config.dvalue.DValue;
 import io.github.terra121.dataset.osm.draw.DrawFunction;

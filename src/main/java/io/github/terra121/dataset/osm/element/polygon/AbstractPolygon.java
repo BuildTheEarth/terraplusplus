@@ -1,9 +1,9 @@
 package io.github.terra121.dataset.osm.element.polygon;
 
-import io.github.terra121.dataset.geojson.geometry.LineString;
-import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
-import io.github.terra121.dataset.geojson.geometry.Point;
-import io.github.terra121.dataset.geojson.geometry.Polygon;
+import io.github.terra121.dataset.osm.geojson.geometry.LineString;
+import io.github.terra121.dataset.osm.geojson.geometry.MultiPolygon;
+import io.github.terra121.dataset.osm.geojson.geometry.Point;
+import io.github.terra121.dataset.osm.geojson.geometry.Polygon;
 import io.github.terra121.dataset.osm.draw.DrawFunction;
 import io.github.terra121.dataset.osm.element.AbstractElement;
 import io.github.terra121.dataset.osm.element.Segment;

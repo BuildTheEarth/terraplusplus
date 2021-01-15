@@ -36,10 +36,8 @@ import io.github.terra121.generator.populate.TreePopulator;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.ImmutableBlockStateArray;
-import net.minecraft.block.BlockStainedGlass;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.EnumDyeColor;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
@@ -217,7 +215,7 @@ public class EarthGenerator extends BasicCubeGenerator {
             ImmutableBlockStateArray surfaceBlocks = data.surfaceBlocks();
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
-                    int y = data.surfaceHeight(x, z) - Coords.cubeToMinBlock(cubeY);
+                    int y = data.topHeight(x, z) - Coords.cubeToMinBlock(cubeY);
                     IBlockState state;
                     if ((y & 0xF) == y //don't set surface blocks outside of this cube
                         && (state = surfaceBlocks.get(x * 16 + z)) != null) {
@@ -260,10 +258,10 @@ public class EarthGenerator extends BasicCubeGenerator {
                     int groundHeight = data.groundHeight(x, z);
                     int waterHeight = data.waterHeight(x, z);
 
-                    //horizontal density change is calculated using the surface height rather than the ground height
-                    int surfaceHeight = data.surfaceHeight(x, z);
-                    double dx = x == 15 ? surfaceHeight - data.surfaceHeight(x - 1, z) : data.surfaceHeight(x + 1, z) - surfaceHeight;
-                    double dz = z == 15 ? surfaceHeight - data.surfaceHeight(x, z - 1) : data.surfaceHeight(x, z + 1) - surfaceHeight;
+                    //horizontal density change is calculated using the top height rather than the ground height
+                    int topHeight = data.topHeight(x, z);
+                    double dx = x == 15 ? topHeight - data.topHeight(x - 1, z) : data.topHeight(x + 1, z) - topHeight;
+                    double dz = z == 15 ? topHeight - data.topHeight(x, z - 1) : data.topHeight(x, z + 1) - topHeight;
 
                     int groundTop = min(groundHeight - Coords.cubeToMinBlock(cubeY), 15);
                     int waterTop = min(waterHeight - Coords.cubeToMinBlock(cubeY), 15);
@@ -333,7 +331,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         Biome biome = cube.getBiome(Coords.getCubeCenter(cube));
 
         if (this.cfg.settings.dynamicbaseheight) {
-            this.cubiccfg.expectedBaseHeight = (float) data.heights[8 * 16 + 8];
+            this.cubiccfg.expectedBaseHeight = (float) data.groundHeight(8, 8);
         }
 
         MinecraftForge.EVENT_BUS.post(new PopulateCubeEvent.Pre(this.world, rand, cube.getX(), cube.getY(), cube.getZ(), false));

@@ -18,20 +18,18 @@
  *
  */
 
-package io.github.terra121.dataset.geojson;
+package io.github.terra121.dataset.osm.geojson;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import io.github.terra121.dataset.geojson.object.Feature;
-import io.github.terra121.dataset.geojson.object.FeatureCollection;
-import io.github.terra121.dataset.geojson.object.Reference;
+import io.github.terra121.dataset.osm.geojson.object.Feature;
+import io.github.terra121.dataset.osm.geojson.object.FeatureCollection;
+import io.github.terra121.dataset.osm.geojson.object.Reference;
 import lombok.Getter;
 
 import java.io.IOException;
-import java.sql.Ref;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 

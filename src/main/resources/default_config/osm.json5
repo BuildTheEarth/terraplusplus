@@ -275,7 +275,7 @@
                     "narrow": {
                         "draw": {
                             "block": {
-                                "id": "minecraft:brick"
+                                "id": "minecraft:brick_block"
                             }
                         },
                         "layer": {
@@ -359,7 +359,7 @@
                             "narrow": {
                                 "draw": {
                                     "block": {
-                                        "id": "minecraft:brick"
+                                        "id": "minecraft:brick_block"
                                     }
                                 },
                                 "layer": {
