@@ -18,7 +18,7 @@ public class OSMTest {
         Bootstrap.register();
 
         OSMMapper config;
-        try (InputStream in = OSMTest.class.getResourceAsStream("/default_config/osm.json5")) {
+        try (InputStream in = OSMTest.class.getResourceAsStream("/config/osm.json5")) {
             config = OSMMapper.load(in);
         }
 

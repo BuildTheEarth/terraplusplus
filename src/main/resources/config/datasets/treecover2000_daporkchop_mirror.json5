@@ -1,0 +1,39 @@
+//
+// treecover2000
+// http://earthenginepartners.appspot.com/science-2013-global-forest/download_v1.7.html
+//
+// Split into 256x256 pixel TIFF tiles and hosted by DaPorkchop_
+//
+{
+    "urls": [
+        "https://cloud.daporkchop.net/gis/treecover2000/${x}/${z}.tiff"
+    ],
+    "transform": {
+        "mirror_z": {
+            "swap_axes": {
+                "from_grayscale": {
+                    "format": "tiff"
+                }
+            }
+        }
+    },
+    "blend": "linear",
+    "bounds": [
+        {
+            "minX": -180.0,
+            "minZ": -85,
+            "maxX": 180.0,
+            "maxZ": 85
+        }
+    ],
+    "projection": {
+        "scale": {
+            "next": {
+                "equirectangular": {}
+            },
+            "x": 6250.0,
+            "z": 6250.0
+        }
+    },
+    "tileSize": 0.04096
+}

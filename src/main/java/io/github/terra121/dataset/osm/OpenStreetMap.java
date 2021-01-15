@@ -70,7 +70,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         this.earthProjection = earthProjection;
 
         try {
-            this.mapper = OSMMapper.load(OpenStreetMap.class.getResourceAsStream("/default_config/osm.json5"));
+            this.mapper = OSMMapper.load(OpenStreetMap.class.getResourceAsStream("/config/osm.json5"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

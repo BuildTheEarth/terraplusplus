@@ -1,0 +1,38 @@
+//
+// AWS Terrain Tiles
+// https://registry.opendata.aws/terrain-tiles/
+//
+
+{
+    "scalar": {
+        "urls": [
+            "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/13/${x}/${z}.png"
+        ],
+        "transform": {
+            "swap_axes": {
+                "from_rgb_elevation": {
+                    "format": "png"
+                }
+            }
+        },
+        "blend": "smooth",
+        "bounds": [
+            {
+                "minX": -180.0,
+                "minZ": -85,
+                "maxX": 180.0,
+                "maxZ": 85
+            }
+        ],
+        "projection": {
+            "scale": {
+                "next": {
+                    "maps": {}
+                },
+                "x": 0.00000047683715820313,
+                "z": 0.00000047683715820313
+            }
+        },
+        "tileSize": 536870912.0
+    }
+}

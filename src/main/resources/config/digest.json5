@@ -1,0 +1,11 @@
+{
+    //initial state:
+    // "bathymetry": area
+    // "surface_elevation": area
+    // "tree_cover": value
+
+    //tree_cover value is already ready to use
+    "emit": "tree_cover",
+
+    "blank_area":
+}

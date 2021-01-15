@@ -26,13 +26,6 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 public class CachedChunkData {
     private static final Ref<Builder> BUILDER_CACHE = ThreadRef.soft(Builder::new);
 
-    public static final int EXTRA_WATERDEPTH = 0;
-    public static final int EXTRA_OCEANDIST = 1;
-
-    public static final int EXTRA_UNSET = 0xFFFFFF80; //unset value for extra data
-    public static final int EXTRA_UNSET_UNEXTENDED = EXTRA_UNSET & 0xFF; //unset value, but without sign extension
-    public static final int EXTRA_UNSET_WORD = (EXTRA_UNSET_UNEXTENDED << 24) | (EXTRA_UNSET_UNEXTENDED << 16) | (EXTRA_UNSET_UNEXTENDED << 8) | EXTRA_UNSET_UNEXTENDED;
-
     public static final int BLANK_HEIGHT = -2;
 
     public static final CachedChunkData BLANK;

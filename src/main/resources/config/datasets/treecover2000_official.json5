@@ -1,0 +1,39 @@
+//
+// treecover2000
+// http://earthenginepartners.appspot.com/science-2013-global-forest/download_v1.7.html
+//
+// Official host, but slow and highly unstable
+//
+{
+    "urls": [
+        "http://gis-treecover.wri.org/arcgis/rest/services/TreeCover2000/ImageServer/exportImage?f=image&bbox=${lon.min},${lat.min},${lon.max},${lat.max}&imageSR=4152&bboxSR=4152&format=tiff&adjustAspectRatio=false&&interpolation=RSP_CubicConvolution&size=256,256"
+    ],
+    "transform": {
+        "mirror_z": {
+            "swap_axes": {
+                "from_grayscale": {
+                    "format": "tiff"
+                }
+            }
+        }
+    },
+    "blend": "linear",
+    "bounds": [
+        {
+            "minX": -180.0,
+            "minZ": -85,
+            "maxX": 180.0,
+            "maxZ": 85
+        }
+    ],
+    "projection": {
+        "scale": {
+            "next": {
+                "equirectangular": {}
+            },
+            "x": 6250.0,
+            "z": 6250.0
+        }
+    },
+    "tileSize": 0.04096
+}
