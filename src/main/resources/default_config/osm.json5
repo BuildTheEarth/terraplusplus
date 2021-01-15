@@ -354,7 +354,7 @@
                     }
                 },
                 "emit": {
-                    "convert": { //convert polygon edges to a bunch of line segments
+                    "convert": {
                         "line": {
                             "narrow": {
                                 "draw": {

@@ -240,7 +240,7 @@ public class EarthGenerator extends BasicCubeGenerator {
                 }
             }
         } else if (data.aboveSurface(cubeY)) { //above surface -> air (no padding here, replacers don't normally affect anything above the surface)
-            if (false && cubeY < 0) { //fill with water, we're in the ocean
+            if (cubeY < 0) { //fill with water, we're in the ocean
                 for (int x = 0; x < 16; x++) {
                     for (int y = 0; y < 16; y++) {
                         for (int z = 0; z < 16; z++) {
