@@ -3,10 +3,7 @@ package io.github.terra121.dataset;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.github.terra121.dataset.impl.Heights;
-import io.github.terra121.projection.EquirectangularProjection;
 import io.github.terra121.projection.GeographicProjection;
-import io.github.terra121.projection.MapsProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
 import io.github.terra121.util.bvh.BVH;
@@ -43,7 +40,6 @@ import java.util.stream.StreamSupport;
 
 import static java.lang.Math.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
-import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 /**
  * Implementation of {@link ScalarDataset} which can sample from multiple {@link ScalarDataset}s at different resolutions and combine the results.
@@ -51,18 +47,13 @@ import static net.daporkchop.lib.common.util.PorkUtil.*;
  * @author DaPorkchop_
  */
 public class MultiresDataset implements ScalarDataset {
-    public static URL[] configSources(@NonNull String name) throws IOException {
+    public static URL[] configSources(@NonNull String name, boolean overrideDefault) throws IOException {
         Path configDir = Files.createDirectories(Disk.configFile(name));
 
         Path defaultConfig = configDir.resolve("default.json5");
-        if (!Files.isRegularFile(defaultConfig)) { //config file doesn't exist, create default one
-            Path oldDefaultConfig = configDir.resolveSibling(name + "_config.json");
-            if (Files.isRegularFile(oldDefaultConfig)) { //old config file exists, move it to directory
-                Files.move(oldDefaultConfig, defaultConfig);
-            } else {
-                try (InputStream in = MultiresDataset.class.getResourceAsStream("/default_config/" + name + ".json5")) {
-                    Files.write(defaultConfig, StreamUtil.toByteArray(in));
-                }
+        if (overrideDefault || !Files.isRegularFile(defaultConfig)) { //config file doesn't exist, create default one
+            try (InputStream in = MultiresDataset.class.getResourceAsStream("/default_config/" + name + ".json5")) {
+                Files.write(defaultConfig, StreamUtil.toByteArray(in));
             }
         }
 

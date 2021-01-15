@@ -1,6 +1,7 @@
 package io.github.terra121.dataset.impl;
 
 import com.google.common.collect.ImmutableMap;
+import io.github.terra121.TerraConfig;
 import io.github.terra121.dataset.BlendMode;
 import io.github.terra121.dataset.DoubleTiledDataset;
 import io.github.terra121.dataset.MultiresDataset;
@@ -32,7 +33,10 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 public class Heights extends DoubleTiledDataset {
     public static ScalarDataset constructDataset(@NonNull BlendMode blend) {
         try {
-            return new MultiresDataset(new MapsProjection(), MultiresDataset.configSources("heights"), (zoom, urls) -> new Heights(zoom, urls, blend));
+            return new MultiresDataset(
+                    new MapsProjection(),
+                    MultiresDataset.configSources("heights", TerraConfig.data.overrideDefaultElevation),
+                    (zoom, urls) -> new Heights(zoom, urls, blend));
         } catch (IOException e) {
             throw new RuntimeException("unable to load heights dataset config", e);
         }
