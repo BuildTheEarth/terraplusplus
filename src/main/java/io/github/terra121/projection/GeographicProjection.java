@@ -213,7 +213,7 @@ public abstract class GeographicProjection {
 
 		return new double[]{ h * k * sint, 2 * Math.asin(bp / ap), a, b };
 	}
-	
+
 	/**
 	 * Computes the Tissot's indicatrix of this projection at the given point (i.e. the distortion).
 	 * 
@@ -256,7 +256,7 @@ public abstract class GeographicProjection {
 		if(a < 0) a += 360;
 		return (float) a;
 	}
-	
+
 	/**
 	 * Converts an angle in the projected space to an azimuth in the geographic space, at a specific point.
 	 * This is useful to get the direction an entity is looking at, i.e. it will be used by Terramap to show the direction entities are facing.
