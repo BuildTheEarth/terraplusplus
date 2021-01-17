@@ -36,10 +36,11 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
         for (int  x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
                 double height = heights[x * 16 + z];
-                builder.topHeight(x, z, Double.isNaN(height) ? CachedChunkData.BLANK_HEIGHT : floorI(height));
+                if (!Double.isNaN(height)) {
+                    builder.surfaceHeight(x, z, floorI(height));
+                }
             }
         }
-        builder.copyTopHeightToGroundAndWater();
     }
 
     @NonNull

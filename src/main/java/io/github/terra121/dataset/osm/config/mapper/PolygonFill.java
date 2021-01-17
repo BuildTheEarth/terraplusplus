@@ -3,13 +3,13 @@ package io.github.terra121.dataset.osm.config.mapper;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import io.github.terra121.dataset.osm.geojson.Geometry;
-import io.github.terra121.dataset.osm.geojson.geometry.MultiLineString;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import io.github.terra121.dataset.osm.config.dvalue.DValue;
 import io.github.terra121.dataset.osm.draw.DrawFunction;
 import io.github.terra121.dataset.osm.element.Element;
-import io.github.terra121.dataset.osm.element.line.WideLine;
+import io.github.terra121.dataset.osm.element.polygon.FillPolygon;
+import io.github.terra121.dataset.osm.geojson.Geometry;
+import io.github.terra121.dataset.osm.geojson.geometry.MultiPolygon;
 import lombok.Builder;
 import lombok.NonNull;
 
@@ -23,26 +23,23 @@ import static io.github.terra121.TerraConstants.*;
 /**
  * @author DaPorkchop_
  */
-@JsonAdapter(LineWide.Parser.class)
+@JsonAdapter(PolygonFill.Parser.class)
 @Builder
-final class LineWide implements LineMapper {
+final class PolygonFill implements PolygonMapper {
     @NonNull
     protected final DrawFunction draw;
     @NonNull
     protected final DValue layer;
-    @NonNull
-    protected final DValue radius;
-    protected final boolean crossWater;
 
     @Override
-    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull MultiLineString projectedGeometry) {
-        return Collections.singleton(new WideLine(id, this.layer.apply(tags), this.draw, projectedGeometry, this.radius.apply(tags)));
+    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull MultiPolygon projectedGeometry) {
+        return Collections.singletonList(new FillPolygon(id, this.layer.apply(tags), this.draw, projectedGeometry));
     }
 
-    static final class Parser extends JsonParser<LineWide> {
+    static final class Parser extends JsonParser<PolygonFill> {
         @Override
-        public LineWide read(JsonReader in) throws IOException {
-            LineWideBuilder builder = builder();
+        public PolygonFill read(JsonReader in) throws IOException {
+            PolygonFillBuilder builder = builder();
 
             in.beginObject();
             while (in.peek() != JsonToken.END_OBJECT) {
@@ -57,14 +54,6 @@ final class LineWide implements LineMapper {
                         in.beginObject();
                         builder.layer(GSON.fromJson(in, DValue.class));
                         in.endObject();
-                        break;
-                    case "radius":
-                        in.beginObject();
-                        builder.radius(GSON.fromJson(in, DValue.class));
-                        in.endObject();
-                        break;
-                    case "crossWater":
-                        builder.crossWater(in.nextBoolean());
                         break;
                     default:
                         throw new IllegalStateException("invalid property: " + name);

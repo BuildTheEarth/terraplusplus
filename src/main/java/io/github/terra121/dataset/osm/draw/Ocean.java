@@ -13,22 +13,19 @@ import java.io.IOException;
  *
  * @author DaPorkchop_
  */
-@JsonAdapter(Water.Parser.class)
-final class Water implements DrawFunction {
+@JsonAdapter(Ocean.Parser.class)
+final class Ocean implements DrawFunction {
     @Override
     public void drawOnto(@NonNull CachedChunkData.Builder data, int x, int z, int weight) {
-        int waterDepth = data.waterDepth(x, z);
-        if (weight > waterDepth) {
-            data.updateWaterDepth(x, z, weight);
-        }
+        data.markOcean(x, z);
     }
 
-    static class Parser extends JsonParser<Water> {
+    static class Parser extends JsonParser<Ocean> {
         @Override
-        public Water read(JsonReader in) throws IOException {
+        public Ocean read(JsonReader in) throws IOException {
             in.beginObject();
             in.endObject();
-            return new Water();
+            return new Ocean();
         }
     }
 }

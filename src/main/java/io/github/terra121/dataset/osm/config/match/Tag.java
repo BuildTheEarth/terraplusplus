@@ -5,6 +5,7 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import io.github.terra121.dataset.osm.config.JsonParser;
+import io.github.terra121.dataset.osm.geojson.Geometry;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -31,7 +32,7 @@ interface Tag extends MatchCondition {
         protected final String key;
 
         @Override
-        public boolean test(String id, @NonNull Map<String, String> tags) {
+        public boolean test(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull Geometry projectedGeometry) {
             return tags.containsKey(this.key);
         }
     }
@@ -49,7 +50,7 @@ interface Tag extends MatchCondition {
         protected final Set<String> expectedValues;
 
         @Override
-        public boolean test(String id, @NonNull Map<String, String> tags) {
+        public boolean test(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull Geometry projectedGeometry) {
             return this.expectedValues.contains(tags.get(this.key));
         }
     }
@@ -67,7 +68,7 @@ interface Tag extends MatchCondition {
         protected final String value;
 
         @Override
-        public boolean test(String id, @NonNull Map<String, String> tags) {
+        public boolean test(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull Geometry projectedGeometry) {
             return this.value.equals(tags.get(this.key));
         }
     }

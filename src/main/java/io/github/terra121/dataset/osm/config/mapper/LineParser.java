@@ -8,8 +8,8 @@ import java.util.Map;
 /**
  * @author DaPorkchop_
  */
-final class LineParser extends JsonParser.Typed<LineMapper> {
-    private static final Map<String, Class<? extends LineMapper>> TYPES = new Object2ObjectOpenHashMap<>();
+public class LineParser extends JsonParser.Typed<LineMapper> {
+    public static final Map<String, Class<? extends LineMapper>> TYPES = new Object2ObjectOpenHashMap<>();
 
     static {
         TYPES.put("all", All.Line.class);

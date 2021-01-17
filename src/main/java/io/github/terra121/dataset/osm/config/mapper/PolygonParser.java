@@ -8,8 +8,8 @@ import java.util.Map;
 /**
  * @author DaPorkchop_
  */
-class PolygonParser extends JsonParser.Typed<PolygonMapper> {
-    private static final Map<String, Class<? extends PolygonMapper>> TYPES = new Object2ObjectOpenHashMap<>();
+public class PolygonParser extends JsonParser.Typed<PolygonMapper> {
+    public static final Map<String, Class<? extends PolygonMapper>> TYPES = new Object2ObjectOpenHashMap<>();
 
     static {
         TYPES.put("all", All.Polygon.class);
@@ -20,6 +20,7 @@ class PolygonParser extends JsonParser.Typed<PolygonMapper> {
         TYPES.put("nothing", Nothing.Polygon.class);
 
         TYPES.put("distance", PolygonDistance.class);
+        TYPES.put("fill", PolygonFill.class);
     }
 
     public PolygonParser() {

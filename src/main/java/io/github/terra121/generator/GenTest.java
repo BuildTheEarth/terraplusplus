@@ -82,8 +82,8 @@ public class GenTest {
                                 for (int x = 0; x < 16; x++) {
                                     for (int z = 0; z < 16; z++) {
                                         int j = (offX + x) * SIZE + offZ + z;
-                                        dst[0][j] = data.topHeight(x, z);
-                                        dst[1][j] = data.topHeight(x, z) - data.groundHeight(x, z);
+                                        dst[0][j] = data.surfaceHeight(x, z);
+                                        dst[1][j] = data.surfaceHeight(x, z) - data.groundHeight(x, z);
                                         IBlockState state = data.surfaceBlocks().get(x * 16 + z);
                                         dst[2][j] = state == null ? 0.0d : state.getBlock() == Blocks.CONCRETE ? 1.0d : 2.0d;
                                     }

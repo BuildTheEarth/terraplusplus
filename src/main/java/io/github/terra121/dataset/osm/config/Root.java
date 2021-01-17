@@ -39,24 +39,24 @@ final class Root implements OSMMapper<Geometry> {
     protected final PolygonMapper polygon;
 
     @Override
-    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry geometry) {
-        if (geometry instanceof Point || geometry instanceof MultiPoint) { //points can't be generated
+    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull Geometry projectedGeometry) {
+        if (projectedGeometry instanceof Point || projectedGeometry instanceof MultiPoint) { //points can't be generated
             return null;
         }
 
         //convert to multi type if not already
-        if (geometry instanceof LineString) {
-            geometry = new MultiLineString(new LineString[]{ (LineString) geometry });
-        } else if (geometry instanceof Polygon) {
-            geometry = new MultiPolygon(new Polygon[]{ (Polygon) geometry });
+        if (projectedGeometry instanceof LineString) {
+            projectedGeometry = new MultiLineString(new LineString[]{ (LineString) projectedGeometry });
+        } else if (projectedGeometry instanceof Polygon) {
+            projectedGeometry = new MultiPolygon(new Polygon[]{ (Polygon) projectedGeometry });
         }
 
-        if (geometry instanceof MultiLineString) {
-            return this.line.apply(id, tags, (MultiLineString) geometry);
-        } else if (geometry instanceof MultiPolygon) {
-            return this.polygon.apply(id, tags, (MultiPolygon) geometry);
+        if (projectedGeometry instanceof MultiLineString) {
+            return this.line.apply(id, tags, originalGeometry, (MultiLineString) projectedGeometry);
+        } else if (projectedGeometry instanceof MultiPolygon) {
+            return this.polygon.apply(id, tags, originalGeometry, (MultiPolygon) projectedGeometry);
         } else {
-            throw new IllegalArgumentException("unsupported geometry type: " + PorkUtil.className(geometry));
+            throw new IllegalArgumentException("unsupported geometry type: " + PorkUtil.className(projectedGeometry));
         }
     }
 

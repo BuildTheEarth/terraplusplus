@@ -21,7 +21,7 @@ import java.util.Map;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
- * Returns the combined results of all of a number of mappers, ignoring any one of them returns {@code null}.
+ * Returns the combined results of all of a number of mappers, ignoring any one of them that returns {@code null}.
  *
  * @author DaPorkchop_
  */
@@ -31,10 +31,10 @@ abstract class Any<G extends Geometry, M extends OSMMapper<G>> implements OSMMap
     protected final M[] children;
 
     @Override
-    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull G geometry) {
+    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull G projectedGeometry) {
         List<Element> out = new ArrayList<>();
         for (M child : this.children) {
-            Collection<Element> result = child.apply(id, tags, geometry);
+            Collection<Element> result = child.apply(id, tags, originalGeometry, projectedGeometry);
             if (result != null) { //don't bother processing further children
                 out.addAll(result);
             }

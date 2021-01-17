@@ -33,12 +33,12 @@ abstract class Condition<G extends Geometry, M extends OSMMapper<G>> implements 
     protected final M emit;
 
     @Override
-    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull G geometry) {
-        if (!this.match.test(id, tags)) { //element doesn't match, emit nothing
+    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull G projectedGeometry) {
+        if (!this.match.test(id, tags, originalGeometry, projectedGeometry)) { //element doesn't match, emit nothing
             return null;
         }
 
-        return this.emit.apply(id, tags, geometry);
+        return this.emit.apply(id, tags, originalGeometry, projectedGeometry);
     }
 
     static abstract class Parser<G extends Geometry, M extends OSMMapper<G>, I extends Condition<?, ?>> extends JsonParser<I> {

@@ -3,6 +3,7 @@ package io.github.terra121.dataset.osm.config.mapper;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import io.github.terra121.dataset.osm.geojson.Geometry;
 import io.github.terra121.dataset.osm.geojson.geometry.MultiLineString;
 import io.github.terra121.dataset.osm.config.dvalue.DValue;
 import io.github.terra121.dataset.osm.draw.DrawFunction;
@@ -32,8 +33,8 @@ final class LineNarrow implements LineMapper {
     protected final boolean crossWater;
 
     @Override
-    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull MultiLineString geometry) {
-        return Collections.singletonList(new NarrowLine(id, this.layer.apply(tags), this.draw, geometry));
+    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull MultiLineString projectedGeometry) {
+        return Collections.singletonList(new NarrowLine(id, this.layer.apply(tags), this.draw, projectedGeometry));
     }
 
     static final class Parser extends JsonParser<LineNarrow> {

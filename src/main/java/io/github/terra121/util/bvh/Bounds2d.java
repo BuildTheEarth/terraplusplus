@@ -82,6 +82,16 @@ public interface Bounds2d {
     }
 
     /**
+     * Returns a bounding box that contains this bounding box and the given one.
+     *
+     * @param other the other bounding box
+     * @return the minimum bounding box containing both bounding boxes
+     */
+    default Bounds2d union(@NonNull Bounds2d other) {
+        return of(min(this.minX(), other.minX()), max(this.maxX(), other.maxX()), min(this.minZ(), other.minZ()), max(this.maxZ(), other.maxZ()));
+    }
+
+    /**
      * Expands this bounding box by the given amount in every direction.
      *
      * @param offset the amount to expand the bounding box by

@@ -2,6 +2,7 @@ package io.github.terra121.dataset.osm.config.match;
 
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
+import io.github.terra121.dataset.osm.geojson.Geometry;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -20,9 +21,9 @@ final class Or implements MatchCondition {
     protected final MatchCondition[] delegates;
 
     @Override
-    public boolean test(String id, @NonNull Map<String, String> tags) {
+    public boolean test(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull Geometry projectedGeometry) {
         for (MatchCondition delegate : this.delegates) {
-            if (delegate.test(id, tags)) {
+            if (delegate.test(id, tags, originalGeometry, projectedGeometry)) {
                 return true;
             }
         }

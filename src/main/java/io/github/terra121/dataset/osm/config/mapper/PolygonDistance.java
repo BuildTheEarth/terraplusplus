@@ -3,6 +3,7 @@ package io.github.terra121.dataset.osm.config.mapper;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import io.github.terra121.dataset.osm.geojson.Geometry;
 import io.github.terra121.dataset.osm.geojson.geometry.MultiPolygon;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import io.github.terra121.dataset.osm.config.dvalue.DValue;
@@ -33,8 +34,8 @@ final class PolygonDistance implements PolygonMapper {
     protected final int maxDist = 2;
 
     @Override
-    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull MultiPolygon geometry) {
-        return Collections.singletonList(new DistancePolygon(id, this.layer.apply(tags), this.draw, geometry, this.maxDist));
+    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull MultiPolygon projectedGeometry) {
+        return Collections.singletonList(new DistancePolygon(id, this.layer.apply(tags), this.draw, projectedGeometry, this.maxDist));
     }
 
     static final class Parser extends JsonParser<PolygonDistance> {

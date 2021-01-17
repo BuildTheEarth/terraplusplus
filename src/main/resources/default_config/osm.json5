@@ -394,9 +394,7 @@
                 "emit": {
                     "distance": {
                         "draw": {
-                            "water": {
-                                "minDepth": -1
-                            }
+                            "water": {}
                         },
                         "layer": {
                             "tag": {
@@ -407,7 +405,38 @@
                         "maxDist": 6
                     }
                 }
-            }/*,
+            },
+            //special handling for the caspian sea: it's tagged as natural=coastline, but isn't actually at sea level...
+            "condition": {
+                "match": {
+                    "and": {
+                        "tag": {
+                            "natural": "coastline"
+                        },
+                        "intersects": {
+                            "minX": 45.637,
+                            "minZ": 34.597,
+                            "maxX": 56.536,
+                            "maxZ": 47.695
+                        }
+                    }
+                },
+                "emit": {
+                    "distance": {
+                        "draw": {
+                            "water": {}
+                        },
+                        "layer": {
+                            "tag": {
+                                "key": "layer",
+                                "fallback": 0
+                            }
+                        },
+                        "maxDist": 6
+                    }
+                }
+            },
+            //all remaining coastline polygons are treated as ocean
             "condition": {
                 "match": {
                     "tag": {
@@ -416,11 +445,19 @@
                     }
                 },
                 "emit": {
-                    "rasterize": {
-                        "fill": "ocean"
+                    "fill": {
+                        "draw": {
+                            "ocean": {}
+                        },
+                        "layer": {
+                            "tag": {
+                                "key": "layer",
+                                "fallback": 0
+                            }
+                        }
                     }
                 }
-            }*/
+            }
         }
     }
 }

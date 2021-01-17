@@ -2,6 +2,7 @@ package io.github.terra121.dataset.osm.config.mapper;
 
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
+import io.github.terra121.dataset.osm.geojson.Geometry;
 import io.github.terra121.dataset.osm.geojson.geometry.LineString;
 import io.github.terra121.dataset.osm.geojson.geometry.MultiLineString;
 import io.github.terra121.dataset.osm.geojson.geometry.MultiPolygon;
@@ -53,15 +54,15 @@ interface PolygonConvert extends PolygonMapper {
         protected final LineMapper next;
 
         @Override
-        public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull MultiPolygon geometry) {
+        public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull MultiPolygon projectedGeometry) {
             //convert multipolygon to multilinestring
             List<LineString> lines = new ArrayList<>();
-            for (Polygon polygon : geometry.polygons()) {
+            for (Polygon polygon : projectedGeometry.polygons()) {
                 lines.add(polygon.outerRing());
                 lines.addAll(Arrays.asList(polygon.innerRings()));
             }
 
-            return this.next.apply(id, tags, new MultiLineString(lines.toArray(new LineString[0])));
+            return this.next.apply(id, tags, originalGeometry, new MultiLineString(lines.toArray(new LineString[0])));
         }
 
         static class Parser extends JsonParser<Line> {

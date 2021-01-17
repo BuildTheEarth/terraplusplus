@@ -30,9 +30,9 @@ abstract class First<G extends Geometry, M extends OSMMapper<G>> implements OSMM
     protected final M[] children;
 
     @Override
-    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull G geometry) {
+    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull G projectedGeometry) {
         for (M child : this.children) {
-            Collection<Element> result = child.apply(id, tags, geometry);
+            Collection<Element> result = child.apply(id, tags, originalGeometry, projectedGeometry);
             if (result != null) {
                 return result;
             }

@@ -31,5 +31,5 @@ public interface OSMMapper<G extends Geometry> {
         }
     }
 
-    Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull G geometry);
+    Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull G projectedGeometry);
 }

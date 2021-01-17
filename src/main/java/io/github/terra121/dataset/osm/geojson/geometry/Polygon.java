@@ -3,6 +3,7 @@ package io.github.terra121.dataset.osm.geojson.geometry;
 import io.github.terra121.dataset.osm.geojson.Geometry;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.projection.ProjectionFunction;
+import io.github.terra121.util.bvh.Bounds2d;
 import lombok.Data;
 import lombok.NonNull;
 
@@ -33,5 +34,10 @@ public final class Polygon implements Geometry {
             innerRings[i] = innerRings[i].project(projection);
         }
         return new Polygon(outerRing, innerRings);
+    }
+
+    @Override
+    public Bounds2d bounds() {
+        return this.outerRing.bounds();
     }
 }

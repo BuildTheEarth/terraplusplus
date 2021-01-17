@@ -24,9 +24,10 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  * @author DaPorkchop_
  */
 public class CachedChunkData {
+    public static final int BLANK_HEIGHT = -1;
+    public static final int WATERDEPTH_DEFAULT = (byte) 0x80;
     private static final Ref<Builder> BUILDER_CACHE = ThreadRef.soft(Builder::new);
-
-    public static final int BLANK_HEIGHT = -2;
+    public static final int WATERDEPTH_OCEAN = (byte) 0x7F;
 
     public static final CachedChunkData BLANK;
     public static final CachedChunkData NULL_ISLAND;
@@ -36,8 +37,7 @@ public class CachedChunkData {
 
         BLANK = builder.build();
 
-        Arrays.fill(builder.topHeight, (short) 1);
-        Arrays.fill(builder.groundHeight, (short) 1);
+        Arrays.fill(builder.surfaceHeight, 1);
         NULL_ISLAND = builder.build();
     }
 
@@ -62,9 +62,8 @@ public class CachedChunkData {
         return out;
     }
 
-    private final short[] topHeight;
-    private final short[] groundHeight;
-    private final short[] waterHeight;
+    private final int[] surfaceHeight;
+    private final int[] groundHeight;
 
     @Getter
     private final ImmutableBlockStateArray surfaceBlocks;
@@ -76,9 +75,24 @@ public class CachedChunkData {
     private final double treeCover;
 
     private CachedChunkData(@NonNull Builder builder) {
-        this.topHeight = builder.topHeight.clone();
-        this.groundHeight = builder.groundHeight.clone();
-        this.waterHeight = builder.waterHeight.clone();
+        this.surfaceHeight = builder.surfaceHeight.clone();
+        this.groundHeight = builder.surfaceHeight.clone();
+
+        for (int i = 0; i < 16 * 16; i++) {
+            int d = builder.waterDepth[i];
+            if (d == WATERDEPTH_OCEAN) {
+                this.surfaceHeight[i] = 0;
+                if (this.groundHeight[i] >= 0) {
+                    this.groundHeight[i] = -2;
+                }
+            } else {
+                if (d < -EarthGenerator.WATER_DEPTH_OFFSET) {
+                    d = -EarthGenerator.WATER_DEPTH_OFFSET;
+                }
+                this.groundHeight[i] -= d + EarthGenerator.WATER_DEPTH_OFFSET;
+            }
+        }
+
         this.treeCover = builder.treeCover;
 
         this.surfaceBlocks = new ImmutableBlockStateArray(builder.surfaceBlocks);
@@ -88,16 +102,8 @@ public class CachedChunkData {
         int min = Integer.MAX_VALUE;
         int max = Integer.MIN_VALUE;
         for (int i = 0; i < 16 * 16; i++) {
-            min = min(min, this.topHeight[i]);
-            max = max(max, this.topHeight[i]);
-        }
-        for (int i = 0; i < 16 * 16; i++) {
-            min = min(min, this.groundHeight[i]);
-            max = max(max, this.groundHeight[i]);
-        }
-        for (int i = 0; i < 16 * 16; i++) {
-            min = min(min, this.waterHeight[i]);
-            max = max(max, this.waterHeight[i]);
+            min = min(min, this.surfaceHeight[i]);
+            max = max(max, this.surfaceHeight[i]);
         }
         this.surfaceMinCube = Coords.blockToCube(min);
         this.surfaceMaxCube = Coords.blockToCube(max + 1);
@@ -115,8 +121,8 @@ public class CachedChunkData {
         return cubeY < this.surfaceMinCube;
     }
 
-    public int topHeight(int x, int z) {
-        return this.topHeight[x * 16 + z];
+    public int surfaceHeight(int x, int z) {
+        return this.surfaceHeight[x * 16 + z];
     }
 
     public int groundHeight(int x, int z) {
@@ -124,7 +130,7 @@ public class CachedChunkData {
     }
 
     public int waterHeight(int x, int z) {
-        return this.waterHeight[x * 16 + z];
+        return this.surfaceHeight(x, z) - 1;
     }
 
     /**
@@ -135,9 +141,8 @@ public class CachedChunkData {
     @Getter
     @Setter
     public static final class Builder {
-        private final short[] topHeight = new short[16 * 16];
-        private final short[] groundHeight = new short[16 * 16];
-        private final short[] waterHeight = new short[16 * 16];
+        private final int[] surfaceHeight = new int[16 * 16];
+        private final byte[] waterDepth = new byte[16 * 16];
         protected final IBlockState[] surfaceBlocks = new IBlockState[16 * 16];
         protected double treeCover = 0.0d;
 
@@ -149,45 +154,34 @@ public class CachedChunkData {
             this.reset();
         }
 
-        public Builder topHeight(int x, int z, int value) {
-            this.topHeight[x * 16 + z] = toShort(value);
+        public Builder surfaceHeight(int x, int z, int value) {
+            this.surfaceHeight[x * 16 + z] = value;
             return this;
         }
 
-        public Builder groundHeight(int x, int z, int value) {
-            this.groundHeight[x * 16 + z] = toShort(value);
-            return this;
-        }
-
-        public Builder waterHeight(int x, int z, int value) {
-            this.waterHeight[x * 16 + z] = toShort(value);
-            return this;
-        }
-
-        public int topHeight(int x, int z) {
-            return this.topHeight[x * 16 + z];
-        }
-
-        public int groundHeight(int x, int z) {
-            return this.groundHeight[x * 16 + z];
-        }
-
-        public int waterHeight(int x, int z) {
-            return this.waterHeight[x * 16 + z];
-        }
-
-        public Builder copyTopHeightToGroundAndWater() {
-            System.arraycopy(this.topHeight, 0, this.groundHeight, 0, 16 * 16);
-            for (int i = 0; i < 16 * 16; i++) {
-                this.waterHeight[i] = toShort(this.topHeight[i] - 1);
+        public Builder updateWaterDepth(int x, int z, int depth) {
+            if (depth > this.waterDepth[x * 16 + z]) {
+                this.waterDepth[x * 16 + z] = (byte) depth;
             }
             return this;
         }
 
+        public Builder markOcean(int x, int z) {
+            this.waterDepth[x * 16 + z] = (byte) WATERDEPTH_OCEAN;
+            return this;
+        }
+
+        public int surfaceHeight(int x, int z) {
+            return this.surfaceHeight[x * 16 + z];
+        }
+
+        public int waterDepth(int x, int z) {
+            return this.waterDepth[x * 16 + z];
+        }
+
         public Builder reset() {
-            Arrays.fill(this.topHeight, (short) BLANK_HEIGHT);
-            Arrays.fill(this.groundHeight, (short) BLANK_HEIGHT);
-            Arrays.fill(this.waterHeight, (short) BLANK_HEIGHT);
+            Arrays.fill(this.surfaceHeight, BLANK_HEIGHT);
+            Arrays.fill(this.waterDepth, (byte) WATERDEPTH_DEFAULT);
             Arrays.fill(this.surfaceBlocks, null);
             this.treeCover = 0.0d;
             return this;

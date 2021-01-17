@@ -70,7 +70,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         this.earthProjection = earthProjection;
 
         try {
-            this.mapper = OSMMapper.load(OpenStreetMap.class.getResourceAsStream("/config/osm.json5"));
+            this.mapper = OSMMapper.load(OpenStreetMap.class.getResourceAsStream("/default_config/osm.json5"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -139,7 +139,8 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
             return Stream.empty();
         } else {
             try {
-                Collection<Element> elements = this.mapper.apply(id, tags, ((Geometry) object).project(this.earthProjection::fromGeo));
+                Geometry geometry = (Geometry) object;
+                Collection<Element> elements = this.mapper.apply(id, tags, geometry, geometry.project(this.earthProjection::fromGeo));
                 return elements != null ? elements.stream() : Stream.empty();
             } catch (OutOfProjectionBoundsException e) {//skip element
                 return Stream.empty();

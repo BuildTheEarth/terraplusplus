@@ -22,7 +22,7 @@ import java.util.Map;
  */
 abstract class Nothing<G extends Geometry, M extends OSMMapper<G>> implements OSMMapper<G> {
     @Override
-    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull G geometry) {
+    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull G projectedGeometry) {
         return Collections.emptyList();
     }
 

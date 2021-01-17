@@ -4,9 +4,11 @@ import com.google.common.collect.Iterators;
 import io.github.terra121.dataset.osm.geojson.Geometry;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.projection.ProjectionFunction;
+import io.github.terra121.util.bvh.Bounds2d;
 import lombok.Data;
 import lombok.NonNull;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 /**
@@ -29,5 +31,10 @@ public final class MultiPolygon implements Geometry, Iterable<Polygon> {
             out[i] = out[i].project(projection);
         }
         return new MultiPolygon(out);
+    }
+
+    @Override
+    public Bounds2d bounds() {
+        return Arrays.stream(this.polygons).map(Polygon::bounds).reduce(Bounds2d::union).orElse(null);
     }
 }

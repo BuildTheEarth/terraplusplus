@@ -215,7 +215,7 @@ public class EarthGenerator extends BasicCubeGenerator {
             ImmutableBlockStateArray surfaceBlocks = data.surfaceBlocks();
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
-                    int y = data.topHeight(x, z) - Coords.cubeToMinBlock(cubeY);
+                    int y = data.surfaceHeight(x, z) - Coords.cubeToMinBlock(cubeY);
                     IBlockState state;
                     if ((y & 0xF) == y //don't set surface blocks outside of this cube
                         && (state = surfaceBlocks.get(x * 16 + z)) != null) {
@@ -240,15 +240,6 @@ public class EarthGenerator extends BasicCubeGenerator {
                 }
             }
         } else if (data.aboveSurface(cubeY)) { //above surface -> air (no padding here, replacers don't normally affect anything above the surface)
-            if (cubeY < 0) { //fill with water, we're in the ocean
-                for (int x = 0; x < 16; x++) {
-                    for (int y = 0; y < 16; y++) {
-                        for (int z = 0; z < 16; z++) {
-                            primer.setBlockState(x, y, z, water);
-                        }
-                    }
-                }
-            }
         } else {
             IBlockState grass = Blocks.GRASS.getDefaultState();
             IBlockState dirt = Blocks.DIRT.getDefaultState();
@@ -259,9 +250,9 @@ public class EarthGenerator extends BasicCubeGenerator {
                     int waterHeight = data.waterHeight(x, z);
 
                     //horizontal density change is calculated using the top height rather than the ground height
-                    int topHeight = data.topHeight(x, z);
-                    double dx = x == 15 ? topHeight - data.topHeight(x - 1, z) : data.topHeight(x + 1, z) - topHeight;
-                    double dz = z == 15 ? topHeight - data.topHeight(x, z - 1) : data.topHeight(x, z + 1) - topHeight;
+                    int topHeight = data.surfaceHeight(x, z);
+                    double dx = x == 15 ? topHeight - data.surfaceHeight(x - 1, z) : data.surfaceHeight(x + 1, z) - topHeight;
+                    double dz = z == 15 ? topHeight - data.surfaceHeight(x, z - 1) : data.surfaceHeight(x, z + 1) - topHeight;
 
                     int groundTop = min(groundHeight - Coords.cubeToMinBlock(cubeY), 15);
                     int waterTop = min(waterHeight - Coords.cubeToMinBlock(cubeY), 15);

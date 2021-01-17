@@ -8,11 +8,15 @@ import java.util.Map;
 /**
  * @author DaPorkchop_
  */
-class DrawFunctionParser extends JsonParser.Typed<DrawFunction> {
-    protected static final Map<String, Class<? extends DrawFunction>> TYPES = new Object2ObjectOpenHashMap<>();
+public class DrawFunctionParser extends JsonParser.Typed<DrawFunction> {
+    public static final Map<String, Class<? extends DrawFunction>> TYPES = new Object2ObjectOpenHashMap<>();
 
     static {
+        TYPES.put("add", Add.class);
+        TYPES.put("clamp", Clamp.class);
+
         TYPES.put("block", Block.class);
+        TYPES.put("ocean", Ocean.class);
         TYPES.put("water", Water.class);
     }
 

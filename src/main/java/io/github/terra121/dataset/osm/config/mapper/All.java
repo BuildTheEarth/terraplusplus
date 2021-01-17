@@ -31,10 +31,10 @@ abstract class All<G extends Geometry, M extends OSMMapper<G>> implements OSMMap
     protected final M[] children;
 
     @Override
-    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull G geometry) {
+    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull G projectedGeometry) {
         List<Element> out = new ArrayList<>();
         for (M child : this.children) {
-            Collection<Element> result = child.apply(id, tags, geometry);
+            Collection<Element> result = child.apply(id, tags, originalGeometry, projectedGeometry);
             if (result == null) { //don't bother processing further children
                 return null;
             }

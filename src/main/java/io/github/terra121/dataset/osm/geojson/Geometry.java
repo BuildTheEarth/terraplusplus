@@ -23,6 +23,7 @@ package io.github.terra121.dataset.osm.geojson;
 import com.google.gson.annotations.JsonAdapter;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.projection.ProjectionFunction;
+import io.github.terra121.util.bvh.Bounds2d;
 import lombok.NonNull;
 
 /**
@@ -31,4 +32,6 @@ import lombok.NonNull;
 @JsonAdapter(GeometryDeserializer.class)
 public interface Geometry extends GeoJSONObject {
     Geometry project(@NonNull ProjectionFunction projection) throws OutOfProjectionBoundsException;
+
+    Bounds2d bounds();
 }
