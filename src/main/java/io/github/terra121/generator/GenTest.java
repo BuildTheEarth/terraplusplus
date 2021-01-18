@@ -1,6 +1,8 @@
 package io.github.terra121.generator;
 
+import io.github.terra121.BTEWorldType;
 import io.github.terra121.generator.cache.ChunkDataLoader;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.http.Http;
 import net.daporkchop.lib.common.util.PorkUtil;
 import net.minecraft.block.state.IBlockState;
@@ -16,16 +18,16 @@ import static net.daporkchop.lib.common.math.PMath.*;
 
 //TODO: delete this before merge
 public class GenTest {
-    static final int SIZE = 1024;
-    static final int BASE_CHUNK_X = (857742 >> 4) - 8;
-    static final int BASE_CHUNK_Z = (4721747 >> 4) - 4;
+    static final int SIZE = 256;
+    static int BASE_CHUNK_X = 0;
+    static int BASE_CHUNK_Z = 0;
     static final int SCALE = 0;
 
     static final int CHUNKS = SIZE >> 4;
 
     static ChunkDataLoader LOADER;
 
-    public static void main(String... args) {
+    public static void main(String... args) throws OutOfProjectionBoundsException {
         Bootstrap.register();
         Http.configChanged();
 
@@ -34,13 +36,19 @@ public class GenTest {
         }
     }
 
-    private static void doThing() { //allows hot-swapping
+    private static void doThing() throws OutOfProjectionBoundsException { //allows hot-swapping
         EarthGeneratorSettings cfg = new EarthGeneratorSettings("{\"projection\":\"equirectangular\",\"orentation\":\"swapped\",\"scaleX\":100000.0,\"scaleY\":100000.0,\"smoothblend\":true,\"roads\":false,\"customcubic\":\"\",\"dynamicbaseheight\":true,\"osmwater\":true,\"buildings\":false,\"caves\":false,\"lidar\":false,\"customdataset\":\"Custom Terrain Directory\"}");
-        //cfg = new EarthGeneratorSettings("");
+        cfg = new EarthGeneratorSettings(BTEWorldType.BTE_GENERATOR_SETTINGS);
         LOADER = new ChunkDataLoader(new GeneratorDatasets(cfg.getProjection(), cfg, true));
+
+        double[] proj = cfg.getProjection().fromGeo(51.63710, 43.18382);
+        BASE_CHUNK_X = (floorI(proj[0]) >> 4) - (CHUNKS >> 1);
+        BASE_CHUNK_Z = (floorI(proj[1]) >> 4) - (CHUNKS >> 1);
 
         PorkUtil.simpleDisplayImage(true, tile(0, 0, SCALE)
                 .thenApply(data -> {
+                    System.out.println(Arrays.toString(proj));
+
                     BufferedImage img = new BufferedImage(SIZE, SIZE, BufferedImage.TYPE_INT_ARGB);
 
                     double minH = Arrays.stream(data[0]).min().getAsDouble();
@@ -77,12 +85,12 @@ public class GenTest {
                 for (int chunkZ = 0; chunkZ < CHUNKS; chunkZ++) {
                     int offX = chunkX << 4;
                     int offZ = chunkZ << 4;
-                    futures[i++] = LOADER.load(new ChunkPos(BASE_CHUNK_Z + chunkX + tileX * CHUNKS, BASE_CHUNK_X + chunkZ + tileZ * CHUNKS))
+                    futures[i++] = LOADER.load(new ChunkPos(BASE_CHUNK_X + chunkX + tileX * CHUNKS, BASE_CHUNK_Z + chunkZ + tileZ * CHUNKS))
                             .thenAccept(data -> {
                                 for (int x = 0; x < 16; x++) {
                                     for (int z = 0; z < 16; z++) {
                                         int j = (offX + x) * SIZE + offZ + z;
-                                        dst[0][j] = data.surfaceHeight(x, z);
+                                        dst[0][j] = data.groundHeight(x, z);
                                         dst[1][j] = data.surfaceHeight(x, z) - data.groundHeight(x, z);
                                         IBlockState state = data.surfaceBlocks().get(x * 16 + z);
                                         dst[2][j] = state == null ? 0.0d : state.getBlock() == Blocks.CONCRETE ? 1.0d : 2.0d;
@@ -99,17 +107,19 @@ public class GenTest {
                     int offZ = (SIZE >> 1) * dtz;
                     futures[i++] = tile((tileX << 1) + dtx, (tileZ << 1) + dtz, level - 1)
                             .thenAccept(data -> {
-                                for (int x = 0; x < SIZE; x += 2) {
-                                    for (int z = 0; z < SIZE; z += 2) {
-                                        int j = (offX + (x >> 1)) * SIZE + offZ + (z >> 1);
-                                        for (int l = 0; l < dst.length; l++) {
-                                            double v = 0.0d;
-                                            for (int dx = 0; dx < 2; dx++) {
-                                                for (int dz = 0; dz < 2; dz++) {
-                                                    v += data[l][(x + dx) * SIZE + (z + dz)];
+                                synchronized (dst) {
+                                    for (int x = 0; x < SIZE; x += 2) {
+                                        for (int z = 0; z < SIZE; z += 2) {
+                                            int j = (offX + (x >> 1)) * SIZE + offZ + (z >> 1);
+                                            for (int l = 0; l < dst.length; l++) {
+                                                double v = 0.0d;
+                                                for (int dx = 0; dx < 2; dx++) {
+                                                    for (int dz = 0; dz < 2; dz++) {
+                                                        v += data[l][(x + dx) * SIZE + (z + dz)];
+                                                    }
                                                 }
+                                                dst[l][j] = v * 0.25d;
                                             }
-                                            dst[l][j] = v * 0.25d;
                                         }
                                     }
                                 }
@@ -117,6 +127,6 @@ public class GenTest {
                 }
             }
         }
-        return CompletableFuture.allOf(futures).thenApply(unused -> dst);
+        return CompletableFuture.allOf(futures).whenComplete((v, t) -> {}).thenApply(unused -> dst);
     }
 }

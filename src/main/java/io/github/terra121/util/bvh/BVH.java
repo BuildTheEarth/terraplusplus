@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import static java.lang.Math.*;
+import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 /**
  * A simple, immutable, quadtree-based implementation of a BVH (Bounding Volume Hierarchy) on arbitrary values implementing {@link Bounds2d}.
@@ -98,6 +99,11 @@ public class BVH<V extends Bounds2d> implements Bounds2d {
         }
     }
 
+    /**
+     * Runs the given function on every value.
+     *
+     * @param callback the callback function to run
+     */
     public void forEach(@NonNull Consumer<V> callback) {
         if (this.root != null) {
             this.root.forEach(callback);
@@ -107,7 +113,7 @@ public class BVH<V extends Bounds2d> implements Bounds2d {
     protected static class Node<V extends Bounds2d> extends Bounds2dImpl {
         protected Node<V>[] children;
 
-        protected Object[] values;
+        protected Bounds2d[] values;
         protected int size = 0; //only used during construction
 
         public Node(double minX, double maxX, double minZ, double maxZ) {
@@ -116,7 +122,7 @@ public class BVH<V extends Bounds2d> implements Bounds2d {
 
         protected void insert(V value) {
             if (this.values == null) { //allocate initial value array
-                this.values = new Object[NODE_SPLIT_CAPACITY];
+                this.values = new Bounds2d[NODE_SPLIT_CAPACITY];
             } else if (this.size == NODE_SPLIT_CAPACITY && this.canSplit()) { //we're at capacity and haven't split yet, attempt to split now
                 this.split();
             }
@@ -134,7 +140,7 @@ public class BVH<V extends Bounds2d> implements Bounds2d {
 
             int valueIndex = this.size++;
             if (valueIndex >= this.values.length) { //grow array if necessary
-                Object[] values = new Object[this.values.length << 1];
+                Bounds2d[] values = new Bounds2d[this.values.length << 1];
                 System.arraycopy(this.values, 0, values, 0, this.values.length);
                 this.values = values;
             }
@@ -181,7 +187,6 @@ public class BVH<V extends Bounds2d> implements Bounds2d {
             this.size = size;
         }
 
-        @SuppressWarnings("unchecked")
         protected void forEachIntersecting(Bounds2d bb, Consumer<V> callback) {
             if (this.children != null) { //not a leaf node
                 for (Node<V> child : this.children) {
@@ -194,12 +199,12 @@ public class BVH<V extends Bounds2d> implements Bounds2d {
             if (this.values != null) { //this node contains some values
                 if (bb.contains(this)) { //the query box contains this entire node, therefore we can assume that all of the values intersect it
                     for (Object value : this.values) {
-                        callback.accept((V) value);
+                        callback.accept(uncheckedCast(value));
                     }
                 } else { //check intersection with each value individually
-                    for (Object value : this.values) {
-                        if (bb.intersects((V) value)) {
-                            callback.accept((V) value);
+                    for (Bounds2d value : this.values) {
+                        if (bb.intersects(value)) {
+                            callback.accept(uncheckedCast(value));
                         }
                     }
                 }

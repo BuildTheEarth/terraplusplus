@@ -42,6 +42,7 @@ public class TerraConfig {
 
         public String[] openstreetmap = {
                 "file:///home/daporkchop/Desktop/switzerland.tiles/",
+                "http://localhost:8080/",
                 "https://cloud.daporkchop.net/gis/switzerland.tiles/",
                 "https://cloud.daporkchop.net/gis/osm/"
         };
@@ -74,7 +75,7 @@ public class TerraConfig {
                 "The maximum age of data in the persistent cache, in minutes. Data older than this will be expired.",
                 "Default: 1440 minutes (1 day)"
         })
-        public int cacheTTL = 1440;
+        public int cacheTTL = 1440 << 8;
 
         @Comment({
                 "Allows you to override the default elevation datasets.",

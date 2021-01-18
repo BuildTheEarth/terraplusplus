@@ -52,8 +52,6 @@ public final class DistancePolygon extends AbstractPolygon {
                 int max;
 
                 if (i < intersectionPoints.length) { //index is valid
-                    final double end = baseZ + 16 + maxDist;
-
                     int mask = 0;
                     int min = floorI(intersectionPoints[i++]) - baseZ;
 
@@ -71,7 +69,7 @@ public final class DistancePolygon extends AbstractPolygon {
 
                         min = max;
                         mask = ~mask;
-                    } while (i < intersectionPoints.length && intersectionPoints[i] <= end);
+                    } while (i < intersectionPoints.length && max <= baseX + 16);
                 } else { //index is too high, simply fill from the end
                     max = floorI(intersectionPoints[intersectionPoints.length - 1]) - baseZ;
                 }

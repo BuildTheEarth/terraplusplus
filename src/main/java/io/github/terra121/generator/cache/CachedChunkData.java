@@ -82,7 +82,7 @@ public class CachedChunkData {
             int d = builder.waterDepth[i];
             if (d == WATERDEPTH_OCEAN) {
                 this.surfaceHeight[i] = 0;
-                if (this.groundHeight[i] >= 0) {
+                if (this.groundHeight[i] >= -1) {
                     this.groundHeight[i] = -2;
                 }
             } else {

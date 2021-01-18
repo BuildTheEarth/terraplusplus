@@ -33,8 +33,9 @@ abstract class All<G extends Geometry, M extends OSMMapper<G>> implements OSMMap
     @Override
     public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull G projectedGeometry) {
         List<Element> out = new ArrayList<>();
+        int i = 0;
         for (M child : this.children) {
-            Collection<Element> result = child.apply(id, tags, originalGeometry, projectedGeometry);
+            Collection<Element> result = child.apply(id + '/' + i++, tags, originalGeometry, projectedGeometry);
             if (result == null) { //don't bother processing further children
                 return null;
             }
