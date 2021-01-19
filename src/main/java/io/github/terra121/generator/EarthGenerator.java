@@ -49,6 +49,8 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.InitMapGenEvent;
 import net.minecraftforge.fml.common.Loader;
@@ -180,6 +182,21 @@ public class EarthGenerator extends BasicCubeGenerator {
         }
         this.biomeBlockReplacers = new IBiomeBlockReplacer[biomeBlockReplacers.keySet().stream().mapToInt(Biome::getIdForBiome).max().orElse(0) + 1][];
         biomeBlockReplacers.forEach((biome, replacers) -> this.biomeBlockReplacers[Biome.getIdForBiome(biome)] = replacers.toArray(new IBiomeBlockReplacer[0]));
+    }
+
+    @Override
+    public boolean supportsConcurrentColumnGeneration() {
+        return true;
+    }
+
+    @Override
+    public void generateColumn(Chunk column) {
+        super.generateColumn(column);
+    }
+
+    @Override
+    public boolean supportsConcurrentCubeGeneration() {
+        return false; //we ALMOST do, but generateCube still has to access the world in order to get at the biome data... this will be resolved in fast-osm
     }
 
     @Override
