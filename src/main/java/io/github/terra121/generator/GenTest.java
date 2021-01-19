@@ -6,6 +6,7 @@ import com.google.common.cache.LoadingCache;
 import io.github.terra121.BTEWorldType;
 import io.github.terra121.generator.cache.CachedChunkData;
 import io.github.terra121.generator.cache.ChunkDataLoader;
+import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.http.Http;
 import net.daporkchop.lib.common.util.PorkUtil;
@@ -38,6 +39,7 @@ public class GenTest {
 
     static final int CHUNKS = SIZE >> 4;
 
+    static GeographicProjection PROJECTION;
     static Function<ChunkPos, CompletableFuture<CachedChunkData>> GET_FUNC;
 
     public static void main(String... args) throws OutOfProjectionBoundsException {
@@ -50,17 +52,20 @@ public class GenTest {
     }
 
     private static void doThing() throws OutOfProjectionBoundsException { //allows hot-swapping
-        EarthGeneratorSettings cfg = new EarthGeneratorSettings("{\"projection\":\"equirectangular\",\"orentation\":\"upright\",\"scaleX\":100000.0,\"scaleY\":100000.0,\"smoothblend\":true,\"roads\":false,\"customcubic\":\"\",\"dynamicbaseheight\":true,\"osmwater\":true,\"buildings\":false,\"caves\":false,\"lidar\":false,\"customdataset\":\"Custom Terrain Directory\"}");
-        cfg = new EarthGeneratorSettings(BTEWorldType.BTE_GENERATOR_SETTINGS);
+        Runnable initSettings = () -> {
+            EarthGeneratorSettings cfg = new EarthGeneratorSettings(BTEWorldType.BTE_GENERATOR_SETTINGS);
+            PROJECTION = cfg.getProjection();
 
-        double[] proj = cfg.getProjection().fromGeo(8.57696, 47.21763);
+            LoadingCache<ChunkPos, CompletableFuture<CachedChunkData>> cache = CacheBuilder.newBuilder()
+                    .softValues()
+                    .build(new ChunkDataLoader(new GeneratorDatasets(PROJECTION, cfg, true)));
+            GET_FUNC = cache::getUnchecked;
+        };
+        initSettings.run();
+
+        double[] proj = PROJECTION.fromGeo(8.57696, 47.21763);
         BASE_CHUNK_X = floorI(proj[0]) >> 4;
         BASE_CHUNK_Z = floorI(proj[1]) >> 4;
-
-        LoadingCache<ChunkPos, CompletableFuture<CachedChunkData>> cache = CacheBuilder.newBuilder()
-                .softValues()
-                .build(new ChunkDataLoader(new GeneratorDatasets(cfg.getProjection(), cfg, true)));
-        GET_FUNC = cache::getUnchecked;
 
         JFrame frame = new JFrame();
         BufferedImage img = new BufferedImage(SIZE, SIZE, BufferedImage.TYPE_INT_ARGB);
@@ -125,6 +130,9 @@ public class GenTest {
                         break;
                     case KeyEvent.VK_SUBTRACT:
                         SCALE++;
+                        break;
+                    case KeyEvent.VK_R:
+                        initSettings.run();
                         break;
                 }
                 updateImage.run();

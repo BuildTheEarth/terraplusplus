@@ -42,6 +42,7 @@ public final class DistancePolygon extends AbstractPolygon {
                 double[] intersectionPoints = this.getIntersectionPoints(x + baseX);
 
                 if (intersectionPoints.length == 0) { //no intersections along this line
+                    Arrays.fill(distances, -1);
                     break DISTANCES;
                 }
 
