@@ -55,7 +55,7 @@ public class CachedChunkData {
 
     private static int extractActualDepth(int waterDepth) {
         //discard upper 2 bits from least significant byte and then sign-extend everything back down
-        return waterDepth << 26 >> 26;
+        return ((waterDepth & 0x3F) - 32) << 26 >> 26;
     }
 
     /**
@@ -194,7 +194,7 @@ public class CachedChunkData {
         }
 
         public Builder updateWaterDepth(int x, int z, int depth) {
-            depth = (depth & 0x3F) | WATERDEPTH_TYPE_WATER;
+            depth = ((depth + 32) & 0x3F) | WATERDEPTH_TYPE_WATER;
             if (depth > this.waterDepth[x * 16 + z]) {
                 this.waterDepth[x * 16 + z] = (byte) depth;
             }
@@ -202,7 +202,7 @@ public class CachedChunkData {
         }
 
         public Builder updateOceanDepth(int x, int z, int depth) {
-            depth = (depth & 0x3F) | WATERDEPTH_TYPE_OCEAN;
+            depth = ((depth + 32) & 0x3F) | WATERDEPTH_TYPE_OCEAN;
             if (depth > this.waterDepth[x * 16 + z]) {
                 this.waterDepth[x * 16 + z] = (byte) depth;
             }

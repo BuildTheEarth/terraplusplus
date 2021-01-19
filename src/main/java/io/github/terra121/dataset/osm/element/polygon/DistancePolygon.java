@@ -109,7 +109,9 @@ public final class DistancePolygon extends AbstractPolygon {
                             }
                         }
                     }
-                    this.draw.drawOnto(builder, x - maxDist, z, clamp(dist, -maxDist, maxDist));
+                    if (dist >= -maxDist) {
+                        this.draw.drawOnto(builder, x - maxDist, z, min(dist, maxDist));
+                    }
                 }
             }
         }
