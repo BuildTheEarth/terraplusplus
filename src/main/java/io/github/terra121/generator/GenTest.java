@@ -18,10 +18,10 @@ import static net.daporkchop.lib.common.math.PMath.*;
 
 //TODO: delete this before merge
 public class GenTest {
-    static final int SIZE = 256;
+    static final int SIZE = 1024;
     static int BASE_CHUNK_X = 0;
     static int BASE_CHUNK_Z = 0;
-    static final int SCALE = 0;
+    static final int SCALE = 1;
 
     static final int CHUNKS = SIZE >> 4;
 
@@ -37,11 +37,11 @@ public class GenTest {
     }
 
     private static void doThing() throws OutOfProjectionBoundsException { //allows hot-swapping
-        EarthGeneratorSettings cfg = new EarthGeneratorSettings("{\"projection\":\"equirectangular\",\"orentation\":\"swapped\",\"scaleX\":100000.0,\"scaleY\":100000.0,\"smoothblend\":true,\"roads\":false,\"customcubic\":\"\",\"dynamicbaseheight\":true,\"osmwater\":true,\"buildings\":false,\"caves\":false,\"lidar\":false,\"customdataset\":\"Custom Terrain Directory\"}");
+        EarthGeneratorSettings cfg = new EarthGeneratorSettings("{\"projection\":\"equirectangular\",\"orentation\":\"upright\",\"scaleX\":100000.0,\"scaleY\":100000.0,\"smoothblend\":true,\"roads\":false,\"customcubic\":\"\",\"dynamicbaseheight\":true,\"osmwater\":true,\"buildings\":false,\"caves\":false,\"lidar\":false,\"customdataset\":\"Custom Terrain Directory\"}");
         cfg = new EarthGeneratorSettings(BTEWorldType.BTE_GENERATOR_SETTINGS);
         LOADER = new ChunkDataLoader(new GeneratorDatasets(cfg.getProjection(), cfg, true));
 
-        double[] proj = cfg.getProjection().fromGeo(51.63710, 43.18382);
+        double[] proj = cfg.getProjection().fromGeo(8.57696, 47.21763);
         BASE_CHUNK_X = (floorI(proj[0]) >> 4) - (CHUNKS >> 1);
         BASE_CHUNK_Z = (floorI(proj[1]) >> 4) - (CHUNKS >> 1);
 

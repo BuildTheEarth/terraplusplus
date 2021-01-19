@@ -17,10 +17,7 @@ import java.io.IOException;
 final class Water implements DrawFunction {
     @Override
     public void drawOnto(@NonNull CachedChunkData.Builder data, int x, int z, int weight) {
-        int waterDepth = data.waterDepth(x, z);
-        if (weight > waterDepth) {
-            data.updateWaterDepth(x, z, weight);
-        }
+        data.updateWaterDepth(x, z, weight);
     }
 
     static class Parser extends JsonParser<Water> {

@@ -1,9 +1,7 @@
 package io.github.terra121.generator;
 
-import io.github.terra121.TerraMod;
 import io.github.terra121.dataset.impl.Climate;
 import io.github.terra121.dataset.impl.Soil;
-import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import net.minecraft.init.Biomes;
@@ -13,15 +11,13 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
 public class EarthBiomeProvider extends BiomeProvider {
-    public Soil soil;
-    public Climate climate;
+    public final Soil soil = new Soil();
+    public final Climate climate = new Climate();
     public GeographicProjection projection;
 
     private final Biome defaultBiome;
@@ -36,17 +32,6 @@ public class EarthBiomeProvider extends BiomeProvider {
     public EarthBiomeProvider(Biome biomeIn) {
         //load soil and climate data from assets
         this.defaultBiome = biomeIn;
-        try {
-            InputStream is = this.getClass().getClassLoader().getResourceAsStream("assets/terra121/data/suborder.img");
-            this.soil = new Soil(is);
-            is.close();
-
-            is = this.getClass().getClassLoader().getResourceAsStream("assets/terra121/data/climate.dat");
-            this.climate = new Climate(is);
-            is.close();
-        } catch (IOException ioe) {
-            TerraMod.LOGGER.error("Failed to load biome data: " + ioe);
-        }
     }
 
     /**

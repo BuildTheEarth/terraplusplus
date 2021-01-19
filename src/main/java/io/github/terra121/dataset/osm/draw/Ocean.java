@@ -17,7 +17,7 @@ import java.io.IOException;
 final class Ocean implements DrawFunction {
     @Override
     public void drawOnto(@NonNull CachedChunkData.Builder data, int x, int z, int weight) {
-        data.markOcean(x, z);
+        data.updateOceanDepth(x, z, weight);
     }
 
     static class Parser extends JsonParser<Ocean> {

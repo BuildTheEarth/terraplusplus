@@ -9,6 +9,7 @@ import lombok.Setter;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.ref.ThreadRef;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.world.biome.Biome;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,6 +17,7 @@ import java.util.Comparator;
 import java.util.TreeSet;
 
 import static java.lang.Math.*;
+import static net.daporkchop.lib.common.math.PMath.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
@@ -25,9 +27,15 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 public class CachedChunkData {
     public static final int BLANK_HEIGHT = -1;
+
     public static final int WATERDEPTH_DEFAULT = (byte) 0x80;
+
+    public static final int WATERDEPTH_TYPE_MASK = (byte) 0xC0;
+    public static final int WATERDEPTH_TYPE_DEFAULT = (byte) 0x80;
+    public static final int WATERDEPTH_TYPE_WATER = (byte) 0x00;
+    public static final int WATERDEPTH_TYPE_OCEAN = (byte) 0x40;
+
     private static final Ref<Builder> BUILDER_CACHE = ThreadRef.soft(Builder::new);
-    public static final int WATERDEPTH_OCEAN = (byte) 0x7F;
 
     public static final CachedChunkData BLANK;
     public static final CachedChunkData NULL_ISLAND;
@@ -43,6 +51,11 @@ public class CachedChunkData {
 
     public static Builder builder() {
         return BUILDER_CACHE.get().reset();
+    }
+
+    private static int extractActualDepth(int waterDepth) {
+        //discard upper 2 bits from least significant byte and then sign-extend everything back down
+        return waterDepth << 26 >> 26;
     }
 
     /**
@@ -65,6 +78,8 @@ public class CachedChunkData {
     private final int[] surfaceHeight;
     private final int[] groundHeight;
 
+    private final byte[] biomes;
+
     @Getter
     private final ImmutableBlockStateArray surfaceBlocks;
 
@@ -79,18 +94,34 @@ public class CachedChunkData {
         this.groundHeight = builder.surfaceHeight.clone();
 
         for (int i = 0; i < 16 * 16; i++) {
-            int d = builder.waterDepth[i];
-            if (d == WATERDEPTH_OCEAN) {
-                this.surfaceHeight[i] = 0;
-                if (this.groundHeight[i] >= -1) {
-                    this.groundHeight[i] = -2;
-                }
-            } else {
-                if (d < -EarthGenerator.WATER_DEPTH_OFFSET) {
-                    d = -EarthGenerator.WATER_DEPTH_OFFSET;
-                }
-                this.groundHeight[i] -= d + EarthGenerator.WATER_DEPTH_OFFSET;
+            int waterDepth = builder.waterDepth[i];
+            int d = extractActualDepth(waterDepth);
+
+            switch (waterDepth & WATERDEPTH_TYPE_MASK) {
+                case WATERDEPTH_TYPE_DEFAULT: //no water
+                    //do nothing
+                    break;
+                case WATERDEPTH_TYPE_WATER: //water - lake/river/pond
+                    this.groundHeight[i] -= max(d + EarthGenerator.WATER_DEPTH_OFFSET, 0);
+                    break;
+                case WATERDEPTH_TYPE_OCEAN:
+                    if (d < 0) {
+                        double t = (~d) / 8.0d;
+                        this.surfaceHeight[i] = floorI(lerp(0.0d, this.surfaceHeight[i], t));
+                        this.groundHeight[i] = floorI(lerp(-1.0d, this.groundHeight[i], t));
+                    } else {
+                        this.surfaceHeight[i] = 0;
+                        this.groundHeight[i] = min(this.groundHeight[i], -2);
+                    }
+                    break;
+                default:
+                    throw new IllegalStateException();
             }
+        }
+
+        this.biomes = new byte[16 * 16];
+        for (int i = 0; i < 16 * 16; i++) {
+            this.biomes[i] = (byte) Biome.getIdForBiome(builder.biomes[i]);
         }
 
         this.treeCover = builder.treeCover;
@@ -143,6 +174,9 @@ public class CachedChunkData {
     public static final class Builder {
         private final int[] surfaceHeight = new int[16 * 16];
         private final byte[] waterDepth = new byte[16 * 16];
+
+        private final Biome[] biomes = new Biome[16 * 16];
+
         protected final IBlockState[] surfaceBlocks = new IBlockState[16 * 16];
         protected double treeCover = 0.0d;
 
@@ -160,23 +194,23 @@ public class CachedChunkData {
         }
 
         public Builder updateWaterDepth(int x, int z, int depth) {
+            depth = (depth & 0x3F) | WATERDEPTH_TYPE_WATER;
             if (depth > this.waterDepth[x * 16 + z]) {
                 this.waterDepth[x * 16 + z] = (byte) depth;
             }
             return this;
         }
 
-        public Builder markOcean(int x, int z) {
-            this.waterDepth[x * 16 + z] = (byte) WATERDEPTH_OCEAN;
+        public Builder updateOceanDepth(int x, int z, int depth) {
+            depth = (depth & 0x3F) | WATERDEPTH_TYPE_OCEAN;
+            if (depth > this.waterDepth[x * 16 + z]) {
+                this.waterDepth[x * 16 + z] = (byte) depth;
+            }
             return this;
         }
 
         public int surfaceHeight(int x, int z) {
             return this.surfaceHeight[x * 16 + z];
-        }
-
-        public int waterDepth(int x, int z) {
-            return this.waterDepth[x * 16 + z];
         }
 
         public Builder reset() {

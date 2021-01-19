@@ -1,39 +1,32 @@
 package io.github.terra121.dataset.impl;
 
 import io.github.terra121.util.RandomAccessRunlength;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import net.daporkchop.lib.binary.oio.StreamUtil;
+import net.daporkchop.lib.common.function.io.IOSupplier;
+import net.daporkchop.lib.common.ref.Ref;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
 public class Soil {
     public static final int COLS = 10800;
     public static final int ROWS = 5400;
-    RandomAccessRunlength<Byte> data;
 
-    public Soil(InputStream input) throws IOException {
-        //save some memory by tying the same bytes to the same object (idk if java does this already)
-        Byte[] bytes = new Byte[256];
-        for (int x = 0; x < bytes.length; x++) {
-            bytes[x] = (byte) x;
+    private static final Ref<RandomAccessRunlength<Byte>> DATA_CACHE = Ref.soft((IOSupplier<RandomAccessRunlength<Byte>>) () -> {
+        ByteBuf buf;
+        try (InputStream in = Climate.class.getResourceAsStream("/assets/terra121/data/suborder.img")) {
+            buf = Unpooled.wrappedBuffer(StreamUtil.toByteArray(in));
         }
 
-        //save in a random access run lenth to save ram at the slight cost of efficiency
-        //this works because one soil type tends to stretch more than 4km
-        this.data = new RandomAccessRunlength<>();
-
-        BufferedInputStream is = new BufferedInputStream(input);
-
-        int i;
-        while ((i = is.read()) >= 0) {
-            this.data.add(bytes[i]);
+        RandomAccessRunlength<Byte> data = new RandomAccessRunlength<>();
+        while (buf.isReadable()) {
+            data.add(buf.readByte());
         }
+        return data;
+    });
 
-
-        if (this.data.size() != COLS * ROWS) {
-            throw new IOException("Soil data invalid, " + this.data.size());
-        }
-    }
+    private final RandomAccessRunlength<Byte> data = DATA_CACHE.get();
 
     public byte getOfficial(int x, int y) {
         if (x >= COLS || x < 0 || y >= ROWS || y < 0) {

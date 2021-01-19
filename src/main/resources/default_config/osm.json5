@@ -10,8 +10,15 @@
             //tunnels shouldn't be generated, ever
             "condition": {
                 "match": {
-                    "tag": {
-                        "tunnel": "yes"
+                    "and": {
+                        "tag": {
+                            "tunnel": null
+                        },
+                        "not": {
+                            "tag": {
+                                "tunnel": "no"
+                            }
+                        }
                     }
                 },
                 "emit": {
@@ -445,7 +452,7 @@
                     }
                 },
                 "emit": {
-                    "fill": {
+                    "distance": {
                         "draw": {
                             "ocean": {}
                         },
@@ -454,7 +461,8 @@
                                 "key": "layer",
                                 "fallback": 0
                             }
-                        }
+                        },
+                        "maxDist": 7
                     }
                 }
             }
