@@ -17,9 +17,9 @@ import static io.github.terra121.TerraConstants.*;
  *
  * @author DaPorkchop_
  */
-@JsonAdapter(Block.Parser.class)
+@JsonAdapter(BlockDraw.Parser.class)
 @RequiredArgsConstructor
-final class Block implements DrawFunction {
+public final class BlockDraw implements DrawFunction {
     @NonNull
     protected final IBlockState state;
 
@@ -28,10 +28,10 @@ final class Block implements DrawFunction {
         data.surfaceBlocks()[x * 16 + z] = this.state;
     }
 
-    static class Parser extends JsonParser<Block> {
+    static class Parser extends JsonParser<BlockDraw> {
         @Override
-        public Block read(JsonReader in) throws IOException {
-            return new Block(GSON.fromJson(in, IBlockState.class));
+        public BlockDraw read(JsonReader in) throws IOException {
+            return new BlockDraw(GSON.fromJson(in, IBlockState.class));
         }
     }
 }

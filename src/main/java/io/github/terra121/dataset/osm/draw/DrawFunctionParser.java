@@ -15,7 +15,7 @@ public class DrawFunctionParser extends JsonParser.Typed<DrawFunction> {
         TYPES.put("add", Add.class);
         TYPES.put("clamp", Clamp.class);
 
-        TYPES.put("block", Block.class);
+        TYPES.put("block", BlockDraw.class);
         TYPES.put("ocean", Ocean.class);
         TYPES.put("water", Water.class);
     }

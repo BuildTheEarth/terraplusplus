@@ -16,16 +16,23 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraftforge.client.model.pipeline.LightUtil;
 
 import javax.swing.JFrame;
 import java.awt.Canvas;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
+import java.awt.RenderingHints;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
 import static net.daporkchop.lib.common.math.PMath.*;
@@ -55,10 +62,11 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
     }
 
     private static void doThing() throws OutOfProjectionBoundsException { //allows hot-swapping
-        final int COUNT = 2;
+        final int COUNT = 5;
+        final int SHIFT = 1;
         final int CANVAS_SIZE = SIZE * COUNT;
 
-        class State extends JFrame implements KeyListener {
+        class State extends JFrame implements KeyEventDispatcher {
             final EarthGeneratorSettings settings;
             final GeographicProjection projection;
             TerrainPreview preview;
@@ -67,7 +75,8 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
             final Canvas canvas = new Canvas() {
                 @Override
                 public void paint(Graphics g) {
-                    g.drawImage(State.this.image, 0, 0, null);
+                    ((Graphics2D) g).addRenderingHints(Collections.singletonMap(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR));
+                    g.drawImage(State.this.image, 0, 0, CANVAS_SIZE >> SHIFT, CANVAS_SIZE >> SHIFT, null);
                 }
 
                 @Override
@@ -86,10 +95,10 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                 this.settings = settings;
                 this.projection = settings.getProjection();
 
-                this.addKeyListener(this);
+                KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(this);
                 this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-                this.canvas.setBounds(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+                this.canvas.setBounds(0, 0, CANVAS_SIZE >> SHIFT, CANVAS_SIZE >> SHIFT);
                 this.getContentPane().add(this.canvas);
             }
 
@@ -118,11 +127,11 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
             }
 
             @Override
-            public void keyTyped(KeyEvent e) {
-            }
+            public boolean dispatchKeyEvent(KeyEvent e) {
+                if (e.getID() != KeyEvent.KEY_PRESSED) {
+                    return false;
+                }
 
-            @Override
-            public void keyPressed(KeyEvent e) {
                 int dx = 0;
                 int dz = 0;
 
@@ -170,22 +179,20 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                     }
                 }
 
-                this.chunkX += dx * CHUNKS_PER_TILE;
-                this.chunkZ += dz * CHUNKS_PER_TILE;
+                int scale = this.zoom >= 0 ? CHUNKS_PER_TILE << this.zoom : CHUNKS_PER_TILE >> -this.zoom;
+                this.chunkX += dx * scale;
+                this.chunkZ += dz * scale;
 
                 this.update();
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
+                return true;
             }
 
             public void update() {
                 CompletableFuture<Void>[] tileFutures = uncheckedCast(new CompletableFuture[COUNT * COUNT]);
 
                 int zoom = this.zoom;
-                int baseTX = zoom >= 0 ? this.chunkX >> (zoom + CHUNKS_PER_TILE_SHIFT) : 0;
-                int baseTZ = zoom >= 0 ? this.chunkZ >> (zoom + CHUNKS_PER_TILE_SHIFT) : 0;
+                int baseTX = ((zoom >= 0 ? this.chunkX >> zoom : this.chunkX << -zoom) >> CHUNKS_PER_TILE_SHIFT) - (COUNT >> 1);
+                int baseTZ = ((zoom >= 0 ? this.chunkZ >> zoom : this.chunkZ << -zoom) >> CHUNKS_PER_TILE_SHIFT) - (COUNT >> 1);
 
                 for (int i = 0, _tx = 0; _tx < COUNT; _tx++) {
                     for (int _tz = 0; _tz < COUNT; _tz++) {
@@ -206,14 +213,19 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
 
                 this.canvas.repaint();
             }
+
+            @Override
+            public void dispose() {
+                KeyboardFocusManager.getCurrentKeyboardFocusManager().removeKeyEventDispatcher(this);
+                super.dispose();
+            }
         }
 
         State state = new State(new EarthGeneratorSettings(BTEWorldType.BTE_GENERATOR_SETTINGS));
         state.initSettings();
 
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d);
-        int off = (COUNT >> 1) * CHUNKS_PER_TILE;
-        state.setView((floorI(proj[0]) >> 4) - off, (floorI(proj[1]) >> 4) - off, 0);
+        state.setView(floorI(proj[0]) >> 4, floorI(proj[1]) >> 4, 0);
 
         state.update();
 
@@ -272,7 +284,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
             }
         }
 
-        return CompletableFuture.allOf(dataFutures).thenApply(unused -> {
+        return CompletableFuture.allOf(dataFutures).thenApplyAsync(unused -> {
             BufferedImage dst = createBlankTile();
 
             for (int ti = 0, tx = 0; tx < CHUNKS_PER_TILE; tx++) {
@@ -282,11 +294,23 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                     int baseZ = tz << 4;
                     for (int cx = 0; cx < 16; cx++) {
                         for (int cz = 0; cz < 16; cz++) {
-                            int c = 0;
+                            int c;
 
                             IBlockState state = data.surfaceBlock(cx, cz);
                             if (state != null) {
                                 c = state.getMapColor(EmptyWorld.INSTANCE, BlockPos.ORIGIN).colorValue;
+                            } else {
+                                int groundHeight = data.groundHeight(cx, cz);
+                                int waterHeight = data.waterHeight(cx, cz);
+
+                                if (groundHeight > waterHeight) {
+                                    float dx = cx == 15 ? groundHeight - data.groundHeight(cx - 1, cz) : data.groundHeight(cx + 1, cz) - groundHeight;
+                                    float dz = cz == 15 ? groundHeight - data.groundHeight(cx, cz - 1) : data.groundHeight(cx, cz + 1) - groundHeight;
+                                    int diffuse = floorI(LightUtil.diffuseLight(clamp(dx, -1.0f, 1.0f), 0.0f, clamp(dz, -1.0f, 1.0f)) * 255.0f);
+                                    c = diffuse << 16 | diffuse << 8 | diffuse;
+                                } else {
+                                    c = floorI(lerp(255.0f, 64.0f, clamp(waterHeight - groundHeight + 1, 0, 8) / 8.0f));
+                                }
                             }
 
                             dst.setRGB(baseX + cx, baseZ + cz, 0xFF000000 | c);
@@ -307,7 +331,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
             }
         }
 
-        return CompletableFuture.allOf(children).thenApply(unused -> {
+        return CompletableFuture.allOf(children).thenApplyAsync(unused -> {
             BufferedImage dst = createBlankTile();
             int[] buf = new int[4];
 
@@ -343,12 +367,12 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
 
     protected CompletableFuture<BufferedImage> zoomedInTile(int x, int z, int zoom) {
         return this.tile(x >> 1, z >> 1, zoom + 1)
-                .thenApply(src -> {
+                .thenApplyAsync(src -> {
                     BufferedImage dst = createBlankTile();
                     int[] buf = new int[4];
 
-                    int baseX = (x & 1) << (SIZE_SHIFT >> 1);
-                    int baseZ = (z & 1) << (SIZE_SHIFT >> 1);
+                    int baseX = (x & 1) << (SIZE_SHIFT - 1);
+                    int baseZ = (z & 1) << (SIZE_SHIFT - 1);
                     for (int dx = 0; dx < SIZE >> 1; dx++) {
                         for (int dz = 0; dz < SIZE >> 1; dz++) {
                             Arrays.fill(buf, src.getRGB(baseX + dx, baseZ + dz));
