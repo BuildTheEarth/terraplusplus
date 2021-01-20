@@ -46,10 +46,10 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
     private final List<Polygon> allPolygons = new ArrayList<>();
     private final Gson gson = new Gson();
     private final boolean doRoad;
-    private final boolean doWater;
+    private final boolean doWater = true;
     private final boolean doBuildings;
 
-    public OpenStreetMap(@NonNull GeographicProjection earthProjection, boolean doRoad, boolean doWater, boolean doBuildings) {
+    public OpenStreetMap(@NonNull GeographicProjection earthProjection, boolean doRoad, boolean doBuildings) {
         super(new EquirectangularProjection(), TILE_SIZE);
 
         this.earthProjection = earthProjection;
@@ -61,7 +61,6 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         }
 
         this.doRoad = doRoad;
-        this.doWater = doWater;
         this.doBuildings = doBuildings;
     }
 

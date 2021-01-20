@@ -136,8 +136,8 @@ public class EarthGenerator extends BasicCubeGenerator {
 
         this.biomes = world.getBiomeProvider(); //TODO: make this not order dependent
 
-        this.osm = new OpenStreetMap(this.projection, doRoads, this.cfg.settings.osmwater, doBuildings);
-        this.water = this.cfg.settings.osmwater ? this.osm.water : null;
+        this.osm = new OpenStreetMap(this.projection, doRoads, doBuildings);
+        this.water = this.osm.water;
         this.heights = Heights.constructDataset(this.cfg.settings.smoothblend ? BlendMode.SMOOTH : BlendMode.LINEAR);
         this.trees = new Trees();
 
@@ -329,7 +329,7 @@ public class EarthGenerator extends BasicCubeGenerator {
 
                     if (abs(cubeX) < 5 && abs(cubeZ) < 5) {
                         //NULL ISLAND
-                    } else if (this.cfg.settings.osmwater) {
+                    } else {
                         if (wateroff > 1) {
                             int start = (int) (height);
                             if (start == 0) {
@@ -351,10 +351,6 @@ public class EarthGenerator extends BasicCubeGenerator {
                             for (int y = start; y < 16 && y < height - minblock; y++) {
                                 primer.setBlockState(x, y, z, water);
                             }
-                        }
-                    } else {
-                        for (int y = (int) max(height - minblock, 0); y < 16 && y < -minblock; y++) {
-                            primer.setBlockState(x, y, z, water);
                         }
                     }
                 }

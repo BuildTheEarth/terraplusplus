@@ -38,7 +38,7 @@ public class TerraInvertWaterFragment extends CommandFragment {
         EarthGenerator terrain = (EarthGenerator) gen;
         GeographicProjection projection = terrain.projection;
 
-        if (!terrain.cfg.settings.osmwater || terrain.osm == null || terrain.osm.water == null) {
+        if (terrain.osm == null || terrain.osm.water == null) {
             sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.error.nowtr")));
             return;
         }
