@@ -61,7 +61,7 @@ dependencies {
 
     shade "org.apache.commons:commons-imaging:1.0-alpha2"
 
-    shade("net.daporkchop.lib:binary:0.5.5-SNAPSHOT")  {
+    shade("net.daporkchop.lib:binary:0.5.6-SNAPSHOT")  {
         exclude group: "io.netty"
     }
 
