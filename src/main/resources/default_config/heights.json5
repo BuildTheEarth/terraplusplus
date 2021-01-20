@@ -17,9 +17,9 @@
     "bounds": [
       {
         "minX": -180.0,
-        "minZ": -85,
+        "minZ": -90,
         "maxX": 180.0,
-        "maxZ": 85
+        "maxZ": 90
       }
     ],
     "priority": -100.0 // low priority
@@ -38,9 +38,9 @@
     "bounds": [
       {
         "minX": -180.0,
-        "minZ": -85,
+        "minZ": -90,
         "maxX": 180.0,
-        "maxZ": 85
+        "maxZ": 90
       }
     ],
     "priority": 100.0, //high priority

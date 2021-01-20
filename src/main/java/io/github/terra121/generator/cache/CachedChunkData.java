@@ -80,7 +80,6 @@ public class CachedChunkData {
 
     private final byte[] biomes;
 
-    @Getter
     private final ImmutableBlockStateArray surfaceBlocks;
 
     private final int surfaceMinCube;
@@ -162,6 +161,10 @@ public class CachedChunkData {
 
     public int waterHeight(int x, int z) {
         return this.surfaceHeight(x, z) - 1;
+    }
+
+    public IBlockState surfaceBlock(int x, int z) {
+        return this.surfaceBlocks.get(x * 16 + z);
     }
 
     /**

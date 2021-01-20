@@ -35,7 +35,6 @@ import io.github.terra121.generator.populate.SnowPopulator;
 import io.github.terra121.generator.populate.TreePopulator;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
-import io.github.terra121.util.ImmutableBlockStateArray;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -117,7 +116,7 @@ public class EarthGenerator extends BasicCubeGenerator {
 
         this.biomes = world.getBiomeProvider(); //TODO: make this not order dependent
 
-        this.datasets = new GeneratorDatasets(this.projection, this.cfg, world.getWorldInfo().isMapFeaturesEnabled());
+        this.datasets = new GeneratorDatasets(this.projection, this.cfg);
         this.cache = CacheBuilder.newBuilder()
                 .expireAfterAccess(5L, TimeUnit.MINUTES)
                 .softValues()
@@ -212,13 +211,12 @@ public class EarthGenerator extends BasicCubeGenerator {
         this.structureGenerators.forEach(gen -> gen.generate(this.world, primer, new CubePos(cubeX, cubeY, cubeZ)));
 
         if (data.intersectsSurface(cubeY)) { //render surface blocks onto cube surface
-            ImmutableBlockStateArray surfaceBlocks = data.surfaceBlocks();
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
                     int y = data.surfaceHeight(x, z) - Coords.cubeToMinBlock(cubeY);
                     IBlockState state;
                     if ((y & 0xF) == y //don't set surface blocks outside of this cube
-                        && (state = surfaceBlocks.get(x * 16 + z)) != null) {
+                        && (state = data.surfaceBlock(x, z)) != null) {
                         primer.setBlockState(x, y, z, state);
                     }
                 }

@@ -66,7 +66,7 @@ public class EarthGeneratorSettings {
     }
 
     public GeographicProjection getProjection() {
-    	GeographicProjection projection  = GeographicProjection.projections.get(this.settings.projection);
+    	GeographicProjection projection = GeographicProjection.projections.get(this.settings.projection);
         projection = GeographicProjection.orientProjection(projection, this.settings.orentation);
         projection = new ScaleProjectionTransform(projection, this.settings.scaleX, this.settings.scaleY);
         projection = new OffsetProjectionTransform(projection, this.settings.offsetX, this.settings.offsetY);

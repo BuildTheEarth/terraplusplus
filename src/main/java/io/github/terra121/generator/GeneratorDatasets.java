@@ -20,7 +20,7 @@ public class GeneratorDatasets {
     public final OpenStreetMap osm;
     public final ScalarDataset trees;
 
-    public GeneratorDatasets(@NonNull GeographicProjection projection,  @NonNull EarthGeneratorSettings cfg, boolean features) {
+    public GeneratorDatasets(@NonNull GeographicProjection projection,  @NonNull EarthGeneratorSettings cfg) {
         this.projection = projection;
 
         this.osm = new OpenStreetMap(projection);
