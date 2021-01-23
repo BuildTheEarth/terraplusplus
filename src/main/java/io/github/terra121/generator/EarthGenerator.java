@@ -11,8 +11,6 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.CubeGeneratorsRegistry
 import io.github.opencubicchunks.cubicchunks.api.worldgen.CubePrimer;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.CubePopulatorEvent;
-import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
-import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.structure.ICubicStructureGenerator;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.structure.event.InitCubicStructureGeneratorEvent;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
@@ -35,7 +33,7 @@ import io.github.terra121.dataset.impl.Trees;
 import io.github.terra121.dataset.impl.Water;
 import io.github.terra121.dataset.osm.OpenStreetMap;
 import io.github.terra121.dataset.osm.segment.Segment;
-import io.github.terra121.event.EarthGeneratorEvent;
+import io.github.terra121.event.InitEarthGeneratorEvent;
 import io.github.terra121.generator.cache.CachedChunkData;
 import io.github.terra121.generator.cache.ChunkDataLoader;
 import io.github.terra121.generator.populate.BiomeDecorationPopulator;
@@ -54,7 +52,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.InitMapGenEvent;
 import net.minecraftforge.fml.common.Loader;
@@ -164,13 +161,13 @@ public class EarthGenerator extends BasicCubeGenerator {
         //populators
         OrderedRegistry<IEarthPopulator> populatorRegistry = new OrderedRegistry<IEarthPopulator>()
                 .addLast("fml_pre_cube_populate_event", CompatibilityEarthPopulators.cubePopulatePre())
-                .addLast("trees", TreePopulator.INSTANCE)
+                .addLast("trees", new TreePopulator())
                 .addLast("biome_decorate", new BiomeDecorationPopulator(this.cfg))
-                .addLast("snow", SnowPopulator.INSTANCE)
+                .addLast("snow", new SnowPopulator())
                 .addLast("fml_post_cube_populate_event", CompatibilityEarthPopulators.cubePopulatePost())
                 .addLast("cc_cube_generators_registry", CompatibilityEarthPopulators.cubeGeneratorsRegistry());
 
-        EarthGeneratorEvent<IEarthPopulator> populatorEvent = new EarthGeneratorEvent<IEarthPopulator>(this.cfg, populatorRegistry) {};
+        InitEarthGeneratorEvent<IEarthPopulator> populatorEvent = new InitEarthGeneratorEvent<IEarthPopulator>(this.cfg, populatorRegistry) {};
         MinecraftForge.TERRAIN_GEN_BUS.post(populatorEvent);
         this.populators = populatorEvent.registry().entryStream().map(Map.Entry::getValue).toArray(IEarthPopulator[]::new);
 

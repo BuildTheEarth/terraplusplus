@@ -3,9 +3,8 @@ package io.github.terra121.generator.populate;
 import com.google.common.collect.ImmutableSet;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
+import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.terra121.generator.cache.CachedChunkData;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -17,10 +16,7 @@ import net.minecraft.world.gen.feature.WorldGenAbstractTree;
 import java.util.Random;
 import java.util.Set;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class TreePopulator implements IEarthPopulator {
-    public static final TreePopulator INSTANCE = new TreePopulator();
-
+public class TreePopulator implements IEarthPopulator {
     protected static final Set<Block> EXTRA_SURFACE = ImmutableSet.of(
             Blocks.SAND,
             Blocks.SANDSTONE,
@@ -31,22 +27,25 @@ public final class TreePopulator implements IEarthPopulator {
             Blocks.SNOW,
             Blocks.MYCELIUM);
 
-    private static double atanh(double x) {
-        return (Math.log(1.0d + x) - Math.log(1.0d - x)) * 0.5d;
-    }
-
     @Override
     public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData data) {
         if (!data.intersectsSurface(pos.getY())) { //optimization: don't try to generate trees if the cube doesn't intersect the surface
             return;
         }
 
+        for (int i = 0, treeCount = this.treeCount(world, random, pos, biome, data); i < treeCount; ++i) {
+            this.tryPlace(world, random, pos, biome);
+        }
+    }
+
+    protected int treeCount(World world, Random random, CubePos pos, Biome biome, CachedChunkData data) {
         double canopy = data.treeCover();
 
         //got this fun formula messing around with data on desmos, estimate of tree cover -> number
         int treeCount = 30; //max so it doesn't go to infinity (which would technically be required to guarantee full coverage, but no)
         if (canopy < 0.95d) {
-            treeCount = (int) (atanh(Math.pow(canopy, 1.5d)) * 20.0d);
+            double x = Math.pow(canopy, 1.5d);
+            treeCount = (int) ((Math.log(1.0d + x) - Math.log(1.0d - x)) * 10.0d);
         }
 
         //null island
@@ -58,54 +57,43 @@ public final class TreePopulator implements IEarthPopulator {
             treeCount++;
         }
 
-        //we are special, and this event is being canceled to control the default populators
-        //CWGEventFactory.decorate(world, random, pos, DecorateBiomeEvent.Decorate.EventType.TREE);
+        return treeCount;
+    }
 
-        for (int i = 0; i < treeCount; ++i) {
-            int xOffset = random.nextInt(ICube.SIZE);
-            int zOffset = random.nextInt(ICube.SIZE);
-            WorldGenAbstractTree treeGen = biome.getRandomTreeFeature(random);
-            treeGen.setDecorationDefaults();
-
-            int actualX = xOffset + pos.getMinBlockX();
-            int actualZ = zOffset + pos.getMinBlockZ();
-            BlockPos top1 = new BlockPos(actualX, this.quickElev(world, actualX, actualZ, pos.getMinBlockY() - 1, pos.getMaxBlockY()) + 1, actualZ);
-
-            if (pos.getMinBlockY() <= top1.getY() && top1.getY() <= pos.getMaxBlockY() && world.getBlockState(top1).getBlock() == Blocks.AIR) {
-                IBlockState topstate = world.getBlockState(top1.down());
-                boolean spawn = true;
-
-                if (topstate.getBlock() != Blocks.GRASS && topstate.getBlock() != Blocks.DIRT) {
-                    //plant a bit of dirt to make sure trees spawn when they are supposed to even in certain hostile environments
-                    if (EXTRA_SURFACE.contains(topstate.getBlock())) {
-                        world.setBlockState(top1.down(), Blocks.GRASS.getDefaultState());
-                    } else {
-                        spawn = false;
-                    }
-                }
-
-                if (spawn && treeGen.generate(world, random, top1)) {
-                    treeGen.generateSaplings(world, random, top1);
-                }
-            }
+    protected void tryPlace(World world, Random random, CubePos pos, Biome biome) {
+        int xOffset = ICube.SIZE / 2 + random.nextInt(ICube.SIZE);
+        int zOffset = ICube.SIZE / 2 + random.nextInt(ICube.SIZE);
+        BlockPos blockPos = ((ICubicWorld) world).getSurfaceForCube(pos, xOffset, zOffset, 0, ICubicWorld.SurfaceType.OPAQUE);
+        if (blockPos != null && this.canPlaceAt(world, blockPos)) {
+            this.placeTree(world, random, blockPos, biome);
         }
     }
 
-    private int quickElev(World world, int x, int z, int low, int high) {
-        high++;
+    protected boolean canPlaceAt(World world, BlockPos pos) {
+        BlockPos down = pos.down();
+        IBlockState state = world.getBlockState(down);
 
-        IBlockState defState = Blocks.AIR.getDefaultState();
-
-        while (low < high - 1) {
-            int y = low + (high - low) / 2;
-            if (world.getBlockState(new BlockPos(x, y, z)) == defState) {
-                high = y;
-            } else {
-                low = y;
+        if (state.getBlock() != Blocks.GRASS && state.getBlock() != Blocks.DIRT) {
+            //plant a bit of dirt to make sure trees spawn when they are supposed to even in certain hostile environments
+            if (!this.isSurfaceBlock(world, down, state)) {
+                return false;
             }
+            world.setBlockState(down, Blocks.GRASS.getDefaultState());
         }
 
-        return low;
+        return true;
     }
 
+    protected boolean isSurfaceBlock(World world, BlockPos pos, IBlockState state) {
+        return EXTRA_SURFACE.contains(state.getBlock());
+    }
+
+    protected void placeTree(World world, Random random, BlockPos pos, Biome biome) {
+        WorldGenAbstractTree generator = biome.getRandomTreeFeature(random);
+        generator.setDecorationDefaults();
+
+        if (generator.generate(world, random, pos)) {
+            generator.generateSaplings(world, random, pos);
+        }
+    }
 }

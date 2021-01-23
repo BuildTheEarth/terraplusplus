@@ -15,10 +15,7 @@ import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class SnowPopulator implements IEarthPopulator {
-    public static final SnowPopulator INSTANCE = new SnowPopulator();
-
+public class SnowPopulator implements IEarthPopulator {
     public static boolean canSnow(BlockPos pos, World world, boolean air) {
         IBlockState blockstate = world.getBlockState(pos);
 

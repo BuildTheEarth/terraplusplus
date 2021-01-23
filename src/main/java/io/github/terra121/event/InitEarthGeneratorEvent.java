@@ -24,12 +24,12 @@ import net.minecraftforge.fml.common.eventhandler.IGenericEvent;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
-public class EarthGeneratorEvent<T> extends Event implements IGenericEvent<T> {
+public class InitEarthGeneratorEvent<T> extends Event implements IGenericEvent<T> {
     @NonNull
     protected final EarthGeneratorSettings settings;
     @NonNull
     protected OrderedRegistry<T> registry;
 
     @Accessors(fluent = false)
-    protected final Class<T> genericType = GenericMatcher.uncheckedFind(this.getClass(), EarthGeneratorEvent.class, "T");
+    protected final Class<T> genericType = GenericMatcher.uncheckedFind(this.getClass(), InitEarthGeneratorEvent.class, "T");
 }
