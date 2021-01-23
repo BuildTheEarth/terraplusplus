@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
+import static java.lang.Math.*;
 import static net.daporkchop.lib.common.math.PMath.*;
 import static net.daporkchop.lib.common.util.PorkUtil.*;
 
@@ -303,14 +304,22 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                                 int groundHeight = data.groundHeight(cx, cz);
                                 int waterHeight = data.waterHeight(cx, cz);
 
+                                int r;
+                                int g;
+                                int b;
+
                                 if (groundHeight > waterHeight) {
                                     float dx = cx == 15 ? groundHeight - data.groundHeight(cx - 1, cz) : data.groundHeight(cx + 1, cz) - groundHeight;
                                     float dz = cz == 15 ? groundHeight - data.groundHeight(cx, cz - 1) : data.groundHeight(cx, cz + 1) - groundHeight;
                                     int diffuse = floorI(LightUtil.diffuseLight(clamp(dx, -1.0f, 1.0f), 0.0f, clamp(dz, -1.0f, 1.0f)) * 255.0f);
-                                    c = diffuse << 16 | diffuse << 8 | diffuse;
+                                    r = g = b = diffuse;
                                 } else {
-                                    c = floorI(lerp(255.0f, 64.0f, clamp(waterHeight - groundHeight + 1, 0, 8) / 8.0f));
+                                    r = g = 0;
+                                    b = lerpI(255, 64, clamp(waterHeight - groundHeight + 1, 0, 8) / 8.0f);
                                 }
+
+                                g = max(g, lerpI(0, 80, data.treeCover()));
+                                c = r << 16 | g << 8 | b;
                             }
 
                             dst.setRGB(baseX + cx, baseZ + cz, 0xFF000000 | c);

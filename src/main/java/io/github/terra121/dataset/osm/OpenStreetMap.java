@@ -9,14 +9,16 @@ import io.github.terra121.dataset.TiledDataset;
 import io.github.terra121.dataset.osm.config.OSMMapper;
 import io.github.terra121.dataset.osm.draw.BlockDraw;
 import io.github.terra121.dataset.osm.element.Element;
-import io.github.terra121.dataset.osm.element.line.NarrowLine;
 import io.github.terra121.dataset.osm.element.line.WideLine;
+import io.github.terra121.dataset.osm.element.polygon.FillPolygon;
 import io.github.terra121.dataset.osm.geojson.GeoJSON;
 import io.github.terra121.dataset.osm.geojson.GeoJSONObject;
 import io.github.terra121.dataset.osm.geojson.Geometry;
 import io.github.terra121.dataset.osm.geojson.geometry.LineString;
 import io.github.terra121.dataset.osm.geojson.geometry.MultiLineString;
+import io.github.terra121.dataset.osm.geojson.geometry.MultiPolygon;
 import io.github.terra121.dataset.osm.geojson.geometry.Point;
+import io.github.terra121.dataset.osm.geojson.geometry.Polygon;
 import io.github.terra121.dataset.osm.geojson.object.Feature;
 import io.github.terra121.dataset.osm.geojson.object.Reference;
 import io.github.terra121.projection.EquirectangularProjection;
@@ -158,23 +160,6 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         if (elements == null) {
             elements = new Element[0];
         }
-
-        Element[] elements1 = new Element[elements.length + 1];
-        System.arraycopy(elements, 0, elements1, 1, elements.length);
-        try {
-            double d = 0.0001d;
-            elements1[0] = new WideLine("asdf", 1, new BlockDraw(Blocks.GOLD_BLOCK.getDefaultState()),
-                    new MultiLineString(new LineString[]{ new LineString(new Point[]{
-                            new Point(pos.x * TILE_SIZE + d, pos.z * TILE_SIZE + d),
-                            new Point(pos.x * TILE_SIZE + d, (pos.z + 1) * TILE_SIZE - d),
-                            new Point((pos.x + 1) * TILE_SIZE - d, (pos.z + 1) * TILE_SIZE - d),
-                            new Point((pos.x + 1) * TILE_SIZE - d, pos.z * TILE_SIZE + d),
-                            new Point(pos.x * TILE_SIZE + d, pos.z * TILE_SIZE + d)
-                    }) }).project(this.earthProjection::fromGeo), 0.5d);
-        } catch (OutOfProjectionBoundsException e) {
-            throw new RuntimeException(e);
-        }
-        elements = elements1;
 
         return new OSMRegion(pos, new BVH<>(Arrays.asList(elements)));
     }
