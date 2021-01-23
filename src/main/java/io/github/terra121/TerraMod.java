@@ -1,8 +1,5 @@
 package io.github.terra121;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
-
 import io.github.terra121.control.TerraCommand;
 import io.github.terra121.control.TerraTeleport;
 import io.github.terra121.letsencryptcraft.ILetsEncryptMod;
@@ -23,13 +20,17 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.server.permission.DefaultPermissionLevel;
 import net.minecraftforge.server.permission.PermissionAPI;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.simple.SimpleLogger;
 import org.apache.logging.log4j.util.PropertiesUtil;
 
-@Mod(modid = TerraMod.MODID, name = TerraMod.NAME, version = TerraMod.VERSION, dependencies = "required-after:cubicchunks; required-after:cubicgen", acceptableRemoteVersions = "*")
+@Mod(modid = TerraMod.MODID,
+        dependencies = "required-after:cubicchunks; required-after:cubicgen",
+        acceptableRemoteVersions = "*",
+        useMetadata = true)
 public class TerraMod implements ILetsEncryptMod {
     public static final String MODID = TerraConstants.modID;
-    public static final String NAME = "Terra 1 to 1";
     public static final String VERSION = "0.1";
     public static final String USERAGENT = TerraMod.MODID + '/' + TerraMod.VERSION;
     public static final boolean CUSTOM_PROVIDER = false; //could potentially interfere with other mods and is relatively untested, leaving off for now
@@ -44,14 +45,27 @@ public class TerraMod implements ILetsEncryptMod {
         DimensionManager.registerDimension(0, type);
     }
 
+    /**
+     * Let other mods detect if this is Legacy Terra121 or if it is Terra++.
+     * Terramap uses (or will use) this.
+     *
+     * @return true
+     * @throws NoSuchMethodException if Terra121 is installed instead of Terra++
+     */
+    public static boolean isTerraPlusPlus() {
+        return true;
+    }
+
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         LOGGER = event.getModLog();
         EarthWorldType.create();
-        
+
         // This is just a handy shortcut when creating new BTE worlds on the client not needed on the server
         // It is critical that this happens after the EarthWorldType is registered
-        if(Side.CLIENT.equals(event.getSide())) BTEWorldType.create();
+        if (Side.CLIENT.equals(event.getSide())) {
+            BTEWorldType.create();
+        }
 
         if (CUSTOM_PROVIDER) {
             setupProvider();
@@ -63,7 +77,9 @@ public class TerraMod implements ILetsEncryptMod {
         MinecraftForge.TERRAIN_GEN_BUS.register(GenerationEventDenier.class);
         MinecraftForge.EVENT_BUS.register(WaterDenier.class);
         MinecraftForge.EVENT_BUS.register(TerraConfig.class);
-        if(Side.CLIENT.equals(event.getSide())) MinecraftForge.EVENT_BUS.register(BTEWorldType.class);
+        if (Side.CLIENT.equals(event.getSide())) {
+            MinecraftForge.EVENT_BUS.register(BTEWorldType.class);
+        }
         PermissionAPI.registerNode(TerraConstants.controlCommandNode + "tpll", DefaultPermissionLevel.OP, "Allows a player to do /tpll");
         PermissionAPI.registerNode(TerraConstants.controlCommandNode + "terra", DefaultPermissionLevel.OP, "Allows access to terra commands");
         PermissionAPI.registerNode(TerraConstants.controlCommandNode + "terra.utility", DefaultPermissionLevel.OP, "Allows access to terra++'s utilities");
@@ -97,16 +113,5 @@ public class TerraMod implements ILetsEncryptMod {
     @Override
     public void error(String log, Throwable t) {
         LOGGER.error(log, t);
-    }
-    
-    /**
-     * Let other mods detect if this is Legacy Terra121 or if it is Terra++.
-     * Terramap uses (or will use) this.
-     * 
-     * @return true
-     * @throws NoSuchMethodException if Terra121 is installed instead of Terra++
-     */
-    public static boolean isTerraPlusPlus() {
-    	return true;
     }
 }

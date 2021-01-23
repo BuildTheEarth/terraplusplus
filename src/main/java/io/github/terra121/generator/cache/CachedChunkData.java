@@ -2,6 +2,7 @@ package io.github.terra121.generator.cache;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.terra121.generator.EarthGenerator;
+import io.github.terra121.util.CustomAttributeContainer;
 import io.github.terra121.util.ImmutableBlockStateArray;
 import lombok.Getter;
 import lombok.NonNull;
@@ -12,20 +13,18 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.biome.Biome;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.TreeSet;
+import java.util.Collections;
+import java.util.Map;
 
 import static java.lang.Math.*;
 import static net.daporkchop.lib.common.math.PMath.*;
-import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * A collection of data cached per-column by {@link EarthGenerator}.
  *
  * @author DaPorkchop_
  */
-public class CachedChunkData {
+public class CachedChunkData extends CustomAttributeContainer<Object> {
     public static final int BLANK_HEIGHT = -1;
 
     public static final int WATERDEPTH_DEFAULT = (byte) 0x80;
@@ -56,23 +55,6 @@ public class CachedChunkData {
     private static int extractActualDepth(int waterDepth) {
         //discard upper 2 bits from least significant byte and then sign-extend everything back down
         return ((waterDepth & 0x3F) - 32) << 26 >> 26;
-    }
-
-    /**
-     * Sorts elements using a {@link TreeSet} rather than using {@link Arrays#sort(Object[])}.
-     * <p>
-     * This allows for a decent, but potentially imperfect sort in cases where the comparator isn't perfectly consistent. {@link Arrays#sort(Object[])} would sooner
-     * throw an exception than return imperfect results.
-     *
-     * @param values     the values to sort
-     * @param comparator the comparator to compare values with
-     * @param <T>        the value type
-     * @return a sorted collection
-     */
-    private static <T> Collection<T> approximateSort(@NonNull Collection<T> values, @NonNull Comparator<T> comparator) {
-        Collection<T> out = new TreeSet<>(comparator);
-        out.addAll(values);
-        return out;
     }
 
     private final int[] surfaceHeight;
@@ -137,6 +119,8 @@ public class CachedChunkData {
         }
         this.surfaceMinCube = Coords.blockToCube(min);
         this.surfaceMaxCube = Coords.blockToCube(max + 1);
+
+        super.custom = builder.custom;
     }
 
     public boolean intersectsSurface(int cubeY) {
@@ -183,6 +167,8 @@ public class CachedChunkData {
         protected final IBlockState[] surfaceBlocks = new IBlockState[16 * 16];
         protected double treeCover = 0.0d;
 
+        protected Map<String, Object> custom;
+
         /**
          * @deprecated use {@link #builder()} unless you have a specific reason to invoke this constructor directly
          */
@@ -221,11 +207,14 @@ public class CachedChunkData {
             Arrays.fill(this.waterDepth, (byte) WATERDEPTH_DEFAULT);
             Arrays.fill(this.surfaceBlocks, null);
             this.treeCover = 0.0d;
+            this.custom = Collections.emptyMap();
             return this;
         }
 
         public CachedChunkData build() {
-            return new CachedChunkData(this);
+            CachedChunkData built = new CachedChunkData(this);
+            this.custom = Collections.emptyMap();
+            return built;
         }
     }
 }

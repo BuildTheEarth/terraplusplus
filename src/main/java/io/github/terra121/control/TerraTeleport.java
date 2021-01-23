@@ -149,7 +149,7 @@ public class TerraTeleport extends Command {
                 CompletableFuture<Double> altFuture;
                 if (Double.isNaN(altitude)) {
                     try {
-                        altFuture = terrain.datasets.heights.getAsync(defaultCoords.getLng(), defaultCoords.getLat())
+                        altFuture = terrain.datasets.heights().getAsync(defaultCoords.getLng(), defaultCoords.getLat())
                                 .thenApply(a -> a + 1.0d);
                     } catch (OutOfProjectionBoundsException e) { //out of bounds, notify user
                         sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.error.numbers")));

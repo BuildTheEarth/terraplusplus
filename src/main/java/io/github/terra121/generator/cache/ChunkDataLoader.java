@@ -1,10 +1,12 @@
 package io.github.terra121.generator.cache;
 
 import com.google.common.cache.CacheLoader;
+import com.google.common.collect.ImmutableMap;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.terra121.TerraMod;
 import io.github.terra121.dataset.osm.OSMRegion;
 import io.github.terra121.dataset.osm.element.Element;
+import io.github.terra121.event.LoadCachedChunkDataEvent;
 import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.generator.GeneratorDatasets;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
@@ -13,7 +15,11 @@ import io.github.terra121.util.bvh.Bounds2d;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraftforge.common.MinecraftForge;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
@@ -33,7 +39,7 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
             return; //we assume the builder's heights are already all set to the blank height value
         }
 
-        for (int  x = 0; x < 16; x++) {
+        for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
                 double height = heights[x * 16 + z];
                 if (!Double.isNaN(height)) {
@@ -47,7 +53,7 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
     protected final GeneratorDatasets data;
 
     @Override
-    public CompletableFuture<CachedChunkData> load(ChunkPos pos) {
+    public CompletableFuture<CachedChunkData> load(@NonNull ChunkPos pos) {
         if (EarthGenerator.isNullIsland(pos.x, pos.z)) {
             return CompletableFuture.completedFuture(CachedChunkData.NULL_ISLAND);
         }
@@ -59,14 +65,24 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
             Bounds2d chunkBounds = Bounds2d.of(baseX, baseX + 16, baseZ, baseZ + 16);
             Bounds2d osmBounds = chunkBounds.expand(8.0d);
 
-            CornerBoundingBox2d chunkBoundsGeo = chunkBounds.toCornerBB(this.data.projection, false).toGeo();
-            CornerBoundingBox2d osmBoundsGeo = osmBounds.toCornerBB(this.data.projection, false).toGeo();
+            CornerBoundingBox2d chunkBoundsGeo = chunkBounds.toCornerBB(this.data.projection(), false).toGeo();
+            CornerBoundingBox2d osmBoundsGeo = osmBounds.toCornerBB(this.data.projection(), false).toGeo();
 
-            CompletableFuture<double[]> heightsFuture = this.data.heights.getAsync(chunkBoundsGeo, 16, 16);
-            CompletableFuture<Double> treeCoverFuture = this.data.trees.getAsync(chunkBoundsGeo.point(null, 0.5d, 0.5d));
-            CompletableFuture<OSMRegion[]> osmRegionsFuture = this.data.osm.getRegionsAsync(osmBoundsGeo);
+            CompletableFuture<double[]> heightsFuture = this.data.heights().getAsync(chunkBoundsGeo, 16, 16);
+            CompletableFuture<Double> treeCoverFuture = this.data.trees().getAsync(chunkBoundsGeo.point(null, 0.5d, 0.5d));
+            CompletableFuture<OSMRegion[]> osmRegionsFuture = this.data.osm().getRegionsAsync(osmBoundsGeo);
 
-            CompletableFuture<CachedChunkData> future = CompletableFuture.allOf(heightsFuture, treeCoverFuture, osmRegionsFuture)
+            LoadCachedChunkDataEvent event = new LoadCachedChunkDataEvent(pos, this.data);
+            MinecraftForge.TERRAIN_GEN_BUS.post(event);
+            Map<String, CompletableFuture<?>> customFutures = event.getAllCustomProperties();
+
+            List<CompletableFuture> futuresList = new ArrayList<>();
+            futuresList.add(heightsFuture);
+            futuresList.add(treeCoverFuture);
+            futuresList.add(osmRegionsFuture);
+            futuresList.addAll(customFutures.values());
+
+            CompletableFuture<CachedChunkData> future = CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[0]))
                     .thenApply(unused -> {
                         //dereference all futures
                         double[] heights = heightsFuture.join();
@@ -75,6 +91,13 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
 
                         CachedChunkData.Builder builder = CachedChunkData.builder()
                                 .treeCover(Double.isNaN(treeCover) ? 0.0d : treeCover);
+
+                        //set custom future properties
+                        if (!customFutures.isEmpty()) {
+                            ImmutableMap.Builder<String, Object> customMapBuilder = ImmutableMap.builder();
+                            customFutures.forEach((key, f) -> customMapBuilder.put(key, f.join()));
+                            builder.custom(customMapBuilder.build());
+                        }
 
                         applyHeights(builder, heights);
 
