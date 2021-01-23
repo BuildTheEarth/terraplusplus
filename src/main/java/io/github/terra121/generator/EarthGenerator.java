@@ -35,13 +35,17 @@ import io.github.terra121.dataset.impl.Trees;
 import io.github.terra121.dataset.impl.Water;
 import io.github.terra121.dataset.osm.OpenStreetMap;
 import io.github.terra121.dataset.osm.segment.Segment;
+import io.github.terra121.event.EarthGeneratorEvent;
 import io.github.terra121.generator.cache.CachedChunkData;
 import io.github.terra121.generator.cache.ChunkDataLoader;
+import io.github.terra121.generator.populate.BiomeDecorationPopulator;
+import io.github.terra121.generator.populate.CompatibilityEarthPopulators;
 import io.github.terra121.generator.populate.IEarthPopulator;
 import io.github.terra121.generator.populate.SnowPopulator;
 import io.github.terra121.generator.populate.TreePopulator;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
+import io.github.terra121.util.OrderedRegistry;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -98,6 +102,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         return abs(chunkX) < 5 && abs(chunkZ) < 5;
     }
 
+    public final EarthGeneratorSettings cfg;
     public final BiomeProvider biomes;
     public final GeographicProjection projection;
     private final CustomGeneratorSettings cubiccfg;
@@ -106,9 +111,7 @@ public class EarthGenerator extends BasicCubeGenerator {
 
     private final List<ICubicStructureGenerator> structureGenerators = new ArrayList<>();
 
-    private final List<IEarthPopulator> populators = new ArrayList<>();
-    private final Map<Biome, ICubicPopulator> biomePopulators = new IdentityHashMap<>();
-    public final EarthGeneratorSettings cfg;
+    private final IEarthPopulator[] populators;
 
     public final LoadingCache<ChunkPos, CompletableFuture<CachedChunkData>> cache = CacheBuilder.newBuilder()
             .expireAfterAccess(5L, TimeUnit.MINUTES)
@@ -141,8 +144,6 @@ public class EarthGenerator extends BasicCubeGenerator {
         this.heights = Heights.constructDataset(this.cfg.settings.smoothblend ? BlendMode.SMOOTH : BlendMode.LINEAR);
         this.trees = new Trees();
 
-        this.populators.add(TreePopulator.INSTANCE);
-
         //structures
         if (this.cubiccfg.caves) {
             InitCubicStructureGeneratorEvent caveEvent = new InitCubicStructureGeneratorEvent(InitMapGenEvent.EventType.CAVE, new CubicCaveGenerator());
@@ -160,10 +161,18 @@ public class EarthGenerator extends BasicCubeGenerator {
             this.structureGenerators.add(strongholdsEvent.getNewGen());
         }
 
-        for (Biome biome : ForgeRegistries.BIOMES) {
-            CubicBiome cubicBiome = CubicBiome.getCubic(biome);
-            this.biomePopulators.put(biome, cubicBiome.getDecorator(this.cubiccfg));
-        }
+        //populators
+        OrderedRegistry<IEarthPopulator> populatorRegistry = new OrderedRegistry<IEarthPopulator>()
+                .addLast("fml_pre_cube_populate_event", CompatibilityEarthPopulators.cubePopulatePre())
+                .addLast("trees", TreePopulator.INSTANCE)
+                .addLast("biome_decorate", new BiomeDecorationPopulator(this.cfg))
+                .addLast("snow", SnowPopulator.INSTANCE)
+                .addLast("fml_post_cube_populate_event", CompatibilityEarthPopulators.cubePopulatePost())
+                .addLast("cc_cube_generators_registry", CompatibilityEarthPopulators.cubeGeneratorsRegistry());
+
+        EarthGeneratorEvent<IEarthPopulator> populatorEvent = new EarthGeneratorEvent<IEarthPopulator>(this.cfg, populatorRegistry) {};
+        MinecraftForge.TERRAIN_GEN_BUS.post(populatorEvent);
+        this.populators = populatorEvent.registry().entryStream().map(Map.Entry::getValue).toArray(IEarthPopulator[]::new);
 
         BiomeBlockReplacerConfig conf = this.cubiccfg.createBiomeBlockReplacerConfig();
         Map<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers = new IdentityHashMap<>();
@@ -362,8 +371,8 @@ public class EarthGenerator extends BasicCubeGenerator {
     public GeneratorReadyState pollAsyncCubePopulator(int cubeX, int cubeY, int cubeZ) {
         //ensure that all columns required for population are ready to go
         // checking all neighbors here improves performance when checking if a cube can be generated
-        for (int dx = -1; dx < 2; dx++) {
-            for (int dz = -1; dz < 2; dz++) {
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
                 CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(cubeX + dx, cubeZ + dz));
                 if (!future.isDone()) {
                     return GeneratorReadyState.WAITING;
@@ -382,37 +391,18 @@ public class EarthGenerator extends BasicCubeGenerator {
             return; //population event was cancelled
         }
 
-        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(cube.getCoords().chunkPos());
-        if (!future.isDone() || future.isCompletedExceptionally()) {
-            return;
-        }
-        CachedChunkData data = future.join();
+        CachedChunkData data = this.cache.getUnchecked(cube.getCoords().chunkPos()).join();
 
-        Random rand = Coords.coordsSeedRandom(this.world.getSeed(), cube.getX(), cube.getY(), cube.getZ());
+        Random random = Coords.coordsSeedRandom(this.world.getSeed(), cube.getX(), cube.getY(), cube.getZ());
         Biome biome = cube.getBiome(Coords.getCubeCenter(cube));
 
         if (this.cfg.settings.dynamicbaseheight) {
             this.cubiccfg.expectedBaseHeight = (float) data.heights[8 * 16 + 8];
         }
 
-        MinecraftForge.EVENT_BUS.post(new PopulateCubeEvent.Pre(this.world, rand, cube.getX(), cube.getY(), cube.getZ(), false));
-
-        if (data.intersectsSurface(cube.getY())) {
-            for (IEarthPopulator populator : this.populators) {
-                populator.populate(this.world, rand, cube.getCoords(), biome, data);
-            }
+        for (IEarthPopulator populator : this.populators) {
+            populator.populate(this.world, random, cube.getCoords(), biome, data);
         }
-
-        this.biomePopulators.get(biome).generate(this.world, rand, cube.getCoords(), biome);
-
-        if (data.aboveSurface(cube.getY())) {
-            SnowPopulator.INSTANCE.populate(this.world, rand, cube.getCoords(), biome, data);
-        }
-
-        MinecraftForge.EVENT_BUS.post(new PopulateCubeEvent.Post(this.world, rand, cube.getX(), cube.getY(), cube.getZ(), false));
-
-        //other mod generators
-        CubeGeneratorsRegistry.generateWorld(this.world, rand, cube.getCoords(), biome);
     }
 
     @Override

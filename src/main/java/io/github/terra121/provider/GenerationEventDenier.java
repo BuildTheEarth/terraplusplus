@@ -2,8 +2,8 @@ package io.github.terra121.provider;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.DecorateCubeBiomeEvent;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
-import io.github.terra121.generator.EarthBiomeProvider;
 import io.github.terra121.EarthWorldType;
+import io.github.terra121.generator.EarthBiomeProvider;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;

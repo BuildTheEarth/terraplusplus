@@ -37,6 +37,10 @@ public final class TreePopulator implements IEarthPopulator {
 
     @Override
     public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData data) {
+        if (!data.intersectsSurface(pos.getY())) { //optimization: don't try to generate trees if the cube doesn't intersect the surface
+            return;
+        }
+
         double canopy = data.treeCover();
 
         //got this fun formula messing around with data on desmos, estimate of tree cover -> number
@@ -67,7 +71,7 @@ public final class TreePopulator implements IEarthPopulator {
             int actualZ = zOffset + pos.getMinBlockZ();
             BlockPos top1 = new BlockPos(actualX, this.quickElev(world, actualX, actualZ, pos.getMinBlockY() - 1, pos.getMaxBlockY()) + 1, actualZ);
 
-            if (pos.getMinBlockY() <= top1.getY() && top1.getY() <= pos.getMaxBlockY() && world.getBlockState(top1).getBlock()== Blocks.AIR) {
+            if (pos.getMinBlockY() <= top1.getY() && top1.getY() <= pos.getMaxBlockY() && world.getBlockState(top1).getBlock() == Blocks.AIR) {
                 IBlockState topstate = world.getBlockState(top1.down());
                 boolean spawn = true;
 
