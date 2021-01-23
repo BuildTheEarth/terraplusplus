@@ -15,10 +15,7 @@ import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class SnowPopulator implements IEarthPopulator {
-    public static final SnowPopulator INSTANCE = new SnowPopulator();
-
+public class SnowPopulator implements IEarthPopulator {
     public static boolean canSnow(BlockPos pos, World world, boolean air) {
         IBlockState blockstate = world.getBlockState(pos);
 
@@ -37,6 +34,11 @@ public final class SnowPopulator implements IEarthPopulator {
 
     @Override
     public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData data) {
+        if (!data.aboveSurface(pos.getY())) { //optimization: don't try to generate snow below the surface
+            //TODO: i think this should actually check for >=, not >
+            return;
+        }
+
         int baseX = Coords.cubeToMinBlock(pos.getX());
         int baseY = Coords.cubeToMinBlock(pos.getY());
         int baseZ = Coords.cubeToMinBlock(pos.getZ());

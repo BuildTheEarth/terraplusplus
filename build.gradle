@@ -52,7 +52,7 @@ repositories {
 }
 
 dependencies {
-    deobfProvided ("com.github.OpenCubicChunks.CubicChunks:cubicchunks:6e18a97abe31e1c7892ebcf8ed0f17a4ac379e10") {
+    deobfProvided ("com.github.OpenCubicChunks.CubicChunks:cubicchunks:f71aafb9854466ac5ffa0ccd2796921684f1d8b1") {
         transitive = false
     }
     deobfProvided ("com.github.OpenCubicChunks:CubicWorldGen:27de56d2f792513873584b2f8fd9f3082fb259ec") {
@@ -64,6 +64,8 @@ dependencies {
     shade("net.daporkchop.lib:binary:0.5.5-SNAPSHOT")  {
         exclude group: "io.netty"
     }
+
+    testCompile "junit:junit:4.12"
 
     compileOnly "org.projectlombok:lombok:1.18.16"
     annotationProcessor "org.projectlombok:lombok:1.18.16"
