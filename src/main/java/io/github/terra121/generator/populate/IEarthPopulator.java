@@ -2,8 +2,7 @@ package io.github.terra121.generator.populate;
 
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
-import io.github.terra121.generator.cache.CachedChunkData;
-import net.minecraft.world.IBlockAccess;
+import io.github.terra121.generator.CachedChunkData;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 

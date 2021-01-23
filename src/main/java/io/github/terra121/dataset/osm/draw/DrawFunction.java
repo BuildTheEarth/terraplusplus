@@ -1,7 +1,7 @@
 package io.github.terra121.dataset.osm.draw;
 
 import com.google.gson.annotations.JsonAdapter;
-import io.github.terra121.generator.cache.CachedChunkData;
+import io.github.terra121.generator.CachedChunkData;
 import lombok.NonNull;
 
 /**

@@ -1,8 +1,8 @@
 package io.github.terra121.event;
 
 import io.github.terra121.generator.GeneratorDatasets;
-import io.github.terra121.generator.cache.CachedChunkData;
-import io.github.terra121.generator.cache.ChunkDataLoader;
+import io.github.terra121.generator.CachedChunkData;
+import io.github.terra121.generator.ChunkDataLoader;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.util.math.ChunkPos;

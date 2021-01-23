@@ -1,4 +1,4 @@
-package io.github.terra121.generator.cache;
+package io.github.terra121.generator;
 
 import com.google.common.cache.CacheLoader;
 import com.google.common.collect.ImmutableMap;
@@ -7,8 +7,6 @@ import io.github.terra121.TerraMod;
 import io.github.terra121.dataset.osm.OSMRegion;
 import io.github.terra121.dataset.osm.element.Element;
 import io.github.terra121.event.LoadCachedChunkDataEvent;
-import io.github.terra121.generator.EarthGenerator;
-import io.github.terra121.generator.GeneratorDatasets;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
 import io.github.terra121.util.bvh.Bounds2d;

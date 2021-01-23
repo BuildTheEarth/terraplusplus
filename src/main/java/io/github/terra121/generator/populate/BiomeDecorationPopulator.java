@@ -4,7 +4,7 @@ import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.CubicBiome;
 import io.github.terra121.generator.EarthGeneratorSettings;
-import io.github.terra121.generator.cache.CachedChunkData;
+import io.github.terra121.generator.CachedChunkData;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import lombok.NonNull;
 import net.minecraft.world.World;

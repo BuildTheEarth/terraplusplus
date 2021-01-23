@@ -1,7 +1,6 @@
-package io.github.terra121.generator.cache;
+package io.github.terra121.generator;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.util.CustomAttributeContainer;
 import io.github.terra121.util.ImmutableBlockStateArray;
 import lombok.Getter;

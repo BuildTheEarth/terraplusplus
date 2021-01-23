@@ -3,7 +3,7 @@ package io.github.terra121.dataset.osm.draw;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import io.github.terra121.dataset.osm.config.JsonParser;
-import io.github.terra121.generator.cache.CachedChunkData;
+import io.github.terra121.generator.CachedChunkData;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.block.state.IBlockState;

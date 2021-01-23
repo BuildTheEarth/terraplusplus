@@ -1,6 +1,6 @@
 package io.github.terra121.dataset.osm.element;
 
-import io.github.terra121.generator.cache.CachedChunkData;
+import io.github.terra121.generator.CachedChunkData;
 import io.github.terra121.util.bvh.Bounds2d;
 import lombok.NonNull;
 

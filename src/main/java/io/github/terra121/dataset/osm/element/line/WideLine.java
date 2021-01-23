@@ -4,7 +4,7 @@ import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.MathUtil;
 import io.github.terra121.dataset.osm.geojson.geometry.MultiLineString;
 import io.github.terra121.dataset.osm.draw.DrawFunction;
-import io.github.terra121.generator.cache.CachedChunkData;
+import io.github.terra121.generator.CachedChunkData;
 import io.github.terra121.util.bvh.Bounds2d;
 import lombok.NonNull;
 import net.minecraft.util.math.MathHelper;
