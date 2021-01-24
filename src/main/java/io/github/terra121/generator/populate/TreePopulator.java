@@ -41,7 +41,7 @@ public class TreePopulator implements IEarthPopulator {
     }
 
     protected int treeCount(World world, Random random, CubePos pos, Biome biome, CachedChunkData data) {
-        double treeCover = (Double) data.getCustom(KEY_TREE_COVER);
+        double treeCover = (Double) data.getCustom(KEY_TREE_COVER, 0.0d);
 
         //got this fun formula messing around with data on desmos, estimate of tree cover -> number
         int treeCount = 30; //max so it doesn't go to infinity (which would technically be required to guarantee full coverage, but no)

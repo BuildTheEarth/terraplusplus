@@ -6,6 +6,7 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.terra121.control.EarthGui;
 import io.github.terra121.generator.EarthBiomeProvider;
 import io.github.terra121.generator.EarthGenerator;
+import io.github.terra121.generator.EarthGeneratorSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.init.Biomes;
@@ -34,7 +35,7 @@ public class EarthWorldType extends WorldType implements ICubicWorldType {
 
     @Override
     public BiomeProvider getBiomeProvider(World world) {
-        return new EarthBiomeProvider(Biomes.FOREST, world);
+        return new EarthGeneratorSettings(world.getWorldInfo().getGeneratorOptions()).getBiomeProvider();
     }
 
     @Override

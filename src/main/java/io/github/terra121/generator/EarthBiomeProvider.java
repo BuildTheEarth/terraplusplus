@@ -4,6 +4,8 @@ import io.github.terra121.dataset.impl.Climate;
 import io.github.terra121.dataset.impl.Soil;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import net.minecraft.init.Biomes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -15,24 +17,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+@RequiredArgsConstructor
 public class EarthBiomeProvider extends BiomeProvider {
     public final Soil soil = new Soil();
     public final Climate climate = new Climate();
-    public GeographicProjection projection;
 
-    private final Biome defaultBiome;
-
-    public EarthBiomeProvider(Biome biomeIn, World world) {
-        this(biomeIn);
-
-        EarthGeneratorSettings cfg = new EarthGeneratorSettings(world.getWorldInfo().getGeneratorOptions());
-        this.projection = cfg.getProjection();
-    }
-
-    public EarthBiomeProvider(Biome biomeIn) {
-        //load soil and climate data from assets
-        this.defaultBiome = biomeIn;
-    }
+    @NonNull
+    public final GeographicProjection projection;
 
     /**
      * Returns the biome generator based on soil and climate (mostly soil)
@@ -213,7 +204,7 @@ public class EarthBiomeProvider extends BiomeProvider {
             biomes = new Biome[width * height];
         }
 
-        Arrays.fill(biomes, 0, width * height, this.defaultBiome);
+        Arrays.fill(biomes, 0, width * height, Biomes.FOREST);
         return biomes;
     }
 

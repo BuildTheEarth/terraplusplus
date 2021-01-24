@@ -285,7 +285,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                 for (int tz = 0; tz < CHUNKS_PER_TILE; tz++) {
                     CachedChunkData data = dataFutures[ti++].join();
 
-                    int treeCover = lerpI(0, 80, (Double) data.getCustom(KEY_TREE_COVER));
+                    int treeCover = lerpI(0, 80, (Double) data.getCustom(KEY_TREE_COVER, 0.0d));
 
                     int baseX = tx << 4;
                     int baseZ = tz << 4;

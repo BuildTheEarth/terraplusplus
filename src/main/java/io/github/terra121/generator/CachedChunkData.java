@@ -10,7 +10,9 @@ import lombok.NonNull;
 import lombok.Setter;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.ref.ThreadRef;
+import net.daporkchop.lib.common.util.PorkUtil;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Biomes;
 import net.minecraft.world.biome.Biome;
 
 import java.util.Arrays;
@@ -61,6 +63,7 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
     private final int[] surfaceHeight;
     private final int[] groundHeight;
 
+    @Getter
     private final byte[] biomes;
 
     private final ImmutableBlockStateArray surfaceBlocks;
@@ -102,7 +105,7 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
 
         this.biomes = new byte[16 * 16];
         for (int i = 0; i < 16 * 16; i++) {
-            this.biomes[i] = (byte) Biome.getIdForBiome(builder.biomes[i]);
+            this.biomes[i] = (byte) Biome.getIdForBiome(PorkUtil.fallbackIfNull(builder.biomes[i], Biomes.DEEP_OCEAN));
         }
 
         this.surfaceBlocks = new ImmutableBlockStateArray(builder.surfaceBlocks);
@@ -145,6 +148,10 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
 
     public IBlockState surfaceBlock(int x, int z) {
         return this.surfaceBlocks.get(x * 16 + z);
+    }
+
+    public int biome(int x, int z) {
+        return this.biomes[z * 16 + x];
     }
 
     /**

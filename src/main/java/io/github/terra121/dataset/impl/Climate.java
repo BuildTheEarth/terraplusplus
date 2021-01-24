@@ -29,8 +29,10 @@ public class Climate {
         }
 
         double[] out = new double[ROWS * COLS * 2];
-        for (int i = 0; i < out.length; i++) {
-            out[i] = buf.readFloat();
+        for (int i = 0; i < out.length; ) {
+            buf.skipBytes(8);
+            out[i++] = buf.readFloat();
+            out[i++] = buf.readFloat();
         }
         return out;
     });
@@ -51,6 +53,8 @@ public class Climate {
     };
 
     public ClimateData getPoint(double x, double y) {
+        x = (COLS * (x + 180) / 360);
+        y = (ROWS * (90 - y) / 180);
         return new ClimateData(BlendMode.LINEAR.get(x, y, this.getOfficialTemp), BlendMode.LINEAR.get(x, y, this.getOfficialPrecip));
     }
 

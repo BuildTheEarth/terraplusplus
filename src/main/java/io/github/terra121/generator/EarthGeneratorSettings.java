@@ -74,6 +74,10 @@ public class EarthGeneratorSettings {
         return projection;
     }
 
+    public EarthBiomeProvider getBiomeProvider() {
+        return new EarthBiomeProvider(this.getProjection());
+    }
+
     public GeographicProjection getNormalizedProjection() {
         return GeographicProjection.orientProjection(
                 GeographicProjection.projections.get(this.settings.projection), GeographicProjection.Orientation.upright);

@@ -9,6 +9,7 @@ import io.github.terra121.event.InitDatasetsEvent;
 import io.github.terra121.event.InitEarthRegistryEvent;
 import io.github.terra121.generator.process.HeightsBaker;
 import io.github.terra121.generator.process.IChunkDataBaker;
+import io.github.terra121.generator.process.InitialBiomesBaker;
 import io.github.terra121.generator.process.OSMBaker;
 import io.github.terra121.generator.process.TreeCoverBaker;
 import io.github.terra121.projection.GeographicProjection;
@@ -51,6 +52,7 @@ public class GeneratorDatasets extends CustomAttributeContainer<Object> {
         this.trees = new Trees();
 
         OrderedRegistry<IChunkDataBaker<?>> bakerRegistry = new OrderedRegistry<IChunkDataBaker<?>>()
+                .addLast("initial_biomes", new InitialBiomesBaker(settings.getBiomeProvider()))
                 .addLast("tree_cover", new TreeCoverBaker())
                 .addLast("heights", new HeightsBaker())
                 .addLast("osm", new OSMBaker());

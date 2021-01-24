@@ -43,6 +43,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkPrimer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.InitMapGenEvent;
 import net.minecraftforge.fml.common.Loader;
@@ -177,13 +178,42 @@ public class EarthGenerator extends BasicCubeGenerator {
     }
 
     @Override
-    public void generateColumn(Chunk column) {
-        super.generateColumn(column);
+    public GeneratorReadyState pollAsyncColumnGenerator(int chunkX, int chunkZ) {
+        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(chunkX, chunkZ));
+        if (!future.isDone()) {
+            return GeneratorReadyState.WAITING;
+        } else if (future.isCompletedExceptionally()) {
+            return GeneratorReadyState.FAIL;
+        } else {
+            return GeneratorReadyState.READY;
+        }
+    }
+
+    @Override
+    public void generateColumn(Chunk column) { //legacy compat method
+        CachedChunkData data = this.cache.getUnchecked(column.getPos()).join();
+        this.generateColumn(column, data);
+    }
+
+    @Override
+    public Optional<Chunk> tryGenerateColumn(World world, int columnX, int columnZ, ChunkPrimer primer, boolean forceGenerate) {
+        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(columnX, columnZ));
+        if (!forceGenerate && (!future.isDone() || future.isCompletedExceptionally())) {
+            return Optional.empty();
+        }
+
+        Chunk column = new Chunk(world, columnX, columnZ);
+        this.generateColumn(column, future.join());
+        return Optional.of(column);
+    }
+
+    protected void generateColumn(Chunk column, CachedChunkData data) {
+        column.setBiomeArray(data.biomes());
     }
 
     @Override
     public boolean supportsConcurrentCubeGeneration() {
-        return false; //we ALMOST do, but generateCube still has to access the world in order to get at the biome data... this will be resolved in fast-osm
+        return true;
     }
 
     @Override
@@ -203,14 +233,7 @@ public class EarthGenerator extends BasicCubeGenerator {
 
     @Override
     public GeneratorReadyState pollAsyncCubeGenerator(int cubeX, int cubeY, int cubeZ) {
-        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ));
-        if (!future.isDone()) {
-            return GeneratorReadyState.WAITING;
-        } else if (future.isCompletedExceptionally()) {
-            return GeneratorReadyState.FAIL;
-        } else {
-            return GeneratorReadyState.READY;
-        }
+        return this.pollAsyncColumnGenerator(cubeX, cubeZ);
     }
 
     @Override
@@ -226,7 +249,7 @@ public class EarthGenerator extends BasicCubeGenerator {
 
     protected void generateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer, CachedChunkData data) {
         //build ground surfaces
-        this.generateSurface(cubeX, cubeY, cubeZ, primer, data, this.world.getChunk(cubeX, cubeZ).getBiomeArray());
+        this.generateSurface(cubeX, cubeY, cubeZ, primer, data);
 
         //generate structures
         this.structureGenerators.forEach(gen -> gen.generate(this.world, primer, new CubePos(cubeX, cubeY, cubeZ)));
@@ -245,7 +268,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         }
     }
 
-    protected void generateSurface(int cubeX, int cubeY, int cubeZ, CubePrimer primer, CachedChunkData data, byte[] biomes) {
+    protected void generateSurface(int cubeX, int cubeY, int cubeZ, CubePrimer primer, CachedChunkData data) {
         IBlockState stone = Blocks.STONE.getDefaultState();
         IBlockState water = Blocks.WATER.getDefaultState();
         if (data.belowSurface(cubeY + 2)) { //below surface -> solid stone (padding of 2 cubes because some replacers might need it)
@@ -278,7 +301,7 @@ public class EarthGenerator extends BasicCubeGenerator {
 
                     int blockX = Coords.cubeToMinBlock(cubeX) + x;
                     int blockZ = Coords.cubeToMinBlock(cubeZ) + z;
-                    IBiomeBlockReplacer[] replacers = this.biomeBlockReplacers[biomes[x * 16 + z] & 0xFF];
+                    IBiomeBlockReplacer[] replacers = this.biomeBlockReplacers[data.biome(x, z) & 0xFF];
                     for (int y = 0; y <= groundTop; y++) {
                         int blockY = Coords.cubeToMinBlock(cubeY) + y;
                         double density = groundTop - y;

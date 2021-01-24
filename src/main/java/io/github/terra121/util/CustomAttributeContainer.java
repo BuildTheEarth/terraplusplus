@@ -5,8 +5,6 @@ import lombok.NonNull;
 
 import java.util.Map;
 
-import static net.daporkchop.lib.common.util.PValidation.*;
-
 /**
  * @author DaPorkchop_
  */
@@ -18,12 +16,11 @@ public abstract class CustomAttributeContainer<T> {
     /**
      * Gets the custom attribute with the given key.
      *
-     * @param key the key of the attribute to get
+     * @param key      the key of the attribute to get
+     * @param fallback the value to return if the key couldn't be found
      * @return the attribute
      */
-    public T getCustom(@NonNull String key) {
-        T value = this.custom.get(key);
-        checkArg(value != null, "unknown attribute key: \"%s\"!", key);
-        return value;
+    public T getCustom(@NonNull String key, T fallback) {
+        return this.custom.getOrDefault(key, fallback);
     }
 }
