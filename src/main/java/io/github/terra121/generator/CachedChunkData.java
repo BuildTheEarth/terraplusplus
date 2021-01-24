@@ -86,7 +86,10 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
                     //do nothing
                     break;
                 case WATERDEPTH_TYPE_WATER: //water - lake/river/pond
-                    this.groundHeight[i] -= max(d + EarthGenerator.WATER_DEPTH_OFFSET, 0);
+                    if (d + EarthGenerator.WATER_DEPTH_OFFSET >= 0) {
+                        this.groundHeight[i] -= d + EarthGenerator.WATER_DEPTH_OFFSET;
+                        builder.biomes[(i >>> 4) | ((i & 0xF) << 4)] = Biomes.RIVER;
+                    }
                     break;
                 case WATERDEPTH_TYPE_OCEAN:
                     if (d < 0) {
@@ -96,6 +99,7 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
                     } else {
                         this.surfaceHeight[i] = 0;
                         this.groundHeight[i] = min(this.groundHeight[i], -2);
+                        builder.biomes[(i >>> 4) | ((i & 0xF) << 4)] = Biomes.OCEAN;
                     }
                     break;
                 default:
