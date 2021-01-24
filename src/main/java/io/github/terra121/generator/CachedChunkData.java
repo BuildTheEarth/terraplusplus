@@ -1,8 +1,10 @@
 package io.github.terra121.generator;
 
+import com.google.common.collect.ImmutableMap;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.terra121.util.CustomAttributeContainer;
 import io.github.terra121.util.ImmutableBlockStateArray;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -66,10 +68,9 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
     private final int surfaceMinCube;
     private final int surfaceMaxCube;
 
-    @Getter
-    private final double treeCover;
+    private CachedChunkData(@NonNull Builder builder, @NonNull Map<String, Object> custom) {
+        super(custom);
 
-    private CachedChunkData(@NonNull Builder builder) {
         this.surfaceHeight = builder.surfaceHeight.clone();
         this.groundHeight = builder.surfaceHeight.clone();
 
@@ -104,8 +105,6 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
             this.biomes[i] = (byte) Biome.getIdForBiome(builder.biomes[i]);
         }
 
-        this.treeCover = builder.treeCover;
-
         this.surfaceBlocks = new ImmutableBlockStateArray(builder.surfaceBlocks);
 
         //this.segments = approximateSort(elements, new EqualsTieBreakComparator<Element.Cube>(Comparator.naturalOrder(), true, true)).toArray(new Element.Cube[0]);
@@ -118,8 +117,6 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
         }
         this.surfaceMinCube = Coords.blockToCube(min);
         this.surfaceMaxCube = Coords.blockToCube(max + 1);
-
-        super.custom = builder.custom;
     }
 
     public boolean intersectsSurface(int cubeY) {
@@ -157,22 +154,20 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
      */
     @Getter
     @Setter
-    public static final class Builder {
+    public static final class Builder extends CustomAttributeContainer<Object> {
         private final int[] surfaceHeight = new int[16 * 16];
         private final byte[] waterDepth = new byte[16 * 16];
 
         private final Biome[] biomes = new Biome[16 * 16];
 
         protected final IBlockState[] surfaceBlocks = new IBlockState[16 * 16];
-        protected double treeCover = 0.0d;
-
-        protected Map<String, Object> custom;
 
         /**
          * @deprecated use {@link #builder()} unless you have a specific reason to invoke this constructor directly
          */
         @Deprecated
         public Builder() {
+            super(new Object2ObjectOpenHashMap<>());
             this.reset();
         }
 
@@ -201,19 +196,22 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
             return this.surfaceHeight[x * 16 + z];
         }
 
+        public void putCustom(@NonNull String key, @NonNull Object value) {
+            this.custom.put(key, value);
+        }
+
         public Builder reset() {
             Arrays.fill(this.surfaceHeight, BLANK_HEIGHT);
             Arrays.fill(this.waterDepth, (byte) WATERDEPTH_DEFAULT);
             Arrays.fill(this.surfaceBlocks, null);
-            this.treeCover = 0.0d;
-            this.custom = Collections.emptyMap();
+            this.custom.clear();
             return this;
         }
 
         public CachedChunkData build() {
-            CachedChunkData built = new CachedChunkData(this);
-            this.custom = Collections.emptyMap();
-            return built;
+            Map<String, Object> custom = ImmutableMap.copyOf(this.custom);
+            this.custom.clear();
+            return new CachedChunkData(this, custom);
         }
     }
 }

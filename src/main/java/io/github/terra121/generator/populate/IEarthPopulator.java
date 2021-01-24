@@ -14,6 +14,7 @@ import java.util.Random;
  * @author DaPorkchop_
  * @see ICubicPopulator
  */
+@FunctionalInterface
 public interface IEarthPopulator {
     /**
      * @param data the {@link CachedChunkData} for the column

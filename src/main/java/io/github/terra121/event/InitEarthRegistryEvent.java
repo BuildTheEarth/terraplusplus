@@ -1,6 +1,5 @@
 package io.github.terra121.event;
 
-import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.util.OrderedRegistry;
 import lombok.AccessLevel;
@@ -15,7 +14,7 @@ import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.IGenericEvent;
 
 /**
- * Fired when an {@link EarthGenerator} is being initialized.
+ * Fired when an {@link OrderedRegistry} is being initialized.
  * <p>
  * This event is fired on {@link MinecraftForge#TERRAIN_GEN_BUS}.
  *
@@ -24,12 +23,12 @@ import net.minecraftforge.fml.common.eventhandler.IGenericEvent;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Setter
-public class InitEarthGeneratorEvent<T> extends Event implements IGenericEvent<T> {
+public class InitEarthRegistryEvent<T> extends Event implements IGenericEvent<T> {
     @NonNull
     protected final EarthGeneratorSettings settings;
     @NonNull
     protected OrderedRegistry<T> registry;
 
     @Accessors(fluent = false)
-    protected final Class<T> genericType = GenericMatcher.uncheckedFind(this.getClass(), InitEarthGeneratorEvent.class, "T");
+    protected final Class<T> genericType = GenericMatcher.uncheckedFind(this.getClass(), InitEarthRegistryEvent.class, "T");
 }

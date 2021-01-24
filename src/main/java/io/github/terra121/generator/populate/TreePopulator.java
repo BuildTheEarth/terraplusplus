@@ -16,6 +16,8 @@ import net.minecraft.world.gen.feature.WorldGenAbstractTree;
 import java.util.Random;
 import java.util.Set;
 
+import static io.github.terra121.TerraConstants.*;
+
 public class TreePopulator implements IEarthPopulator {
     protected static final Set<Block> EXTRA_SURFACE = ImmutableSet.of(
             Blocks.SAND,
@@ -39,12 +41,12 @@ public class TreePopulator implements IEarthPopulator {
     }
 
     protected int treeCount(World world, Random random, CubePos pos, Biome biome, CachedChunkData data) {
-        double canopy = data.treeCover();
+        double treeCover = (Double) data.getCustom(KEY_TREE_COVER);
 
         //got this fun formula messing around with data on desmos, estimate of tree cover -> number
         int treeCount = 30; //max so it doesn't go to infinity (which would technically be required to guarantee full coverage, but no)
-        if (canopy < 0.95d) {
-            double x = Math.pow(canopy, 1.5d);
+        if (treeCover < 0.95d) {
+            double x = Math.pow(treeCover, 1.5d);
             treeCount = (int) ((Math.log(1.0d + x) - Math.log(1.0d - x)) * 10.0d);
         }
 

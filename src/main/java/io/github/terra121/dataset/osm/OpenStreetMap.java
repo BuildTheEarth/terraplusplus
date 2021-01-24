@@ -21,6 +21,7 @@ import io.github.terra121.dataset.osm.geojson.geometry.Point;
 import io.github.terra121.dataset.osm.geojson.geometry.Polygon;
 import io.github.terra121.dataset.osm.geojson.object.Feature;
 import io.github.terra121.dataset.osm.geojson.object.Reference;
+import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.projection.EquirectangularProjection;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
@@ -72,10 +73,10 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                 return Http.getFirst(urls, this::parseGeoJSON).thenCompose(COMPOSE_FUNCTION);
             }));
 
-    public OpenStreetMap(@NonNull GeographicProjection earthProjection) {
+    public OpenStreetMap(@NonNull EarthGeneratorSettings settings) {
         super(new EquirectangularProjection(), TILE_SIZE);
 
-        this.earthProjection = earthProjection;
+        this.earthProjection = settings.getProjection();
 
         try {
             this.mapper = OSMMapper.load(OpenStreetMap.class.getResourceAsStream("/default_config/osm.json5"));

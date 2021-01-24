@@ -2,7 +2,6 @@ package io.github.terra121.event;
 
 import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.generator.GeneratorDatasets;
-import io.github.terra121.projection.GeographicProjection;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,20 @@ import net.minecraftforge.common.MinecraftForge;
 @Getter
 public class InitDatasetsEvent extends AbstractCustomRegistrationEvent<Object> {
     @NonNull
-    protected final GeographicProjection projection;
-    @NonNull
     protected final EarthGeneratorSettings settings;
+
+    @Override
+    public void register(@NonNull String key, @NonNull Object value) {
+        super.register(key, value);
+    }
+
+    @Override
+    public void remove(@NonNull String key) {
+        super.remove(key);
+    }
+
+    @Override
+    public Object get(@NonNull String key) {
+        return super.get(key);
+    }
 }

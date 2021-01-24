@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
+import static io.github.terra121.TerraConstants.*;
 import static java.lang.Math.*;
 import static net.daporkchop.lib.common.math.PMath.*;
 import static net.daporkchop.lib.common.util.PorkUtil.*;
@@ -106,7 +107,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
             }
 
             public void initSettings() {
-                this.preview = new TerrainPreview(this.projection, this.settings);
+                this.preview = new TerrainPreview(this.settings);
             }
 
             public CompletableFuture<Void> run() {
@@ -234,11 +235,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
     protected final ChunkDataLoader loader;
 
     public TerrainPreview(@NonNull EarthGeneratorSettings settings) {
-        this(settings.getProjection(), settings);
-    }
-
-    public TerrainPreview(@NonNull GeographicProjection projection, @NonNull EarthGeneratorSettings settings) {
-        this(new GeneratorDatasets(projection, settings));
+        this(new GeneratorDatasets(settings));
     }
 
     public TerrainPreview(@NonNull GeneratorDatasets datasets) {
@@ -287,6 +284,9 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
             for (int ti = 0, tx = 0; tx < CHUNKS_PER_TILE; tx++) {
                 for (int tz = 0; tz < CHUNKS_PER_TILE; tz++) {
                     CachedChunkData data = dataFutures[ti++].join();
+
+                    int treeCover = lerpI(0, 80, (Double) data.getCustom(KEY_TREE_COVER));
+
                     int baseX = tx << 4;
                     int baseZ = tz << 4;
                     for (int cx = 0; cx < 16; cx++) {
@@ -314,7 +314,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                                     b = lerpI(255, 64, clamp(waterHeight - groundHeight + 1, 0, 8) / 8.0f);
                                 }
 
-                                g = max(g, lerpI(0, 80, data.treeCover()));
+                                g = max(g, treeCover);
                                 c = r << 16 | g << 8 | b;
                             }
 

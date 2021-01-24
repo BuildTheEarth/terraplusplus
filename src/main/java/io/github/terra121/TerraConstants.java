@@ -30,4 +30,6 @@ public class TerraConstants {
     public static final double EARTH_POLAR_CIRCUMFERENCE = 40008000;
 
     public static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
+
+    public static final String KEY_TREE_COVER = "tree_cover";
 }

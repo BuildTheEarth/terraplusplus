@@ -26,9 +26,7 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.Cubi
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicRavineGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.feature.CubicStrongholdGenerator;
 import io.github.terra121.TerraMod;
-import io.github.terra121.dataset.impl.Water;
-import io.github.terra121.dataset.osm.segment.Segment;
-import io.github.terra121.event.InitEarthGeneratorEvent;
+import io.github.terra121.event.InitEarthRegistryEvent;
 import io.github.terra121.generator.populate.BiomeDecorationPopulator;
 import io.github.terra121.generator.populate.CompatibilityEarthPopulators;
 import io.github.terra121.generator.populate.IEarthPopulator;
@@ -94,7 +92,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         return abs(chunkX) < 5 && abs(chunkZ) < 5;
     }
 
-    public final EarthGeneratorSettings cfg;
+    public final EarthGeneratorSettings settings;
     public final BiomeProvider biomes;
     public final GeographicProjection projection;
     private final CustomGeneratorSettings cubiccfg;
@@ -112,13 +110,13 @@ public class EarthGenerator extends BasicCubeGenerator {
     public EarthGenerator(World world) {
         super(world);
 
-        this.cfg = new EarthGeneratorSettings(world.getWorldInfo().getGeneratorOptions());
-        this.cubiccfg = this.cfg.getCustomCubic();
-        this.projection = this.cfg.getProjection();
+        this.settings = new EarthGeneratorSettings(world.getWorldInfo().getGeneratorOptions());
+        this.cubiccfg = this.settings.getCustomCubic();
+        this.projection = this.settings.getProjection();
 
         this.biomes = world.getBiomeProvider(); //TODO: make this not order dependent
 
-        this.datasets = new GeneratorDatasets(this.projection, this.cfg);
+        this.datasets = new GeneratorDatasets(this.settings);
         this.cache = CacheBuilder.newBuilder()
                 .expireAfterAccess(5L, TimeUnit.MINUTES)
                 .softValues()
@@ -145,12 +143,12 @@ public class EarthGenerator extends BasicCubeGenerator {
         OrderedRegistry<IEarthPopulator> populatorRegistry = new OrderedRegistry<IEarthPopulator>()
                 .addLast("fml_pre_cube_populate_event", CompatibilityEarthPopulators.cubePopulatePre())
                 .addLast("trees", new TreePopulator())
-                .addLast("biome_decorate", new BiomeDecorationPopulator(this.cfg))
+                .addLast("biome_decorate", new BiomeDecorationPopulator(this.settings))
                 .addLast("snow", new SnowPopulator())
                 .addLast("fml_post_cube_populate_event", CompatibilityEarthPopulators.cubePopulatePost())
                 .addLast("cc_cube_generators_registry", CompatibilityEarthPopulators.cubeGeneratorsRegistry());
 
-        InitEarthGeneratorEvent<IEarthPopulator> populatorEvent = new InitEarthGeneratorEvent<IEarthPopulator>(this.cfg, populatorRegistry) {};
+        InitEarthRegistryEvent<IEarthPopulator> populatorEvent = new InitEarthRegistryEvent<IEarthPopulator>(this.settings, populatorRegistry) {};
         MinecraftForge.TERRAIN_GEN_BUS.post(populatorEvent);
         this.populators = populatorEvent.registry().entryStream().map(Map.Entry::getValue).toArray(IEarthPopulator[]::new);
 
@@ -338,7 +336,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         Random random = Coords.coordsSeedRandom(this.world.getSeed(), cube.getX(), cube.getY(), cube.getZ());
         Biome biome = cube.getBiome(Coords.getCubeCenter(cube));
 
-        if (this.cfg.settings.dynamicbaseheight) {
+        if (this.settings.settings.dynamicbaseheight) {
             this.cubiccfg.expectedBaseHeight = (float) data.groundHeight(8, 8);
         }
 

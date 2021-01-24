@@ -36,7 +36,7 @@ public class TerraWorldFragment extends CommandFragment {
         }
 
         EarthGenerator terrain = (EarthGenerator) gen;
-        EarthGeneratorSettings.JsonSettings projectionSettings = terrain.cfg.settings;
+        EarthGeneratorSettings.JsonSettings projectionSettings = terrain.settings.settings;
 
         sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "World Type: ", TextFormatting.GREEN, "Earth World"));
         sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "Projection: ", TextFormatting.GREEN, projectionSettings.projection,

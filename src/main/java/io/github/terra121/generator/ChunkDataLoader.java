@@ -1,28 +1,20 @@
 package io.github.terra121.generator;
 
 import com.google.common.cache.CacheLoader;
-import com.google.common.collect.ImmutableMap;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.terra121.TerraMod;
-import io.github.terra121.dataset.osm.OSMRegion;
-import io.github.terra121.dataset.osm.element.Element;
-import io.github.terra121.event.LoadCachedChunkDataEvent;
+import io.github.terra121.generator.process.IChunkDataBaker;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
 import io.github.terra121.util.bvh.Bounds2d;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraftforge.common.MinecraftForge;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 
 import static net.daporkchop.lib.common.math.PMath.*;
+import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 /**
  * {@link CacheLoader} implementation for {@link EarthGenerator} which asynchronously aggregates information from multiple datasets and stores it
@@ -61,51 +53,21 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
             int baseZ = Coords.cubeToMinBlock(pos.z);
 
             Bounds2d chunkBounds = Bounds2d.of(baseX, baseX + 16, baseZ, baseZ + 16);
-            Bounds2d osmBounds = chunkBounds.expand(8.0d);
-
             CornerBoundingBox2d chunkBoundsGeo = chunkBounds.toCornerBB(this.data.projection(), false).toGeo();
-            CornerBoundingBox2d osmBoundsGeo = osmBounds.toCornerBB(this.data.projection(), false).toGeo();
 
-            CompletableFuture<double[]> heightsFuture = this.data.heights().getAsync(chunkBoundsGeo, 16, 16);
-            CompletableFuture<Double> treeCoverFuture = this.data.trees().getAsync(chunkBoundsGeo.point(null, 0.5d, 0.5d));
-            CompletableFuture<OSMRegion[]> osmRegionsFuture = this.data.osm().getRegionsAsync(osmBoundsGeo);
+            IChunkDataBaker<?>[] bakers = this.data.bakers;
+            CompletableFuture<?>[] futures = new CompletableFuture[bakers.length];
+            for (int i = 0; i < bakers.length; i++) {
+                futures[i] = bakers[i].requestData(pos, this.data, chunkBounds, chunkBoundsGeo);
+            }
 
-            LoadCachedChunkDataEvent event = new LoadCachedChunkDataEvent(pos, this.data);
-            MinecraftForge.TERRAIN_GEN_BUS.post(event);
-            Map<String, CompletableFuture<?>> customFutures = event.getAllCustomProperties();
-
-            List<CompletableFuture> futuresList = new ArrayList<>();
-            futuresList.add(heightsFuture);
-            futuresList.add(treeCoverFuture);
-            futuresList.add(osmRegionsFuture);
-            futuresList.addAll(customFutures.values());
-
-            CompletableFuture<CachedChunkData> future = CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[0]))
+            CompletableFuture<CachedChunkData> future = CompletableFuture.allOf(futures)
                     .thenApply(unused -> {
-                        //dereference all futures
-                        double[] heights = heightsFuture.join();
-                        double treeCover = treeCoverFuture.join();
-                        OSMRegion[] osmRegions = osmRegionsFuture.join();
+                        CachedChunkData.Builder builder = CachedChunkData.builder();
 
-                        CachedChunkData.Builder builder = CachedChunkData.builder()
-                                .treeCover(Double.isNaN(treeCover) ? 0.0d : treeCover);
-
-                        //set custom future properties
-                        if (!customFutures.isEmpty()) {
-                            ImmutableMap.Builder<String, Object> customMapBuilder = ImmutableMap.builder();
-                            customFutures.forEach((key, f) -> customMapBuilder.put(key, f.join()));
-                            builder.custom(customMapBuilder.build());
+                        for (int i = 0; i < bakers.length; i++) {
+                            bakers[i].bake(pos, builder, uncheckedCast(futures[i].join()));
                         }
-
-                        applyHeights(builder, heights);
-
-                        //find all OpenStreetMap geometry that intersects the chunk
-                        Set<Element> elements = new TreeSet<>();
-                        for (OSMRegion region : osmRegions) {
-                            region.elements.forEachIntersecting(chunkBounds, elements::add);
-                        }
-
-                        elements.forEach(element -> element.apply(builder, pos.x, pos.z, chunkBounds));
 
                         return builder.build();
                     });
