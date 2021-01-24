@@ -24,7 +24,7 @@ public class BiomeDecorationPopulator implements IEarthPopulator {
 
     public BiomeDecorationPopulator(@NonNull EarthGeneratorSettings settings) {
         for (Biome biome : ForgeRegistries.BIOMES) {
-            this.populators.put(biome, CubicBiome.getCubic(biome).getDecorator(settings.getCustomCubic()));
+            this.populators.put(biome, CubicBiome.getCubic(biome).getDecorator(settings.customCubic()));
         }
     }
 

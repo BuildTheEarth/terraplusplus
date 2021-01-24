@@ -1,6 +1,7 @@
 package io.github.terra121.control;
 
 import io.github.terra121.TerraMod;
+import io.github.terra121.config.GlobalParseRegistries;
 import io.github.terra121.control.DynamicOptions.Element;
 import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.projection.GeographicProjection;
@@ -39,7 +40,7 @@ public class EarthGui extends GuiScreen implements DynamicOptions.Handler {
     GuiCreateWorld guiCreateWorld;
 
     public EarthGui(GuiCreateWorld guiCreateWorld, Minecraft mc) {
-        this.cfg = new EarthGeneratorSettings(guiCreateWorld.chunkProviderSettingsJson);
+        this.cfg = EarthGeneratorSettings.parse(guiCreateWorld.chunkProviderSettingsJson);
 
         this.mc = mc;
         this.guiCreateWorld = guiCreateWorld;
@@ -50,10 +51,11 @@ public class EarthGui extends GuiScreen implements DynamicOptions.Handler {
             throw new RuntimeException(e);
         }
 
-        String[] projs = GeographicProjection.projections.keySet().toArray(new String[0]);
+        String[] projs = GlobalParseRegistries.PROJECTIONS.keySet().toArray(new String[0]);
 
         this.settingElems = new DynamicOptions.Element[]{
-                this.cycleButton(6969, "projection", projs, e -> {
+                this.cycleButton(6969 //nice
+                        , "projection", projs, e -> {
                     this.projectMap();
                     return I18n.format("terra121.gui.projection") + ": " + I18n.format("terra121.projection." + e);
                 }),
@@ -81,11 +83,11 @@ public class EarthGui extends GuiScreen implements DynamicOptions.Handler {
     }
 
     //auto format based on field name
-    private <E> DynamicOptions.ToggleElement toggleButton(int id, String field, Consumer<Boolean> notify) {
+    private DynamicOptions.ToggleElement toggleButton(int id, String field, Consumer<Boolean> notify) {
         return this.toggleButton(id, I18n.format("terra121.gui." + field), field, notify);
     }
 
-    private <E> DynamicOptions.ToggleElement toggleButton(int id, String name, String field, Consumer<Boolean> notify) {
+    private DynamicOptions.ToggleElement toggleButton(int id, String name, String field, Consumer<Boolean> notify) {
         try {
             return new DynamicOptions.ToggleElement(id, name, field == null ? null : EarthGeneratorSettings.JsonSettings.class.getField(field), this.cfg.settings, notify);
         } catch (NoSuchFieldException | SecurityException e) {

@@ -1,5 +1,6 @@
 package io.github.terra121.projection;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.TerraConstants;
 
 /**
@@ -8,8 +9,8 @@ import io.github.terra121.TerraConstants;
  * @see <a href="https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system">Wikipedia's article on the universal transverse Mercator projection</a>
  * @see <a href="https://en.wikipedia.org/wiki/Transverse_Mercator_projection">Wikipedia's article on the transverse Mercator projection</a>
  */
+@JsonDeserialize
 public class TransverseMercatorProjection extends GeographicProjection {
-	
 	/**
 	 * Width of a longitude range in radians.
 	 * The 360 degrees of longitude are divided into chunks of this size,

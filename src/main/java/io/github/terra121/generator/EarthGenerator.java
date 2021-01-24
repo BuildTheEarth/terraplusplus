@@ -111,9 +111,9 @@ public class EarthGenerator extends BasicCubeGenerator {
     public EarthGenerator(World world) {
         super(world);
 
-        this.settings = new EarthGeneratorSettings(world.getWorldInfo().getGeneratorOptions());
-        this.cubiccfg = this.settings.getCustomCubic();
-        this.projection = this.settings.getProjection();
+        this.settings = EarthGeneratorSettings.parse(world.getWorldInfo().getGeneratorOptions());
+        this.cubiccfg = this.settings.customCubic();
+        this.projection = this.settings.projection();
 
         this.biomes = world.getBiomeProvider(); //TODO: make this not order dependent
 

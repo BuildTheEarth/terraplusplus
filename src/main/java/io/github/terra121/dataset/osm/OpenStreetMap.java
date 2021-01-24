@@ -7,18 +7,11 @@ import com.google.common.collect.ImmutableMap;
 import io.github.terra121.TerraConfig;
 import io.github.terra121.dataset.TiledDataset;
 import io.github.terra121.dataset.osm.config.OSMMapper;
-import io.github.terra121.dataset.osm.draw.BlockDraw;
 import io.github.terra121.dataset.osm.element.Element;
-import io.github.terra121.dataset.osm.element.line.WideLine;
-import io.github.terra121.dataset.osm.element.polygon.FillPolygon;
 import io.github.terra121.dataset.osm.geojson.GeoJSON;
 import io.github.terra121.dataset.osm.geojson.GeoJSONObject;
 import io.github.terra121.dataset.osm.geojson.Geometry;
-import io.github.terra121.dataset.osm.geojson.geometry.LineString;
-import io.github.terra121.dataset.osm.geojson.geometry.MultiLineString;
-import io.github.terra121.dataset.osm.geojson.geometry.MultiPolygon;
 import io.github.terra121.dataset.osm.geojson.geometry.Point;
-import io.github.terra121.dataset.osm.geojson.geometry.Polygon;
 import io.github.terra121.dataset.osm.geojson.object.Feature;
 import io.github.terra121.dataset.osm.geojson.object.Reference;
 import io.github.terra121.generator.EarthGeneratorSettings;
@@ -33,7 +26,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import lombok.NonNull;
 import net.daporkchop.lib.common.util.PorkUtil;
-import net.minecraft.init.Blocks;
 import net.minecraft.util.math.ChunkPos;
 
 import java.io.BufferedReader;
@@ -76,7 +68,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
     public OpenStreetMap(@NonNull EarthGeneratorSettings settings) {
         super(new EquirectangularProjection(), TILE_SIZE);
 
-        this.earthProjection = settings.getProjection();
+        this.earthProjection = settings.projection();
 
         try {
             this.mapper = OSMMapper.load(OpenStreetMap.class.getResourceAsStream("/default_config/osm.json5"));

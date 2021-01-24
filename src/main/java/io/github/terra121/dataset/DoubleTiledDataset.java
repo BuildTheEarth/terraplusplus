@@ -32,7 +32,7 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
     public final BlendMode blend;
 
     public DoubleTiledDataset(GeographicProjection proj, double scale, @NonNull BlendMode blend) {
-        super(new ScaleProjectionTransform(proj, scale), 1.0d / scale * TILE_SIZE);
+        super(new ScaleProjectionTransform(proj, scale, scale), 1.0d / scale * TILE_SIZE);
 
         this.blend = blend;
     }

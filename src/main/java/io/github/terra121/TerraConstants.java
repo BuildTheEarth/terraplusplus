@@ -1,9 +1,13 @@
 package io.github.terra121;
 
+import com.fasterxml.jackson.core.json.JsonReadFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.github.terra121.dataset.osm.config.BlockStateParser;
 import net.minecraft.block.state.IBlockState;
+
+import java.util.concurrent.CompletableFuture;
 
 public class TerraConstants {
     public static final String prefix = "&2&lT++ &8&l> ";
@@ -18,6 +22,16 @@ public class TerraConstants {
     public static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(IBlockState.class, BlockStateParser.INSTANCE)
             .create();
+
+    public static final JsonMapper JSON_MAPPER = JsonMapper.builder()
+            .configure(JsonReadFeature.ALLOW_JAVA_COMMENTS, true)
+            .configure(JsonReadFeature.ALLOW_LEADING_ZEROS_FOR_NUMBERS, true)
+            .configure(JsonReadFeature.ALLOW_LEADING_DECIMAL_POINT_FOR_NUMBERS, true)
+            .configure(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS, true)
+            .configure(JsonReadFeature.ALLOW_TRAILING_COMMA, true)
+            .build();
+
+    public static final CompletableFuture<Void> COMPLETE_FUTURE = CompletableFuture.completedFuture(null);
 
     /**
      * Earth's circumference around the equator, in meters.

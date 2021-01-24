@@ -1,57 +1,51 @@
 package io.github.terra121.projection.airocean;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Scanner;
-
-import io.github.terra121.projection.InvertableVectorField;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.util.MathUtils;
+import io.netty.util.AsciiString;
+import net.daporkchop.lib.binary.oio.StreamUtil;
+import net.daporkchop.lib.common.function.io.IOSupplier;
+import net.daporkchop.lib.common.ref.Ref;
+import net.daporkchop.lib.common.util.PArrays;
+
+import java.io.InputStream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * Implementation of the Dynmaxion like conformal projection.
  * Slightly modifies the Dynmaxion projection to make it conformal.
- * 
- * @see io.github.terra121.projection.Airocean
+ *
+ * @see io.github.terra121.projection.airocean.Airocean
  */
+@JsonDeserialize
 public class ConformalEstimate extends Airocean {
+    protected static final double VECTOR_SCALE_FACTOR = 1.0d / 1.1473979730192934d;
+    protected static final int SIDE_LENGTH = 256;
 
-    private InvertableVectorField inverse;
+    protected static final Ref<InvertableVectorField> INVERSE_CACHE = Ref.soft((IOSupplier<InvertableVectorField>) () -> {
+        double[][] vx = PArrays.filled(SIDE_LENGTH + 1, double[][]::new, i -> new double[SIDE_LENGTH + 1 - i]);
+        double[][] vy = PArrays.filled(SIDE_LENGTH + 1, double[][]::new, i -> new double[SIDE_LENGTH + 1 - i]);
 
-    private final double VECTOR_SCALE_FACTOR = 1 / 1.1473979730192934;
-
-    public ConformalEstimate() {
-
-        int sideLength = 256;
-
-        double[][] xs = new double[sideLength + 1][];
-        double[][] ys = new double[xs.length][];
-
-        try(InputStream is = this.getClass().getClassLoader().getResourceAsStream("assets/terra121/data/conformal.txt") ; Scanner sc = new Scanner(is)) {
-
-            for (int u = 0; u < xs.length; u++) {
-                double[] px = new double[xs.length - u];
-                double[] py = new double[xs.length - u];
-                xs[u] = px;
-                ys[u] = py;
-            }
-
-            for (int v = 0; v < xs.length; v++) {
-                for (int u = 0; u < xs.length - v; u++) {
-                    String line = sc.nextLine();
-                    line = line.substring(1, line.length() - 3);
-                    String[] split = line.split(", ");
-                    xs[u][v] = Double.parseDouble(split[0]) * this.VECTOR_SCALE_FACTOR;
-                    ys[u][v] = Double.parseDouble(split[1]) * this.VECTOR_SCALE_FACTOR;
-                }
-            }
-
-            sc.close();
-        } catch (IOException e) {
-            System.err.println("Can't load conformal: " + e);
+        Matcher matcher;
+        try (InputStream in = ConformalEstimate.class.getResourceAsStream("/assets/terra121/data/conformal.txt")) {
+            matcher = Pattern.compile("\\[(.*?), (.*?)]", Pattern.MULTILINE).matcher(new AsciiString(StreamUtil.toByteArray(in), false));
         }
 
-        this.inverse = new InvertableVectorField(xs, ys);
-    }
+        for (int v = 0; v < SIDE_LENGTH + 1; v++) {
+            for (int u = 0; u < SIDE_LENGTH + 1 - v; u++) {
+                checkState(matcher.find());
+                vx[u][v] = Double.parseDouble(matcher.group(1)) * VECTOR_SCALE_FACTOR;
+                vy[u][v] = Double.parseDouble(matcher.group(2)) * VECTOR_SCALE_FACTOR;
+            }
+        }
+
+        return new InvertableVectorField(vx, vy);
+    });
+
+    protected final InvertableVectorField inverse = INVERSE_CACHE.get();
 
     @Override
     protected double[] triangleTransform(double[] vec) {
@@ -98,6 +92,106 @@ public class ConformalEstimate extends Airocean {
 
     @Override
     public double metersPerUnit() {
-        return (40075017 / (2 * Math.PI)) / this.VECTOR_SCALE_FACTOR;
+        return (40075017.0d / (2.0d * Math.PI)) / VECTOR_SCALE_FACTOR;
+    }
+
+    private static class InvertableVectorField {
+        private final double[][] vx;
+        private final double[][] vy;
+
+        public InvertableVectorField(double[][] vx, double[][] vy) {
+            this.vx = vx;
+            this.vy = vy;
+        }
+
+        public double[] getInterpolatedVector(double x, double y) {
+            //scale up triangle to be triangleSize across
+            x *= SIDE_LENGTH;
+            y *= SIDE_LENGTH;
+
+            //convert to triangle units
+            double v = 2 * y / MathUtils.ROOT3;
+            double u = x - v * 0.5;
+
+            int u1 = (int) u;
+            int v1 = (int) v;
+
+            if (u1 < 0) {
+                u1 = 0;
+            } else if (u1 >= SIDE_LENGTH) {
+                u1 = SIDE_LENGTH - 1;
+            }
+
+            if (v1 < 0) {
+                v1 = 0;
+            } else if (v1 >= SIDE_LENGTH - u1) {
+                v1 = SIDE_LENGTH - u1 - 1;
+            }
+
+            double valx1;
+            double valy1;
+            double valx2;
+            double valy2;
+            double valx3;
+            double valy3;
+            double y3;
+            double x3;
+
+            double flip = 1;
+
+            if (y < -MathUtils.ROOT3 * (x - u1 - v1 - 1) || v1 == SIDE_LENGTH - u1 - 1) {
+                valx1 = this.vx[u1][v1];
+                valy1 = this.vy[u1][v1];
+                valx2 = this.vx[u1][v1 + 1];
+                valy2 = this.vy[u1][v1 + 1];
+                valx3 = this.vx[u1 + 1][v1];
+                valy3 = this.vy[u1 + 1][v1];
+
+                y3 = 0.5 * MathUtils.ROOT3 * v1;
+                x3 = (u1 + 1) + 0.5 * v1;
+            } else {
+                valx1 = this.vx[u1][v1 + 1];
+                valy1 = this.vy[u1][v1 + 1];
+                valx2 = this.vx[u1 + 1][v1];
+                valy2 = this.vy[u1 + 1][v1];
+                valx3 = this.vx[u1 + 1][v1 + 1];
+                valy3 = this.vy[u1 + 1][v1 + 1];
+
+                flip = -1;
+                y = -y;
+
+                y3 = -(0.5 * MathUtils.ROOT3 * (v1 + 1));
+                x3 = (u1 + 1) + 0.5 * (v1 + 1);
+            }
+
+            //TODO: not sure if weights are right (but weirdly mirrors stuff so there may be simplifcation yet)
+            double w1 = -(y - y3) / MathUtils.ROOT3 - (x - x3);
+            double w2 = 2 * (y - y3) / MathUtils.ROOT3;
+            double w3 = 1 - w1 - w2;
+
+            return new double[]{ valx1 * w1 + valx2 * w2 + valx3 * w3, valy1 * w1 + valy2 * w2 + valy3 * w3,
+                    (valx3 - valx1) * SIDE_LENGTH, SIDE_LENGTH * flip * (2 * valx2 - valx1 - valx3) / MathUtils.ROOT3,
+                    (valy3 - valy1) * SIDE_LENGTH, SIDE_LENGTH * flip * (2 * valy2 - valy1 - valy3) / MathUtils.ROOT3 };
+        }
+
+        public double[] applyNewtonsMethod(double expectedf, double expectedg, double xest, double yest, int iter) {
+            for (int i = 0; i < iter; i++) {
+                double[] c = this.getInterpolatedVector(xest, yest);
+
+                double f = c[0] - expectedf;
+                double g = c[1] - expectedg;
+                double dfdx = c[2];
+                double dfdy = c[3];
+                double dgdx = c[4];
+                double dgdy = c[5];
+
+                double determinant = 1 / (dfdx * dgdy - dfdy * dgdx);
+
+                xest -= determinant * (dgdy * f - dfdy * g);
+                yest -= determinant * (-dgdx * f + dfdx * g);
+            }
+
+            return new double[]{ xest, yest };
+        }
     }
 }

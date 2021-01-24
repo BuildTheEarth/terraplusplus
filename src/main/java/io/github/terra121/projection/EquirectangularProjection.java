@@ -1,13 +1,15 @@
 package io.github.terra121.projection;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import static java.lang.Math.*;
 
 /**
  * Implements the equirectangular map projection, which applies no transformation at all.
  * x and y are therefore the same as longitude and latitude (in degrees).
  */
+@JsonDeserialize
 public class EquirectangularProjection extends GeographicProjection {
-
     /**
      * Converts map coordinates to geographic coordinates
      * 
@@ -48,7 +50,7 @@ public class EquirectangularProjection extends GeographicProjection {
         return 100000;
     }
 
-    private void checkArgs(double lon, double lat) throws OutOfProjectionBoundsException {
+    protected void checkArgs(double lon, double lat) throws OutOfProjectionBoundsException {
         if (abs(lon) > 180.0d || abs(lat) > 90.0d) {
             throw OutOfProjectionBoundsException.get();
         }

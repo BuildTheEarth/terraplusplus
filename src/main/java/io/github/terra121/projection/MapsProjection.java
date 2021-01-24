@@ -1,5 +1,6 @@
 package io.github.terra121.projection;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.util.MathUtils;
 
 /**
@@ -10,8 +11,8 @@ import io.github.terra121.util.MathUtils;
  * @see <a href="https://en.wikipedia.org/wiki/Mercator_projection"> Wikipedia's article on the Mercator projection</a>
  * @see <a href="https://en.wikipedia.org/wiki/Web_Mercator_projection"> Wikipedia's article on the Web Mercator projection</a>
  */
+@JsonDeserialize
 public class MapsProjection extends GeographicProjection {
-
     @Override
     public double[] toGeo(double x, double y) {
         return new double[]{

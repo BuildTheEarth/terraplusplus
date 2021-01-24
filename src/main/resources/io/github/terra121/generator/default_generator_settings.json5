@@ -1,0 +1,12 @@
+{
+    "projection": {
+        "scale": {
+            "delegate": {
+                "equirectangular": {}
+            },
+            "x": 100000.0,
+            "z": 100000.0
+        }
+    },
+    "version": 2
+}

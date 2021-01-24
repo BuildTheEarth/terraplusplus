@@ -45,14 +45,14 @@ public class GeneratorDatasets extends CustomAttributeContainer<Object> {
     public GeneratorDatasets(@NonNull EarthGeneratorSettings settings) {
         super(getCustomDatasets(settings));
 
-        this.projection = settings.getProjection();
+        this.projection = settings.projection();
 
         this.osm = new OpenStreetMap(settings);
         this.heights = Heights.constructDataset(settings.settings.smoothblend ? BlendMode.SMOOTH : BlendMode.LINEAR);
         this.trees = new Trees();
 
         OrderedRegistry<IChunkDataBaker<?>> bakerRegistry = new OrderedRegistry<IChunkDataBaker<?>>()
-                .addLast("initial_biomes", new InitialBiomesBaker(settings.getBiomeProvider()))
+                .addLast("initial_biomes", new InitialBiomesBaker(settings.biomeProvider()))
                 .addLast("tree_cover", new TreeCoverBaker())
                 .addLast("heights", new HeightsBaker())
                 .addLast("osm", new OSMBaker());

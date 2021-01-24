@@ -1,5 +1,6 @@
 package io.github.terra121.projection.airocean;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.MathUtils;
@@ -10,6 +11,7 @@ import io.github.terra121.util.MathUtils;
  * 
  * @see <a href="https://en.wikipedia.org/wiki/Dymaxion_map">Wikipedia's article on the Dynmaxion projection</a>
  */
+@JsonDeserialize
 public class Airocean extends GeographicProjection {
 
     protected static final double ARC = 2 * Math.asin(Math.sqrt(5 - Math.sqrt(5)) / Math.sqrt(10));
@@ -32,7 +34,7 @@ public class Airocean extends GeographicProjection {
 	 * 
 	 * @see <a href="https://en.wikipedia.org/wiki/Regular_icosahedron#Spherical_coordinates">Wikipedia</a>
 	 */
-	protected static final double[][] VERTICES = new double[][] {
+	protected static final double[][] VERTICES = {
 		{10.536199, 64.700000},
 		{-5.245390, 2.300882},
 		{58.157706, 10.447378},
@@ -51,7 +53,7 @@ public class Airocean extends GeographicProjection {
 	 * Indicates the vertices forming each face of the icosahedron.
 	 * Each entry refers to the index of a vertex in {@link #VERTICES}
 	 */
-	protected static final int[][] ISO = new int[][] {
+	protected static final int[][] ISO = {
 		{2, 1, 6},
 		{1, 0, 2},
 		{0, 1, 5},
@@ -104,7 +106,7 @@ public class Airocean extends GeographicProjection {
 	/**
 	 * Indicates for each face if it needs to be flipped after projecting
 	 */
-	protected static final boolean[] FLIP_TRIANGLE = new boolean[] {
+	protected static final boolean[] FLIP_TRIANGLE = {
 			true, false, true, false , false,
 			true, false, true, false, true, false, true, false, true, false,
 			true, true, true , false, false,
@@ -206,25 +208,6 @@ public class Airocean extends GeographicProjection {
                     return i;
                 }
 
-                face = i;
-                min = dissq;
-            }
-        }
-
-        return face;
-    }
-
-    protected int findMapTriangle(double x, double y) {
-
-        double min = Double.MAX_VALUE;
-        int face = 0;
-
-        for (int i = 0; i < 20; i++) {
-            double xd = CENTER_MAP[i][0] - x;
-            double yd = CENTER_MAP[i][1] - y;
-
-            double dissq = xd * xd + yd * yd;
-            if (dissq < min) {
                 face = i;
                 min = dissq;
             }
@@ -356,87 +339,6 @@ public class Airocean extends GeographicProjection {
         return new double[]{ z * xpoZ, z * ypoZ, z };
     }
 
-    protected double[] inverseTriangleTransformCbrt(double xpp, double ypp) {
-        //a & b are linearly related to c, so using the tan of sum formula we know: tan(c+off) = (tanc + tanoff)/(1-tanc*tanoff)
-        double tanaoff = Math.tan(MathUtils.ROOT3 * ypp + xpp); // a = c + root3*y'' + x''
-        double tanboff = Math.tan(2 * xpp); // b = c + 2x''
-
-        //using a derived cubic equation and cubic formula
-        double l = tanboff * tanaoff;
-        double m = -(R * tanboff * tanaoff + 2 * tanboff + 2 * tanaoff);
-        double n = 3 + R * tanboff + R * tanaoff - 2 * tanboff * tanaoff;
-        double o = tanboff + tanaoff - R;
-
-        double p = -m / (3 * l);
-        double q = p * p * p + (m * n - 3 * l * o) / (6 * l * l);
-        double r = n / (3 * l);
-
-        double rmpp = r - p * p;
-        double imag = Math.sqrt(-(q * q + rmpp * rmpp * rmpp));
-        double mag = Math.sqrt(imag * imag + q * q);
-
-        double b = Math.atan2(imag, q);
-
-        double tanc = 2 * Math.cbrt(mag) * Math.cos((b / 3)) + p;
-
-        double tana = (tanc + tanaoff) / (1 - tanc * tanaoff);
-        double tanb = (tanc + tanboff) / (1 - tanc * tanboff);
-
-        //simple reversal algebra based on tan values
-        double yp = MathUtils.ROOT3 * (DVE * tana + EL6) / 2;
-        double xp = DVE * tanb + yp / MathUtils.ROOT3 + EL6;
-
-        //x = z*xp/Z, y = z*yp/Z, x^2 + y^2 + z^2 = 1
-        double xpoZ = xp / Z;
-        double ypoZ = yp / Z;
-
-        double z = 1 / Math.sqrt(1 + xpoZ * xpoZ + ypoZ * ypoZ);
-
-        return new double[]{ z * xpoZ, z * ypoZ, z };
-    }
-
-    protected double[] inverseTriangleTransformCbrtNewton(double xpp, double ypp) {
-        //a & b are linearly related to c, so using the tan of sum formula we know: tan(c+off) = (tanc + tanoff)/(1-tanc*tanoff)
-        double tanaoff = Math.tan(MathUtils.ROOT3 * ypp + xpp); // a = c + root3*y'' + x''
-        double tanboff = Math.tan(2 * xpp); // b = c + 2x''
-        double sumtmp = tanaoff + tanboff;
-
-        //using a derived cubic equation and cubic formula
-        double l = tanboff * tanaoff;
-        double m = -(R * l + 2 * tanboff + 2 * tanaoff);
-        double n = 3 + R * sumtmp - 2 * l;
-        double o = sumtmp - R;
-
-        double l3 = 3 * l;
-        double m2 = 2 * m;
-
-        double x = -o / n; //x = tanc
-
-        for (int i = 0; i < NEWTON; i++) {
-            double x2 = x * x;
-
-            double f = l * x2 * x + m * x2 + n * x + o;
-            double fp = l3 * x2 + m2 * x + n;
-
-            x -= f / fp;
-        }
-
-        double tana = (x + tanaoff) / (1 - x * tanaoff);
-        double tanb = (x + tanboff) / (1 - x * tanboff);
-
-        //simple reversal algebra based on tan values
-        double yp = MathUtils.ROOT3 * (DVE * tana + EL6) / 2;
-        double xp = DVE * tanb + yp / MathUtils.ROOT3 + EL6;
-
-        //x = z*xp/Z, y = z*yp/Z, x^2 + y^2 + z^2 = 1
-        double xpoZ = xp / Z;
-        double ypoZ = yp / Z;
-
-        double z = 1 / Math.sqrt(1 + xpoZ * xpoZ + ypoZ * ypoZ);
-
-        return new double[]{ z * xpoZ, z * ypoZ, z };
-    }
-
     protected double[] inverseTriangleTransform(double x, double y) {
         return this.inverseTriangleTransformNewton(x, y);
     }
@@ -509,7 +411,7 @@ public class Airocean extends GeographicProjection {
         y = c[1];
         double z = c[2];
 
-        double[] vec = new double[] {x, y, z};
+        double[] vec = {x, y, z};
         //apply inverse rotation matrix (move triangle from template triangle to correct position on globe)
         double[] vecp = MathUtils.matVecProdD(INVERSE_ROTATION_MATRICES[face], vec);
         

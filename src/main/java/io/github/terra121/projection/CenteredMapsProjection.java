@@ -1,5 +1,6 @@
 package io.github.terra121.projection;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.TerraConstants;
 
 /**
@@ -8,6 +9,7 @@ import io.github.terra121.TerraConstants;
  * @see io.github.terra121.projection.MapsProjection
  * @see <a href="https://en.wikipedia.org/wiki/Mercator_projection"> Wikipedia's article on the Mercator projection</a>
  */
+@JsonDeserialize
 public class CenteredMapsProjection extends GeographicProjection {
 
     @Override

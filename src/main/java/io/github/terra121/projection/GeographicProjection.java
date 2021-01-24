@@ -1,14 +1,20 @@
 package io.github.terra121.projection;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.TerraConstants;
+import io.github.terra121.config.Configured;
+import io.github.terra121.config.GlobalParseRegistries;
+import io.github.terra121.config.TypedDeserializer;
 import io.github.terra121.projection.airocean.Airocean;
 import io.github.terra121.projection.airocean.ConformalEstimate;
 import io.github.terra121.projection.airocean.ModifiedAirocean;
-import io.github.terra121.projection.transform.InvertedOrientationProjectionTransform;
-import io.github.terra121.projection.transform.UprightOrientationProjectionTransform;
+import io.github.terra121.projection.transform.SwapAxesProjectionTransform;
+import io.github.terra121.projection.transform.FlipVerticalProjectionTransform;
+import lombok.NonNull;
 
 /**
  * Support for various projection types.
@@ -23,28 +29,8 @@ import io.github.terra121.projection.transform.UprightOrientationProjectionTrans
  * 
  * @see <a href="https://en.wikipedia.org/wiki/Equirectangular_projection">Wikipedia's article on the equirectangular projection</a>
  */
-public abstract class GeographicProjection {
-
-	/**
-	 * Contains the various projections implemented in Terra121,
-	 * identified by a String key.
-	 */
-	public static final Map<String, GeographicProjection> projections;
-
-	static {
-		projections = new HashMap<>();
-		projections.put("web_mercator", new CenteredMapsProjection());
-		projections.put("equirectangular", new EquirectangularProjection());
-		projections.put("sinusoidal", new SinusoidalProjection());
-		projections.put("equal_earth", new EqualEarth());
-		projections.put("airocean", new Airocean());
-		projections.put("transverse_mercator", new TransverseMercatorProjection());
-		projections.put("airocean", new Airocean());
-		projections.put("conformal", new ConformalEstimate());
-		projections.put("bteairocean", new ModifiedAirocean());
-	}
-
-
+@JsonDeserialize(using = GeographicProjection.Deserializer.class)
+public abstract class GeographicProjection implements Configured<GeographicProjection> {
 	/**
 	 * Orients a projection
 	 * 
@@ -53,25 +39,34 @@ public abstract class GeographicProjection {
 	 * 
 	 * @return a projection that warps the base projection but applies the transformation described by the given orientation
 	 */
-	public static GeographicProjection orientProjection(GeographicProjection base, Orientation orientation) {
+	@Deprecated
+	public static GeographicProjection orientProjectionLegacy(GeographicProjection base, Orientation orientation) {
 		if (base.upright()) {
 			if (orientation == Orientation.upright) {
 				return base;
 			}
-			base = new UprightOrientationProjectionTransform(base);
+			base = new FlipVerticalProjectionTransform(base);
 		}
 
 		if (orientation == Orientation.swapped) {
-			return new InvertedOrientationProjectionTransform(base);
+			return new SwapAxesProjectionTransform(base);
 		} else if (orientation == Orientation.upright) {
-			base = new UprightOrientationProjectionTransform(base);
+			base = new FlipVerticalProjectionTransform(base);
 		}
 
 		return base;
 	}
 
+	public static GeographicProjection parse(@NonNull String config) throws IOException {
+	    return TerraConstants.JSON_MAPPER.readValue(config, GeographicProjection.class);
+    }
 
-	/**
+    @Override
+    public void validate() throws IllegalStateException {
+	    //no-op
+    }
+
+    /**
 	 * Converts map coordinates to geographic coordinates
 	 * 
 	 * @param x - x map coordinate
@@ -277,4 +272,11 @@ public abstract class GeographicProjection {
 	public enum Orientation {
 		none, upright, swapped
 	}
+
+	static class Deserializer extends TypedDeserializer<GeographicProjection> {
+        @Override
+        protected Map<String, Class<? extends GeographicProjection>> registry() {
+            return GlobalParseRegistries.PROJECTIONS;
+        }
+    }
 }

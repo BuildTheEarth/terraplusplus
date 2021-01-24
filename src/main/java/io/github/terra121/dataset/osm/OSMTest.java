@@ -22,7 +22,7 @@ public class OSMTest {
             config = OSMMapper.load(in);
         }
 
-        GeographicProjection projection = new EarthGeneratorSettings("").getProjection();
+        GeographicProjection projection = EarthGeneratorSettings.parse("").projection();
         Bounds2d bounds2d = Bounds2d.of(8.57707d, 8.57707d, 47.21767d, 47.21767d).expand(0.001d);
         Bounds2d intersectionBounds = bounds2d.toCornerBB(projection, true).fromGeo().axisAlign();
 

@@ -6,27 +6,37 @@ import io.github.terra121.projection.GeographicProjection;
  * Warps a Geographic projection and applies a transformation to it.
  */
 public abstract class ProjectionTransform extends GeographicProjection {
-    protected final GeographicProjection input;
+    protected final GeographicProjection delegate;
 
     /**
-     * @param input - projection to transform
+     * @param delegate - projection to transform
      */
-    public ProjectionTransform(GeographicProjection input) {
-        this.input = input;
+    public ProjectionTransform(GeographicProjection delegate) {
+        this.delegate = delegate;
     }
 
     @Override
+    public void validate() throws IllegalStateException {
+        super.validate();
+
+        this.delegate.validate();
+    }
+
+    @Override
+    public abstract GeographicProjection optimize();
+
+    @Override
     public boolean upright() {
-        return this.input.upright();
+        return this.delegate.upright();
     }
 
     @Override
     public double[] bounds() {
-        return this.input.bounds();
+        return this.delegate.bounds();
     }
 
     @Override
     public double metersPerUnit() {
-        return this.input.metersPerUnit();
+        return this.delegate.metersPerUnit();
     }
 }

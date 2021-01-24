@@ -1,5 +1,6 @@
 package io.github.terra121.projection;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.util.MathUtils;
 
@@ -8,8 +9,8 @@ import io.github.terra121.util.MathUtils;
  * 
  * @see <a href="https://en.wikipedia.org/wiki/Equal_Earth_projection"> Wikipedia's article on the Equal Earth projection</a>
  */
+@JsonDeserialize
 public class EqualEarth extends GeographicProjection {
-
     private static final double A1 = 1.340264;
     private static final double A2 = -0.081106;
     private static final double A3 = 0.000893;

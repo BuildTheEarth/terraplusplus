@@ -91,7 +91,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
 
             public State(@NonNull EarthGeneratorSettings settings) {
                 this.settings = settings;
-                this.projection = settings.getProjection();
+                this.projection = settings.projection();
 
                 KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(this);
                 this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -219,7 +219,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
             }
         }
 
-        State state = new State(new EarthGeneratorSettings(BTEWorldType.BTE_GENERATOR_SETTINGS));
+        State state = new State(EarthGeneratorSettings.parse(BTEWorldType.BTE_GENERATOR_SETTINGS));
         state.initSettings();
 
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d);

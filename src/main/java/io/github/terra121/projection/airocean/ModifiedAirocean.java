@@ -1,5 +1,6 @@
 package io.github.terra121.projection.airocean;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.MathUtils;
 
@@ -9,6 +10,7 @@ import io.github.terra121.util.MathUtils;
  * @see io.github.terra121.projection.Airocean
  * @see io.github.terra121.projection.ConformalEstimate
  */
+@JsonDeserialize
 public class ModifiedAirocean extends ConformalEstimate {
 
     protected static final double THETA = Math.toRadians(-150);
