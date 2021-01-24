@@ -1,11 +1,13 @@
 package io.github.terra121.projection.transform;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.terra121.projection.GeographicProjection;
 
 /**
  * Warps a Geographic projection and applies a transformation to it.
  */
 public abstract class ProjectionTransform extends GeographicProjection {
+    @JsonProperty
     protected final GeographicProjection delegate;
 
     /**

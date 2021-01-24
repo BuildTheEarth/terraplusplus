@@ -1,6 +1,7 @@
 package io.github.terra121.config;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import io.github.terra121.projection.CenteredMapsProjection;
 import io.github.terra121.projection.EqualEarth;
 import io.github.terra121.projection.EquirectangularProjection;
@@ -18,9 +19,6 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Identifies implementation classes by their type names.
  * <p>
@@ -30,7 +28,7 @@ import java.util.Map;
  */
 @UtilityClass
 public class GlobalParseRegistries {
-    public final Map<String, Class<? extends GeographicProjection>> PROJECTIONS = new MapBuilder<String, Class<? extends GeographicProjection>>()
+    public final BiMap<String, Class<? extends GeographicProjection>> PROJECTIONS = new BiMapBuilder<String, Class<? extends GeographicProjection>>()
             //normal projections
             .put("web_mercator", CenteredMapsProjection.class)
             .put("equirectangular", EquirectangularProjection.class)
@@ -49,26 +47,24 @@ public class GlobalParseRegistries {
 
     /**
      * Stupid builder class so that I can populate the initial values cleanly using chained method calls.
-     * <p>
-     * Effectively the same as {@link ImmutableMap.Builder}, but without the immutable part.
      *
      * @author DaPorkchop_
      */
     @RequiredArgsConstructor
-    private static class MapBuilder<K, V> {
+    private static class BiMapBuilder<K, V> {
         @NonNull
-        private final Map<K, V> delegate;
+        private final BiMap<K, V> delegate;
 
-        public MapBuilder() {
-            this(new HashMap<>());
+        public BiMapBuilder() {
+            this(HashBiMap.create());
         }
 
-        public MapBuilder<K, V> put(K key, V value) {
+        public BiMapBuilder<K, V> put(K key, V value) {
             this.delegate.put(key, value);
             return this;
         }
 
-        public Map<K, V> build() {
+        public BiMap<K, V> build() {
             return this.delegate;
         }
     }

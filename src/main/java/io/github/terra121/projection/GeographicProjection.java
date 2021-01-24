@@ -5,10 +5,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.config.Configured;
 import io.github.terra121.config.GlobalParseRegistries;
 import io.github.terra121.config.TypedDeserializer;
+import io.github.terra121.config.TypedSerializer;
 import io.github.terra121.projection.airocean.Airocean;
 import io.github.terra121.projection.airocean.ConformalEstimate;
 import io.github.terra121.projection.airocean.ModifiedAirocean;
@@ -25,11 +27,11 @@ import lombok.NonNull;
  * A projection as defined here is something that projects a point in the geographic space to a point of the projected space (and vice versa).
  * 
  * All geographic coordinates are in degrees.
- * 
- * 
+ *
  * @see <a href="https://en.wikipedia.org/wiki/Equirectangular_projection">Wikipedia's article on the equirectangular projection</a>
  */
 @JsonDeserialize(using = GeographicProjection.Deserializer.class)
+@JsonSerialize(using = GeographicProjection.Serializer.class)
 public abstract class GeographicProjection implements Configured<GeographicProjection> {
 	/**
 	 * Orients a projection
@@ -273,10 +275,17 @@ public abstract class GeographicProjection implements Configured<GeographicProje
 		none, upright, swapped
 	}
 
-	static class Deserializer extends TypedDeserializer<GeographicProjection> {
+    static class Deserializer extends TypedDeserializer<GeographicProjection> {
         @Override
         protected Map<String, Class<? extends GeographicProjection>> registry() {
             return GlobalParseRegistries.PROJECTIONS;
+        }
+    }
+
+    static class Serializer extends TypedSerializer<GeographicProjection> {
+        @Override
+        protected Map<Class<? extends GeographicProjection>, String> registry() {
+            return GlobalParseRegistries.PROJECTIONS.inverse();
         }
     }
 }

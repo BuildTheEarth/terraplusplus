@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Preconditions;
-
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 
@@ -15,15 +14,17 @@ import io.github.terra121.projection.OutOfProjectionBoundsException;
  */
 @JsonDeserialize
 public class ScaleProjectionTransform extends ProjectionTransform {
+    @JsonProperty("x")
     private final double scaleX;
+    @JsonProperty("y")
     private final double scaleY;
 
     /**
      * Creates a new ScaleProjection with different scale factors for the x and y axis.
      *
      * @param delegate - projection to transform
-     * @param x - scaling to apply along the x axis
-     * @param y - scaling to apply along the y axis
+     * @param x        - scaling to apply along the x axis
+     * @param y        - scaling to apply along the y axis
      */
     @JsonCreator
     public ScaleProjectionTransform(
@@ -76,19 +77,19 @@ public class ScaleProjectionTransform extends ProjectionTransform {
         return this.delegate.metersPerUnit() / Math.sqrt((this.scaleX * this.scaleX + this.scaleY * this.scaleY) / 2); //TODO: better transform
     }
 
-	/**
-	 * @return the scaleX
-	 */
-	public double getScaleX() {
-		return scaleX;
-	}
+    /**
+     * @return the scaleX
+     */
+    public double getScaleX() {
+        return scaleX;
+    }
 
-	/**
-	 * @return the scaleY
-	 */
-	public double getScaleY() {
-		return scaleY;
-	}
-    
-    
+    /**
+     * @return the scaleY
+     */
+    public double getScaleY() {
+        return scaleY;
+    }
+
+
 }
