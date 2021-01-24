@@ -1,0 +1,17 @@
+{
+    "projection": {
+        "scale": {
+            "delegate": {
+                "flip_vertical": {
+                    "delegate": {
+                        "bteairocean": {}
+                    }
+                }
+            },
+            "x": 7318261.522857145,
+            "z": 7318261.522857145
+        }
+    },
+    "blend": "SMOOTH",
+    "version": 2
+}

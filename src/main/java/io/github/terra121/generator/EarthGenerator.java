@@ -359,9 +359,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         Random random = Coords.coordsSeedRandom(this.world.getSeed(), cube.getX(), cube.getY(), cube.getZ());
         Biome biome = cube.getBiome(Coords.getCubeCenter(cube));
 
-        if (this.settings.settings.dynamicbaseheight) {
-            this.cubiccfg.expectedBaseHeight = (float) data.groundHeight(8, 8);
-        }
+        this.cubiccfg.expectedBaseHeight = (float) data.groundHeight(8, 8);
 
         for (IEarthPopulator populator : this.populators) {
             populator.populate(this.world, random, cube.getCoords(), biome, data);

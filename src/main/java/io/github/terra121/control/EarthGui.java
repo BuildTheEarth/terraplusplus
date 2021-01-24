@@ -98,9 +98,7 @@ public class EarthGui extends GuiScreen implements DynamicOptions.Handler {
     }
 
     private void projectMap() {
-        this.projection = this.cfg.getNormalizedProjection();
-
-        this.cfg.settings.scaleX = this.cfg.settings.scaleY = this.projection.metersPerUnit();
+        this.projection = this.cfg.projection();
 
         if (this.map != null) {
             this.mc.renderEngine.deleteTexture(this.map);

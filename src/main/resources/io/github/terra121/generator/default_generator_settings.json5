@@ -8,5 +8,6 @@
             "z": 100000.0
         }
     },
+    "blend": "SMOOTH",
     "version": 2
 }

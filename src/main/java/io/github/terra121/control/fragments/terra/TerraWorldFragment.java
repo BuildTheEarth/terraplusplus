@@ -7,6 +7,7 @@ import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
+import net.daporkchop.lib.common.misc.string.PStrings;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.ITextComponent;
@@ -36,25 +37,19 @@ public class TerraWorldFragment extends CommandFragment {
         }
 
         EarthGenerator terrain = (EarthGenerator) gen;
-        EarthGeneratorSettings.JsonSettings projectionSettings = terrain.settings.settings;
+        EarthGeneratorSettings settings = terrain.settings;
 
         sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "World Type: ", TextFormatting.GREEN, "Earth World"));
-        sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "Projection: ", TextFormatting.GREEN, projectionSettings.projection,
-                                                   TextFormatting.GRAY, String.format(" [%s]", projectionSettings.orentation.name())));
-        sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "Scale: ", TextFormatting.GRAY,
-                                                   String.format("[%s, %s]", projectionSettings.scaleX, projectionSettings.scaleY)));
-        sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "Offset: ", TextFormatting.GRAY,
-                                                   String.format("[%s, %s]", projectionSettings.offsetX, projectionSettings.offsetY)));
         sender.sendMessage(ChatUtil.combine(TextFormatting.RESET));
 
-        sender.sendMessage(boolComponent("Roads", projectionSettings.roads));
-        sender.sendMessage(boolComponent("Buildings", projectionSettings.buildings));
-        sender.sendMessage(boolComponent("Smooth Blending", projectionSettings.smoothblend));
+        sender.sendMessage(ChatUtil.combine(
+                TextFormatting.BLUE, "Blend mode: ",
+                TextFormatting.GREEN, PStrings.split(settings.blend().name(), '_').titleFormat().join(' ')));
     }
 
     @Override
     public String[] getName() {
-        return new String[]{"world"};
+        return new String[]{ "world" };
     }
 
     @Override

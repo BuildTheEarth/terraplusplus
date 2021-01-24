@@ -159,24 +159,6 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                         break;
                 }
 
-                ORIENT:
-                {
-                    if (this.projection.upright()) {
-                        if (this.settings.settings.orentation == GeographicProjection.Orientation.upright) {
-                            break ORIENT;
-                        }
-                        dz = -dz;
-                    }
-
-                    if (this.settings.settings.orentation == GeographicProjection.Orientation.swapped) {
-                        int i = dx;
-                        dx = dz;
-                        dz = i;
-                    } else if (this.settings.settings.orentation == GeographicProjection.Orientation.upright) {
-                        dz = -dz;
-                    }
-                }
-
                 int scale = this.zoom >= 0 ? CHUNKS_PER_TILE << this.zoom : CHUNKS_PER_TILE >> -this.zoom;
                 this.chunkX += dx * scale;
                 this.chunkZ += dz * scale;
@@ -219,7 +201,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
             }
         }
 
-        State state = new State(EarthGeneratorSettings.parse(BTEWorldType.BTE_GENERATOR_SETTINGS));
+        State state = new State(EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS));
         state.initSettings();
 
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d);

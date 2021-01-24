@@ -10,6 +10,8 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGenerato
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.CustomGenSettingsSerialization;
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.fixer.PresetLoadError;
 import io.github.terra121.TerraConstants;
+import io.github.terra121.TerraMod;
+import io.github.terra121.dataset.BlendMode;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.transform.OffsetProjectionTransform;
 import io.github.terra121.projection.transform.ScaleProjectionTransform;
@@ -27,14 +29,21 @@ import static io.github.terra121.TerraConstants.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 @JsonDeserialize
+@Getter
 public class EarthGeneratorSettings {
     public static final int CONFIG_VERSION = 2;
 
     public static final String DEFAULT_SETTINGS;
+    public static final String BTE_DEFAULT_SETTINGS;
 
     static {
-        try (InputStream in = EarthGeneratorSettings.class.getResourceAsStream("default_generator_settings.json5")) {
-            DEFAULT_SETTINGS = new String(StreamUtil.toByteArray(in));
+        try {
+            try (InputStream in = EarthGeneratorSettings.class.getResourceAsStream("default_generator_settings.json5")) {
+                DEFAULT_SETTINGS = new String(StreamUtil.toByteArray(in));
+            }
+            try (InputStream in = EarthGeneratorSettings.class.getResourceAsStream("bte_generator_settings.json5")) {
+                BTE_DEFAULT_SETTINGS = new String(StreamUtil.toByteArray(in));
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -47,6 +56,8 @@ public class EarthGeneratorSettings {
 
         try {
             if (!generatorSettings.contains("version")) { //upgrade legacy config
+                TerraMod.LOGGER.info("Parsing legacy config: {}", generatorSettings);
+
                 LegacyConfig legacy = JSON_MAPPER.readValue(generatorSettings, LegacyConfig.class);
 
                 GeographicProjection projection = JSON_MAPPER.readValue("{\"" + legacy.projection + "\":{}}",GeographicProjection.class);
@@ -54,7 +65,7 @@ public class EarthGeneratorSettings {
                 projection = new ScaleProjectionTransform(projection, legacy.scaleX, legacy.scaleY);
                 projection = new OffsetProjectionTransform(projection, legacy.offsetX, legacy.offsetY);
 
-                return new EarthGeneratorSettings(projection, legacy.customcubic, CONFIG_VERSION);
+                return new EarthGeneratorSettings(projection, legacy.smoothblend ? BlendMode.SMOOTH : BlendMode.LINEAR, legacy.customcubic, CONFIG_VERSION);
             }
 
             return JSON_MAPPER.readValue(generatorSettings, EarthGeneratorSettings.class);
@@ -64,15 +75,14 @@ public class EarthGeneratorSettings {
     }
 
     @Deprecated
-    public JsonSettings settings;
+    public final JsonSettings settings = null;
 
-    @Getter
     protected final GeographicProjection projection;
     @Getter(AccessLevel.PRIVATE)
     protected final String cwg;
+    protected final BlendMode blend;
 
     protected final Ref<BiomeProvider> biomeProvider = Ref.soft(() -> new EarthBiomeProvider(this.projection()));
-
     protected final Ref<CustomGeneratorSettings> customCubic = Ref.soft(() -> {
         CustomGeneratorSettings cfg;
         if (Strings.isNullOrEmpty(this.cwg())) { //use new minimal defaults
@@ -96,11 +106,13 @@ public class EarthGeneratorSettings {
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public EarthGeneratorSettings(
             @JsonProperty(value = "projection", required = true) @NonNull GeographicProjection projection,
+            @JsonProperty(value = "blend", required = true) @NonNull BlendMode blend,
             @JsonProperty("cwg") String cwg,
             @JsonProperty(value = "version", required = true) int version) {
         checkState(version == CONFIG_VERSION, "invalid version %d (expected: %d)", version, CONFIG_VERSION);
 
         this.projection = projection.optimize();
+        this.blend = blend;
         this.cwg = cwg;
     }
 
@@ -117,31 +129,8 @@ public class EarthGeneratorSettings {
         return this.customCubic.get();
     }
 
-    public GeographicProjection getNormalizedProjection() {
-        /*return GeographicProjection.orientProjection(
-                GeographicProjection.projections.get(this.settings.projection), GeographicProjection.Orientation.upright);*/
-        //TODO: this
-        return null;
-    }
-
-    //json template to be filled by Gson
-
-    //what moron made this a separate inner class?
-    // - DaPorkchop_, 2021
+    @Deprecated
     public static class JsonSettings {
-        public String projection = "equirectangular";
-        public GeographicProjection.Orientation orentation = GeographicProjection.Orientation.none; // This typo is unfortunate, but let's keep it for backward compatibility
-        public double scaleX = 100000.0d;
-        public double scaleY = 100000.0d;
-        public double offsetX = 0;
-        public double offsetY = 0;
-        public boolean smoothblend = true;
-        public boolean roads = true;
-        public String customcubic = "";
-        public boolean dynamicbaseheight = true;
-        @Deprecated
-        public boolean osmwater = true;
-        public boolean buildings = true;
     }
 
     @JsonDeserialize
