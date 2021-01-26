@@ -22,11 +22,6 @@ public class SwapAxesProjectionTransform extends ProjectionTransform {
     }
 
     @Override
-    public GeographicProjection optimize() {
-        return new SwapAxesProjectionTransform(this.delegate.optimize());
-    }
-
-    @Override
     public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
         return this.delegate.toGeo(y, x);
     }

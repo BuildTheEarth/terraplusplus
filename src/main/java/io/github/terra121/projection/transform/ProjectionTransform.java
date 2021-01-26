@@ -1,13 +1,15 @@
 package io.github.terra121.projection.transform;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.terra121.projection.GeographicProjection;
+import lombok.Getter;
 
 /**
  * Warps a Geographic projection and applies a transformation to it.
  */
+@Getter(onMethod_ = { @JsonGetter })
 public abstract class ProjectionTransform extends GeographicProjection {
-    @JsonProperty
     protected final GeographicProjection delegate;
 
     /**
@@ -16,16 +18,6 @@ public abstract class ProjectionTransform extends GeographicProjection {
     public ProjectionTransform(GeographicProjection delegate) {
         this.delegate = delegate;
     }
-
-    @Override
-    public void validate() throws IllegalStateException {
-        super.validate();
-
-        this.delegate.validate();
-    }
-
-    @Override
-    public abstract GeographicProjection optimize();
 
     @Override
     public boolean upright() {

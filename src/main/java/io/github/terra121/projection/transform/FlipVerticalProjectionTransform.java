@@ -22,11 +22,6 @@ public class FlipVerticalProjectionTransform extends ProjectionTransform {
     }
 
     @Override
-    public GeographicProjection optimize() {
-        return new FlipVerticalProjectionTransform(this.delegate.optimize());
-    }
-
-    @Override
     public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
         return this.delegate.toGeo(x, -y);
     }

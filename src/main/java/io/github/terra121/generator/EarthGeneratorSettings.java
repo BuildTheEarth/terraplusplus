@@ -21,10 +21,14 @@ import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.transform.OffsetProjectionTransform;
 import io.github.terra121.projection.transform.ScaleProjectionTransform;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.With;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.ref.Ref;
+import net.daporkchop.lib.common.util.PorkUtil;
 import net.minecraft.world.biome.BiomeProvider;
 
 import java.io.IOException;
@@ -33,8 +37,10 @@ import java.io.InputStream;
 import static io.github.terra121.TerraConstants.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@Getter
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@Getter(onMethod_ = { @JsonGetter })
+@With
 public class EarthGeneratorSettings {
     public static final int CONFIG_VERSION = 2;
 
@@ -91,21 +97,28 @@ public class EarthGeneratorSettings {
         return SETTINGS_PARSE_CACHE.getUnchecked(generatorSettings);
     }
 
+    public static void main(String... args) {
+        System.out.println(parse(""));
+        System.out.println(parse(parse("").toString()));
+    }
+
     @Deprecated
+    @Getter(AccessLevel.NONE)
     public transient final JsonSettings settings = null;
 
-    @JsonProperty
+    @NonNull
     protected final GeographicProjection projection;
-    @Getter(AccessLevel.PRIVATE)
-    @JsonProperty
+    @NonNull
     protected final String cwg;
-    @JsonProperty
+    @NonNull
     protected final BlendMode blend;
 
+    @Getter(AccessLevel.NONE)
     protected transient final Ref<BiomeProvider> biomeProvider = Ref.soft(() -> new EarthBiomeProvider(this.projection()));
+    @Getter(AccessLevel.NONE)
     protected transient final Ref<CustomGeneratorSettings> customCubic = Ref.soft(() -> {
         CustomGeneratorSettings cfg;
-        if (Strings.isNullOrEmpty(this.cwg())) { //use new minimal defaults
+        if (this.cwg().isEmpty()) { //use new minimal defaults
             cfg = new CustomGeneratorSettings();
             cfg.mineshafts = cfg.caves = cfg.strongholds = cfg.dungeons = cfg.ravines = false;
             cfg.lakes.clear();
@@ -127,13 +140,13 @@ public class EarthGeneratorSettings {
     public EarthGeneratorSettings(
             @JsonProperty(value = "projection", required = true) @NonNull GeographicProjection projection,
             @JsonProperty(value = "blend", required = true) @NonNull BlendMode blend,
-            @JsonProperty("cwg") String cwg,
+            @JsonProperty(value = "cwg") String cwg,
             @JsonProperty(value = "version", required = true) int version) {
         checkState(version == CONFIG_VERSION, "invalid version %d (expected: %d)", version, CONFIG_VERSION);
 
-        this.projection = projection.optimize();
+        this.projection = projection;
+        this.cwg = PorkUtil.fallbackIfNull(cwg, "");
         this.blend = blend;
-        this.cwg = cwg;
     }
 
     @Override

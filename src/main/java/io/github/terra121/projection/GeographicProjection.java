@@ -1,22 +1,18 @@
 package io.github.terra121.projection;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.github.terra121.TerraConstants;
-import io.github.terra121.config.Configured;
 import io.github.terra121.config.GlobalParseRegistries;
 import io.github.terra121.config.TypedDeserializer;
 import io.github.terra121.config.TypedSerializer;
-import io.github.terra121.projection.airocean.Airocean;
-import io.github.terra121.projection.airocean.ConformalEstimate;
-import io.github.terra121.projection.airocean.ModifiedAirocean;
 import io.github.terra121.projection.transform.SwapAxesProjectionTransform;
 import io.github.terra121.projection.transform.FlipVerticalProjectionTransform;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 
 /**
  * Support for various projection types.
@@ -32,7 +28,7 @@ import lombok.NonNull;
  */
 @JsonDeserialize(using = GeographicProjection.Deserializer.class)
 @JsonSerialize(using = GeographicProjection.Serializer.class)
-public abstract class GeographicProjection implements Configured<GeographicProjection> {
+public abstract class GeographicProjection {
 	/**
 	 * Orients a projection
 	 * 
@@ -59,13 +55,9 @@ public abstract class GeographicProjection implements Configured<GeographicProje
 		return base;
 	}
 
-	public static GeographicProjection parse(@NonNull String config) throws IOException {
+	@SneakyThrows(IOException.class)
+	public static GeographicProjection parse(@NonNull String config) {
 	    return TerraConstants.JSON_MAPPER.readValue(config, GeographicProjection.class);
-    }
-
-    @Override
-    public void validate() throws IllegalStateException {
-	    //no-op
     }
 
     /**
@@ -105,7 +97,6 @@ public abstract class GeographicProjection implements Configured<GeographicProje
 	 * @return {minimum X, minimum Y, maximum X, maximum Y}
 	 */
 	public double[] bounds() {
-
 		try {
 			//get max in by using extreme coordinates
 			double[] bounds = {
