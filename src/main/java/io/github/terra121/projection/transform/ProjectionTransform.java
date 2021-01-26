@@ -1,7 +1,6 @@
 package io.github.terra121.projection.transform;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.terra121.projection.GeographicProjection;
 import lombok.Getter;
 

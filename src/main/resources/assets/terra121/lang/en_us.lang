@@ -4,32 +4,27 @@ generator.bte=Build the Earth
 generator.bte.info=Planet Earth world with the default Build the Earth settings
 
 ## GUI options
+terra121.gui.header=Terra++ World Options
 terra121.gui.projection=Projection
-terra121.gui.orientation=Orientation
-terra121.gui.roads=Spawn Roads
-terra121.gui.smoothblend=Smooth Blending
-terra121.gui.dynamicbaseheight=Elevation Based Ores
-terra121.gui.osmwater=Advanced Water (experimental)
-terra121.gui.buildings=OSM Building Outlines
-terra121.gui.lidar=Custom Terrain
-terra121.gui.caves=Caves
+terra121.gui.cwg=CubicWorldGen
 
-terra121.gui.biomemap=Debug Map
+## Transformations
+terra121.gui.transformation.add=Add Transform
 
 ## Projection types
-terra121.projection.web_mercator=Mercator
-terra121.projection.equirectangular=Equirectangular
-terra121.projection.sinusoidal=Sinusoidal
-terra121.projection.equal_earth=Equal Earth
-terra121.projection.transverse_mercator=Transverse Mercator
-terra121.projection.airocean=Airocean (Not BTE)
-terra121.projection.conformal=Conformal Approx. (Not BTE)
-terra121.projection.bteairocean=Build The Earth
+terra121.gui.projection.web_mercator=Web Mercator
+terra121.gui.projection.equirectangular=Equirectangular
+terra121.gui.projection.sinusoidal=Sinusoidal
+terra121.gui.projection.equal_earth=Equal Earth
+terra121.gui.projection.transverse_mercator=Transverse Mercator
+terra121.gui.projection.airocean=Airocean (Not BTE)
+terra121.gui.projection.conformal=Conformal Approx. (Not BTE)
+terra121.gui.projection.bteairocean=Build The Earth
 
-## Projection orientations
-terra121.orientation.upright=Upright
-terra121.orientation.none=No Orientation
-terra121.orientation.swapped=Flipped Axis
+## Blending modes
+terra121.gui.blend="Interpolation: "
+terra121.gui.blend.linear=Linear
+terra121.gui.blend.cubic=Cubic
 
 ## command messages
 terra121.commands.tpll.usage=Usage: /tpll <latitude> <longitude> [altitude]

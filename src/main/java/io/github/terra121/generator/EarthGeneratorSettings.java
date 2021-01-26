@@ -10,10 +10,12 @@ import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.JsonGrammar;
 import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.api.DeserializationException;
 import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.api.SyntaxError;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGeneratorSettings;
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.CustomGenSettingsSerialization;
+import io.github.opencubicchunks.cubicchunks.cubicgen.preset.fixer.CustomGeneratorSettingsFixer;
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.fixer.PresetLoadError;
 import io.github.terra121.TerraMod;
 import io.github.terra121.dataset.BlendMode;
@@ -21,7 +23,6 @@ import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.transform.OffsetProjectionTransform;
 import io.github.terra121.projection.transform.ScaleProjectionTransform;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +59,7 @@ public class EarthGeneratorSettings {
                         projection = new ScaleProjectionTransform(projection, legacy.scaleX, legacy.scaleY);
                         projection = new OffsetProjectionTransform(projection, legacy.offsetX, legacy.offsetY);
 
-                        return new EarthGeneratorSettings(projection, legacy.smoothblend ? BlendMode.SMOOTH : BlendMode.LINEAR, legacy.customcubic, CONFIG_VERSION);
+                        return new EarthGeneratorSettings(projection, legacy.smoothblend ? BlendMode.CUBIC : BlendMode.LINEAR, legacy.customcubic, CONFIG_VERSION);
                     }
 
                     return JSON_MAPPER.readValue(generatorSettings, EarthGeneratorSettings.class);
@@ -145,7 +146,7 @@ public class EarthGeneratorSettings {
         checkState(version == CONFIG_VERSION, "invalid version %d (expected: %d)", version, CONFIG_VERSION);
 
         this.projection = projection;
-        this.cwg = PorkUtil.fallbackIfNull(cwg, "");
+        this.cwg = Strings.isNullOrEmpty(cwg) ? "" : CustomGeneratorSettingsFixer.INSTANCE.fixJson(cwg).toJson(JsonGrammar.COMPACT);
         this.blend = blend;
     }
 
