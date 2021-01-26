@@ -6,8 +6,10 @@ import net.minecraftforge.common.config.Config.Comment;
 import net.minecraftforge.common.config.Config.Name;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+@Mod.EventBusSubscriber(modid = TerraMod.MODID)
 @Config(modid = TerraMod.MODID)
 public class TerraConfig {
     @Name("reduced_console_messages")
@@ -19,6 +21,7 @@ public class TerraConfig {
     @Comment({ "Require 3 water sources in order to form a new source instead of the vanilla 2",
             "This will make generated streams more stable but will disrupt vanilla water mechanics like 2x2 infinite water sources",
             "Highly expiremental, use at your own risk" })
+    @Config.RequiresMcRestart
     public static boolean threeWater;
 
     @Comment({

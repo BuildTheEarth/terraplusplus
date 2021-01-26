@@ -23,9 +23,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -45,6 +43,13 @@ import java.util.stream.IntStream;
 import static java.lang.Math.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
+/**
+ * The world configuration GUI.
+ * <p>
+ * This is a hacky mess... but still many orders of magnitude better than the previous heap of refuse.
+ *
+ * @author DaPorkchop_
+ */
 public class EarthGui extends GuiScreen {
     protected static final int SRC_W = 2048;
     protected static final int SRC_H = 1024;

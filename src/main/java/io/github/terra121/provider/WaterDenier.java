@@ -3,6 +3,7 @@ package io.github.terra121.provider;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
 import io.github.terra121.generator.EarthBiomeProvider;
 import io.github.terra121.TerraConfig;
+import lombok.experimental.UtilityClass;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDynamicLiquid;
 import net.minecraft.block.BlockLiquid;
@@ -13,26 +14,17 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.world.BlockEvent.CreateFluidSourceEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+@UtilityClass
 public class WaterDenier {
-
     @SubscribeEvent
-    public static void sourceCatch(CreateFluidSourceEvent event) {
-        if (!TerraConfig.threeWater) {
-            return;
-        }
-
+    public void sourceCatch(CreateFluidSourceEvent event) {
         World world = event.getWorld();
 
         if (world.getBiomeProvider() instanceof EarthBiomeProvider) {
-            IBlockState state = event.getState();
-            Block b = state.getBlock();
-
-            if (b.getMaterial(state) != Material.WATER) {
+            if (event.getState().getMaterial() != Material.WATER) {
                 return;
             }
 
-
-            BlockDynamicLiquid block = (BlockDynamicLiquid) b;
             BlockPos pos = event.getPos();
 
             int c = 0;
@@ -47,8 +39,8 @@ public class WaterDenier {
         }
     }
 
-    private static int isSource(World world, BlockPos pos) {
+    private int isSource(World world, BlockPos pos) {
         IBlockState state = world.getBlockState(pos);
-        return (state.getBlock() instanceof BlockLiquid && (Integer) state.getValue(BlockLiquid.LEVEL) == 0) ? 1 : 0;
+        return (state.getBlock() instanceof BlockLiquid && state.getValue(BlockLiquid.LEVEL) == 0) ? 1 : 0;
     }
 }

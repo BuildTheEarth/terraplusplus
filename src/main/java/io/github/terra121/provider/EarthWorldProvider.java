@@ -6,7 +6,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldProviderSurface;
 
 public class EarthWorldProvider extends WorldProviderSurface {
-
     protected boolean isEarth;
 
     @Override
