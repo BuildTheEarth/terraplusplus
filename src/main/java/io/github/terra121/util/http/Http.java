@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,6 +55,8 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @UtilityClass
 public class Http {
+    protected static final long TIMEOUT = 10L;
+
     private final ThreadFactory NETWORK_THREAD_FACTORY = PThreadFactories.builder().daemon().minPriority().name("terra++ HTTP network thread").build();
 
     protected final EventLoop NETWORK_EVENT_LOOP = (Epoll.isAvailable()
@@ -63,7 +66,8 @@ public class Http {
     protected final Bootstrap DEFAULT_BOOTSTRAP = new Bootstrap()
             .group(NETWORK_EVENT_LOOP)
             .channel(Epoll.isAvailable() ? EpollSocketChannel.class : NioSocketChannel.class)
-            .option(ChannelOption.SO_KEEPALIVE, true);
+            .option(ChannelOption.SO_KEEPALIVE, true)
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, toInt(TimeUnit.SECONDS.toMillis(TIMEOUT)));
 
     protected final SslContext SSL_CONTEXT;
 
