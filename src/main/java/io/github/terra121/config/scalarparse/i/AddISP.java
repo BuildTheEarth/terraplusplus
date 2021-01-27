@@ -1,6 +1,7 @@
 package io.github.terra121.config.scalarparse.i;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.config.scalarparse.d.DoubleScalarParser;
@@ -14,7 +15,7 @@ import java.io.IOException;
  * @author DaPorkchop_
  */
 @JsonDeserialize
-@Getter
+@Getter(onMethod_ = { @JsonGetter })
 public class AddISP implements IntScalarParser {
     protected final IntScalarParser delegate;
     protected final int value;

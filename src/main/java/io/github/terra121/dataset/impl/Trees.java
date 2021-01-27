@@ -16,7 +16,7 @@ public class Trees extends DoubleTiledDataset {
     public static final double BLOCK_SIZE = 16.0d / 100000.0d;
 
     public Trees() {
-        super(new EquirectangularProjection(), 1.0d / BLOCK_SIZE, 256, BlendMode.LINEAR);
+        super(new EquirectangularProjection(), 256, BlendMode.LINEAR);
     }
 
     @Override

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -14,10 +15,12 @@ import com.google.common.collect.ImmutableMap;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.util.http.Http;
 import io.netty.buffer.ByteBuf;
+import lombok.Getter;
 import lombok.NonNull;
 import net.daporkchop.lib.common.misc.string.PStrings;
 import net.minecraft.util.math.ChunkPos;
 
+@Getter
 public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, CompletableFuture<T>> {
     protected final LoadingCache<ChunkPos, CompletableFuture<T>> cache = CacheBuilder.newBuilder()
             .softValues()

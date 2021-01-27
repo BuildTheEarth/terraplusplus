@@ -66,7 +66,7 @@ public class GlobalParseRegistries {
 
     public final BiMap<String, Class<? extends DoubleCondition>> DOUBLE_CONDITIONS = new BiMapBuilder<String, Class<? extends DoubleCondition>>()
             //conditions
-            .put("equals", EqualDC.class)
+            .put("equal", EqualDC.class)
             .put("greater_than", GreaterThanDC.class)
             .put("less_than", LessThanDC.class)
             //logical operators

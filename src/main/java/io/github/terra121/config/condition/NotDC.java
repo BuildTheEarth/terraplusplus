@@ -1,20 +1,24 @@
 package io.github.terra121.config.condition;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
 /**
  * @author DaPorkchop_
  */
-@RequiredArgsConstructor(onConstructor_ = { @JsonCreator })
 @JsonDeserialize
-@Getter
+@Getter(onMethod_ = { @JsonGetter })
 public class NotDC implements DoubleCondition {
-    @NonNull
     protected final DoubleCondition delegate;
+
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    public NotDC(@JsonProperty(value = "delegate", required = true) @NonNull DoubleCondition delegate) {
+        this.delegate = delegate;
+    }
 
     @Override
     public boolean test(double value) {

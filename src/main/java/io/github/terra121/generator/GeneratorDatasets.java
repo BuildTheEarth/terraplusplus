@@ -46,8 +46,8 @@ public class GeneratorDatasets extends CustomAttributeContainer<Object> {
 
         this.projection = settings.projection();
 
-        this.osm = new OpenStreetMap(settings);
         this.heights = Heights.constructDataset();
+        this.osm = new OpenStreetMap(settings);
         this.trees = new Trees();
 
         OrderedRegistry<IChunkDataBaker<?>> bakerRegistry = new OrderedRegistry<IChunkDataBaker<?>>()

@@ -17,7 +17,8 @@ import java.io.IOException;
 public class Heights extends DoubleTiledDataset {
     public static ScalarDataset constructDataset() {
         try {
-            return new MultiresDataset(MultiresDataset.configSources("heights", TerraConfig.data.overrideDefaultElevation));
+            //TODO: remove true ||
+            return new MultiresDataset(MultiresDataset.configSources("heights", true || TerraConfig.data.overrideDefaultElevation));
         } catch (IOException e) {
             throw new RuntimeException("unable to load heights dataset config", e);
         }
@@ -27,7 +28,7 @@ public class Heights extends DoubleTiledDataset {
     private final int zoom;
 
     protected Heights(int zoom, @NonNull String[] urls, @NonNull BlendMode blend) {
-        super(new WebMercatorProjection(zoom), 1 << (zoom + 8), 256, blend);
+        super(new WebMercatorProjection(zoom), 256, blend);
 
         this.urls = urls;
         this.zoom = zoom;

@@ -1,5 +1,6 @@
 package io.github.terra121.dataset;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.projection.transform.ScaleProjectionTransform;
@@ -8,6 +9,7 @@ import io.github.terra121.util.IntToDoubleBiFunction;
 import io.github.terra121.util.bvh.Bounds2d;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.daporkchop.lib.common.math.BinMath;
@@ -24,6 +26,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  *
  * @author DaPorkchop_
  */
+@Getter
 public abstract class DoubleTiledDataset extends TiledDataset<double[]> implements ScalarDataset {
     protected static final int TILE_SHIFT = 8;
     protected static final int TILE_SIZE = 1 << TILE_SHIFT; //256
@@ -32,8 +35,8 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
     protected final BlendMode blend;
     protected final int resolution;
 
-    public DoubleTiledDataset(GeographicProjection proj, double scale, int resolution, @NonNull BlendMode blend) {
-        super(new ScaleProjectionTransform(proj, scale, scale), 1.0d / scale * resolution);
+    public DoubleTiledDataset(@NonNull GeographicProjection proj, int resolution, @NonNull BlendMode blend) {
+        super(proj, 1.0d / resolution);
 
         this.resolution = resolution;
         this.blend = blend;

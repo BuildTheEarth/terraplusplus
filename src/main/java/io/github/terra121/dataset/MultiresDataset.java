@@ -1,7 +1,10 @@
 package io.github.terra121.dataset;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.github.terra121.config.condition.DoubleCondition;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
@@ -10,8 +13,6 @@ import io.github.terra121.util.bvh.Bounds2d;
 import io.github.terra121.util.http.Disk;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.function.io.IOFunction;
 import net.daporkchop.lib.common.function.throwing.EFunction;
@@ -56,7 +57,16 @@ public class MultiresDataset implements ScalarDataset {
 
     public MultiresDataset(@NonNull URL[] configSources) throws IOException {
         this.bvh = new BVH<>(Arrays.stream(configSources)
-                .map((IOFunction<URL, WrappedDataset>) url -> JSON_MAPPER.readValue(url, WrappedDataset.class))
+                //.map((IOFunction<URL, WrappedDataset[]>) url -> JSON_MAPPER.readValue(url, WrappedDataset[].class))
+                .map((IOFunction<URL, WrappedDataset[]>) url -> {
+                    WrappedDataset[] datasets = JSON_MAPPER.readValue(url, WrappedDataset[].class);
+                    String s0 = JSON_MAPPER.writeValueAsString(datasets);
+                    String s1 = JSON_MAPPER.writeValueAsString(JSON_MAPPER.readValue(s0, WrappedDataset[].class));
+                    checkState(s0.equals(s1), "\ns0: %s\ns1: %s\n", s0, s1);
+                    System.exit(1);
+                    return datasets;
+                })
+                .flatMap(Arrays::stream)
                 .collect(Collectors.toList()));
     }
 
@@ -178,12 +188,13 @@ public class MultiresDataset implements ScalarDataset {
      *
      * @author DaPorkchop_
      */
-    @RequiredArgsConstructor
+    @JsonDeserialize
+    @JsonSerialize
     @Getter
-    @ToString
     public static class WrappedDataset implements Bounds2d, Comparable<WrappedDataset>, DoubleCondition {
-        @NonNull
+        @Getter(onMethod_ = { @JsonGetter })
         protected final ScalarDataset dataset;
+        @Getter(onMethod_ = { @JsonGetter })
         protected final DoubleCondition condition;
 
         protected final double minX;
@@ -191,6 +202,7 @@ public class MultiresDataset implements ScalarDataset {
         protected final double minZ;
         protected final double maxZ;
 
+        @Getter(onMethod_ = { @JsonGetter })
         protected final double priority;
 
         @JsonCreator
@@ -217,6 +229,11 @@ public class MultiresDataset implements ScalarDataset {
         @Override
         public boolean test(double value) {
             return this.condition == null || this.condition.test(value);
+        }
+
+        @JsonGetter("bounds")
+        public Bounds2d bounds() {
+            return Bounds2d.of(this.minX, this.maxX, this.minZ, this.maxZ);
         }
     }
 }

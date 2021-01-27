@@ -1,8 +1,10 @@
 package io.github.terra121.util.bvh;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -15,7 +17,8 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  * @author DaPorkchop_
  */
 @JsonDeserialize
-@Getter
+@JsonSerialize
+@Getter(onMethod_ = { @JsonGetter })
 @ToString
 @EqualsAndHashCode
 class Bounds2dImpl implements Bounds2d {
@@ -32,7 +35,7 @@ class Bounds2dImpl implements Bounds2d {
             @JsonProperty(value = "maxZ", required = true) double maxZ) {
         checkArg(minX <= maxX, "minX (%s) may not be greater than maxX (%s)!", minX, maxX);
         checkArg(minZ <= maxZ, "minZ (%s) may not be greater than maxZ (%s)!", minZ, maxZ);
-        
+
         this.minX = minX;
         this.maxX = maxX;
         this.minZ = minZ;

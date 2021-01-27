@@ -1,6 +1,7 @@
 package io.github.terra121.config.scalarparse.d;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.netty.buffer.ByteBuf;
@@ -13,7 +14,7 @@ import java.io.IOException;
  * @author DaPorkchop_
  */
 @JsonDeserialize
-@Getter
+@Getter(onMethod_ = { @JsonGetter })
 public class AddDSP implements DoubleScalarParser {
     protected final DoubleScalarParser delegate;
     protected final double value;

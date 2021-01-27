@@ -1,23 +1,27 @@
 package io.github.terra121.config.scalarparse.i;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 
 /**
  * @author DaPorkchop_
  */
-@RequiredArgsConstructor(onConstructor_ = { @JsonCreator(mode = JsonCreator.Mode.DELEGATING) })
 @JsonDeserialize
-@Getter
+@Getter(onMethod_ = { @JsonGetter })
 public class RequireOpaqueISP implements IntScalarParser {
-    @NonNull
     protected final IntScalarParser delegate;
+
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    public RequireOpaqueISP(@JsonProperty(value = "delegate", required = true) @NonNull IntScalarParser delegate) {
+        this.delegate = delegate;
+    }
 
     @Override
     public int[] parse(int resolution, @NonNull ByteBuf buffer) throws IOException {
