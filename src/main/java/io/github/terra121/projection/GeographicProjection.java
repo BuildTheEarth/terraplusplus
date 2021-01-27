@@ -28,35 +28,9 @@ import lombok.SneakyThrows;
  */
 @JsonDeserialize(using = GeographicProjection.Deserializer.class)
 @JsonSerialize(using = GeographicProjection.Serializer.class)
-public abstract class GeographicProjection {
-	/**
-	 * Orients a projection
-	 * 
-	 * @param base - the projection to orient
-	 * @param orientation - the orientation to use
-	 * 
-	 * @return a projection that warps the base projection but applies the transformation described by the given orientation
-	 */
-	@Deprecated
-	public static GeographicProjection orientProjectionLegacy(GeographicProjection base, Orientation orientation) {
-		if (base.upright()) {
-			if (orientation == Orientation.upright) {
-				return base;
-			}
-			base = new FlipVerticalProjectionTransform(base);
-		}
-
-		if (orientation == Orientation.swapped) {
-			return new SwapAxesProjectionTransform(base);
-		} else if (orientation == Orientation.upright) {
-			base = new FlipVerticalProjectionTransform(base);
-		}
-
-		return base;
-	}
-
-	@SneakyThrows(IOException.class)
-	public static GeographicProjection parse(@NonNull String config) {
+public interface GeographicProjection {
+    @SneakyThrows(IOException.class)
+	static GeographicProjection parse(@NonNull String config) {
 	    return TerraConstants.JSON_MAPPER.readValue(config, GeographicProjection.class);
     }
 
@@ -69,7 +43,7 @@ public abstract class GeographicProjection {
 	 * @return {longitude, latitude} in degrees
 	 * @throws OutOfProjectionBoundsException if the specified point on the projected space cannot be mapped to a point of the geographic space
 	 */
-	public abstract double[] toGeo(double x, double y) throws OutOfProjectionBoundsException;
+	double[] toGeo(double x, double y) throws OutOfProjectionBoundsException;
 
 	/**
 	 * Converts geographic coordinates to map coordinates
@@ -80,7 +54,7 @@ public abstract class GeographicProjection {
 	 * @return {x, y} map coordinates
 	 * @throws OutOfProjectionBoundsException if the specified point on the geographic space cannot be mapped to a point of the projected space
 	 */
-	public abstract double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException;
+	double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException;
 
 	/**
 	 * Gives an estimation of the scale of this projection.
@@ -89,14 +63,14 @@ public abstract class GeographicProjection {
 	 * 
 	 * @return an estimation of the scale of this projection
 	 */
-	public abstract double metersPerUnit();
+	double metersPerUnit();
 
 	/**
 	 * Indicates the minimum and maximum X and Y coordinates on the projected space.
 	 * 
 	 * @return {minimum X, minimum Y, maximum X, maximum Y}
 	 */
-	public double[] bounds() {
+	default double[] bounds() {
 		try {
 			//get max in by using extreme coordinates
 			double[] bounds = {
@@ -130,7 +104,7 @@ public abstract class GeographicProjection {
 	 * 
 	 * @return north pole Z <= south pole Z
 	 */
-	public boolean upright() {
+	default boolean upright() {
 		try {
 			return this.fromGeo(0, 90)[1] <= this.fromGeo(0, -90)[1];
 		} catch (OutOfProjectionBoundsException e) {
@@ -149,7 +123,7 @@ public abstract class GeographicProjection {
 	 * 
 	 * @return {distance x, distance y} on the projected space
 	 */
-	public double[] vector(double x, double y, double north, double east) throws OutOfProjectionBoundsException {
+	default double[] vector(double x, double y, double north, double east) throws OutOfProjectionBoundsException {
 		double[] geo = this.toGeo(x, y);
 
 		//TODO: east may be slightly off because earth not a sphere
@@ -172,7 +146,7 @@ public abstract class GeographicProjection {
 	 * @deprecated Prefer using {@link GeographicProjection#tissot(double, double)} for a default differential of 10^-7.
 	 */
 	@Deprecated
-	public double[] tissot(double longitude, double latitude, double d) throws OutOfProjectionBoundsException {
+	default double[] tissot(double longitude, double latitude, double d) throws OutOfProjectionBoundsException {
 
 		double R = TerraConstants.EARTH_CIRCUMFERENCE / (2 * Math.PI);
 
@@ -212,8 +186,8 @@ public abstract class GeographicProjection {
 	 * 
 	 * @return {area inflation, maximum angular distortion, maximum scale factor, minimum scale factor}
 	 */
-	public double[] tissot(double longitude, double latitude) throws OutOfProjectionBoundsException {
-		return this.tissot(longitude,  latitude, 1E-7);
+	default double[] tissot(double longitude, double latitude) throws OutOfProjectionBoundsException {
+		return this.tissot(longitude,  latitude, 1E-7d);
 	}
 
 	/**
@@ -232,7 +206,7 @@ public abstract class GeographicProjection {
 	 * @deprecated Prefer using {@link GeographicProjection#azimuth(double, double, float)} for a default differential of 10^-7. Smaller tends to give less accurate results.
 	 */
 	@Deprecated
-	public float azimuth(double x, double y, float angle, double d) throws OutOfProjectionBoundsException {
+	default float azimuth(double x, double y, float angle, double d) throws OutOfProjectionBoundsException {
 		double x2 = x - d*Math.sin(Math.toRadians(angle));
 		double y2 = y + d*Math.cos(Math.toRadians(angle));
 		double[] geo1 = this.toGeo(x, y);
@@ -258,22 +232,18 @@ public abstract class GeographicProjection {
 	 * @return the corresponding azimuth, in degrees, counted positively clockwise, between 0° and 360°.
 	 * @throws OutOfProjectionBoundsException if the given point is outside the projection domain
 	 */
-	public float azimuth(double x, double y, float angle) throws OutOfProjectionBoundsException {
+	default float azimuth(double x, double y, float angle) throws OutOfProjectionBoundsException {
 		return this.azimuth(x, y, angle, 1E-5);
 	}
 
-	public enum Orientation {
-		none, upright, swapped
-	}
-
-    static class Deserializer extends TypedDeserializer<GeographicProjection> {
+    class Deserializer extends TypedDeserializer<GeographicProjection> {
         @Override
         protected Map<String, Class<? extends GeographicProjection>> registry() {
             return GlobalParseRegistries.PROJECTIONS;
         }
     }
 
-    static class Serializer extends TypedSerializer<GeographicProjection> {
+    class Serializer extends TypedSerializer<GeographicProjection> {
         @Override
         protected Map<Class<? extends GeographicProjection>, String> registry() {
             return GlobalParseRegistries.PROJECTIONS.inverse();

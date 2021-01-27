@@ -6,37 +6,18 @@ import io.github.terra121.dataset.BlendMode;
 import io.github.terra121.dataset.DoubleTiledDataset;
 import io.github.terra121.dataset.MultiresDataset;
 import io.github.terra121.dataset.ScalarDataset;
-import io.github.terra121.projection.MapsProjection;
-import io.github.terra121.util.http.Disk;
+import io.github.terra121.projection.mercator.WebMercatorProjection;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import lombok.NonNull;
-import net.daporkchop.lib.binary.oio.StreamUtil;
-import net.daporkchop.lib.common.function.throwing.EFunction;
-import net.daporkchop.lib.common.util.PorkUtil;
 
 import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
-
-import static net.daporkchop.lib.common.math.PMath.*;
-import static net.daporkchop.lib.common.util.PValidation.*;
 
 public class Heights extends DoubleTiledDataset {
-    public static ScalarDataset constructDataset(@NonNull BlendMode blend) {
+    public static ScalarDataset constructDataset() {
         try {
-            return new MultiresDataset(
-                    new MapsProjection(),
-                    MultiresDataset.configSources("heights", TerraConfig.data.overrideDefaultElevation),
-                    (zoom, urls) -> new Heights(zoom, urls, blend));
+            return new MultiresDataset(MultiresDataset.configSources("heights", TerraConfig.data.overrideDefaultElevation));
         } catch (IOException e) {
             throw new RuntimeException("unable to load heights dataset config", e);
         }
@@ -46,7 +27,7 @@ public class Heights extends DoubleTiledDataset {
     private final int zoom;
 
     protected Heights(int zoom, @NonNull String[] urls, @NonNull BlendMode blend) {
-        super(new MapsProjection(), 1 << (zoom + 8), blend);
+        super(new WebMercatorProjection(zoom), 1 << (zoom + 8), 256, blend);
 
         this.urls = urls;
         this.zoom = zoom;

@@ -9,7 +9,7 @@ import static java.lang.Math.*;
  * x and y are therefore the same as longitude and latitude (in degrees).
  */
 @JsonDeserialize
-public class EquirectangularProjection extends GeographicProjection {
+public class EquirectangularProjection implements GeographicProjection {
     /**
      * Converts map coordinates to geographic coordinates
      * 

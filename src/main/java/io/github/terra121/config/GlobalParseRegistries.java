@@ -2,12 +2,30 @@ package io.github.terra121.config;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import io.github.terra121.projection.CenteredMapsProjection;
+import io.github.terra121.config.condition.AndDC;
+import io.github.terra121.config.condition.DoubleCondition;
+import io.github.terra121.config.condition.EqualDC;
+import io.github.terra121.config.condition.GreaterThanDC;
+import io.github.terra121.config.condition.LessThanDC;
+import io.github.terra121.config.condition.NotDC;
+import io.github.terra121.config.condition.OrDC;
+import io.github.terra121.config.scalarparse.d.AddDSP;
+import io.github.terra121.config.scalarparse.d.DivideDSP;
+import io.github.terra121.config.scalarparse.d.DoubleScalarParser;
+import io.github.terra121.config.scalarparse.d.FromIntDSP;
+import io.github.terra121.config.scalarparse.d.MultiplyDSP;
+import io.github.terra121.config.scalarparse.i.AddISP;
+import io.github.terra121.config.scalarparse.i.AndISP;
+import io.github.terra121.config.scalarparse.i.IntScalarParser;
+import io.github.terra121.config.scalarparse.i.ParsePngISP;
+import io.github.terra121.config.scalarparse.i.RequireOpaqueISP;
+import io.github.terra121.projection.mercator.CenteredMercatorProjection;
 import io.github.terra121.projection.EqualEarth;
 import io.github.terra121.projection.EquirectangularProjection;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.SinusoidalProjection;
-import io.github.terra121.projection.TransverseMercatorProjection;
+import io.github.terra121.projection.mercator.WebMercatorProjection;
+import io.github.terra121.projection.mercator.TransverseMercatorProjection;
 import io.github.terra121.projection.airocean.Airocean;
 import io.github.terra121.projection.airocean.ConformalEstimate;
 import io.github.terra121.projection.airocean.ModifiedAirocean;
@@ -30,12 +48,13 @@ import lombok.experimental.UtilityClass;
 public class GlobalParseRegistries {
     public final BiMap<String, Class<? extends GeographicProjection>> PROJECTIONS = new BiMapBuilder<String, Class<? extends GeographicProjection>>()
             //normal projections
-            .put("web_mercator", CenteredMapsProjection.class)
+            .put("centered_mercator", CenteredMercatorProjection.class)
+            .put("web_mercator", WebMercatorProjection.class)
+            .put("transverse_mercator", TransverseMercatorProjection.class)
             .put("equirectangular", EquirectangularProjection.class)
             .put("sinusoidal", SinusoidalProjection.class)
             .put("equal_earth", EqualEarth.class)
             .put("airocean", Airocean.class)
-            .put("transverse_mercator", TransverseMercatorProjection.class)
             .put("conformal", ConformalEstimate.class)
             .put("bteairocean", ModifiedAirocean.class)
             //transformations
@@ -43,6 +62,37 @@ public class GlobalParseRegistries {
             .put("offset", OffsetProjectionTransform.class)
             .put("scale", ScaleProjectionTransform.class)
             .put("swap_axes", SwapAxesProjectionTransform.class)
+            .build();
+
+    public final BiMap<String, Class<? extends DoubleCondition>> DOUBLE_CONDITIONS = new BiMapBuilder<String, Class<? extends DoubleCondition>>()
+            //conditions
+            .put("equals", EqualDC.class)
+            .put("greater_than", GreaterThanDC.class)
+            .put("less_than", LessThanDC.class)
+            //logical operators
+            .put("and", AndDC.class)
+            .put("not", NotDC.class)
+            .put("or", OrDC.class)
+            .build();
+
+    public final BiMap<String, Class<? extends DoubleScalarParser>> SCALAR_PARSERS_DOUBLE = new BiMapBuilder<String, Class<? extends DoubleScalarParser>>()
+            //arithmetic operators
+            .put("add", AddDSP.class)
+            .put("divide", DivideDSP.class)
+            .put("multiply", MultiplyDSP.class)
+            //conversion operators
+            .put("from_int", FromIntDSP.class)
+            .build();
+
+    public final BiMap<String, Class<? extends IntScalarParser>> SCALAR_PARSERS_INT = new BiMapBuilder<String, Class<? extends IntScalarParser>>()
+            //arithmetic operators
+            .put("add", AddISP.class)
+            //logical operators
+            .put("and", AndISP.class)
+            //conversion operators
+            .put("require_opaque", RequireOpaqueISP.class)
+            //parse operators
+            .put("parse_png", ParsePngISP.class)
             .build();
 
     /**

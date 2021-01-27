@@ -20,8 +20,10 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.preset.fixer.PresetLoadErr
 import io.github.terra121.TerraMod;
 import io.github.terra121.dataset.BlendMode;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.transform.FlipVerticalProjectionTransform;
 import io.github.terra121.projection.transform.OffsetProjectionTransform;
 import io.github.terra121.projection.transform.ScaleProjectionTransform;
+import io.github.terra121.projection.transform.SwapAxesProjectionTransform;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
@@ -29,7 +31,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.With;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.ref.Ref;
-import net.daporkchop.lib.common.util.PorkUtil;
 import net.minecraft.world.biome.BiomeProvider;
 
 import java.io.IOException;
@@ -54,8 +55,8 @@ public class EarthGeneratorSettings {
 
                         LegacyConfig legacy = JSON_MAPPER.readValue(generatorSettings, LegacyConfig.class);
 
-                        GeographicProjection projection = JSON_MAPPER.readValue("{\"" + legacy.projection + "\":{}}", GeographicProjection.class);
-                        projection = GeographicProjection.orientProjectionLegacy(projection, legacy.orentation);
+                        GeographicProjection projection = JSON_MAPPER.readValue("{\"" + LegacyConfig.upgradeLegacyProjectionName(legacy.projection) + "\":{}}", GeographicProjection.class);
+                        projection = LegacyConfig.orientProjectionLegacy(projection, legacy.orentation);
                         projection = new ScaleProjectionTransform(projection, legacy.scaleX, legacy.scaleY);
                         projection = new OffsetProjectionTransform(projection, legacy.offsetX, legacy.offsetY);
 
@@ -178,8 +179,34 @@ public class EarthGeneratorSettings {
 
     @JsonDeserialize
     private static class LegacyConfig {
+        private static GeographicProjection orientProjectionLegacy(GeographicProjection base, Orientation orientation) {
+            if (base.upright()) {
+                if (orientation == Orientation.upright) {
+                    return base;
+                }
+                base = new FlipVerticalProjectionTransform(base);
+            }
+
+            if (orientation == Orientation.swapped) {
+                return new SwapAxesProjectionTransform(base);
+            } else if (orientation == Orientation.upright) {
+                base = new FlipVerticalProjectionTransform(base);
+            }
+
+            return base;
+        }
+
+        private static String upgradeLegacyProjectionName(String name) {
+            switch (name) {
+                case "web_mercator":
+                    return "centered_mercator";
+                default:
+                    return name;
+            }
+        }
+
         public String projection = "equirectangular";
-        public GeographicProjection.Orientation orentation = GeographicProjection.Orientation.none;
+        public Orientation orentation = Orientation.none;
         public double scaleX = 100000.0d;
         public double scaleY = 100000.0d;
         public double offsetX = 0;
@@ -190,5 +217,9 @@ public class EarthGeneratorSettings {
         public boolean dynamicbaseheight = true;
         public boolean osmwater = true;
         public boolean buildings = true;
+
+        private enum Orientation {
+            none, upright, swapped
+        }
     }
 }

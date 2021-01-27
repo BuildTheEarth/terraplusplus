@@ -1,16 +1,17 @@
-package io.github.terra121.projection;
+package io.github.terra121.projection.mercator;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.TerraConstants;
+import io.github.terra121.projection.GeographicProjection;
 
 /**
  * Implementation of the Mercator projection, normalized between -1 and 1.
  * 
- * @see io.github.terra121.projection.MapsProjection
+ * @see WebMercatorProjection
  * @see <a href="https://en.wikipedia.org/wiki/Mercator_projection"> Wikipedia's article on the Mercator projection</a>
  */
 @JsonDeserialize
-public class CenteredMapsProjection extends GeographicProjection {
+public class CenteredMercatorProjection implements GeographicProjection {
 
     @Override
     public double[] toGeo(double x, double y) {

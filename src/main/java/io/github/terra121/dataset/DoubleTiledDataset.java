@@ -29,11 +29,13 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
     protected static final int TILE_SIZE = 1 << TILE_SHIFT; //256
     protected static final int TILE_MASK = (1 << TILE_SHIFT) - 1; //0xFF
 
-    public final BlendMode blend;
+    protected final BlendMode blend;
+    protected final int resolution;
 
-    public DoubleTiledDataset(GeographicProjection proj, double scale, @NonNull BlendMode blend) {
-        super(new ScaleProjectionTransform(proj, scale, scale), 1.0d / scale * TILE_SIZE);
+    public DoubleTiledDataset(GeographicProjection proj, double scale, int resolution, @NonNull BlendMode blend) {
+        super(new ScaleProjectionTransform(proj, scale, scale), 1.0d / scale * resolution);
 
+        this.resolution = resolution;
         this.blend = blend;
     }
 

@@ -1,5 +1,7 @@
 package io.github.terra121.dataset;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.github.terra121.dataset.impl.ConfigurableDoubleTiledDataset;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
 import lombok.NonNull;
@@ -11,6 +13,7 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author DaPorkchop_
  */
+@JsonDeserialize(as = ConfigurableDoubleTiledDataset.class)
 public interface ScalarDataset {
     /**
      * @param point the point

@@ -15,6 +15,7 @@ import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.util.http.Http;
 import io.netty.buffer.ByteBuf;
 import lombok.NonNull;
+import net.daporkchop.lib.common.misc.string.PStrings;
 import net.minecraft.util.math.ChunkPos;
 
 public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, CompletableFuture<T>> {
@@ -37,10 +38,10 @@ public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, CompletableF
     protected void addProperties(int tileX, int tileZ, @NonNull ImmutableMap.Builder<String, String> builder) {
         builder.put("x", String.valueOf(tileX))
                 .put("z", String.valueOf(tileZ))
-                .put("lon.min", String.format(Locale.US, "%.12f", tileX * this.tileSize))
-                .put("lon.max", String.format(Locale.US, "%.12f", (tileX + 1) * this.tileSize))
-                .put("lat.min", String.format(Locale.US, "%.12f", tileZ * this.tileSize))
-                .put("lat.max", String.format(Locale.US, "%.12f", (tileZ + 1) * this.tileSize));
+                .put("lon.min", PStrings.fastFormat("%.12f", tileX * this.tileSize))
+                .put("lon.max", PStrings.fastFormat("%.12f", (tileX + 1) * this.tileSize))
+                .put("lat.min", PStrings.fastFormat("%.12f", tileZ * this.tileSize))
+                .put("lat.max", PStrings.fastFormat("%.12f", (tileZ + 1) * this.tileSize));
     }
 
     protected abstract T decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception;

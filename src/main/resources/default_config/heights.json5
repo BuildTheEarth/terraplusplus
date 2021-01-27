@@ -3,49 +3,84 @@
  */
 
 [
-  //
-  // AWS Terrain Tiles
-  // https://registry.opendata.aws/terrain-tiles/
-  //
+    //
+    // AWS Terrain Tiles
+    // https://registry.opendata.aws/terrain-tiles/
+    //
 
-  //whole world at max resolution
-  {
-    "urls": [
-      "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${zoom}/${x}/${z}.png"
-    ],
-    "zoom": 13,
-    "bounds": [
-      {
-        "minX": -180.0,
-        "minZ": -85,
-        "maxX": 180.0,
-        "maxZ": 85
-      }
-    ],
-    "priority": -100.0 // low priority
-  },
-
-  //this is a workaround for the fact that the dataset is broken in the ocean at zoom levels above 10.
-  // see https://github.com/tilezen/joerd/issues/199
-  //
-  // we sample the whole world at resolution 10 (which is not broken), and only use it if < 1. elevations >= 1 will
-  // be handled by the first entry (which has lower priority, but better resolution)
-  {
-    "urls": [
-      "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${zoom}/${x}/${z}.png"
-    ],
-    "zoom": 10,
-    "bounds": [
-      {
-        "minX": -180.0,
-        "minZ": -85,
-        "maxX": 180.0,
-        "maxZ": 85
-      }
-    ],
-    "priority": 100.0, //high priority
-    "condition": {
-      "lessThan": 1.0
+    //whole world at max resolution
+    {
+        "dataset": {
+            "urls": [
+                "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/13/${x}/${z}.png"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 13
+                }
+            },
+            "resolution": 256,
+            "blend": "CUBIC",
+            "parse": {
+                "divide": {
+                    //scale
+                    "delegate": {
+                        "add": {
+                            //offset
+                            "delegate": {
+                                "from_int": {
+                                    //convert to doubles
+                                    "and": {
+                                        //extract RGB bits (non-opaque pixels will be skipped)
+                                        "delegate": {
+                                            "require_opaque": {
+                                                //filter non-opaque pixels
+                                                "parse_png": {}
+                                                //parse as png image
+                                            }
+                                        },
+                                        "mask": 0x00FFFFFF
+                                    }
+                                }
+                            },
+                            "value": -0x800000
+                        }
+                    },
+                    "value": 256.0
+                }
+            }
+        },
+        "bounds": {
+            "minX": -180.0,
+            "minZ": -85,
+            "maxX": 180.0,
+            "maxZ": 85
+        },
+        "priority": -100.0
+        // low priority
     }
-  }
+    //this is a workaround for the fact that the dataset is broken in the ocean at zoom levels above 10.
+    // see https://github.com/tilezen/joerd/issues/199
+    //
+    // we sample the whole world at resolution 10 (which is not broken), and only use it if < 1. elevations >= 1 will
+    // be handled by the first entry (which has lower priority, but better resolution)
+    /*{
+        "urls": [
+            "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${zoom}/${x}/${z}.png"
+        ],
+        "zoom": 10,
+        "bounds": [
+            {
+                "minX": -180.0,
+                "minZ": -85,
+                "maxX": 180.0,
+                "maxZ": 85
+            }
+        ],
+        "priority": 100.0,
+        //high priority
+        "condition": {
+            "less_than": 1.0
+        }
+    }*/
 ]

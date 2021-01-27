@@ -1,7 +1,8 @@
-package io.github.terra121.projection;
+package io.github.terra121.projection.mercator;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.TerraConstants;
+import io.github.terra121.projection.GeographicProjection;
 
 /**
  * Implementation of the universal transverse Mercator projection.
@@ -10,15 +11,15 @@ import io.github.terra121.TerraConstants;
  * @see <a href="https://en.wikipedia.org/wiki/Transverse_Mercator_projection">Wikipedia's article on the transverse Mercator projection</a>
  */
 @JsonDeserialize
-public class TransverseMercatorProjection extends GeographicProjection {
+public class TransverseMercatorProjection implements GeographicProjection {
 	/**
 	 * Width of a longitude range in radians.
 	 * The 360 degrees of longitude are divided into chunks of this size,
 	 * and each zone gets its own central meridian to use for the universal projection.
 	 */
-    public static final double zoneWidth = Math.toRadians(6.0);
+    public static final double ZONE_WIDTH = Math.toRadians(6.0);
     
-    private static final double metersPerUnit = TerraConstants.EARTH_CIRCUMFERENCE / (2 * Math.PI);
+    private static final double METERS_PER_UNIT = TerraConstants.EARTH_CIRCUMFERENCE / (2 * Math.PI);
 
     /**
      * @param longitude - longitude in radians
@@ -26,7 +27,7 @@ public class TransverseMercatorProjection extends GeographicProjection {
      */
     public static double getCentralMeridian(double longitude) {
     	//TODO Why is there a Math.floor here? It seems to work a lot better without it
-        return (Math.floor(longitude / zoneWidth) + 0.5) * zoneWidth;
+        return (Math.floor(longitude / ZONE_WIDTH) + 0.5) * ZONE_WIDTH;
     }
 
     @Override
@@ -56,6 +57,6 @@ public class TransverseMercatorProjection extends GeographicProjection {
 
     @Override
     public double metersPerUnit() {
-        return metersPerUnit;
+        return METERS_PER_UNIT;
     }
 }

@@ -10,7 +10,7 @@ import io.github.terra121.TerraConstants;
  *
  */
 @JsonDeserialize
-public class SinusoidalProjection extends GeographicProjection {
+public class SinusoidalProjection implements GeographicProjection {
     @Override
     public double[] toGeo(double x, double y) {
         return new double[]{ x / Math.cos(Math.toRadians(y)), y };

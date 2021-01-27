@@ -8,7 +8,7 @@ import lombok.Getter;
  * Warps a Geographic projection and applies a transformation to it.
  */
 @Getter(onMethod_ = { @JsonGetter })
-public abstract class ProjectionTransform extends GeographicProjection {
+public abstract class ProjectionTransform implements GeographicProjection {
     protected final GeographicProjection delegate;
 
     /**

@@ -1,5 +1,6 @@
 package io.github.terra121.util.bvh;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
@@ -14,6 +15,7 @@ import static net.daporkchop.lib.common.math.PMath.*;
  *
  * @author DaPorkchop_
  */
+@JsonDeserialize(as = Bounds2dImpl.class)
 public interface Bounds2d {
     static Bounds2d of(double x0, double x1, double z0, double z1) {
         return new Bounds2dImpl(min(x0, x1), max(x0, x1), min(z0, z1), max(z0, z1));

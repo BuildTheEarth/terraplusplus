@@ -1,7 +1,6 @@
 package io.github.terra121.dataset.impl;
 
 import io.github.terra121.dataset.BlendMode;
-import io.github.terra121.dataset.ScalarDataset;
 import io.github.terra121.util.IntToDoubleBiFunction;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -11,12 +10,7 @@ import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.function.io.IOSupplier;
 import net.daporkchop.lib.common.ref.Ref;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-
-import static net.daporkchop.lib.common.math.PMath.*;
 
 public class Climate {
     public static final int COLS = 720;
