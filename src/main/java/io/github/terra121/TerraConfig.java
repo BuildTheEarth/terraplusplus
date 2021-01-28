@@ -38,11 +38,6 @@ public class TerraConfig {
     }
 
     public static class Data {
-        public String[] trees = {
-                "https://cloud.daporkchop.net/gis/treecover2000/${x}/${z}.tiff",
-                "http://gis-treecover.wri.org/arcgis/rest/services/TreeCover2000/ImageServer/exportImage?f=image&bbox=${lon.min},${lat.min},${lon.max},${lat.max}&imageSR=4152&bboxSR=4152&format=tiff&adjustAspectRatio=false&&interpolation=RSP_CubicConvolution&size=256,256"
-        };
-
         public String[] openstreetmap = {
                 "file:///home/daporkchop/Desktop/switzerland.tiles/",
                 "file:///home/daporkchop/10.0.0.20/gis/switzerland.tiles/",
@@ -80,11 +75,5 @@ public class TerraConfig {
                 "Default: 1440 minutes (1 day)"
         })
         public int cacheTTL = 1440 << 8;
-
-        @Comment({
-                "Allows you to override the default elevation datasets.",
-                "The default elevation datasets are configured in <minecraft_root>/terraplusplus/config/heights/default.json5"
-        })
-        public boolean overrideDefaultElevation = false;
     }
 }

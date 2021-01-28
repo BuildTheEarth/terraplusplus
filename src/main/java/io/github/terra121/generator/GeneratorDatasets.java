@@ -1,7 +1,6 @@
 package io.github.terra121.generator;
 
-import io.github.terra121.dataset.impl.Heights;
-import io.github.terra121.dataset.impl.Trees;
+import io.github.terra121.dataset.MultiresDataset;
 import io.github.terra121.dataset.osm.OpenStreetMap;
 import io.github.terra121.dataset.ScalarDataset;
 import io.github.terra121.event.InitDatasetsEvent;
@@ -36,8 +35,8 @@ public class GeneratorDatasets extends CustomAttributeContainer<Object> {
     protected final GeographicProjection projection;
 
     protected final ScalarDataset heights;
-    protected final OpenStreetMap osm;
     protected final ScalarDataset trees;
+    protected final OpenStreetMap osm;
 
     protected final IChunkDataBaker[] bakers;
 
@@ -46,9 +45,9 @@ public class GeneratorDatasets extends CustomAttributeContainer<Object> {
 
         this.projection = settings.projection();
 
-        this.heights = Heights.constructDataset();
+        this.heights = new MultiresDataset("heights", settings.useDefaultHeights());
+        this.trees = new MultiresDataset("trees", settings.useDefaultTrees());
         this.osm = new OpenStreetMap(settings);
-        this.trees = new Trees();
 
         OrderedRegistry<IChunkDataBaker<?>> bakerRegistry = new OrderedRegistry<IChunkDataBaker<?>>()
                 .addLast("initial_biomes", new InitialBiomesBaker(settings.biomeProvider()))

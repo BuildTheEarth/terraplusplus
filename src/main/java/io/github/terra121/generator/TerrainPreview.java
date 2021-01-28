@@ -3,8 +3,6 @@ package io.github.terra121.generator;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import io.github.terra121.BTEWorldType;
-import io.github.terra121.dataset.impl.Heights;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.EmptyWorld;
@@ -52,7 +50,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
     }
 
     public static void main(String... args) throws OutOfProjectionBoundsException {
-        //Bootstrap.register();
+        Bootstrap.register();
         Http.configChanged();
 
         while (true) {

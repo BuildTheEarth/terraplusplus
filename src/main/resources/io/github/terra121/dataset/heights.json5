@@ -28,15 +28,10 @@
                             "delegate": {
                                 "from_int": {
                                     "delegate": {
-                                        "and": {
+                                        "rgb_extract": {
                                             "delegate": {
-                                                "require_opaque": {
-                                                    "delegate": {
-                                                        "parse_png": {},
-                                                    }
-                                                }
-                                            },
-                                            "mask": 16777215
+                                                "parse_png": {},
+                                            }
                                         }
                                     }
                                 }
@@ -80,16 +75,11 @@
                             "delegate": {
                                 "from_int": {
                                     "delegate": {
-                                        "and": {
+                                        "rgb_extract": {
                                             "delegate": {
-                                                "require_opaque": {
-                                                    "delegate": {
-                                                        "parse_png": {}
-                                                    }
-                                                }
-                                            },
-                                            "mask": 16777215
-                                        },
+                                                "parse_png": {},
+                                            }
+                                        }
                                     }
                                 }
                             },

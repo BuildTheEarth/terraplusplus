@@ -60,7 +60,7 @@ public class EarthGeneratorSettings {
                         projection = new ScaleProjectionTransform(projection, legacy.scaleX, legacy.scaleY);
                         projection = new OffsetProjectionTransform(projection, legacy.offsetX, legacy.offsetY);
 
-                        return new EarthGeneratorSettings(projection, legacy.smoothblend ? BlendMode.CUBIC : BlendMode.LINEAR, legacy.customcubic, CONFIG_VERSION);
+                        return new EarthGeneratorSettings(projection, legacy.smoothblend ? BlendMode.CUBIC : BlendMode.LINEAR, legacy.customcubic, true, true, CONFIG_VERSION);
                     }
 
                     return JSON_MAPPER.readValue(generatorSettings, EarthGeneratorSettings.class);
@@ -115,6 +115,9 @@ public class EarthGeneratorSettings {
     @NonNull
     protected final BlendMode blend;
 
+    protected final boolean useDefaultHeights;
+    protected final boolean useDefaultTrees;
+
     @Getter(AccessLevel.NONE)
     protected transient final Ref<BiomeProvider> biomeProvider = Ref.soft(() -> new EarthBiomeProvider(this.projection()));
     @Getter(AccessLevel.NONE)
@@ -143,11 +146,15 @@ public class EarthGeneratorSettings {
             @JsonProperty(value = "projection", required = true) @NonNull GeographicProjection projection,
             @JsonProperty(value = "blend", required = true) @NonNull BlendMode blend,
             @JsonProperty(value = "cwg") String cwg,
+            @JsonProperty(value = "useDefaultHeights") Boolean useDefaultHeights,
+            @JsonProperty(value = "useDefaultTrees") Boolean useDefaultTrees,
             @JsonProperty(value = "version", required = true) int version) {
         checkState(version == CONFIG_VERSION, "invalid version %d (expected: %d)", version, CONFIG_VERSION);
 
         this.projection = projection;
         this.cwg = Strings.isNullOrEmpty(cwg) ? "" : CustomGeneratorSettingsFixer.INSTANCE.fixJson(cwg).toJson(JsonGrammar.COMPACT);
+        this.useDefaultHeights = useDefaultHeights != null ? useDefaultHeights : true;
+        this.useDefaultTrees = useDefaultTrees != null ? useDefaultTrees : true;
         this.blend = blend;
     }
 

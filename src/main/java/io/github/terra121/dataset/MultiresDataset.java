@@ -13,17 +13,18 @@ import io.github.terra121.util.bvh.Bounds2d;
 import io.github.terra121.util.http.Disk;
 import lombok.Getter;
 import lombok.NonNull;
-import net.daporkchop.lib.binary.oio.StreamUtil;
+import lombok.SneakyThrows;
 import net.daporkchop.lib.common.function.io.IOFunction;
 import net.daporkchop.lib.common.function.throwing.EFunction;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
@@ -38,34 +39,24 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  * @author DaPorkchop_
  */
 public class MultiresDataset implements ScalarDataset {
-    public static URL[] configSources(@NonNull String name, boolean overrideDefault) throws IOException {
-        Path configDir = Files.createDirectories(Disk.configFile(name));
-
-        Path defaultConfig = configDir.resolve("default.json5");
-        if (overrideDefault || !Files.isRegularFile(defaultConfig)) { //config file doesn't exist, create default one
-            try (InputStream in = MultiresDataset.class.getResourceAsStream("/default_config/" + name + ".json5")) {
-                Files.write(defaultConfig, StreamUtil.toByteArray(in));
-            }
-        }
-
-        try (Stream<Path> stream = Files.list(configDir)) {
-            return stream.map(Path::toUri).map((EFunction<URI, URL>) URI::toURL).toArray(URL[]::new);
-        }
-    }
-
     protected final BVH<WrappedDataset> bvh;
 
-    public MultiresDataset(@NonNull URL[] configSources) throws IOException {
-        this.bvh = new BVH<>(Arrays.stream(configSources)
-                //.map((IOFunction<URL, WrappedDataset[]>) url -> JSON_MAPPER.readValue(url, WrappedDataset[].class))
-                .map((IOFunction<URL, WrappedDataset[]>) url -> {
-                    WrappedDataset[] datasets = JSON_MAPPER.readValue(url, WrappedDataset[].class);
-                    String s0 = JSON_MAPPER.writeValueAsString(datasets);
-                    String s1 = JSON_MAPPER.writeValueAsString(JSON_MAPPER.readValue(s0, WrappedDataset[].class));
-                    checkState(s0.equals(s1), "\ns0: %s\ns1: %s\n", s0, s1);
-                    System.exit(1);
-                    return datasets;
-                })
+    @SneakyThrows(IOException.class)
+    public MultiresDataset(@NonNull String name, boolean useDefault) {
+        List<URL> configSources = new ArrayList<>();
+        if (useDefault) { //add default configuration
+            configSources.add(MultiresDataset.class.getResource(name + ".json5"));
+        }
+
+        try (Stream<Path> stream = Files.list(Files.createDirectories(Disk.configFile(name)))) {
+            stream.filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().matches("\\.json5?$"))
+                    .map(Path::toUri).map((EFunction<URI, URL>) URI::toURL)
+                    .forEach(configSources::add);
+        }
+
+        this.bvh = new BVH<>(configSources.stream()
+                .map((IOFunction<URL, WrappedDataset[]>) url -> JSON_MAPPER.readValue(url, WrappedDataset[].class))
                 .flatMap(Arrays::stream)
                 .collect(Collectors.toList()));
     }

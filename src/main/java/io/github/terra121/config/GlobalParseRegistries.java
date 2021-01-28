@@ -16,9 +16,16 @@ import io.github.terra121.config.scalarparse.d.FromIntDSP;
 import io.github.terra121.config.scalarparse.d.MultiplyDSP;
 import io.github.terra121.config.scalarparse.i.AddISP;
 import io.github.terra121.config.scalarparse.i.AndISP;
+import io.github.terra121.config.scalarparse.i.FlipXISP;
+import io.github.terra121.config.scalarparse.i.GrayscaleExtractISP;
 import io.github.terra121.config.scalarparse.i.IntScalarParser;
+import io.github.terra121.config.scalarparse.i.ParseJpgISP;
 import io.github.terra121.config.scalarparse.i.ParsePngISP;
+import io.github.terra121.config.scalarparse.i.ParseTiffISP;
+import io.github.terra121.config.scalarparse.i.RGBExtractISP;
 import io.github.terra121.config.scalarparse.i.RequireOpaqueISP;
+import io.github.terra121.config.scalarparse.i.SwapAxesISP;
+import io.github.terra121.config.scalarparse.i.FlipZISP;
 import io.github.terra121.projection.mercator.CenteredMercatorProjection;
 import io.github.terra121.projection.EqualEarth;
 import io.github.terra121.projection.EquirectangularProjection;
@@ -90,9 +97,16 @@ public class GlobalParseRegistries {
             //logical operators
             .put("and", AndISP.class)
             //conversion operators
+            .put("flip_x", FlipXISP.class)
+            .put("flip_z", FlipZISP.class)
+            .put("grayscale_extract", GrayscaleExtractISP.class)
             .put("require_opaque", RequireOpaqueISP.class)
+            .put("rgb_extract", RGBExtractISP.class)
+            .put("swap_axes", SwapAxesISP.class)
             //parse operators
+            .put("parse_jpg", ParseJpgISP.class)
             .put("parse_png", ParsePngISP.class)
+            .put("parse_tiff", ParseTiffISP.class)
             .build();
 
     /**

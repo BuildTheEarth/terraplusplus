@@ -1,4 +1,4 @@
-package io.github.terra121.dataset.impl;
+package io.github.terra121.dataset;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
@@ -6,8 +6,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.github.terra121.config.scalarparse.d.DoubleScalarParser;
-import io.github.terra121.dataset.BlendMode;
-import io.github.terra121.dataset.DoubleTiledDataset;
 import io.github.terra121.projection.GeographicProjection;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;

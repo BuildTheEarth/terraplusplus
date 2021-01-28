@@ -1,7 +1,6 @@
 package io.github.terra121.dataset;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.github.terra121.dataset.impl.ConfigurableDoubleTiledDataset;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
 import lombok.NonNull;
