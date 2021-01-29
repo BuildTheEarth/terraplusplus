@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 import static java.lang.Math.*;
@@ -146,7 +148,7 @@ public class EarthGui extends GuiScreen {
     public void initGui() {
         Keyboard.enableRepeatEvents(true);
 
-        this.imgSize = min(this.height - (VERTICAL_PADDING << 1), this.width >> 1);
+        this.imgSize = max(min(this.height - (VERTICAL_PADDING << 1), this.width >> 1), this.width - 400);
 
         this.buttonList.clear();
         this.doneButton = this.addButton(new GuiButton(0, this.width / 2 - 155, this.height - 28, 150, 20, I18n.format("gui.done")));
@@ -157,7 +159,6 @@ public class EarthGui extends GuiScreen {
         RE_ASSEMBLE:
         if (!this.entries.isEmpty()) { //re-assemble projection
             EarthGeneratorSettings oldSettings = this.settings;
-            System.out.println("old settings: " + oldSettings);
 
             try {
                 for (Entry entry : this.entries) {
@@ -168,16 +169,16 @@ public class EarthGui extends GuiScreen {
                 this.settings = oldSettings;
                 break RE_ASSEMBLE;
             }
-
-            System.out.println("new settings: " + this.settings);
         }
         this.entries.clear();
 
         //add states
         int y = VERTICAL_PADDING;
         y += this.addEntry(new ProjectionEntry(this.settings, this, 5, y, this.width - this.imgSize - 10)).height();
-        y += this.addEntry(new PaddingEntry(20)).height();
-        y += this.addEntry(new BlendEntry(this.settings, this, 5, y, this.width - this.imgSize - 10)).height();
+        y += this.addEntry(new PaddingEntry(10)).height();
+        y += this.addEntry(new ToggleEntry(this, 5, y, this.width - this.imgSize - 10, this.settings.useDefaultHeights(), "use_default_heights", EarthGeneratorSettings::withUseDefaultHeights)).height();
+        y += this.addEntry(new ToggleEntry(this, 5, y, this.width - this.imgSize - 10, this.settings.useDefaultTrees(), "use_default_trees", EarthGeneratorSettings::withUseDefaultTrees)).height();
+        y += this.addEntry(new PaddingEntry(10)).height();
         y += this.addEntry(new CWGEntry(this.settings, this, 5, y, this.width - this.imgSize - 10)).height();
 
         this.updateMap();
@@ -336,6 +337,7 @@ public class EarthGui extends GuiScreen {
         }
 
         protected enum Transformation {
+            flip_horizontal,
             flip_vertical,
             swap_axes,
             offset {
@@ -564,18 +566,19 @@ public class EarthGui extends GuiScreen {
         }
     }
 
-    protected static class BlendEntry implements Entry {
-        protected BlendMode mode;
+    protected static class ToggleEntry implements Entry {
+        protected final BiFunction<EarthGeneratorSettings, Boolean, EarthGeneratorSettings> touch;
+        protected boolean value;
 
-        public BlendEntry(EarthGeneratorSettings settings, EarthGui gui, int x, int y, int width) {
-            this.mode = settings.blend();
+        public ToggleEntry(EarthGui gui, int x, int y, int width, boolean value, String name, BiFunction<EarthGeneratorSettings, Boolean, EarthGeneratorSettings> touch) {
+            this.touch = touch;
+            this.value = value;
 
-            gui.addButton(new GuiButton(0, x, y, width, 20, I18n.format(TerraMod.MODID + ".gui.blend") + I18n.format(TerraMod.MODID + ".gui.blend." + this.mode.name().toLowerCase(Locale.US))) {
+            gui.addButton(new GuiButton(0, x, y, width, 20, I18n.format(TerraMod.MODID + ".gui." + name) + ": " + I18n.format("options." + (value ? "on" : "off"))) {
                 @Override
                 public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
                     if (super.mousePressed(mc, mouseX, mouseY)) {
-                        BlendMode[] modes = BlendMode.values();
-                        BlendEntry.this.mode = modes[(BlendEntry.this.mode.ordinal() + 1) % modes.length];
+                        ToggleEntry.this.value = !ToggleEntry.this.value;
                         return true;
                     }
                     return false;
@@ -590,7 +593,7 @@ public class EarthGui extends GuiScreen {
 
         @Override
         public EarthGeneratorSettings touchSettings(EarthGeneratorSettings settings) {
-            return settings.withBlend(this.mode);
+            return this.touch.apply(settings, this.value);
         }
     }
 
@@ -601,29 +604,27 @@ public class EarthGui extends GuiScreen {
     }
 
     protected static class CWGEntry implements Entry {
-        protected final GuiTextField textField;
+        protected String text;
 
         public CWGEntry(EarthGeneratorSettings settings, EarthGui gui, int x, int y, int width) {
             int text = gui.fontRenderer.getStringWidth(I18n.format(TerraMod.MODID + ".gui.cwg")) + 5;
             x += text;
             width -= text;
 
-            this.textField = gui.addTextField(x, y, width - 20, 20);
-            this.textField.setMaxStringLength(Integer.MAX_VALUE);
-            this.textField.setText(settings.cwg());
+            this.text = settings.cwg();
 
             gui.addButton(new GuiButton(0, x + width - 20, y, 20, 20, "...") {
                 @Override
                 public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
                     if (super.mousePressed(mc, mouseX, mouseY)) {
                         GuiCreateWorld fakeParent = new GuiCreateWorld(null);
-                        fakeParent.chunkProviderSettingsJson = CWGEntry.this.textField.getText();
+                        fakeParent.chunkProviderSettingsJson = CWGEntry.this.text;
 
                         MinecraftForge.EVENT_BUS.register(new Object() {
                             @SubscribeEvent
                             public void onGuiOpen(GuiOpenEvent event) {
                                 if (event.getGui() == fakeParent) {
-                                    CWGEntry.this.textField.setText(fakeParent.chunkProviderSettingsJson);
+                                    CWGEntry.this.text = fakeParent.chunkProviderSettingsJson;
                                     event.setGui(gui);
                                     MinecraftForge.EVENT_BUS.unregister(this);
                                 }
@@ -654,7 +655,7 @@ public class EarthGui extends GuiScreen {
 
         @Override
         public EarthGeneratorSettings touchSettings(EarthGeneratorSettings settings) {
-            return settings.withCwg(this.textField.getText());
+            return settings.withCwg(this.text);
         }
     }
 }

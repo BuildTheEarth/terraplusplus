@@ -25,9 +25,9 @@ public class TerraConfig {
     public static boolean threeWater;
 
     @Comment({
-            "Configure the servers that terraplusplus will fetch terrain data from."
+            "Configure how terraplusplus' will retrieve OpenStreetMap data."
     })
-    public static Data data = new Data();
+    public static OSMOpts openstreetmap = new OSMOpts();
 
     @Comment({
             "Configure the terraplusplus HTTP client."
@@ -42,13 +42,9 @@ public class TerraConfig {
         }
     }
 
-    public static class Data {
-        public String[] openstreetmap = {
-                "file:///home/daporkchop/Desktop/switzerland.tiles/",
-                "file:///home/daporkchop/10.0.0.20/gis/switzerland.tiles/",
-                //"http://localhost:8080/",
-                "https://cloud.daporkchop.net/gis/switzerland.tiles/",
-                "https://cloud.daporkchop.net/gis/osm/"
+    public static class OSMOpts {
+        public String[] servers = {
+                "https://cloud.daporkchop.net/gis/osm/0/"
         };
     }
 

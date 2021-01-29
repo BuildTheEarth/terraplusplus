@@ -40,4 +40,9 @@ public class SwapAxesProjectionTransform extends ProjectionTransform {
         double[] b = this.delegate.bounds();
         return new double[]{ b[1], b[0], b[3], b[2] };
     }
+
+    @Override
+    public String toString() {
+        return "Swap Axes(" + super.delegate + ')';
+    }
 }

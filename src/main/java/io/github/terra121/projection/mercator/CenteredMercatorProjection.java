@@ -43,4 +43,9 @@ public class CenteredMercatorProjection implements GeographicProjection {
     public boolean upright() {
         return true;
     }
+
+    @Override
+    public String toString() {
+        return "Mercator";
+    }
 }

@@ -55,4 +55,9 @@ public class EquirectangularProjection implements GeographicProjection {
             throw OutOfProjectionBoundsException.get();
         }
     }
+
+    @Override
+    public String toString() {
+        return "Equirectangular";
+    }
 }

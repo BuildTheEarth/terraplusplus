@@ -59,4 +59,9 @@ public class TransverseMercatorProjection implements GeographicProjection {
     public double metersPerUnit() {
         return METERS_PER_UNIT;
     }
+
+    @Override
+    public String toString() {
+        return "Transverse Mercator";
+    }
 }

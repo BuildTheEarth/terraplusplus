@@ -1,4 +1,4 @@
-package io.github.terra121.projection.airocean;
+package io.github.terra121.projection.dymaxion;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.projection.GeographicProjection;
@@ -12,7 +12,7 @@ import io.github.terra121.util.MathUtils;
  * @see <a href="https://en.wikipedia.org/wiki/Dymaxion_map">Wikipedia's article on the Dynmaxion projection</a>
  */
 @JsonDeserialize
-public class Airocean implements GeographicProjection {
+public class Dymaxion implements GeographicProjection {
 
     protected static final double ARC = 2 * Math.asin(Math.sqrt(5 - Math.sqrt(5)) / Math.sqrt(10));
     protected static final double Z = Math.sqrt(5 + 2 * Math.sqrt(5)) / Math.sqrt(15);
@@ -432,5 +432,10 @@ public class Airocean implements GeographicProjection {
     @Override
     public double metersPerUnit() {
         return Math.sqrt(510100000000000.0 / (20 * MathUtils.ROOT3 * ARC * ARC / 4));
+    }
+
+    @Override
+    public String toString() {
+        return "Dymaxion";
     }
 }

@@ -36,15 +36,14 @@ public class TerraWorldFragment extends CommandFragment {
             return;
         }
 
-        EarthGenerator terrain = (EarthGenerator) gen;
-        EarthGeneratorSettings settings = terrain.settings;
+        EarthGeneratorSettings settings = ((EarthGenerator) gen).settings;
 
         sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "World Type: ", TextFormatting.GREEN, "Earth World"));
         sender.sendMessage(ChatUtil.combine(TextFormatting.RESET));
 
-        sender.sendMessage(ChatUtil.combine(
-                TextFormatting.BLUE, "Blend mode: ",
-                TextFormatting.GREEN, PStrings.split(settings.blend().name(), '_').titleFormat().join(' ')));
+        sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "Projection: ", TextFormatting.GREEN, settings.projection().toString()));
+        sender.sendMessage(this.boolComponent("Default heights", settings.useDefaultHeights()));
+        sender.sendMessage(this.boolComponent("Default trees", settings.useDefaultTrees()));
     }
 
     @Override
@@ -68,6 +67,6 @@ public class TerraWorldFragment extends CommandFragment {
     }
 
     private ITextComponent boolComponent(String name, boolean value) {
-        return ChatUtil.combine(TextFormatting.BLUE, name, ": ", (value ? TextFormatting.GREEN + "True" : TextFormatting.RED + "False"));
+        return ChatUtil.combine(TextFormatting.BLUE, name, ": ", (value ? TextFormatting.GREEN + "Yes" : TextFormatting.RED + "No"));
     }
 }

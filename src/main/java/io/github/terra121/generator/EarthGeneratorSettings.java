@@ -57,10 +57,14 @@ public class EarthGeneratorSettings {
 
                         GeographicProjection projection = JSON_MAPPER.readValue("{\"" + LegacyConfig.upgradeLegacyProjectionName(legacy.projection) + "\":{}}", GeographicProjection.class);
                         projection = LegacyConfig.orientProjectionLegacy(projection, legacy.orentation);
-                        projection = new ScaleProjectionTransform(projection, legacy.scaleX, legacy.scaleY);
-                        projection = new OffsetProjectionTransform(projection, legacy.offsetX, legacy.offsetY);
+                        if (legacy.scaleX != 1.0d || legacy.scaleY != 1.0d) {
+                            projection = new ScaleProjectionTransform(projection, legacy.scaleX, legacy.scaleY);
+                        }
+                        if (legacy.offsetX != 0.0d || legacy.offsetY != 0.0d) {
+                            projection = new OffsetProjectionTransform(projection, legacy.offsetX, legacy.offsetY);
+                        }
 
-                        return new EarthGeneratorSettings(projection, legacy.smoothblend ? BlendMode.CUBIC : BlendMode.LINEAR, legacy.customcubic, true, true, CONFIG_VERSION);
+                        return new EarthGeneratorSettings(projection, legacy.customcubic, true, true, CONFIG_VERSION);
                     }
 
                     return JSON_MAPPER.readValue(generatorSettings, EarthGeneratorSettings.class);
@@ -104,16 +108,10 @@ public class EarthGeneratorSettings {
         System.out.println(parse(parse("").toString()));
     }
 
-    @Deprecated
-    @Getter(AccessLevel.NONE)
-    public transient final JsonSettings settings = null;
-
     @NonNull
     protected final GeographicProjection projection;
     @NonNull
     protected final String cwg;
-    @NonNull
-    protected final BlendMode blend;
 
     protected final boolean useDefaultHeights;
     protected final boolean useDefaultTrees;
@@ -144,7 +142,6 @@ public class EarthGeneratorSettings {
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public EarthGeneratorSettings(
             @JsonProperty(value = "projection", required = true) @NonNull GeographicProjection projection,
-            @JsonProperty(value = "blend", required = true) @NonNull BlendMode blend,
             @JsonProperty(value = "cwg") String cwg,
             @JsonProperty(value = "useDefaultHeights") Boolean useDefaultHeights,
             @JsonProperty(value = "useDefaultTrees") Boolean useDefaultTrees,
@@ -155,7 +152,6 @@ public class EarthGeneratorSettings {
         this.cwg = Strings.isNullOrEmpty(cwg) ? "" : CustomGeneratorSettingsFixer.INSTANCE.fixJson(cwg).toJson(JsonGrammar.COMPACT);
         this.useDefaultHeights = useDefaultHeights != null ? useDefaultHeights : true;
         this.useDefaultTrees = useDefaultTrees != null ? useDefaultTrees : true;
-        this.blend = blend;
     }
 
     @Override
@@ -178,10 +174,6 @@ public class EarthGeneratorSettings {
 
     public CustomGeneratorSettings customCubic() {
         return this.customCubic.get();
-    }
-
-    @Deprecated
-    public static class JsonSettings {
     }
 
     @JsonDeserialize
@@ -207,6 +199,12 @@ public class EarthGeneratorSettings {
             switch (name) {
                 case "web_mercator":
                     return "centered_mercator";
+                case "airocean":
+                    return "dymaxion";
+                case "conformal":
+                    return "conformal_dymaxion";
+                case "bteairocean":
+                    return "bte_conformal_dymaxion";
                 default:
                     return name;
             }

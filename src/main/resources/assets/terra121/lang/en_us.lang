@@ -6,25 +6,32 @@ generator.bte.info=Planet Earth world with the default Build the Earth settings
 ## GUI options
 terra121.gui.header=Terra++ World Options
 terra121.gui.projection=Projection
-terra121.gui.cwg=CubicWorldGen
+terra121.gui.cwg=CubicWorldGen Preset
+terra121.gui.use_default_heights=Default Elevation Datasets
+terra121.gui.use_default_tree=Default Tree Cover Datasets
 
 ## Transformations
 terra121.gui.transformation.add=Add Transform
+terra121.gui.transformation.flip_horizontal=Horizontal Flip
+terra121.gui.transformation.flip_vertical=Vertical Flip
+terra121.gui.transformation.offset=Offset
+terra121.gui.transformation.offset.dx=X
+terra121.gui.transformation.offset.dy=Y
+terra121.gui.transformation.scale=Scale
+terra121.gui.transformation.scale.x=X
+terra121.gui.transformation.scale.y=Y
+terra121.gui.transformation.swap_axes=Swap Axes
 
 ## Projection types
+terra121.gui.projection.centered_mercator=Mercator
 terra121.gui.projection.web_mercator=Web Mercator
+terra121.gui.projection.transverse_mercator=Transverse Mercator
 terra121.gui.projection.equirectangular=Equirectangular
 terra121.gui.projection.sinusoidal=Sinusoidal
 terra121.gui.projection.equal_earth=Equal Earth
-terra121.gui.projection.transverse_mercator=Transverse Mercator
-terra121.gui.projection.airocean=Airocean (Not BTE)
-terra121.gui.projection.conformal=Conformal Approx. (Not BTE)
-terra121.gui.projection.bteairocean=Build The Earth
-
-## Blending modes
-terra121.gui.blend="Interpolation: "
-terra121.gui.blend.linear=Linear
-terra121.gui.blend.cubic=Cubic
+terra121.gui.projection.bte_conformal_dymaxion=BuildTheEarth Conformal Dymaxion
+terra121.gui.projection.dymaxion=Dymaxion (not BTE!)
+terra121.gui.projection.conformal_dymaxion=Conformal Dymaxion
 
 ## command messages
 terra121.commands.tpll.usage=Usage: /tpll <latitude> <longitude> [altitude]

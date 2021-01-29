@@ -55,7 +55,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @UtilityClass
 public class Http {
-    protected static final long TIMEOUT = 10L;
+    protected static final long TIMEOUT = 20L;
 
     private final ThreadFactory NETWORK_THREAD_FACTORY = PThreadFactories.builder().daemon().minPriority().name("terra++ HTTP network thread").build();
 

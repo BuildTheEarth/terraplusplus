@@ -77,4 +77,9 @@ public class EqualEarth implements GeographicProjection {
     public double metersPerUnit() {
         return TerraConstants.EARTH_CIRCUMFERENCE / (2 * this.bounds()[2]);
     }
+
+    @Override
+    public String toString() {
+        return "Equal Earth";
+    }
 }

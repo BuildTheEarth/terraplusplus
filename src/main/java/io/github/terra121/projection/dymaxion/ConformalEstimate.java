@@ -1,4 +1,4 @@
-package io.github.terra121.projection.airocean;
+package io.github.terra121.projection.dymaxion;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.util.MathUtils;
@@ -18,10 +18,10 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  * Implementation of the Dynmaxion like conformal projection.
  * Slightly modifies the Dynmaxion projection to make it conformal.
  *
- * @see io.github.terra121.projection.airocean.Airocean
+ * @see Dymaxion
  */
 @JsonDeserialize
-public class ConformalEstimate extends Airocean {
+public class ConformalEstimate extends Dymaxion {
     protected static final double VECTOR_SCALE_FACTOR = 1.0d / 1.1473979730192934d;
     protected static final int SIDE_LENGTH = 256;
 
@@ -193,5 +193,10 @@ public class ConformalEstimate extends Airocean {
 
             return new double[]{ xest, yest };
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Conformal Dymaxion";
     }
 }

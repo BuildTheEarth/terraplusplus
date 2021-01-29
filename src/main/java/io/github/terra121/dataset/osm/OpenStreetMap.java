@@ -60,7 +60,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
             .expireAfterAccess(5L, TimeUnit.MINUTES)
             .build(CacheLoader.from(location -> {
                 //suffix urls with location
-                String[] urls = Arrays.stream(TerraConfig.data.openstreetmap).map(s -> s + location).toArray(String[]::new);
+                String[] urls = Arrays.stream(TerraConfig.openstreetmap.servers).map(s -> s + location).toArray(String[]::new);
 
                 return Http.getFirst(urls, this::parseGeoJSON).thenCompose(COMPOSE_FUNCTION);
             }));
@@ -79,7 +79,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
 
     @Override
     protected String[] urls(int tileX, int tileZ) {
-        return Arrays.stream(TerraConfig.data.openstreetmap).map(s -> s + TILE_SUFFIX).toArray(String[]::new);
+        return Arrays.stream(TerraConfig.openstreetmap.servers).map(s -> s + TILE_SUFFIX).toArray(String[]::new);
     }
 
     @Override

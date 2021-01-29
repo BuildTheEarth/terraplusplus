@@ -1,4 +1,4 @@
-package io.github.terra121.projection.airocean;
+package io.github.terra121.projection.dymaxion;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
@@ -7,11 +7,11 @@ import io.github.terra121.util.MathUtils;
 /**
  * Implementation of the BTE modified Dynmaxion projection.
  * 
- * @see io.github.terra121.projection.Airocean
- * @see io.github.terra121.projection.ConformalEstimate
+ * @see Dymaxion
+ * @see io.github.terra121.projection.dymaxion.ConformalEstimate
  */
 @JsonDeserialize
-public class ModifiedAirocean extends ConformalEstimate {
+public class BTEDymaxion extends ConformalEstimate {
 
     protected static final double THETA = Math.toRadians(-150);
     protected static final double SIN_THETA = Math.sin(THETA);
@@ -121,5 +121,10 @@ public class ModifiedAirocean extends ConformalEstimate {
     @Override
     public double[] bounds() {
         return new double[]{ -1.5 * ARC * MathUtils.ROOT3, -1.5 * ARC, 3 * ARC, MathUtils.ROOT3 * ARC }; //TODO: 3*ARC is prly to high
+    }
+
+    @Override
+    public String toString() {
+        return "BuildTheEarth Conformal Dymaxion";
     }
 }

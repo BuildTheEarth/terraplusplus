@@ -25,4 +25,9 @@ public class SinusoidalProjection implements GeographicProjection {
     public double metersPerUnit() {
         return TerraConstants.EARTH_CIRCUMFERENCE / 360.0; //gotta make good on that exact area
     }
+
+    @Override
+    public String toString() {
+        return "Sinusoidal";
+    }
 }

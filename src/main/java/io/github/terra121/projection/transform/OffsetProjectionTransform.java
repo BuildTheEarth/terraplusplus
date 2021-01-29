@@ -58,4 +58,9 @@ public class OffsetProjectionTransform extends ProjectionTransform {
 		pos[1] += this.dy;
 		return pos;
 	}
+
+    @Override
+    public String toString() {
+        return "Offset (" + super.delegate + ") by " + this.dx + ", " + this.dy;
+    }
 }

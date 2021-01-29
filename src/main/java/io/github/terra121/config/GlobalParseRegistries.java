@@ -33,9 +33,10 @@ import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.SinusoidalProjection;
 import io.github.terra121.projection.mercator.WebMercatorProjection;
 import io.github.terra121.projection.mercator.TransverseMercatorProjection;
-import io.github.terra121.projection.airocean.Airocean;
-import io.github.terra121.projection.airocean.ConformalEstimate;
-import io.github.terra121.projection.airocean.ModifiedAirocean;
+import io.github.terra121.projection.dymaxion.Dymaxion;
+import io.github.terra121.projection.dymaxion.ConformalEstimate;
+import io.github.terra121.projection.dymaxion.BTEDymaxion;
+import io.github.terra121.projection.transform.FlipHorizontalProjectionTransform;
 import io.github.terra121.projection.transform.FlipVerticalProjectionTransform;
 import io.github.terra121.projection.transform.OffsetProjectionTransform;
 import io.github.terra121.projection.transform.ScaleProjectionTransform;
@@ -61,10 +62,11 @@ public class GlobalParseRegistries {
             .put("equirectangular", EquirectangularProjection.class)
             .put("sinusoidal", SinusoidalProjection.class)
             .put("equal_earth", EqualEarth.class)
-            .put("airocean", Airocean.class)
-            .put("conformal", ConformalEstimate.class)
-            .put("bteairocean", ModifiedAirocean.class)
+            .put("bte_conformal_dymaxion", BTEDymaxion.class)
+            .put("dymaxion", Dymaxion.class)
+            .put("conformal_dymaxion", ConformalEstimate.class)
             //transformations
+            .put("flip_horizontal", FlipHorizontalProjectionTransform.class)
             .put("flip_vertical", FlipVerticalProjectionTransform.class)
             .put("offset", OffsetProjectionTransform.class)
             .put("scale", ScaleProjectionTransform.class)

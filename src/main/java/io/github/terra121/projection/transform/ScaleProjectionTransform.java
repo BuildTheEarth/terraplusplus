@@ -31,7 +31,7 @@ public class ScaleProjectionTransform extends ProjectionTransform {
     public ScaleProjectionTransform(
             @JsonProperty(value = "delegate", required = true) GeographicProjection delegate,
             @JsonProperty(value = "x", required = true) double x,
-            @JsonProperty(value = "y", required = true) @JsonAlias("z") double y) {
+            @JsonProperty(value = "y", required = true) double y) {
         super(delegate);
         Preconditions.checkArgument(Double.isFinite(x) && Double.isFinite(y), "Projection scales should be finite");
         Preconditions.checkArgument(x != 0 && y != 0, "Projection scale cannot be 0!");
@@ -70,5 +70,10 @@ public class ScaleProjectionTransform extends ProjectionTransform {
     @Override
     public double metersPerUnit() {
         return this.delegate.metersPerUnit() / Math.sqrt((this.x * this.x + this.y * this.y) / 2); //TODO: better transform
+    }
+
+    @Override
+    public String toString() {
+        return "Scale (" + super.delegate + ") by " + this.x + ", " + this.y;
     }
 }

@@ -63,4 +63,9 @@ public class WebMercatorProjection implements GeographicProjection {
     public double metersPerUnit() {
         return 100000;
     }
+
+    @Override
+    public String toString() {
+        return "Web Mercator";
+    }
 }
