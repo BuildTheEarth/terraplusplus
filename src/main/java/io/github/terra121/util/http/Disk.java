@@ -153,7 +153,7 @@ public class Disk {
      * @return whether or not the file's TTL has expired
      */
     public boolean hasExpired(@NonNull Path file) throws IOException {
-        return System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(TerraConfig.data.cacheTTL) > Files.getLastModifiedTime(file).toMillis();
+        return System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(TerraConfig.http.cacheTTL) > Files.getLastModifiedTime(file).toMillis();
     }
 
     private void pruneCache() throws IOException {

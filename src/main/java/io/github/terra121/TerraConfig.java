@@ -29,6 +29,11 @@ public class TerraConfig {
     })
     public static Data data = new Data();
 
+    @Comment({
+            "Configure the terraplusplus HTTP client."
+    })
+    public static HttpOpts http = new HttpOpts();
+
     @SubscribeEvent
     public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
         if (TerraMod.MODID.equals(event.getModID())) {
@@ -45,7 +50,9 @@ public class TerraConfig {
                 "https://cloud.daporkchop.net/gis/switzerland.tiles/",
                 "https://cloud.daporkchop.net/gis/osm/"
         };
+    }
 
+    public static class HttpOpts {
         @Comment({
                 "Configures the maximum permitted number of concurrent HTTP requests to each of the given hosts.",
                 "Each line is an entry, given in the following format:",

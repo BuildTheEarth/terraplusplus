@@ -183,8 +183,11 @@ public class Http {
                             return;
                     }
 
-                    //write to disk
-                    Disk.write(cacheFile, toCacheData);
+                    if (TerraConfig.http.cache) { //store in cache
+                        Disk.write(cacheFile, toCacheData);
+                    } else { //manually release the data that would have been written to cache
+                        toCacheData.release();
+                    }
                 }
             }
 
@@ -200,8 +203,12 @@ public class Http {
                     return;
                 }
 
-                this.cacheFile = Disk.cacheFileFor(this.parsed.toString());
-                Disk.read(this.cacheFile, true).whenComplete(this);
+                if (TerraConfig.http.cache) { //attempt to read from cache
+                    this.cacheFile = Disk.cacheFileFor(this.parsed.toString());
+                    Disk.read(this.cacheFile, true).whenComplete(this);
+                } else { //send the actual request
+                    managerFor(this.parsed).submit(this.parsed.getFile(), this);
+                }
             }
         }
 
@@ -329,7 +336,7 @@ public class Http {
 
     public void configChanged() {
         Matcher matcher = Pattern.compile("^(\\d+): (.+)$").matcher("");
-        for (String entry : TerraConfig.data.maxConcurrentRequests) {
+        for (String entry : TerraConfig.http.maxConcurrentRequests) {
             if (matcher.reset(entry).matches()) {
                 try {
                     setMaximumConcurrentRequestsTo(matcher.group(2), Integer.parseInt(matcher.group(1)));
