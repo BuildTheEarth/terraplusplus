@@ -1,14 +1,13 @@
 package io.github.terra121.generator;
 
-import io.github.terra121.dataset.impl.Climate;
-import io.github.terra121.dataset.impl.Soil;
+import io.github.terra121.dataset.builtin.Climate;
+import io.github.terra121.dataset.builtin.Soil;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.init.Biomes;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 

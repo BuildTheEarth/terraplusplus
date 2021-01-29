@@ -2,11 +2,14 @@ package io.github.terra121.projection.dymaxion;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.util.MathUtils;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.util.AsciiString;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.function.io.IOSupplier;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.util.PArrays;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 
 import java.io.InputStream;
 import java.util.regex.Matcher;
@@ -29,16 +32,15 @@ public class ConformalEstimate extends Dymaxion {
         double[][] vx = PArrays.filled(SIDE_LENGTH + 1, double[][]::new, i -> new double[SIDE_LENGTH + 1 - i]);
         double[][] vy = PArrays.filled(SIDE_LENGTH + 1, double[][]::new, i -> new double[SIDE_LENGTH + 1 - i]);
 
-        Matcher matcher;
-        try (InputStream in = ConformalEstimate.class.getResourceAsStream("/assets/terra121/data/conformal.txt")) {
-            matcher = Pattern.compile("\\[(.*?), (.*?)]", Pattern.MULTILINE).matcher(new AsciiString(StreamUtil.toByteArray(in), false));
+        ByteBuf buf;
+        try (InputStream in = new BZip2CompressorInputStream(ConformalEstimate.class.getResourceAsStream("conformal.bz2"))) {
+            buf = Unpooled.wrappedBuffer(StreamUtil.toByteArray(in));
         }
 
         for (int v = 0; v < SIDE_LENGTH + 1; v++) {
             for (int u = 0; u < SIDE_LENGTH + 1 - v; u++) {
-                checkState(matcher.find());
-                vx[u][v] = Double.parseDouble(matcher.group(1)) * VECTOR_SCALE_FACTOR;
-                vy[u][v] = Double.parseDouble(matcher.group(2)) * VECTOR_SCALE_FACTOR;
+                vx[u][v] = buf.readDouble() * VECTOR_SCALE_FACTOR;
+                vy[u][v] = buf.readDouble() * VECTOR_SCALE_FACTOR;
             }
         }
 

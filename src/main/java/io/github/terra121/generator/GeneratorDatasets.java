@@ -1,8 +1,8 @@
 package io.github.terra121.generator;
 
-import io.github.terra121.dataset.MultiresDataset;
+import io.github.terra121.dataset.scalar.MultiresScalarDataset;
 import io.github.terra121.dataset.osm.OpenStreetMap;
-import io.github.terra121.dataset.ScalarDataset;
+import io.github.terra121.dataset.scalar.ScalarDataset;
 import io.github.terra121.event.InitDatasetsEvent;
 import io.github.terra121.event.InitEarthRegistryEvent;
 import io.github.terra121.generator.process.HeightsBaker;
@@ -45,8 +45,8 @@ public class GeneratorDatasets extends CustomAttributeContainer<Object> {
 
         this.projection = settings.projection();
 
-        this.heights = new MultiresDataset("heights", settings.useDefaultHeights());
-        this.trees = new MultiresDataset("trees", settings.useDefaultTrees());
+        this.heights = new MultiresScalarDataset("heights", settings.useDefaultHeights());
+        this.trees = new MultiresScalarDataset("trees", settings.useDefaultTrees());
         this.osm = new OpenStreetMap(settings);
 
         OrderedRegistry<IChunkDataBaker<?>> bakerRegistry = new OrderedRegistry<IChunkDataBaker<?>>()
