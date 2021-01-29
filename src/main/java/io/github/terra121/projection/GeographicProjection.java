@@ -5,12 +5,11 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import io.github.terra121.TerraConstants;
 import io.github.terra121.config.GlobalParseRegistries;
 import io.github.terra121.config.TypedDeserializer;
 import io.github.terra121.config.TypedSerializer;
-import io.github.terra121.projection.transform.SwapAxesProjectionTransform;
-import io.github.terra121.projection.transform.FlipVerticalProjectionTransform;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 

@@ -1,19 +1,22 @@
 package io.github.terra121.projection.mercator;
 
+import static net.daporkchop.lib.common.util.PValidation.notNegative;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.util.MathUtils;
 import lombok.Getter;
 
-import static net.daporkchop.lib.common.util.PValidation.*;
-
 /**
- * Implementation of the web Mercator projection, with projected space normalized between 0 and 256.
- * The Greenwich meridian and the equator are at x=0 and y=0 respectively.
- *
+ * Implementation of the web Mercator projection, with projected space normalized between 0 and 2^zoom * 256.
+ * This projection is mainly used by tiled mapping services like GoogleMaps or OpenStreetMap.
+ * In this implementation of the projection, 1 unit on the projected space corresponds to 1 pixel on those services at the same zoom level.
+ * The origin is on the upper left corner of the map.
+ * 
  * @see CenteredMercatorProjection
  * @see <a href="https://en.wikipedia.org/wiki/Web_Mercator_projection"> Wikipedia's article on the Web Mercator projection</a>
  */
@@ -36,8 +39,8 @@ public class WebMercatorProjection implements GeographicProjection {
     @Override
     public double[] toGeo(double x, double y) {
         return new double[]{
-                Math.toDegrees(this.scaleTo * (x * MathUtils.TAU - Math.PI)),
-                Math.toDegrees(this.scaleTo * (Math.atan(Math.exp(Math.PI - y * MathUtils.TAU)) * 2 - Math.PI / 2))
+                Math.toDegrees(this.scaleTo * x * MathUtils.TAU - Math.PI),
+                Math.toDegrees(Math.atan(Math.exp(Math.PI - this.scaleTo * y * MathUtils.TAU)) * 2 - Math.PI / 2)
         };
     }
 
@@ -68,4 +71,5 @@ public class WebMercatorProjection implements GeographicProjection {
     public String toString() {
         return "Web Mercator";
     }
+
 }
