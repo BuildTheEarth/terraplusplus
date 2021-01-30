@@ -7,11 +7,11 @@ import io.github.terra121.util.MathUtils;
 /**
  * Implementation of the BTE modified Dynmaxion projection.
  * 
- * @see Dymaxion
- * @see io.github.terra121.projection.dymaxion.ConformalEstimate
+ * @see DymaxionProjection
+ * @see io.github.terra121.projection.dymaxion.ConformalDynmaxionProjection
  */
 @JsonDeserialize
-public class BTEDymaxion extends ConformalEstimate {
+public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
 
     protected static final double THETA = Math.toRadians(-150);
     protected static final double SIN_THETA = Math.sin(THETA);

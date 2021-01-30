@@ -27,15 +27,15 @@ import io.github.terra121.config.scalarparse.i.RequireOpaqueISP;
 import io.github.terra121.config.scalarparse.i.SwapAxesISP;
 import io.github.terra121.config.scalarparse.i.FlipZISP;
 import io.github.terra121.projection.mercator.CenteredMercatorProjection;
-import io.github.terra121.projection.EqualEarth;
+import io.github.terra121.projection.EqualEarthProjection;
 import io.github.terra121.projection.EquirectangularProjection;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.SinusoidalProjection;
 import io.github.terra121.projection.mercator.WebMercatorProjection;
 import io.github.terra121.projection.mercator.TransverseMercatorProjection;
-import io.github.terra121.projection.dymaxion.Dymaxion;
-import io.github.terra121.projection.dymaxion.ConformalEstimate;
-import io.github.terra121.projection.dymaxion.BTEDymaxion;
+import io.github.terra121.projection.dymaxion.DymaxionProjection;
+import io.github.terra121.projection.dymaxion.ConformalDynmaxionProjection;
+import io.github.terra121.projection.dymaxion.BTEDymaxionProjection;
 import io.github.terra121.projection.transform.FlipHorizontalProjectionTransform;
 import io.github.terra121.projection.transform.FlipVerticalProjectionTransform;
 import io.github.terra121.projection.transform.OffsetProjectionTransform;
@@ -61,10 +61,10 @@ public class GlobalParseRegistries {
             .put("transverse_mercator", TransverseMercatorProjection.class)
             .put("equirectangular", EquirectangularProjection.class)
             .put("sinusoidal", SinusoidalProjection.class)
-            .put("equal_earth", EqualEarth.class)
-            .put("bte_conformal_dymaxion", BTEDymaxion.class)
-            .put("dymaxion", Dymaxion.class)
-            .put("conformal_dymaxion", ConformalEstimate.class)
+            .put("equal_earth", EqualEarthProjection.class)
+            .put("bte_conformal_dymaxion", BTEDymaxionProjection.class)
+            .put("dymaxion", DymaxionProjection.class)
+            .put("conformal_dymaxion", ConformalDynmaxionProjection.class)
             //transformations
             .put("flip_horizontal", FlipHorizontalProjectionTransform.class)
             .put("flip_vertical", FlipVerticalProjectionTransform.class)

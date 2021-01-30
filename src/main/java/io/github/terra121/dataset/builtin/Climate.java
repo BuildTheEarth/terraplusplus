@@ -1,7 +1,7 @@
 package io.github.terra121.dataset.builtin;
 
 import io.github.terra121.dataset.BlendMode;
-import io.github.terra121.projection.dymaxion.ConformalEstimate;
+import io.github.terra121.projection.dymaxion.ConformalDynmaxionProjection;
 import io.github.terra121.util.IntToDoubleBiFunction;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -51,7 +51,7 @@ public class Climate {
     @SneakyThrows(IOException.class)
     public static void main(String... args) {
         Matcher matcher;
-        try (InputStream in = ConformalEstimate.class.getResourceAsStream("conformal.txt")) {
+        try (InputStream in = ConformalDynmaxionProjection.class.getResourceAsStream("conformal.txt")) {
             matcher = Pattern.compile("\\[(.*?), (.*?)]", Pattern.MULTILINE).matcher(new AsciiString(StreamUtil.toByteArray(in), false));
         }
 

@@ -10,7 +10,7 @@ import io.github.terra121.util.MathUtils;
  * @see <a href="https://en.wikipedia.org/wiki/Equal_Earth_projection"> Wikipedia's article on the Equal Earth projection</a>
  */
 @JsonDeserialize
-public class EqualEarth implements GeographicProjection {
+public class EqualEarthProjection implements GeographicProjection {
     private static final double A1 = 1.340264;
     private static final double A2 = -0.081106;
     private static final double A3 = 0.000893;
