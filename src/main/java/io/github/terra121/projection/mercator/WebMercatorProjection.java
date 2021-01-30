@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.MathUtils;
 import lombok.Getter;
 
@@ -22,6 +23,9 @@ import lombok.Getter;
  */
 @JsonDeserialize
 public class WebMercatorProjection implements GeographicProjection {
+	
+	public static final double LIMIT_LATITUDE = Math.toDegrees(2 * Math.atan(Math.pow(Math.E, Math.PI)) - Math.PI/2);
+	
     @Getter(onMethod_ = { @JsonGetter })
     protected final int zoom;
 
@@ -37,7 +41,8 @@ public class WebMercatorProjection implements GeographicProjection {
     }
 
     @Override
-    public double[] toGeo(double x, double y) {
+    public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
+    	if(x < 0 || y < 0  || x > this.scaleFrom || y > this.scaleFrom) throw OutOfProjectionBoundsException.get();
         return new double[]{
                 Math.toDegrees(this.scaleTo * x * MathUtils.TAU - Math.PI),
                 Math.toDegrees(Math.atan(Math.exp(Math.PI - this.scaleTo * y * MathUtils.TAU)) * 2 - Math.PI / 2)
@@ -45,7 +50,8 @@ public class WebMercatorProjection implements GeographicProjection {
     }
 
     @Override
-    public double[] fromGeo(double longitude, double latitude) {
+    public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
+    	OutOfProjectionBoundsException.checkInRange(longitude, latitude, 180, LIMIT_LATITUDE);
         return new double[]{
                 this.scaleFrom * (Math.toRadians(longitude) + Math.PI) / MathUtils.TAU,
                 this.scaleFrom * (Math.PI - Math.log(Math.tan((Math.PI / 2 + Math.toRadians(latitude)) / 2))) / MathUtils.TAU

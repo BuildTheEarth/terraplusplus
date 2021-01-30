@@ -1,21 +1,18 @@
 package io.github.terra121.projection.dymaxion;
 
+import java.io.InputStream;
+
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import io.github.terra121.util.MathUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.util.AsciiString;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.function.io.IOSupplier;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.util.PArrays;
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-
-import java.io.InputStream;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * Implementation of the Dynmaxion like conformal projection.
