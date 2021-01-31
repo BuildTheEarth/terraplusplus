@@ -49,7 +49,11 @@
             "minZ": -85,
             "maxZ": 85
         },
-        "priority": -100.0
+        "zooms": {
+            "min": 0,
+            "max": 3
+        },
+        "priority": 0.0
     },
     //this is a workaround for the fact that the dataset is broken in the ocean at zoom levels above 10.
     // see https://github.com/tilezen/joerd/issues/199
@@ -96,7 +100,11 @@
             "minZ": -85,
             "maxZ": 85
         },
-        "priority": -100.0,
+        "zooms": {
+            "min": 0,
+            "max": 3
+        },
+        "priority": 1.0,
         "condition": {
             "less_than": 1.0
         }

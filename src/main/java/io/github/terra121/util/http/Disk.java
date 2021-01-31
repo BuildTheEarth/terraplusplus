@@ -33,6 +33,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
+import java.util.stream.Stream;
 
 import static net.daporkchop.lib.common.util.PValidation.*;
 
@@ -86,8 +87,9 @@ public class Disk {
                 ByteBuf buf = null;
                 try (FileChannel channel = FileChannel.open(file, StandardOpenOption.READ)) {
                     int size = toInt(channel.size(), "file size");
-                    (buf = ByteBufAllocator.DEFAULT.ioBuffer(size, size)).writeBytes(channel, size);
-                    checkState(!buf.isWritable(), "only read %d/%d bytes!", buf.readableBytes(), size);
+                    buf = ByteBufAllocator.DEFAULT.ioBuffer(size, size);
+                    for (int i = 0; i < size; i += buf.writeBytes(channel, i, size - i)) {
+                    }
                     return buf.retain();
                 } finally {
                     ReferenceCountUtil.release(buf);
@@ -108,8 +110,9 @@ public class Disk {
         DISK_EXECUTOR.submit(() -> {
             try {
                 try (FileChannel channel = FileChannel.open(TMP_FILE, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-                    data.readBytes(channel, data.readableBytes());
-                    checkState(!data.isReadable(), "didn't write all bytes!");
+                    while (data.isReadable()) {
+                        data.readBytes(channel, data.readableBytes());
+                    }
                 }
 
                 Files.move(TMP_FILE, file, StandardCopyOption.REPLACE_EXISTING);
@@ -161,14 +164,16 @@ public class Disk {
 
         LongAdder count = new LongAdder();
         LongAdder size = new LongAdder();
-        Files.list(CACHE_ROOT)
-                .filter(Files::isRegularFile)
-                .filter((IOPredicate<Path>) Disk::hasExpired)
-                .peek((IOConsumer<Path>) path -> {
-                    count.increment();
-                    size.add(Files.size(path));
-                })
-                .forEach((IOConsumer<Path>) Files::delete);
+
+        try (Stream<Path> stream = Files.list(CACHE_ROOT)) {
+            stream.filter(Files::isRegularFile)
+                    .filter((IOPredicate<Path>) Disk::hasExpired)
+                    .peek((IOConsumer<Path>) path -> {
+                        count.increment();
+                        size.add(Files.size(path));
+                    })
+                    .forEach((IOConsumer<Path>) Files::delete);
+        }
 
         double mib = Math.round(size.sum() / (1024.0d * 1024.0d) * 10.0d) / 10.0d;
         TerraMod.LOGGER.info("cache cleanup complete. deleted {} files, totalling {} bytes ({} MiB)", count.sum(), size.sum(), mib);

@@ -2,8 +2,8 @@ package io.github.terra121.dataset.osm.config;
 
 import com.google.gson.JsonParseException;
 import com.google.gson.stream.JsonReader;
-import io.github.terra121.dataset.osm.geojson.Geometry;
 import io.github.terra121.dataset.osm.element.Element;
+import io.github.terra121.dataset.osm.geojson.Geometry;
 import lombok.NonNull;
 
 import java.io.IOException;

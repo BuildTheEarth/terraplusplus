@@ -27,16 +27,14 @@ public abstract class TypedDeserializer<T> extends JsonDeserializer<T> {
             throw JsonMappingException.from(p, "invalid type type name: " + name);
         }
 
-        JsonToken token = p.nextToken();
-        if (!clazz.isAnnotationPresent(SingleProperty.class) && token != JsonToken.START_OBJECT) {
-            throw JsonMappingException.from(p, "expected json object, but found: " + token);
+        if (!clazz.isAnnotationPresent(SingleProperty.class) & p.nextToken() != JsonToken.START_OBJECT) {
+            throw JsonMappingException.from(p, "expected json object, but found: " + p.currentToken());
         }
 
         T value = ctxt.readValue(p, PorkUtil.<Class<? extends T>>uncheckedCast(clazz));
 
-        token = p.nextToken();
-        if (token != JsonToken.END_OBJECT) {
-            throw JsonMappingException.from(p, "expected json object end, but found: " + token);
+        if (p.nextToken() != JsonToken.END_OBJECT) {
+            throw JsonMappingException.from(p, "expected json object end, but found: " + p.currentToken());
         }
 
         return value;

@@ -25,6 +25,7 @@ import io.github.terra121.util.http.Http;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import net.daporkchop.lib.common.util.PorkUtil;
 import net.minecraft.util.math.ChunkPos;
 
@@ -65,16 +66,13 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
                 return Http.getFirst(urls, this::parseGeoJSON).thenCompose(COMPOSE_FUNCTION);
             }));
 
+    @SneakyThrows(IOException.class)
     public OpenStreetMap(@NonNull EarthGeneratorSettings settings) {
         super(new EquirectangularProjection(), TILE_SIZE);
 
         this.earthProjection = settings.projection();
 
-        try {
-            this.mapper = OSMMapper.load(OpenStreetMap.class.getResourceAsStream("/default_config/osm.json5"));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        this.mapper = OSMMapper.load(OpenStreetMap.class.getResourceAsStream("osm.json5"));
     }
 
     @Override

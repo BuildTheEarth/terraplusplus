@@ -103,11 +103,6 @@ public class EarthGeneratorSettings {
         return SETTINGS_PARSE_CACHE.getUnchecked(generatorSettings);
     }
 
-    public static void main(String... args) {
-        System.out.println(parse(""));
-        System.out.println(parse(parse("").toString()));
-    }
-
     @NonNull
     protected final GeographicProjection projection;
     @NonNull

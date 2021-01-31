@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.github.terra121.dataset.osm.config.BlockStateParser;
+import io.github.terra121.util.BlockStateDeserializeMixin;
 import net.minecraft.block.state.IBlockState;
 
 import java.util.concurrent.CompletableFuture;
@@ -29,6 +30,7 @@ public class TerraConstants {
             .configure(JsonReadFeature.ALLOW_LEADING_DECIMAL_POINT_FOR_NUMBERS, true)
             .configure(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS, true)
             .configure(JsonReadFeature.ALLOW_TRAILING_COMMA, true)
+            .addMixIn(IBlockState.class, BlockStateDeserializeMixin.class)
             .build();
 
     public static final CompletableFuture<Void> COMPLETE_FUTURE = CompletableFuture.completedFuture(null);

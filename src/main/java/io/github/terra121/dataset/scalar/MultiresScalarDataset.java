@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.github.terra121.config.condition.DoubleCondition;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
+import io.github.terra121.util.IntRange;
 import io.github.terra121.util.bvh.BVH;
 import io.github.terra121.util.bvh.Bounds2d;
 import io.github.terra121.util.http.Disk;
@@ -187,6 +188,8 @@ public class MultiresScalarDataset implements ScalarDataset {
         protected final ScalarDataset dataset;
         @Getter(onMethod_ = { @JsonGetter })
         protected final DoubleCondition condition;
+        @Getter(onMethod_ = { @JsonGetter })
+        protected final IntRange zooms; //TODO: use this
 
         protected final double minX;
         protected final double maxX;
@@ -200,10 +203,12 @@ public class MultiresScalarDataset implements ScalarDataset {
         public WrappedDataset(
                 @JsonProperty(value = "dataset", required = true) @NonNull ScalarDataset dataset,
                 @JsonProperty(value = "bounds", required = true) @NonNull Bounds2d bounds,
+                @JsonProperty(value = "zooms", required = true) @NonNull IntRange zooms,
                 @JsonProperty(value = "priority", defaultValue = "0.0") double priority,
                 @JsonProperty("condition") DoubleCondition condition) {
             this.dataset = dataset;
             this.condition = condition;
+            this.zooms = zooms;
             this.priority = priority;
 
             this.minX = bounds.minX();
