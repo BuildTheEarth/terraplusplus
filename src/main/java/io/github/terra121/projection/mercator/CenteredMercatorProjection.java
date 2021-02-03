@@ -3,6 +3,7 @@ package io.github.terra121.projection.mercator;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 
 /**
  * Implementation of the Mercator projection, normalized between -1 and 1.
@@ -14,7 +15,8 @@ import io.github.terra121.projection.GeographicProjection;
 public class CenteredMercatorProjection implements GeographicProjection {
 
     @Override
-    public double[] toGeo(double x, double y) {
+    public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
+    	OutOfProjectionBoundsException.checkInRange(x, y, 1, 1);
         return new double[]{
                 x * 180.0,
                 Math.toDegrees(Math.atan(Math.exp(-y * Math.PI)) * 2 - Math.PI / 2)
@@ -22,7 +24,8 @@ public class CenteredMercatorProjection implements GeographicProjection {
     }
 
     @Override
-    public double[] fromGeo(double longitude, double latitude) {
+    public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
+    	OutOfProjectionBoundsException.checkInRange(longitude, latitude, 180, WebMercatorProjection.LIMIT_LATITUDE);
         return new double[]{
                 longitude / 180.0,
                 -(Math.log(Math.tan((Math.PI / 2 + Math.toRadians(latitude)) / 2))) / Math.PI

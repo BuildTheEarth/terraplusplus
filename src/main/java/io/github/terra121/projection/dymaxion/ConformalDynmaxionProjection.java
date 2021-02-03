@@ -1,30 +1,27 @@
 package io.github.terra121.projection.dymaxion;
 
+import java.io.InputStream;
+
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import io.github.terra121.util.MathUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.util.AsciiString;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.function.io.IOSupplier;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.util.PArrays;
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-
-import java.io.InputStream;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * Implementation of the Dynmaxion like conformal projection.
- * Slightly modifies the Dynmaxion projection to make it conformal.
+ * Slightly modifies the Dynmaxion projection to make it (almost) conformal.
  *
- * @see Dymaxion
+ * @see DymaxionProjection
  */
 @JsonDeserialize
-public class ConformalEstimate extends Dymaxion {
+public class ConformalDynmaxionProjection extends DymaxionProjection {
     protected static final double VECTOR_SCALE_FACTOR = 1.0d / 1.1473979730192934d;
     protected static final int SIDE_LENGTH = 256;
 
@@ -33,7 +30,7 @@ public class ConformalEstimate extends Dymaxion {
         double[][] vy = PArrays.filled(SIDE_LENGTH + 1, double[][]::new, i -> new double[SIDE_LENGTH + 1 - i]);
 
         ByteBuf buf;
-        try (InputStream in = new BZip2CompressorInputStream(ConformalEstimate.class.getResourceAsStream("conformal.bz2"))) {
+        try (InputStream in = new BZip2CompressorInputStream(ConformalDynmaxionProjection.class.getResourceAsStream("conformal.bz2"))) {
             buf = Unpooled.wrappedBuffer(StreamUtil.toByteArray(in));
         }
 

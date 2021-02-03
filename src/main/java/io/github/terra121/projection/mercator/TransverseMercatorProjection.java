@@ -3,6 +3,7 @@ package io.github.terra121.projection.mercator;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.terra121.TerraConstants;
 import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.OutOfProjectionBoundsException;
 
 /**
  * Implementation of the universal transverse Mercator projection.
@@ -31,7 +32,8 @@ public class TransverseMercatorProjection implements GeographicProjection {
     }
 
     @Override
-    public double[] fromGeo(double longitude, double latitude) {
+    public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
+    	OutOfProjectionBoundsException.checkLongitudeLatitudeInRange(longitude, latitude);
         double lam = Math.toRadians(longitude);
         double phi = Math.toRadians(latitude);
         double centralMeridian = getCentralMeridian(lam);
@@ -45,7 +47,8 @@ public class TransverseMercatorProjection implements GeographicProjection {
     }
 
     @Override
-    public double[] toGeo(double x, double y) {
+    public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
+    	OutOfProjectionBoundsException.checkInRange(x, y, Math.PI, Math.PI/2);
         double centralMeridian = getCentralMeridian(x);
         x -= centralMeridian;
         double lam = Math.atan2(Math.sinh(x), Math.cos(y)) + centralMeridian;

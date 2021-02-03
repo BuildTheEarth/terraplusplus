@@ -12,7 +12,7 @@ import io.github.terra121.util.MathUtils;
  * @see <a href="https://en.wikipedia.org/wiki/Dymaxion_map">Wikipedia's article on the Dynmaxion projection</a>
  */
 @JsonDeserialize
-public class Dymaxion implements GeographicProjection {
+public class DymaxionProjection implements GeographicProjection {
 
     protected static final double ARC = 2 * Math.asin(Math.sqrt(5 - Math.sqrt(5)) / Math.sqrt(10));
     protected static final double Z = Math.sqrt(5 + 2 * Math.sqrt(5)) / Math.sqrt(15);
