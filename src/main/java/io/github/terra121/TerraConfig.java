@@ -77,6 +77,6 @@ public class TerraConfig {
                 "The maximum age of data in the persistent cache, in minutes. Data older than this will be expired.",
                 "Default: 1440 minutes (1 day)"
         })
-        public int cacheTTL = 1440 << 8;
+        public int cacheTTL = 1440;
     }
 }

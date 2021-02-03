@@ -32,7 +32,6 @@ final class LineWide implements LineMapper {
     protected final DValue layer;
     @NonNull
     protected final DValue radius;
-    protected final boolean crossWater;
 
     @Override
     public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull MultiLineString projectedGeometry) {
@@ -62,9 +61,6 @@ final class LineWide implements LineMapper {
                         in.beginObject();
                         builder.radius(GSON.fromJson(in, DValue.class));
                         in.endObject();
-                        break;
-                    case "crossWater":
-                        builder.crossWater(in.nextBoolean());
                         break;
                     default:
                         throw new IllegalStateException("invalid property: " + name);

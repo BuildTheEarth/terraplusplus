@@ -66,8 +66,7 @@
                                 "key": "layer",
                                 "fallback": 0
                             }
-                        },
-                        "crossWater": true
+                        }
                     }
                 }
             },
@@ -112,8 +111,7 @@
                                 "key": "layer",
                                 "fallback": 0
                             }
-                        },
-                        "crossWater": true
+                        }
                     }
                 }
             },
@@ -152,8 +150,7 @@
                                 "key": "layer",
                                 "fallback": 0
                             }
-                        },
-                        "crossWater": true
+                        }
                     }
                 }
             },
@@ -189,8 +186,7 @@
                                 "key": "layer",
                                 "fallback": 0
                             }
-                        },
-                        "crossWater": true
+                        }
                     }
                 }
             },
@@ -240,8 +236,7 @@
                                 "key": "layer",
                                 "fallback": 0
                             }
-                        },
-                        "crossWater": true
+                        }
                     }
                 }
             },
@@ -265,8 +260,7 @@
                                 "key": "layer",
                                 "fallback": 0
                             }
-                        },
-                        "crossWater": true
+                        }
                     }
                 }
             },
@@ -290,8 +284,7 @@
                                 "key": "layer",
                                 "fallback": 0
                             }
-                        },
-                        "crossWater": false
+                        }
                     }
                 }
             },
@@ -315,8 +308,7 @@
                                 "key": "layer",
                                 "fallback": 0
                             }
-                        },
-                        "crossWater": false
+                        }
                     }
                 }
             },
@@ -343,8 +335,7 @@
                                 "key": "layer",
                                 "fallback": 0
                             }
-                        },
-                        "crossWater": false
+                        }
                     }
                 }
             }
@@ -374,8 +365,7 @@
                                         "key": "layer",
                                         "fallback": 0
                                     }
-                                },
-                                "crossWater": false
+                                }
                             }
                         }
                     }

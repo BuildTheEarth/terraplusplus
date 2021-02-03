@@ -1,34 +1,17 @@
 package io.github.terra121.dataset.builtin;
 
 import io.github.terra121.dataset.BlendMode;
-import io.github.terra121.projection.dymaxion.ConformalDynmaxionProjection;
 import io.github.terra121.util.IntToDoubleBiFunction;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.handler.codec.compression.Lz4FrameEncoder;
-import io.netty.util.AsciiString;
 import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.ToString;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.function.io.IOSupplier;
 import net.daporkchop.lib.common.ref.Ref;
-import net.daporkchop.lib.common.util.PArrays;
-import net.minecraftforge.fml.common.asm.transformers.deobf.LZMAInputSupplier;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorOutputStream;
-import org.apache.commons.compress.compressors.bzip2.BZip2Utils;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.DeflaterOutputStream;
-
-import static net.daporkchop.lib.common.util.PValidation.*;
 
 public class Climate {
     public static final int COLS = 720;
@@ -47,28 +30,6 @@ public class Climate {
         }
         return out;
     });
-
-    @SneakyThrows(IOException.class)
-    public static void main(String... args) {
-        Matcher matcher;
-        try (InputStream in = ConformalDynmaxionProjection.class.getResourceAsStream("conformal.txt")) {
-            matcher = Pattern.compile("\\[(.*?), (.*?)]", Pattern.MULTILINE).matcher(new AsciiString(StreamUtil.toByteArray(in), false));
-        }
-
-        int SIDE_LENGTH = 256;
-        ByteBuf buf = Unpooled.buffer();
-
-        for (int v = 0; v < SIDE_LENGTH + 1; v++) {
-            for (int u = 0; u < SIDE_LENGTH + 1 - v; u++) {
-                checkState(matcher.find());
-                buf.writeDouble(Double.parseDouble(matcher.group(1))).writeDouble(Double.parseDouble(matcher.group(2)));
-            }
-        }
-
-        try (OutputStream out = new BZip2CompressorOutputStream(new FileOutputStream("/media/daporkchop/PortableIDE/Minecraft/terra121/src/main/resources/io/github/terra121/projection/dymaxion/conformal.bz2"))) {
-            buf.readBytes(out, buf.readableBytes());
-        }
-    }
 
     private final double[] data = DATA_CACHE.get();
 

@@ -30,7 +30,6 @@ final class LineNarrow implements LineMapper {
     protected final DrawFunction draw;
     @NonNull
     protected final DValue layer;
-    protected final boolean crossWater;
 
     @Override
     public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull MultiLineString projectedGeometry) {
@@ -55,9 +54,6 @@ final class LineNarrow implements LineMapper {
                         in.beginObject();
                         builder.layer(GSON.fromJson(in, DValue.class));
                         in.endObject();
-                        break;
-                    case "crossWater":
-                        builder.crossWater(in.nextBoolean());
                         break;
                     default:
                         throw new IllegalStateException("invalid property: " + name);
