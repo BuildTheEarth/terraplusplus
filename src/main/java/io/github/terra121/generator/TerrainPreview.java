@@ -5,6 +5,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
+import io.github.terra121.projection.mercator.WebMercatorProjection;
 import io.github.terra121.util.EmptyWorld;
 import io.github.terra121.util.TilePos;
 import io.github.terra121.util.http.Http;
@@ -200,10 +201,12 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
             }
         }
 
-        State state = new State(EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS));
+        State state = new State(EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS)
+        .withProjection(new WebMercatorProjection(16)));
         state.initSettings();
 
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d);
+        proj = state.projection.fromGeo(12.58589, 55.68841);
         state.setView(floorI(proj[0]) >> 4, floorI(proj[1]) >> 4, 0);
 
         state.update();

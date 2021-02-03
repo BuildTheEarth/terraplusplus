@@ -5,7 +5,10 @@ import io.netty.util.internal.InternalThreadLocalMap;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
+import net.daporkchop.lib.common.ref.Ref;
+import net.daporkchop.lib.common.ref.ThreadRef;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,12 +26,12 @@ import static net.daporkchop.lib.common.util.PorkUtil.*;
  */
 @ToString
 public class IntervalTree<V extends Interval> {
-    protected static final FastThreadLocal<Collection<?>> LIST_CACHE = new FastThreadLocal<>();
+    protected static final FastThreadLocal<List<?>> LIST_CACHE = new FastThreadLocal<>();
 
     /**
      * The number of values that must be present in a node in order for it to become eligible for splitting.
      */
-    protected static final int NODE_SPLIT_CAPACITY = 2;
+    protected static final int NODE_SPLIT_CAPACITY = 8;
 
     @SuppressWarnings("unchecked")
     protected static <V extends Interval> Node<V>[] createNodeArray(int length) {
