@@ -7,15 +7,17 @@
     {
         "dataset": {
             "urls": [
-                "https://cloud.daporkchop.net/gis/treecover2000/${x}/${z}.tiff"
+                "https://cloud.daporkchop.net/gis/treecover2000/12/${x}/${z}.tiff"
             ],
             "projection": {
                 "scale": {
                     "delegate": {
-                        "equirectangular": {}
+                        "web_mercator": {
+                            "zoom": 12
+                        }
                     },
-                    "x": 6250.0,
-                    "y": 6250.0
+                    "x": 1.0,
+                    "y": 1.0
                 }
             },
             "resolution": 256,
@@ -25,13 +27,9 @@
                     "delegate": {
                         "from_int": {
                             "delegate": {
-                                "flip_z": {
+                                "grayscale_extract": {
                                     "delegate": {
-                                        "grayscale_extract": {
-                                            "delegate": {
-                                                "parse_tiff": {},
-                                            }
-                                        }
+                                        "parse_tiff": {},
                                     }
                                 }
                             }
