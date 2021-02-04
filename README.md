@@ -1,4 +1,4 @@
-# Terra++
+<img src="https://github.com/BuildTheEarth/terraplusplus/blob/master/docs/images/terraplusplus_logo.png" width="500" height="174">
 
 ### Developed by the BuildTheEarth Development Team
 
