@@ -3,6 +3,7 @@ package io.github.terra121.generator;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import io.github.terra121.generator.process.TreeCoverBaker;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.projection.mercator.WebMercatorProjection;
@@ -205,7 +206,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         state.initSettings();
 
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d);
-        proj = state.projection.fromGeo(12.58589, 55.68841);
+        //proj = state.projection.fromGeo(12.58589, 55.68841);
         state.setView(floorI(proj[0]) >> 4, floorI(proj[1]) >> 4, 0);
 
         state.update();
@@ -268,7 +269,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                 for (int tz = 0; tz < CHUNKS_PER_TILE; tz++) {
                     CachedChunkData data = dataFutures[ti++].join();
 
-                    int treeCover = lerpI(0, 80, (Double) data.getCustom(KEY_TREE_COVER, 0.0d));
+                    byte[] treeCoverArr = (byte[]) data.getCustom(KEY_TREE_COVER, TreeCoverBaker.FALLBACK_TREE_DENSITY);
 
                     int baseX = tx << 4;
                     int baseZ = tz << 4;
@@ -297,7 +298,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                                     b = lerpI(255, 64, clamp(waterHeight - groundHeight + 1, 0, 8) / 8.0f);
                                 }
 
-                                g = max(g, treeCover);
+                                g = max(g, lerpI(0, 80, (treeCoverArr[cx * 16 + cz] & 0xFF) * TreeCoverBaker.TREE_AREA * (1.0d / 255.0d)));
                                 c = r << 16 | g << 8 | b;
                             }
 

@@ -5,6 +5,9 @@ import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.terra121.generator.CachedChunkData;
+import io.github.terra121.generator.process.TreeCoverBaker;
+import net.daporkchop.lib.common.ref.Ref;
+import net.daporkchop.lib.common.ref.ThreadRef;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -29,43 +32,30 @@ public class TreePopulator implements IEarthPopulator {
             Blocks.SNOW,
             Blocks.MYCELIUM);
 
+    protected static final Ref<byte[]> RNG_CACHE = ThreadRef.soft(() -> new byte[16 * 16]);
+
     @Override
     public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData data) {
         if (!data.intersectsSurface(pos.getY())) { //optimization: don't try to generate trees if the cube doesn't intersect the surface
             return;
         }
 
-        for (int i = 0, treeCount = this.treeCount(world, random, pos, biome, data); i < treeCount; ++i) {
-            this.tryPlace(world, random, pos, biome);
+        byte[] treeCover = (byte[]) data.getCustom(KEY_TREE_COVER, TreeCoverBaker.FALLBACK_TREE_DENSITY);
+
+        byte[] rng = RNG_CACHE.get();
+        random.nextBytes(rng);
+
+        for (int i = 0, x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++, i++) {
+                if ((rng[i] & 0xFF) < (treeCover[i] & 0xFF)) {
+                    this.tryPlace(world, random, pos, biome, x, z);
+                }
+            }
         }
     }
 
-    protected int treeCount(World world, Random random, CubePos pos, Biome biome, CachedChunkData data) {
-        double treeCover = (Double) data.getCustom(KEY_TREE_COVER, 0.0d);
-
-        //got this fun formula messing around with data on desmos, estimate of tree cover -> number
-        int treeCount = 30; //max so it doesn't go to infinity (which would technically be required to guarantee full coverage, but no)
-        if (treeCover < 0.95d) {
-            double x = Math.pow(treeCover, 1.5d);
-            treeCount = (int) ((Math.log(1.0d + x) - Math.log(1.0d - x)) * 10.0d);
-        }
-
-        //null island
-        if ((pos.getX() | pos.getZ()) == 0) {
-            treeCount = 10;
-        }
-
-        if (treeCount != 0 && random.nextFloat() < biome.decorator.extraTreeChance) {
-            treeCount++;
-        }
-
-        return treeCount;
-    }
-
-    protected void tryPlace(World world, Random random, CubePos pos, Biome biome) {
-        int xOffset = ICube.SIZE / 2 + random.nextInt(ICube.SIZE);
-        int zOffset = ICube.SIZE / 2 + random.nextInt(ICube.SIZE);
-        BlockPos blockPos = ((ICubicWorld) world).getSurfaceForCube(pos, xOffset, zOffset, 0, ICubicWorld.SurfaceType.OPAQUE);
+    protected void tryPlace(World world, Random random, CubePos pos, Biome biome, int x, int z) {
+        BlockPos blockPos = ((ICubicWorld) world).getSurfaceForCube(pos, x + 8, z + 8, 0, ICubicWorld.SurfaceType.OPAQUE);
         if (blockPos != null && this.canPlaceAt(world, blockPos)) {
             this.placeTree(world, random, blockPos, biome);
         }

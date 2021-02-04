@@ -122,8 +122,8 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
             min = min(min, this.surfaceHeight[i]);
             max = max(max, this.surfaceHeight[i]);
         }
-        this.surfaceMinCube = Coords.blockToCube(min);
-        this.surfaceMaxCube = Coords.blockToCube(max + 1);
+        this.surfaceMinCube = Coords.blockToCube(min) - 1;
+        this.surfaceMaxCube = Coords.blockToCube(max) + 1;
     }
 
     public boolean intersectsSurface(int cubeY) {

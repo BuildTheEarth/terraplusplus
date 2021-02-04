@@ -7,7 +7,9 @@ import io.github.terra121.util.CornerBoundingBox2d;
 import io.github.terra121.util.bvh.Bounds2d;
 import net.minecraft.util.math.ChunkPos;
 
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.IntStream;
 
 import static io.github.terra121.TerraConstants.*;
 import static net.daporkchop.lib.common.math.PMath.*;
@@ -15,14 +17,45 @@ import static net.daporkchop.lib.common.math.PMath.*;
 /**
  * @author DaPorkchop_
  */
-public class TreeCoverBaker implements IChunkDataBaker<Double> {
-    @Override
-    public CompletableFuture<Double> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
-        return datasets.trees().getAsync(boundsGeo.point(null, 0.5d, 0.5d));
+public class TreeCoverBaker implements IChunkDataBaker<double[]> {
+    public static final double TREE_AREA = 3.0d * 3.0d; //the surface area covered by an average tree
+
+    public static final byte[] FALLBACK_TREE_DENSITY = new byte[16 * 16];
+
+    static {
+        Arrays.fill(FALLBACK_TREE_DENSITY, treeChance(50.0d));
+    }
+
+    static byte treeChance(double value) {
+        if (Double.isNaN(value)) {
+            return 0;
+        }
+
+        //value is in range [0-1]
+        value *= (1.0 / TREE_AREA);
+
+        //scale to byte range
+        value *= 255.0d;
+
+        //increase by 50%
+        value *= 1.50d;
+
+        return (byte) clamp(ceilI(value), 0, 255);
     }
 
     @Override
-    public void bake(ChunkPos pos, CachedChunkData.Builder builder, Double treeCover) {
-        builder.putCustom(KEY_TREE_COVER, Double.isNaN(treeCover) ? 0.0d : treeCover);
+    public CompletableFuture<double[]> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
+        return datasets.trees().getAsync(boundsGeo, 16, 16);
+    }
+
+    @Override
+    public void bake(ChunkPos pos, CachedChunkData.Builder builder, double[] treeCover) {
+        byte[] arr = new byte[16 * 16];
+        if (treeCover != null) {
+            for (int i = 0; i < 16 * 16; i++) {
+                arr[i] = treeChance(treeCover[i]);
+            }
+        }
+        builder.putCustom(KEY_TREE_COVER, arr);
     }
 }

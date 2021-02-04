@@ -44,6 +44,7 @@ public class TerraConfig {
 
     public static class OSMOpts {
         public String[] servers = {
+                "http://localhost:8080/0/",
                 "https://cloud.daporkchop.net/gis/osm/0/"
         };
     }
