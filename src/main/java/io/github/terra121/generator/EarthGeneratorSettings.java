@@ -1,5 +1,6 @@
 package io.github.terra121.generator;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -108,7 +109,7 @@ public class EarthGeneratorSettings {
     protected final String cwg;
 
     protected final boolean useDefaultHeights;
-    protected final boolean useDefaultTrees;
+    protected final boolean useDefaultTreeCover;
 
     @Getter(AccessLevel.NONE)
     protected transient final Ref<BiomeProvider> biomeProvider = Ref.soft(() -> new EarthBiomeProvider(this));
@@ -140,14 +141,14 @@ public class EarthGeneratorSettings {
             @JsonProperty(value = "projection", required = true) @NonNull GeographicProjection projection,
             @JsonProperty(value = "cwg") String cwg,
             @JsonProperty(value = "useDefaultHeights") Boolean useDefaultHeights,
-            @JsonProperty(value = "useDefaultTrees") Boolean useDefaultTrees,
+            @JsonProperty(value = "useDefaultTreeCover") @JsonAlias("useDefaultTrees") Boolean useDefaultTreeCover,
             @JsonProperty(value = "version", required = true) int version) {
         checkState(version == CONFIG_VERSION, "invalid version %d (expected: %d)", version, CONFIG_VERSION);
 
         this.projection = projection;
         this.cwg = Strings.isNullOrEmpty(cwg) ? "" : CustomGeneratorSettingsFixer.INSTANCE.fixJson(cwg).toJson(JsonGrammar.COMPACT);
         this.useDefaultHeights = useDefaultHeights != null ? useDefaultHeights : true;
-        this.useDefaultTrees = useDefaultTrees != null ? useDefaultTrees : true;
+        this.useDefaultTreeCover = useDefaultTreeCover != null ? useDefaultTreeCover : true;
     }
 
     @Override

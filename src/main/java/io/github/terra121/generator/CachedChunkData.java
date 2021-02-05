@@ -26,7 +26,7 @@ import static net.daporkchop.lib.common.math.PMath.*;
  *
  * @author DaPorkchop_
  */
-public class CachedChunkData extends CustomAttributeContainer<Object> {
+public class CachedChunkData extends CustomAttributeContainer {
     public static final int BLANK_HEIGHT = -1;
 
     public static final int WATERDEPTH_DEFAULT = (byte) 0x80;
@@ -37,14 +37,6 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
     public static final int WATERDEPTH_TYPE_OCEAN = (byte) 0x40;
 
     private static final Ref<Builder> BUILDER_CACHE = ThreadRef.soft(Builder::new);
-
-    public static final CachedChunkData BLANK;
-
-    static {
-        Builder builder = builder();
-
-        BLANK = builder.build();
-    }
 
     public static Builder builder() {
         return BUILDER_CACHE.get().reset();
@@ -160,7 +152,7 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
      */
     @Getter
     @Setter
-    public static final class Builder extends CustomAttributeContainer<Object> implements IEarthAsyncDataBuilder<CachedChunkData> {
+    public static final class Builder extends CustomAttributeContainer implements IEarthAsyncDataBuilder<CachedChunkData> {
         private final int[] surfaceHeight = new int[16 * 16];
         private final byte[] waterDepth = new byte[16 * 16];
 

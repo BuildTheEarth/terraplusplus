@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.terra121.generator.CachedChunkData;
+import io.github.terra121.generator.EarthGeneratorPipelines;
 import io.github.terra121.generator.data.TreeCoverBaker;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.ref.ThreadRef;
@@ -17,8 +18,6 @@ import net.minecraft.world.gen.feature.WorldGenAbstractTree;
 
 import java.util.Random;
 import java.util.Set;
-
-import static io.github.terra121.TerraConstants.*;
 
 public class TreePopulator implements IEarthPopulator {
     protected static final Set<Block> EXTRA_SURFACE = ImmutableSet.of(
@@ -39,7 +38,7 @@ public class TreePopulator implements IEarthPopulator {
             return;
         }
 
-        byte[] treeCover = (byte[]) data.getCustom(KEY_TREE_COVER, TreeCoverBaker.FALLBACK_TREE_DENSITY);
+        byte[] treeCover = data.getCustom(EarthGeneratorPipelines.KEY_DATA_TREE_COVER, TreeCoverBaker.FALLBACK_TREE_DENSITY);
 
         byte[] rng = RNG_CACHE.get();
         random.nextBytes(rng);
@@ -54,7 +53,7 @@ public class TreePopulator implements IEarthPopulator {
     }
 
     protected void tryPlace(World world, Random random, CubePos pos, Biome biome, int x, int z) {
-        BlockPos blockPos = ((ICubicWorld) world).getSurfaceForCube(pos, x + 8, z + 8, 0, ICubicWorld.SurfaceType.OPAQUE);
+        BlockPos blockPos = ((ICubicWorld) world).getSurfaceForCube(pos, x, z, 0, ICubicWorld.SurfaceType.OPAQUE);
         if (blockPos != null && this.canPlaceAt(world, blockPos)) {
             this.placeTree(world, random, blockPos, biome);
         }

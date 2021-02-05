@@ -1,6 +1,8 @@
 package io.github.terra121.generator.data;
 
+import io.github.terra121.dataset.scalar.ScalarDataset;
 import io.github.terra121.generator.CachedChunkData;
+import io.github.terra121.generator.EarthGeneratorPipelines;
 import io.github.terra121.generator.GeneratorDatasets;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
@@ -10,7 +12,7 @@ import net.minecraft.util.math.ChunkPos;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
-import static io.github.terra121.TerraConstants.*;
+import static io.github.terra121.generator.EarthGeneratorPipelines.*;
 import static net.daporkchop.lib.common.math.PMath.*;
 
 /**
@@ -44,7 +46,7 @@ public class TreeCoverBaker implements IEarthDataBaker<double[]> {
 
     @Override
     public CompletableFuture<double[]> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
-        return datasets.trees().getAsync(boundsGeo, 16, 16);
+        return datasets.<ScalarDataset>getCustom(KEY_DATASET_TREE_COVER).getAsync(boundsGeo, 16, 16);
     }
 
     @Override
@@ -55,6 +57,6 @@ public class TreeCoverBaker implements IEarthDataBaker<double[]> {
                 arr[i] = treeChance(treeCover[i]);
             }
         }
-        builder.putCustom(KEY_TREE_COVER, arr);
+        builder.putCustom(EarthGeneratorPipelines.KEY_DATA_TREE_COVER, arr);
     }
 }

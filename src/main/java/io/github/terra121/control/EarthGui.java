@@ -3,7 +3,6 @@ package io.github.terra121.control;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomCubicWorldType;
 import io.github.terra121.TerraMod;
 import io.github.terra121.config.GlobalParseRegistries;
-import io.github.terra121.dataset.BlendMode;
 import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
@@ -35,11 +34,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiFunction;
-import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 import static java.lang.Math.*;
@@ -177,7 +174,7 @@ public class EarthGui extends GuiScreen {
         y += this.addEntry(new ProjectionEntry(this.settings, this, 5, y, this.width - this.imgSize - 10)).height();
         y += this.addEntry(new PaddingEntry(10)).height();
         y += this.addEntry(new ToggleEntry(this, 5, y, this.width - this.imgSize - 10, this.settings.useDefaultHeights(), "use_default_heights", EarthGeneratorSettings::withUseDefaultHeights)).height();
-        y += this.addEntry(new ToggleEntry(this, 5, y, this.width - this.imgSize - 10, this.settings.useDefaultTrees(), "use_default_trees", EarthGeneratorSettings::withUseDefaultTrees)).height();
+        y += this.addEntry(new ToggleEntry(this, 5, y, this.width - this.imgSize - 10, this.settings.useDefaultTreeCover(), "use_default_trees", EarthGeneratorSettings::withUseDefaultTreeCover)).height();
         y += this.addEntry(new PaddingEntry(10)).height();
         y += this.addEntry(new CWGEntry(this.settings, this, 5, y, this.width - this.imgSize - 10)).height();
 

@@ -13,7 +13,7 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 
 import java.io.InputStream;
 
-public class Climate {
+public abstract class Climate extends AbstractBuiltinDataset implements IntToDoubleBiFunction {
     public static final int COLS = 720;
     public static final int ROWS = 360;
 
@@ -31,36 +31,34 @@ public class Climate {
         return out;
     });
 
-    private final double[] data = DATA_CACHE.get();
+    protected final double[] data = DATA_CACHE.get();
 
-    private final IntToDoubleBiFunction getOfficialTemp = (x, y) -> {
-        if (x >= COLS || x < 0 || y >= ROWS || y < 0) {
-            return -50.0d;
-        }
-        return this.data[(x * ROWS + y) << 1];
-    };
-    private final IntToDoubleBiFunction getOfficialPrecip = (x, y) -> {
-        if (x >= COLS || x < 0 || y >= ROWS || y < 0) {
-            return 0.0d;
-        }
-        return this.data[((x * ROWS + y) << 1) + 1];
-    };
-
-    public ClimateData getPoint(double x, double y) {
-        x = (COLS * (x + 180) / 360);
-        y = (ROWS * (90 - y) / 180);
-        return new ClimateData(BlendMode.LINEAR.get(x, y, this.getOfficialTemp), BlendMode.LINEAR.get(x, y, this.getOfficialPrecip));
+    public Climate() {
+        super(COLS, ROWS);
     }
 
-    //rough estimate of snow cover
-    public boolean isSnow(double x, double y, double alt) {
-        return alt > 5000 || this.getPoint(x, y).temp < 0; //high elevations or freezing temperatures
+    @Override
+    protected double get(double x, double y) {
+        return BlendMode.LINEAR.get(x, y, this);
     }
 
-    @AllArgsConstructor
-    @ToString
-    public static final class ClimateData {
-        public final double temp;
-        public final double precip;
+    public static class Precipitation extends Climate {
+        @Override
+        public double apply(int x, int y) {
+            if (x >= COLS || x < 0 || y >= ROWS || y < 0) {
+                return -50.0d;
+            }
+            return this.data[(x * ROWS + y) << 1];
+        }
+    }
+
+    public static class Temperature extends Climate {
+        @Override
+        public double apply(int x, int y) {
+            if (x >= COLS || x < 0 || y >= ROWS || y < 0) {
+                return -50.0d;
+            }
+            return this.data[(x * ROWS + y) << 1];
+        }
     }
 }

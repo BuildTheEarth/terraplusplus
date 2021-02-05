@@ -10,10 +10,13 @@ import io.github.terra121.util.EmptyWorld;
 import io.github.terra121.util.TilePos;
 import io.github.terra121.util.http.Http;
 import lombok.NonNull;
+import net.daporkchop.lib.common.math.PMath;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.resources.GrassColorReloadListener;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.biome.Biome;
 import net.minecraftforge.client.model.pipeline.LightUtil;
 
 import javax.swing.JFrame;
@@ -31,7 +34,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
-import static io.github.terra121.TerraConstants.*;
 import static java.lang.Math.*;
 import static net.daporkchop.lib.common.math.PMath.*;
 import static net.daporkchop.lib.common.util.PorkUtil.*;
@@ -205,7 +207,8 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         state.initSettings();
 
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d);
-        //proj = state.projection.fromGeo(12.58589, 55.68841);
+        proj = state.projection.fromGeo(12.58589, 55.68841);
+        proj = new double[] {0,0};
         state.setView(floorI(proj[0]) >> 4, floorI(proj[1]) >> 4, 0);
 
         state.update();
@@ -264,7 +267,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                 for (int tz = 0; tz < CHUNKS_PER_TILE; tz++) {
                     CachedChunkData data = dataFutures[ti++].join();
 
-                    byte[] treeCoverArr = (byte[]) data.getCustom(KEY_TREE_COVER, TreeCoverBaker.FALLBACK_TREE_DENSITY);
+                    byte[] treeCoverArr = data.getCustom(EarthGeneratorPipelines.KEY_DATA_TREE_COVER, TreeCoverBaker.FALLBACK_TREE_DENSITY);
 
                     int baseX = tx << 4;
                     int baseZ = tz << 4;
@@ -296,6 +299,8 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                                 g = max(g, lerpI(0, 80, (treeCoverArr[cx * 16 + cz] & 0xFF) * TreeCoverBaker.TREE_AREA * (1.0d / 255.0d)));
                                 c = r << 16 | g << 8 | b;
                             }
+
+                            //c = PMath.mix32(data.biome(cx, cz));
 
                             dst.setRGB(baseX + cx, baseZ + cz, 0xFF000000 | c);
                         }

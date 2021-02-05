@@ -7,7 +7,6 @@ import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
-import net.daporkchop.lib.common.misc.string.PStrings;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.ITextComponent;
@@ -43,7 +42,7 @@ public class TerraWorldFragment extends CommandFragment {
 
         sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "Projection: ", TextFormatting.GREEN, settings.projection().toString()));
         sender.sendMessage(this.boolComponent("Default heights", settings.useDefaultHeights()));
-        sender.sendMessage(this.boolComponent("Default trees", settings.useDefaultTrees()));
+        sender.sendMessage(this.boolComponent("Default trees", settings.useDefaultTreeCover()));
     }
 
     @Override

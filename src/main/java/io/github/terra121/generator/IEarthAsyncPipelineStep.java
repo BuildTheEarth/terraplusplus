@@ -18,16 +18,22 @@ import static net.daporkchop.lib.common.util.PorkUtil.*;
  * @author DaPorkchop_
  */
 public interface IEarthAsyncPipelineStep<D, V, B extends IEarthAsyncDataBuilder<V>> {
-    static <V, B extends IEarthAsyncDataBuilder<V>> CompletableFuture<V> getFuture(ChunkPos pos, GeneratorDatasets datasets, IEarthAsyncPipelineStep<?, V, B>[] steps, Supplier<B> builderFactory) throws OutOfProjectionBoundsException {
+    static <V, B extends IEarthAsyncDataBuilder<V>> CompletableFuture<V> getFuture(ChunkPos pos, GeneratorDatasets datasets, IEarthAsyncPipelineStep<?, V, B>[] steps, Supplier<B> builderFactory) {
         int baseX = Coords.cubeToMinBlock(pos.x);
         int baseZ = Coords.cubeToMinBlock(pos.z);
 
-        Bounds2d chunkBounds = Bounds2d.of(baseX, baseX + 16, baseZ, baseZ + 16);
-        CornerBoundingBox2d chunkBoundsGeo = chunkBounds.toCornerBB(datasets.projection(), false).toGeo();
-
         CompletableFuture<?>[] futures = new CompletableFuture[steps.length];
-        for (int i = 0; i < steps.length; i++) {
-            futures[i] = steps[i].requestData(pos, datasets, chunkBounds, chunkBoundsGeo);
+        try {
+            Bounds2d chunkBounds = Bounds2d.of(baseX, baseX + 16, baseZ, baseZ + 16);
+            CornerBoundingBox2d chunkBoundsGeo = chunkBounds.toCornerBB(datasets.projection(), false).toGeo();
+
+            for (int i = 0; i < steps.length; i++) {
+                try {
+                    futures[i] = steps[i].requestData(pos, datasets, chunkBounds, chunkBoundsGeo);
+                } catch (OutOfProjectionBoundsException ignored) {
+                }
+            }
+        } catch (OutOfProjectionBoundsException ignored) {
         }
 
         boolean areAnyFuturesNull = Arrays.stream(futures).anyMatch(Objects::isNull);
@@ -35,7 +41,7 @@ public interface IEarthAsyncPipelineStep<D, V, B extends IEarthAsyncDataBuilder<
                 ? Arrays.stream(futures).filter(Objects::nonNull).toArray(CompletableFuture[]::new)
                 : futures;
 
-        CompletableFuture<V> future = CompletableFuture.allOf(nonNullFutures)
+        CompletableFuture<V> future = (nonNullFutures.length != 0 ? CompletableFuture.allOf(nonNullFutures) : CompletableFuture.completedFuture(null))
                 .thenApply(unused -> {
                     B builder = builderFactory.get();
 

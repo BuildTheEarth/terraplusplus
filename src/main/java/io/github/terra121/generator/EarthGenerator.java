@@ -87,7 +87,7 @@ public class EarthGenerator extends BasicCubeGenerator {
     }
 
     public static boolean isNullIsland(int chunkX, int chunkZ) {
-        return abs(chunkX) < 5 && abs(chunkZ) < 5;
+        return max(chunkX ^ (chunkX >> 31), chunkZ ^ (chunkZ >> 31)) < 3;
     }
 
     public final EarthGeneratorSettings settings;
@@ -282,13 +282,14 @@ public class EarthGenerator extends BasicCubeGenerator {
                     double dx = x == 15 ? topHeight - data.surfaceHeight(x - 1, z) : data.surfaceHeight(x + 1, z) - topHeight;
                     double dz = z == 15 ? topHeight - data.surfaceHeight(x, z - 1) : data.surfaceHeight(x, z + 1) - topHeight;
 
-                    int groundTop = min(groundHeight - Coords.cubeToMinBlock(cubeY), 15);
+                    int groundTop = groundHeight - Coords.cubeToMinBlock(cubeY);
+                    int groundTopInCube = min(groundTop, 15);
                     int waterTop = min(waterHeight - Coords.cubeToMinBlock(cubeY), 15);
 
                     int blockX = Coords.cubeToMinBlock(cubeX) + x;
                     int blockZ = Coords.cubeToMinBlock(cubeZ) + z;
                     IBiomeBlockReplacer[] replacers = this.biomeBlockReplacers[data.biome(x, z) & 0xFF];
-                    for (int y = 0; y <= groundTop; y++) {
+                    for (int y = 0; y <= groundTopInCube; y++) {
                         int blockY = Coords.cubeToMinBlock(cubeY) + y;
                         double density = groundTop - y;
                         IBlockState state = stone;
@@ -308,7 +309,7 @@ public class EarthGenerator extends BasicCubeGenerator {
                     }
 
                     //fill water
-                    for (int y = max(groundTop + 1, 0); y <= waterTop; y++) {
+                    for (int y = max(groundTopInCube + 1, 0); y <= waterTop; y++) {
                         primer.setBlockState(x, y, z, water);
                     }
                 }
@@ -391,11 +392,7 @@ public class EarthGenerator extends BasicCubeGenerator {
 
         @Override
         public CompletableFuture<CachedChunkData> load(@NonNull ChunkPos pos) {
-            try {
-                return IEarthAsyncPipelineStep.getFuture(pos, this.datasets, this.bakers, CachedChunkData::builder);
-            } catch (OutOfProjectionBoundsException e) {
-                return CompletableFuture.completedFuture(CachedChunkData.BLANK);
-            }
+            return IEarthAsyncPipelineStep.getFuture(pos, this.datasets, this.bakers, CachedChunkData::builder);
         }
     }
 }

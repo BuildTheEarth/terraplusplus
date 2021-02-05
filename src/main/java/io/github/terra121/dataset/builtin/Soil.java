@@ -10,9 +10,11 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 
 import java.io.InputStream;
 
-public class Soil {
-    public static final int COLS = 10800;
-    public static final int ROWS = 5400;
+import static net.daporkchop.lib.common.math.PMath.*;
+
+public class Soil extends AbstractBuiltinDataset {
+    protected static final int COLS = 10800;
+    protected static final int ROWS = 5400;
 
     private static final Ref<RLEByteArray> DATA_CACHE = Ref.soft((IOSupplier<RLEByteArray>) () -> {
         ByteBuf buf;
@@ -29,17 +31,17 @@ public class Soil {
 
     private final RLEByteArray data = DATA_CACHE.get();
 
-    public byte getOfficial(int x, int y) {
+    public Soil() {
+        super(COLS, ROWS);
+    }
+
+    @Override
+    protected double get(double fx, double fy) {
+        int x = floorI(fx);
+        int y = floorI(fy);
         if (x >= COLS || x < 0 || y >= ROWS || y < 0) {
             return 0;
         }
-        return this.data.get(x + y * COLS);
-    }
-
-    public byte getPoint(double x, double y) {
-        int X = (int) (COLS * (x + 180) / 360);
-        int Y = (int) (ROWS * (90 - y) / 180);
-
-        return this.getOfficial(X, Y);
+        return this.data.get(y * COLS + x);
     }
 }

@@ -16,22 +16,7 @@ import net.minecraftforge.common.MinecraftForge;
  */
 @RequiredArgsConstructor
 @Getter
-public class InitDatasetsEvent extends AbstractCustomRegistrationEvent<Object> {
+public class InitDatasetsEvent extends AbstractCustomRegistrationEvent {
     @NonNull
     protected final EarthGeneratorSettings settings;
-
-    @Override
-    public void register(@NonNull String key, @NonNull Object value) {
-        super.register(key, value);
-    }
-
-    @Override
-    public void remove(@NonNull String key) {
-        super.remove(key);
-    }
-
-    @Override
-    public Object get(@NonNull String key) {
-        return super.get(key);
-    }
 }

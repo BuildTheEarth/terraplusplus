@@ -4,7 +4,6 @@ import io.github.terra121.util.ImmutableCompactArray;
 import lombok.Getter;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.ref.ThreadRef;
-import net.minecraft.init.Biomes;
 import net.minecraft.world.biome.Biome;
 
 import java.util.Arrays;
@@ -17,14 +16,6 @@ import java.util.Arrays;
 @Getter
 public class ChunkBiomesBuilder implements IEarthAsyncDataBuilder<ImmutableCompactArray<Biome>> {
     private static final Ref<ChunkBiomesBuilder> BUILDER_CACHE = ThreadRef.soft(ChunkBiomesBuilder::new);
-
-    public static final ImmutableCompactArray<Biome> BLANK;
-
-    static {
-        ChunkBiomesBuilder builder = BUILDER_CACHE.get();
-        Arrays.fill(builder.state, Biomes.DEEP_OCEAN);
-        BLANK = builder.build();
-    }
 
     public static ChunkBiomesBuilder get() {
         return BUILDER_CACHE.get().reset();

@@ -21,8 +21,10 @@ public class SnowPopulator implements IEarthPopulator {
             //this cast could fail but this function should only be called in earth anyways
             EarthBiomeProvider ebp = (EarthBiomeProvider) world.getBiomeProvider();
             try {
-                double[] proj = ebp.projection.toGeo(pos.getX(), pos.getZ());
-                return ebp.climate.isSnow(proj[0], proj[1], pos.getY());
+                /*double[] proj = ebp.projection.toGeo(pos.getX(), pos.getZ());
+                return ebp.climate.isSnow(proj[0], proj[1], pos.getY());*/
+                // return alt > 5000 || this.getPoint(x, y).temperature < 0; //high elevations or freezing temperatures
+                throw OutOfProjectionBoundsException.get(); //TODO
             } catch (OutOfProjectionBoundsException e) { //out of bounds, assume not snow
                 return false;
             }

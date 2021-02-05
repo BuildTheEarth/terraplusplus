@@ -4,6 +4,7 @@ import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.CubicBiome;
 import io.github.terra121.generator.CachedChunkData;
+import io.github.terra121.generator.EarthGenerator;
 import io.github.terra121.generator.EarthGeneratorSettings;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import lombok.NonNull;
@@ -30,6 +31,10 @@ public class BiomeDecorationPopulator implements IEarthPopulator {
 
     @Override
     public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData data) {
+        if (EarthGenerator.isNullIsland(pos.getX(), pos.getZ())) { //don't do biome decoration on null island
+            return;
+        }
+
         this.populators.get(biome).generate(world, random, pos, biome);
     }
 }

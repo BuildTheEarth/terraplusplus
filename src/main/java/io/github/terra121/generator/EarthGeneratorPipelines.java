@@ -1,7 +1,13 @@
 package io.github.terra121.generator;
 
+import io.github.terra121.dataset.builtin.Climate;
+import io.github.terra121.dataset.builtin.Soil;
+import io.github.terra121.dataset.osm.OpenStreetMap;
+import io.github.terra121.dataset.scalar.MultiresScalarDataset;
+import io.github.terra121.event.InitDatasetsEvent;
 import io.github.terra121.event.InitEarthRegistryEvent;
 import io.github.terra121.generator.biome.IEarthBiomeFilter;
+import io.github.terra121.generator.biome.Terra121BiomeFilter;
 import io.github.terra121.generator.data.HeightsBaker;
 import io.github.terra121.generator.data.IEarthDataBaker;
 import io.github.terra121.generator.data.InitialBiomesBaker;
@@ -30,15 +36,38 @@ import static net.daporkchop.lib.common.util.PorkUtil.*;
  */
 @UtilityClass
 public class EarthGeneratorPipelines {
+    public final String KEY_DATASET_HEIGHTS = "heights";
+    public final String KEY_DATASET_OSM = "osm";
+    public final String KEY_DATASET_TERRA121_PRECIPITATION = "terra121_precipitation";
+    public final String KEY_DATASET_TERRA121_SOIL = "terra121_soil";
+    public final String KEY_DATASET_TERRA121_TEMPERATURE = "terra121_temperature";
+    public final String KEY_DATASET_TREE_COVER = "tree_cover";
+
+    public final String KEY_DATA_TREE_COVER = "tree_cover";
+
     private <T> T[] fire(@NonNull InitEarthRegistryEvent<T> event) {
         MinecraftForge.TERRAIN_GEN_BUS.post(event);
         return event.registry().entryStream().map(Map.Entry::getValue).toArray(i -> uncheckedCast(Array.newInstance(event.getGenericType(), i)));
     }
 
+    public Map<String, Object> datasets(@NonNull EarthGeneratorSettings settings) {
+        InitDatasetsEvent event = new InitDatasetsEvent(settings);
+
+        event.register(KEY_DATASET_HEIGHTS, new MultiresScalarDataset(KEY_DATASET_HEIGHTS, settings.useDefaultHeights()));
+        event.register(KEY_DATASET_OSM, new OpenStreetMap(settings));
+        event.register(KEY_DATASET_TERRA121_PRECIPITATION, new Climate.Precipitation());
+        event.register(KEY_DATASET_TERRA121_SOIL, new Soil());
+        event.register(KEY_DATASET_TERRA121_TEMPERATURE, new Climate.Temperature());
+        event.register(KEY_DATASET_TREE_COVER, new MultiresScalarDataset(KEY_DATASET_TREE_COVER, settings.useDefaultTreeCover()));
+
+        MinecraftForge.TERRAIN_GEN_BUS.post(event);
+        return event.getAllCustomProperties();
+    }
+
     public IEarthBiomeFilter<?>[] biomeFilters(@NonNull EarthGeneratorSettings settings) {
         return fire(new InitEarthRegistryEvent<IEarthBiomeFilter>(settings,
                 uncheckedCast(new OrderedRegistry<IEarthBiomeFilter<?>>()
-                )) {});
+                        .addLast("legacy_terra121", new Terra121BiomeFilter()))) {});
     }
 
     public IEarthDataBaker<?>[] dataBakers(@NonNull EarthGeneratorSettings settings) {
