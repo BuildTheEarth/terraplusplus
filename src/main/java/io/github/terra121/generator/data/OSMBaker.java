@@ -1,4 +1,4 @@
-package io.github.terra121.generator.process;
+package io.github.terra121.generator.data;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.terra121.dataset.osm.OSMRegion;
@@ -14,12 +14,10 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 
-import static net.daporkchop.lib.common.math.PMath.*;
-
 /**
  * @author DaPorkchop_
  */
-public class OSMBaker implements IChunkDataBaker<OSMRegion[]> {
+public class OSMBaker implements IEarthDataBaker<OSMRegion[]> {
     @Override
     public CompletableFuture<OSMRegion[]> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
         return datasets.osm().getRegionsAsync(bounds.expand(16.0d).toCornerBB(datasets.projection(), false).toGeo());

@@ -2,10 +2,9 @@ package io.github.terra121.generator.populate;
 
 import com.google.common.collect.ImmutableSet;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
-import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import io.github.terra121.generator.CachedChunkData;
-import io.github.terra121.generator.process.TreeCoverBaker;
+import io.github.terra121.generator.data.TreeCoverBaker;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.ref.ThreadRef;
 import net.minecraft.block.Block;

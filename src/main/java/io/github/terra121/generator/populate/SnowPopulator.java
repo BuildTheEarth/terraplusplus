@@ -2,8 +2,8 @@ package io.github.terra121.generator.populate;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
-import io.github.terra121.generator.EarthBiomeProvider;
 import io.github.terra121.generator.CachedChunkData;
+import io.github.terra121.generator.EarthBiomeProvider;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;

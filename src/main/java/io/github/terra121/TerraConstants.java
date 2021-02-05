@@ -8,8 +8,6 @@ import io.github.terra121.dataset.osm.config.BlockStateParser;
 import io.github.terra121.util.BlockStateDeserializeMixin;
 import net.minecraft.block.state.IBlockState;
 
-import java.util.concurrent.CompletableFuture;
-
 public class TerraConstants {
     public static final String prefix = "&2&lT++ &8&l> ";
     public static final String modID = "terra121";
@@ -32,8 +30,6 @@ public class TerraConstants {
             .configure(JsonReadFeature.ALLOW_TRAILING_COMMA, true)
             .addMixIn(IBlockState.class, BlockStateDeserializeMixin.class)
             .build();
-
-    public static final CompletableFuture<Void> COMPLETE_FUTURE = CompletableFuture.completedFuture(null);
 
     /**
      * Earth's circumference around the equator, in meters.

@@ -1,4 +1,4 @@
-package io.github.terra121.generator.process;
+package io.github.terra121.generator.data;
 
 import io.github.terra121.generator.CachedChunkData;
 import io.github.terra121.generator.GeneratorDatasets;
@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
  * @author DaPorkchop_
  */
 @RequiredArgsConstructor
-public class InitialBiomesBaker implements IChunkDataBaker<Void> {
+public class InitialBiomesBaker implements IEarthDataBaker<Void> {
     @NonNull
     protected final BiomeProvider biomeProvider;
 

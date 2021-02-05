@@ -1,13 +1,19 @@
 package io.github.terra121.generator;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import io.github.terra121.dataset.builtin.Climate;
 import io.github.terra121.dataset.builtin.Soil;
+import io.github.terra121.generator.biome.IEarthBiomeFilter;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
+import io.github.terra121.util.ImmutableCompactArray;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.init.Biomes;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 
@@ -15,6 +21,7 @@ import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 
 @RequiredArgsConstructor
 public class EarthBiomeProvider extends BiomeProvider {
@@ -23,6 +30,16 @@ public class EarthBiomeProvider extends BiomeProvider {
 
     @NonNull
     public final GeographicProjection projection;
+
+    protected final LoadingCache<ChunkPos, CompletableFuture<ImmutableCompactArray<Biome>>> cache;
+
+    public EarthBiomeProvider(@NonNull EarthGeneratorSettings settings) {
+        this.projection = settings.projection();
+
+        this.cache = CacheBuilder.newBuilder()
+                .weakValues()
+                .build(new ChunkDataLoader(settings));
+    }
 
     /**
      * Returns the biome generator based on soil and climate (mostly soil)
@@ -245,5 +262,24 @@ public class EarthBiomeProvider extends BiomeProvider {
     @Override
     public boolean areBiomesViable(int x, int z, int radius, List<Biome> allowed) {
         return true;
+    }
+
+    public static class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<ImmutableCompactArray<Biome>>> {
+        protected final GeneratorDatasets datasets;
+        protected final IEarthBiomeFilter<?>[] filters;
+
+        public ChunkDataLoader(@NonNull EarthGeneratorSettings settings) {
+            this.datasets = settings.datasets();
+            this.filters = EarthGeneratorPipelines.biomeFilters(settings);
+        }
+
+        @Override
+        public CompletableFuture<ImmutableCompactArray<Biome>> load(@NonNull ChunkPos pos) {
+            try {
+                return IEarthAsyncPipelineStep.getFuture(pos, this.datasets, this.filters, ChunkBiomesBuilder::get);
+            } catch (OutOfProjectionBoundsException e) {
+                return CompletableFuture.completedFuture(ChunkBiomesBuilder.BLANK);
+            }
+        }
     }
 }

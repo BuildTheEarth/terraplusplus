@@ -3,7 +3,7 @@ package io.github.terra121.generator;
 import com.google.common.collect.ImmutableMap;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.terra121.util.CustomAttributeContainer;
-import io.github.terra121.util.ImmutableBlockStateArray;
+import io.github.terra121.util.ImmutableCompactArray;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.Getter;
 import lombok.NonNull;
@@ -16,7 +16,6 @@ import net.minecraft.init.Biomes;
 import net.minecraft.world.biome.Biome;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 
 import static java.lang.Math.*;
@@ -40,15 +39,11 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
     private static final Ref<Builder> BUILDER_CACHE = ThreadRef.soft(Builder::new);
 
     public static final CachedChunkData BLANK;
-    public static final CachedChunkData NULL_ISLAND;
 
     static {
         Builder builder = builder();
 
         BLANK = builder.build();
-
-        Arrays.fill(builder.surfaceHeight, 1);
-        NULL_ISLAND = builder.build();
     }
 
     public static Builder builder() {
@@ -66,7 +61,7 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
     @Getter
     private final byte[] biomes;
 
-    private final ImmutableBlockStateArray surfaceBlocks;
+    private final ImmutableCompactArray<IBlockState> surfaceBlocks;
 
     private final int surfaceMinCube;
     private final int surfaceMaxCube;
@@ -112,7 +107,7 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
             this.biomes[i] = (byte) Biome.getIdForBiome(PorkUtil.fallbackIfNull(builder.biomes[i], Biomes.DEEP_OCEAN));
         }
 
-        this.surfaceBlocks = new ImmutableBlockStateArray(builder.surfaceBlocks);
+        this.surfaceBlocks = new ImmutableCompactArray<>(builder.surfaceBlocks);
 
         //this.segments = approximateSort(elements, new EqualsTieBreakComparator<Element.Cube>(Comparator.naturalOrder(), true, true)).toArray(new Element.Cube[0]);
 
@@ -165,7 +160,7 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
      */
     @Getter
     @Setter
-    public static final class Builder extends CustomAttributeContainer<Object> {
+    public static final class Builder extends CustomAttributeContainer<Object> implements IEarthAsyncDataBuilder<CachedChunkData> {
         private final int[] surfaceHeight = new int[16 * 16];
         private final byte[] waterDepth = new byte[16 * 16];
 
@@ -219,6 +214,7 @@ public class CachedChunkData extends CustomAttributeContainer<Object> {
             return this;
         }
 
+        @Override
         public CachedChunkData build() {
             Map<String, Object> custom = ImmutableMap.copyOf(this.custom);
             this.custom.clear();

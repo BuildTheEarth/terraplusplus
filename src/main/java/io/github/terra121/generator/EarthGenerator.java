@@ -1,6 +1,7 @@
 package io.github.terra121.generator;
 
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
@@ -26,15 +27,11 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.Cubi
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicRavineGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.feature.CubicStrongholdGenerator;
 import io.github.terra121.TerraMod;
-import io.github.terra121.event.InitEarthRegistryEvent;
-import io.github.terra121.generator.populate.BiomeDecorationPopulator;
-import io.github.terra121.generator.populate.CompatibilityEarthPopulators;
+import io.github.terra121.generator.data.IEarthDataBaker;
 import io.github.terra121.generator.populate.IEarthPopulator;
-import io.github.terra121.generator.populate.SnowPopulator;
-import io.github.terra121.generator.populate.TreePopulator;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
-import io.github.terra121.util.OrderedRegistry;
+import lombok.NonNull;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -117,11 +114,11 @@ public class EarthGenerator extends BasicCubeGenerator {
 
         this.biomes = world.getBiomeProvider(); //TODO: make this not order dependent
 
-        this.datasets = new GeneratorDatasets(this.settings);
+        this.datasets = this.settings.datasets();
         this.cache = CacheBuilder.newBuilder()
                 .expireAfterAccess(5L, TimeUnit.MINUTES)
                 .softValues()
-                .build(new ChunkDataLoader(this.datasets));
+                .build(new ChunkDataLoader(this.settings));
 
         //structures
         if (this.cubiccfg.caves) {
@@ -140,18 +137,7 @@ public class EarthGenerator extends BasicCubeGenerator {
             this.structureGenerators.add(strongholdsEvent.getNewGen());
         }
 
-        //populators
-        OrderedRegistry<IEarthPopulator> populatorRegistry = new OrderedRegistry<IEarthPopulator>()
-                .addLast("fml_pre_cube_populate_event", CompatibilityEarthPopulators.cubePopulatePre())
-                .addLast("trees", new TreePopulator())
-                .addLast("biome_decorate", new BiomeDecorationPopulator(this.settings))
-                .addLast("snow", new SnowPopulator())
-                .addLast("fml_post_cube_populate_event", CompatibilityEarthPopulators.cubePopulatePost())
-                .addLast("cc_cube_generators_registry", CompatibilityEarthPopulators.cubeGeneratorsRegistry());
-
-        InitEarthRegistryEvent<IEarthPopulator> populatorEvent = new InitEarthRegistryEvent<IEarthPopulator>(this.settings, populatorRegistry) {};
-        MinecraftForge.TERRAIN_GEN_BUS.post(populatorEvent);
-        this.populators = populatorEvent.registry().entryStream().map(Map.Entry::getValue).toArray(IEarthPopulator[]::new);
+        this.populators = EarthGeneratorPipelines.populators(this.settings);
 
         BiomeBlockReplacerConfig conf = this.cubiccfg.createBiomeBlockReplacerConfig();
         Map<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers = new IdentityHashMap<>();
@@ -386,5 +372,30 @@ public class EarthGenerator extends BasicCubeGenerator {
             }
         }
         return null;
+    }
+
+    /**
+     * {@link CacheLoader} implementation for {@link EarthGenerator} which asynchronously aggregates information from multiple datasets and stores it
+     * in a {@link CachedChunkData} for use by the generator.
+     *
+     * @author DaPorkchop_
+     */
+    public static class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<CachedChunkData>> {
+        protected final GeneratorDatasets datasets;
+        protected final IEarthDataBaker<?>[] bakers;
+
+        public ChunkDataLoader(@NonNull EarthGeneratorSettings settings) {
+            this.datasets = settings.datasets();
+            this.bakers = EarthGeneratorPipelines.dataBakers(settings);
+        }
+
+        @Override
+        public CompletableFuture<CachedChunkData> load(@NonNull ChunkPos pos) {
+            try {
+                return IEarthAsyncPipelineStep.getFuture(pos, this.datasets, this.bakers, CachedChunkData::builder);
+            } catch (OutOfProjectionBoundsException e) {
+                return CompletableFuture.completedFuture(CachedChunkData.BLANK);
+            }
+        }
     }
 }

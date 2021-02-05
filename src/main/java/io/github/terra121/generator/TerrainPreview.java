@@ -3,10 +3,9 @@ package io.github.terra121.generator;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import io.github.terra121.generator.process.TreeCoverBaker;
+import io.github.terra121.generator.data.TreeCoverBaker;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
-import io.github.terra121.projection.mercator.WebMercatorProjection;
 import io.github.terra121.util.EmptyWorld;
 import io.github.terra121.util.TilePos;
 import io.github.terra121.util.http.Http;
@@ -86,9 +85,9 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
 
             final int[] buffer = new int[SIZE * SIZE];
 
-            int chunkX = 0;
-            int chunkZ = 0;
-            int zoom = 0;
+            int chunkX;
+            int chunkZ;
+            int zoom;
 
             public State(@NonNull EarthGeneratorSettings settings) {
                 this.settings = settings;
@@ -216,18 +215,14 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
     }
 
     protected final LoadingCache<TilePos, CompletableFuture<BufferedImage>> cache;
-    protected final ChunkDataLoader loader;
+    protected final EarthGenerator.ChunkDataLoader loader;
 
     public TerrainPreview(@NonNull EarthGeneratorSettings settings) {
-        this(new GeneratorDatasets(settings));
+        this(settings, "softValues");
     }
 
-    public TerrainPreview(@NonNull GeneratorDatasets datasets) {
-        this(datasets, "softValues");
-    }
-
-    public TerrainPreview(@NonNull GeneratorDatasets datasets, @NonNull String cacheSpec) {
-        this.loader = new ChunkDataLoader(datasets);
+    public TerrainPreview(@NonNull EarthGeneratorSettings settings, @NonNull String cacheSpec) {
+        this.loader = new EarthGenerator.ChunkDataLoader(settings);
         this.cache = CacheBuilder.from(cacheSpec).build(this);
     }
 

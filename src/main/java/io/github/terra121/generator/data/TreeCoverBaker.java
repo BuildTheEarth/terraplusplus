@@ -1,4 +1,4 @@
-package io.github.terra121.generator.process;
+package io.github.terra121.generator.data;
 
 import io.github.terra121.generator.CachedChunkData;
 import io.github.terra121.generator.GeneratorDatasets;
@@ -9,7 +9,6 @@ import net.minecraft.util.math.ChunkPos;
 
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.IntStream;
 
 import static io.github.terra121.TerraConstants.*;
 import static net.daporkchop.lib.common.math.PMath.*;
@@ -17,7 +16,7 @@ import static net.daporkchop.lib.common.math.PMath.*;
 /**
  * @author DaPorkchop_
  */
-public class TreeCoverBaker implements IChunkDataBaker<double[]> {
+public class TreeCoverBaker implements IEarthDataBaker<double[]> {
     public static final double TREE_AREA = 3.0d * 3.0d; //the surface area covered by an average tree
 
     public static final byte[] FALLBACK_TREE_DENSITY = new byte[16 * 16];

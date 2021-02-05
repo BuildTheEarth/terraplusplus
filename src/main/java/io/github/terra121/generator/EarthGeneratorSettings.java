@@ -18,7 +18,6 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.preset.CustomGenSettingsSe
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.fixer.CustomGeneratorSettingsFixer;
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.fixer.PresetLoadError;
 import io.github.terra121.TerraMod;
-import io.github.terra121.dataset.BlendMode;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.transform.FlipVerticalProjectionTransform;
 import io.github.terra121.projection.transform.OffsetProjectionTransform;
@@ -112,7 +111,7 @@ public class EarthGeneratorSettings {
     protected final boolean useDefaultTrees;
 
     @Getter(AccessLevel.NONE)
-    protected transient final Ref<BiomeProvider> biomeProvider = Ref.soft(() -> new EarthBiomeProvider(this.projection()));
+    protected transient final Ref<BiomeProvider> biomeProvider = Ref.soft(() -> new EarthBiomeProvider(this));
     @Getter(AccessLevel.NONE)
     protected transient final Ref<CustomGeneratorSettings> customCubic = Ref.soft(() -> {
         CustomGeneratorSettings cfg;
@@ -133,6 +132,8 @@ public class EarthGeneratorSettings {
         cfg.waterLevel = 0;
         return cfg;
     });
+    @Getter(AccessLevel.NONE)
+    protected transient final Ref<GeneratorDatasets> datasets = Ref.soft(() -> new GeneratorDatasets(this));
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public EarthGeneratorSettings(
@@ -169,6 +170,10 @@ public class EarthGeneratorSettings {
 
     public CustomGeneratorSettings customCubic() {
         return this.customCubic.get();
+    }
+
+    public GeneratorDatasets datasets() {
+        return this.datasets.get();
     }
 
     @JsonDeserialize
@@ -209,8 +214,8 @@ public class EarthGeneratorSettings {
         public Orientation orentation = Orientation.none;
         public double scaleX = 100000.0d;
         public double scaleY = 100000.0d;
-        public double offsetX = 0;
-        public double offsetY = 0;
+        public double offsetX;
+        public double offsetY;
         public boolean smoothblend = true;
         public boolean roads = true;
         public String customcubic = "";
