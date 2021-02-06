@@ -17,9 +17,11 @@ import io.github.terra121.util.http.Http;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import net.daporkchop.lib.common.misc.string.PStrings;
 import net.minecraft.util.math.ChunkPos;
 
+@RequiredArgsConstructor
 @Getter
 public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, CompletableFuture<T>> {
     protected final LoadingCache<ChunkPos, CompletableFuture<T>> cache = CacheBuilder.newBuilder()
@@ -27,14 +29,10 @@ public abstract class TiledDataset<T> extends CacheLoader<ChunkPos, CompletableF
             .expireAfterAccess(5L, TimeUnit.MINUTES)
             .build(this);
 
-    protected final double tileSize;
-
+    @NonNull
     protected final GeographicProjection projection;
 
-    public TiledDataset(GeographicProjection proj, double tileSize) {
-        this.projection = proj;
-        this.tileSize = tileSize;
-    }
+    protected final double tileSize;
 
     protected abstract String[] urls(int tileX, int tileZ);
 

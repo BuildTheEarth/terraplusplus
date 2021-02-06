@@ -4,7 +4,7 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import io.github.terra121.dataset.osm.config.JsonParser;
-import io.github.terra121.dataset.osm.geojson.Geometry;
+import io.github.terra121.dataset.vector.geojson.Geometry;
 import io.github.terra121.util.bvh.Bounds2d;
 import lombok.Builder;
 import lombok.Getter;

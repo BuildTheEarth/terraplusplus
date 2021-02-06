@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.github.terra121.config.condition.DoubleCondition;
+import io.github.terra121.dataset.IScalarDataset;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
 import io.github.terra121.util.IntRange;
@@ -35,11 +36,11 @@ import static io.github.terra121.TerraConstants.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
- * Implementation of {@link ScalarDataset} which can sample from multiple {@link ScalarDataset}s at different resolutions and combine the results.
+ * Implementation of {@link IScalarDataset} which can sample from multiple {@link IScalarDataset}s at different resolutions and combine the results.
  *
  * @author DaPorkchop_
  */
-public class MultiresScalarDataset implements ScalarDataset {
+public class MultiresScalarDataset implements IScalarDataset {
     protected final BVH<WrappedDataset> bvh;
 
     @SneakyThrows(IOException.class)
@@ -185,7 +186,7 @@ public class MultiresScalarDataset implements ScalarDataset {
     @Getter
     public static class WrappedDataset implements Bounds2d, Comparable<WrappedDataset>, DoubleCondition {
         @Getter(onMethod_ = { @JsonGetter })
-        protected final ScalarDataset dataset;
+        protected final IScalarDataset dataset;
         @Getter(onMethod_ = { @JsonGetter })
         protected final DoubleCondition condition;
         @Getter(onMethod_ = { @JsonGetter })
@@ -201,7 +202,7 @@ public class MultiresScalarDataset implements ScalarDataset {
 
         @JsonCreator
         public WrappedDataset(
-                @JsonProperty(value = "dataset", required = true) @NonNull ScalarDataset dataset,
+                @JsonProperty(value = "dataset", required = true) @NonNull IScalarDataset dataset,
                 @JsonProperty(value = "bounds", required = true) @NonNull Bounds2d bounds,
                 @JsonProperty(value = "zooms", required = true) @NonNull IntRange zooms,
                 @JsonProperty(value = "priority", defaultValue = "0.0") double priority,

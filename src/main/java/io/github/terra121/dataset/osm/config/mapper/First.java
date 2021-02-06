@@ -2,10 +2,10 @@ package io.github.terra121.dataset.osm.config.mapper;
 
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
-import io.github.terra121.dataset.osm.geojson.Geometry;
-import io.github.terra121.dataset.osm.geojson.geometry.MultiLineString;
-import io.github.terra121.dataset.osm.geojson.geometry.MultiPolygon;
-import io.github.terra121.dataset.osm.element.Element;
+import io.github.terra121.dataset.vector.geojson.Geometry;
+import io.github.terra121.dataset.vector.geojson.geometry.MultiLineString;
+import io.github.terra121.dataset.vector.geojson.geometry.MultiPolygon;
+import io.github.terra121.dataset.vector.geometry.VectorGeometry;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import io.github.terra121.dataset.osm.config.OSMMapper;
 import lombok.AllArgsConstructor;
@@ -30,9 +30,9 @@ abstract class First<G extends Geometry, M extends OSMMapper<G>> implements OSMM
     protected final M[] children;
 
     @Override
-    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull G projectedGeometry) {
+    public Collection<VectorGeometry> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull G projectedGeometry) {
         for (M child : this.children) {
-            Collection<Element> result = child.apply(id, tags, originalGeometry, projectedGeometry);
+            Collection<VectorGeometry> result = child.apply(id, tags, originalGeometry, projectedGeometry);
             if (result != null) {
                 return result;
             }

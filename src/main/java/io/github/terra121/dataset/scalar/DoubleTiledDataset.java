@@ -1,6 +1,7 @@
 package io.github.terra121.dataset.scalar;
 
 import io.github.terra121.dataset.BlendMode;
+import io.github.terra121.dataset.IScalarDataset;
 import io.github.terra121.dataset.TiledDataset;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
@@ -27,7 +28,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  * @author DaPorkchop_
  */
 @Getter
-public abstract class DoubleTiledDataset extends TiledDataset<double[]> implements ScalarDataset {
+public abstract class DoubleTiledDataset extends TiledDataset<double[]> implements IScalarDataset {
     protected static final int TILE_SHIFT = 8;
     protected static final int TILE_SIZE = 1 << TILE_SHIFT; //256
     protected static final int TILE_MASK = (1 << TILE_SHIFT) - 1; //0xFF

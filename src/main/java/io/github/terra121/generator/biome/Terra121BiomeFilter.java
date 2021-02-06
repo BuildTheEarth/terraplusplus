@@ -1,6 +1,6 @@
 package io.github.terra121.generator.biome;
 
-import io.github.terra121.dataset.scalar.ScalarDataset;
+import io.github.terra121.dataset.IScalarDataset;
 import io.github.terra121.generator.ChunkBiomesBuilder;
 import io.github.terra121.generator.EarthBiomeProvider;
 import io.github.terra121.generator.GeneratorDatasets;
@@ -26,9 +26,9 @@ import static io.github.terra121.generator.EarthGeneratorPipelines.*;
 public class Terra121BiomeFilter implements IEarthBiomeFilter<Terra121BiomeFilter.Data> {
     @Override
     public CompletableFuture<Terra121BiomeFilter.Data> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
-        CompletableFuture<double[]> precipitationFuture = datasets.<ScalarDataset>getCustom(KEY_DATASET_TERRA121_PRECIPITATION).getAsync(boundsGeo, 16, 16);
-        CompletableFuture<double[]> soilFuture = datasets.<ScalarDataset>getCustom(KEY_DATASET_TERRA121_SOIL).getAsync(boundsGeo, 16, 16);
-        CompletableFuture<double[]> temperatureFuture = datasets.<ScalarDataset>getCustom(KEY_DATASET_TERRA121_TEMPERATURE).getAsync(boundsGeo, 16, 16);
+        CompletableFuture<double[]> precipitationFuture = datasets.<IScalarDataset>getCustom(KEY_DATASET_TERRA121_PRECIPITATION).getAsync(boundsGeo, 16, 16);
+        CompletableFuture<double[]> soilFuture = datasets.<IScalarDataset>getCustom(KEY_DATASET_TERRA121_SOIL).getAsync(boundsGeo, 16, 16);
+        CompletableFuture<double[]> temperatureFuture = datasets.<IScalarDataset>getCustom(KEY_DATASET_TERRA121_TEMPERATURE).getAsync(boundsGeo, 16, 16);
 
         return CompletableFuture.allOf(precipitationFuture, soilFuture, temperatureFuture)
                 .thenApply(unused -> new Data(precipitationFuture.join(), soilFuture.join(), temperatureFuture.join()));

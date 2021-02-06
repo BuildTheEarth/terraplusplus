@@ -1,6 +1,6 @@
 package io.github.terra121.dataset.osm;
 
-import io.github.terra121.dataset.osm.element.Element;
+import io.github.terra121.dataset.vector.geometry.VectorGeometry;
 import io.github.terra121.util.bvh.BVH;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
@@ -14,5 +14,5 @@ public final class OSMRegion {
     @EqualsAndHashCode.Include
     public final ChunkPos coord;
     @NonNull
-    public final BVH<Element> elements;
+    public final BVH<VectorGeometry> elements;
 }

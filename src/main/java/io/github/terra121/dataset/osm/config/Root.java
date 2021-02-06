@@ -3,14 +3,14 @@ package io.github.terra121.dataset.osm.config;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import io.github.terra121.dataset.osm.geojson.Geometry;
-import io.github.terra121.dataset.osm.geojson.geometry.LineString;
-import io.github.terra121.dataset.osm.geojson.geometry.MultiLineString;
-import io.github.terra121.dataset.osm.geojson.geometry.MultiPoint;
-import io.github.terra121.dataset.osm.geojson.geometry.MultiPolygon;
-import io.github.terra121.dataset.osm.geojson.geometry.Point;
-import io.github.terra121.dataset.osm.geojson.geometry.Polygon;
-import io.github.terra121.dataset.osm.element.Element;
+import io.github.terra121.dataset.vector.geojson.Geometry;
+import io.github.terra121.dataset.vector.geojson.geometry.LineString;
+import io.github.terra121.dataset.vector.geojson.geometry.MultiLineString;
+import io.github.terra121.dataset.vector.geojson.geometry.MultiPoint;
+import io.github.terra121.dataset.vector.geojson.geometry.MultiPolygon;
+import io.github.terra121.dataset.vector.geojson.geometry.Point;
+import io.github.terra121.dataset.vector.geojson.geometry.Polygon;
+import io.github.terra121.dataset.vector.geometry.VectorGeometry;
 import io.github.terra121.dataset.osm.config.mapper.LineMapper;
 import io.github.terra121.dataset.osm.config.mapper.PolygonMapper;
 import lombok.Builder;
@@ -39,7 +39,7 @@ final class Root implements OSMMapper<Geometry> {
     protected final PolygonMapper polygon;
 
     @Override
-    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull Geometry projectedGeometry) {
+    public Collection<VectorGeometry> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull Geometry projectedGeometry) {
         if (projectedGeometry instanceof Point || projectedGeometry instanceof MultiPoint) { //points can't be generated
             return null;
         }

@@ -1,6 +1,6 @@
 package io.github.terra121.generator.data;
 
-import io.github.terra121.dataset.scalar.ScalarDataset;
+import io.github.terra121.dataset.IScalarDataset;
 import io.github.terra121.generator.CachedChunkData;
 import io.github.terra121.generator.GeneratorDatasets;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
@@ -20,7 +20,7 @@ import static net.daporkchop.lib.common.math.PMath.*;
 public class HeightsBaker implements IEarthDataBaker<double[]> {
     @Override
     public CompletableFuture<double[]> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
-        return datasets.<ScalarDataset>getCustom(KEY_DATASET_HEIGHTS).getAsync(boundsGeo, 16, 16);
+        return datasets.<IScalarDataset>getCustom(KEY_DATASET_HEIGHTS).getAsync(boundsGeo, 16, 16);
     }
 
     @Override

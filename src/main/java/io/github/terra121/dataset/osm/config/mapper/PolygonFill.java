@@ -5,11 +5,11 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import io.github.terra121.dataset.osm.config.dvalue.DValue;
-import io.github.terra121.dataset.osm.draw.DrawFunction;
-import io.github.terra121.dataset.osm.element.Element;
-import io.github.terra121.dataset.osm.element.polygon.FillPolygon;
-import io.github.terra121.dataset.osm.geojson.Geometry;
-import io.github.terra121.dataset.osm.geojson.geometry.MultiPolygon;
+import io.github.terra121.dataset.vector.draw.DrawFunction;
+import io.github.terra121.dataset.vector.geometry.VectorGeometry;
+import io.github.terra121.dataset.vector.geometry.polygon.FillPolygon;
+import io.github.terra121.dataset.vector.geojson.Geometry;
+import io.github.terra121.dataset.vector.geojson.geometry.MultiPolygon;
 import lombok.Builder;
 import lombok.NonNull;
 
@@ -32,7 +32,7 @@ final class PolygonFill implements PolygonMapper {
     protected final DValue layer;
 
     @Override
-    public Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull MultiPolygon projectedGeometry) {
+    public Collection<VectorGeometry> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull MultiPolygon projectedGeometry) {
         return Collections.singletonList(new FillPolygon(id, this.layer.apply(tags), this.draw, projectedGeometry));
     }
 

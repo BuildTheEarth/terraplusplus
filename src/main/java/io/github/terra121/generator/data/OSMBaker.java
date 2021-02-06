@@ -3,7 +3,7 @@ package io.github.terra121.generator.data;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.terra121.dataset.osm.OSMRegion;
 import io.github.terra121.dataset.osm.OpenStreetMap;
-import io.github.terra121.dataset.osm.element.Element;
+import io.github.terra121.dataset.vector.geometry.VectorGeometry;
 import io.github.terra121.generator.CachedChunkData;
 import io.github.terra121.generator.GeneratorDatasets;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
@@ -38,7 +38,7 @@ public class OSMBaker implements IEarthDataBaker<OSMRegion[]> {
         int baseZ = Coords.cubeToMinBlock(pos.z);
         Bounds2d chunkBounds = Bounds2d.of(baseX, baseX + 16, baseZ, baseZ + 16);
 
-        Set<Element> elements = new TreeSet<>();
+        Set<VectorGeometry> elements = new TreeSet<>();
         for (OSMRegion region : regions) {
             region.elements.forEachIntersecting(chunkBounds, elements::add);
         }

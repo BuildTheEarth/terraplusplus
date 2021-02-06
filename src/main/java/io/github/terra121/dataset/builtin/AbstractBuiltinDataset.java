@@ -1,6 +1,6 @@
 package io.github.terra121.dataset.builtin;
 
-import io.github.terra121.dataset.scalar.ScalarDataset;
+import io.github.terra121.dataset.IScalarDataset;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
 import lombok.NonNull;
@@ -10,11 +10,11 @@ import java.util.concurrent.CompletableFuture;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
- * Abstract implementation of {@link ScalarDataset} for the builtin datasets.
+ * Abstract implementation of {@link IScalarDataset} for the builtin datasets.
  *
  * @author DaPorkchop_
  */
-public abstract class AbstractBuiltinDataset implements ScalarDataset {
+public abstract class AbstractBuiltinDataset implements IScalarDataset {
     protected final double scaleX;
     protected final double scaleY;
 

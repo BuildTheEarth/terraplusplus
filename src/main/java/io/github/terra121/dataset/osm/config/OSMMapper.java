@@ -2,8 +2,8 @@ package io.github.terra121.dataset.osm.config;
 
 import com.google.gson.JsonParseException;
 import com.google.gson.stream.JsonReader;
-import io.github.terra121.dataset.osm.element.Element;
-import io.github.terra121.dataset.osm.geojson.Geometry;
+import io.github.terra121.dataset.vector.geometry.VectorGeometry;
+import io.github.terra121.dataset.vector.geojson.Geometry;
 import lombok.NonNull;
 
 import java.io.IOException;
@@ -31,5 +31,5 @@ public interface OSMMapper<G extends Geometry> {
         }
     }
 
-    Collection<Element> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull G projectedGeometry);
+    Collection<VectorGeometry> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull G projectedGeometry);
 }
