@@ -3,6 +3,7 @@ package io.github.terra121.dataset.scalar;
 import io.github.terra121.dataset.BlendMode;
 import io.github.terra121.dataset.IScalarDataset;
 import io.github.terra121.dataset.TiledDataset;
+import io.github.terra121.dataset.TiledHttpDataset;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
@@ -28,7 +29,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  * @author DaPorkchop_
  */
 @Getter
-public abstract class DoubleTiledDataset extends TiledDataset<double[]> implements IScalarDataset {
+public abstract class DoubleTiledDataset extends TiledHttpDataset<double[]> implements IScalarDataset {
     protected static final int TILE_SHIFT = 8;
     protected static final int TILE_SIZE = 1 << TILE_SHIFT; //256
     protected static final int TILE_MASK = (1 << TILE_SHIFT) - 1; //0xFF
@@ -36,8 +37,8 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
     protected final BlendMode blend;
     protected final int resolution;
 
-    public DoubleTiledDataset(@NonNull GeographicProjection proj, int resolution, @NonNull BlendMode blend) {
-        super(proj, 1.0d / resolution);
+    public DoubleTiledDataset(@NonNull GeographicProjection projection, int resolution, @NonNull BlendMode blend) {
+        super(projection, 1.0d / resolution);
 
         this.resolution = resolution;
         this.blend = blend;
@@ -136,7 +137,7 @@ public abstract class DoubleTiledDataset extends TiledDataset<double[]> implemen
             ChunkPos[] tilePositions = this.paddedLocalBounds.toTiles(TILE_SIZE);
 
             return CompletableFuture.allOf(Arrays.stream(tilePositions)
-                    .map(pos -> DoubleTiledDataset.this.getTileAsync(pos)
+                    .map(pos -> DoubleTiledDataset.this.getAsync(pos)
                             .thenApply(tile -> { //put tile directly into map when it's loaded
                                 //synchronize because we can't be certain that all of the futures will be completed by the same thread
                                 synchronized (this.loadedTiles) {

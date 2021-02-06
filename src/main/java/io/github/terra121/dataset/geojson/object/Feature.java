@@ -1,7 +1,7 @@
-package io.github.terra121.dataset.vector.geojson.object;
+package io.github.terra121.dataset.geojson.object;
 
-import io.github.terra121.dataset.vector.geojson.GeoJSONObject;
-import io.github.terra121.dataset.vector.geojson.Geometry;
+import io.github.terra121.dataset.geojson.GeoJsonObject;
+import io.github.terra121.dataset.geojson.Geometry;
 import lombok.Data;
 import lombok.NonNull;
 
@@ -11,7 +11,7 @@ import java.util.Map;
  * @author DaPorkchop_
  */
 @Data
-public final class Feature implements GeoJSONObject {
+public final class Feature implements GeoJsonObject {
     @NonNull
     protected final Geometry geometry;
     protected final Map<String, String> properties;

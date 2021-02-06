@@ -8,8 +8,8 @@ import io.github.terra121.dataset.osm.config.dvalue.DValue;
 import io.github.terra121.dataset.vector.draw.DrawFunction;
 import io.github.terra121.dataset.vector.geometry.VectorGeometry;
 import io.github.terra121.dataset.vector.geometry.polygon.FillPolygon;
-import io.github.terra121.dataset.vector.geojson.Geometry;
-import io.github.terra121.dataset.vector.geojson.geometry.MultiPolygon;
+import io.github.terra121.dataset.geojson.Geometry;
+import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
 import lombok.Builder;
 import lombok.NonNull;
 

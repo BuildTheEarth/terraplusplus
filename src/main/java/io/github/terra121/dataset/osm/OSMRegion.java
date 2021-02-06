@@ -8,11 +8,11 @@ import lombok.RequiredArgsConstructor;
 import net.minecraft.util.math.ChunkPos;
 
 @RequiredArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode
 public final class OSMRegion {
     @NonNull
-    @EqualsAndHashCode.Include
     public final ChunkPos coord;
     @NonNull
+    @EqualsAndHashCode.Exclude
     public final BVH<VectorGeometry> elements;
 }

@@ -2,7 +2,7 @@ package io.github.terra121.dataset.vector.geometry.line;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.MathUtil;
-import io.github.terra121.dataset.vector.geojson.geometry.MultiLineString;
+import io.github.terra121.dataset.geojson.geometry.MultiLineString;
 import io.github.terra121.dataset.vector.draw.DrawFunction;
 import io.github.terra121.generator.CachedChunkData;
 import io.github.terra121.util.bvh.Bounds2d;

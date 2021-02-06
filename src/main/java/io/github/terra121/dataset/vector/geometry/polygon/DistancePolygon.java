@@ -1,7 +1,7 @@
 package io.github.terra121.dataset.vector.geometry.polygon;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.terra121.dataset.vector.geojson.geometry.MultiPolygon;
+import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
 import io.github.terra121.dataset.vector.draw.DrawFunction;
 import io.github.terra121.generator.CachedChunkData;
 import io.github.terra121.util.bvh.Bounds2d;

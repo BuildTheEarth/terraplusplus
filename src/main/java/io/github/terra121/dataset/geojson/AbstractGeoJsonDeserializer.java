@@ -1,16 +1,16 @@
-package io.github.terra121.dataset.vector.geojson;
+package io.github.terra121.dataset.geojson;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
-import io.github.terra121.dataset.vector.geojson.geometry.GeometryCollection;
-import io.github.terra121.dataset.vector.geojson.geometry.LineString;
-import io.github.terra121.dataset.vector.geojson.geometry.MultiLineString;
-import io.github.terra121.dataset.vector.geojson.geometry.MultiPoint;
-import io.github.terra121.dataset.vector.geojson.geometry.MultiPolygon;
-import io.github.terra121.dataset.vector.geojson.geometry.Point;
-import io.github.terra121.dataset.vector.geojson.geometry.Polygon;
+import io.github.terra121.dataset.geojson.geometry.GeometryCollection;
+import io.github.terra121.dataset.geojson.geometry.LineString;
+import io.github.terra121.dataset.geojson.geometry.MultiLineString;
+import io.github.terra121.dataset.geojson.geometry.MultiPoint;
+import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
+import io.github.terra121.dataset.geojson.geometry.Point;
+import io.github.terra121.dataset.geojson.geometry.Polygon;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +25,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  * @author DaPorkchop_
  */
 @RequiredArgsConstructor
-abstract class AbstractGeoJSONDeserializer<T extends GeoJSONObject> extends TypeAdapter<T> {
+abstract class AbstractGeoJsonDeserializer<T extends GeoJsonObject> extends TypeAdapter<T> {
     @NonNull
     protected final String name;
 

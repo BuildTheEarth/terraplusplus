@@ -1,26 +1,25 @@
-package io.github.terra121.dataset.vector.geojson;
+package io.github.terra121.dataset.geojson;
 
-import com.google.gson.Gson;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
 import java.io.Reader;
 
+import static io.github.terra121.TerraConstants.*;
+
 /**
  * @author DaPorkchop_
  */
 @UtilityClass
-public class GeoJSON {
-    private static final Gson GSON = new Gson();
-
+public class GeoJson {
     /**
      * Parses a single GeoJSON object from the given {@link Reader}.
      *
      * @param in the {@link Reader} to read from
      * @return the parsed GeoJSON object
      */
-    public static GeoJSONObject parse(@NonNull Reader in) {
-        return GSON.fromJson(in, GeoJSONObject.class);
+    public static GeoJsonObject parse(@NonNull Reader in) {
+        return GSON.fromJson(in, GeoJsonObject.class);
     }
 
     /**
@@ -29,7 +28,7 @@ public class GeoJSON {
      * @param json the {@link String} containing the JSON text
      * @return the parsed GeoJSON object
      */
-    public static GeoJSONObject parse(@NonNull String json) {
-        return GSON.fromJson(json, GeoJSONObject.class);
+    public static GeoJsonObject parse(@NonNull String json) {
+        return GSON.fromJson(json, GeoJsonObject.class);
     }
 }

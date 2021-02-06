@@ -57,10 +57,10 @@ public class MultiresScalarDataset implements IScalarDataset {
                     .forEach(configSources::add);
         }
 
-        this.bvh = new BVH<>(configSources.stream()
+        this.bvh = BVH.of(configSources.stream()
                 .map((IOFunction<URL, WrappedDataset[]>) url -> JSON_MAPPER.readValue(url, WrappedDataset[].class))
                 .flatMap(Arrays::stream)
-                .collect(Collectors.toList()));
+                .toArray(WrappedDataset[]::new));
     }
 
     @Override

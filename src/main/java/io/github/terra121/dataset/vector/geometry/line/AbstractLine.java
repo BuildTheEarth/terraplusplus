@@ -1,7 +1,7 @@
 package io.github.terra121.dataset.vector.geometry.line;
 
-import io.github.terra121.dataset.vector.geojson.geometry.LineString;
-import io.github.terra121.dataset.vector.geojson.geometry.MultiLineString;
+import io.github.terra121.dataset.geojson.geometry.LineString;
+import io.github.terra121.dataset.geojson.geometry.MultiLineString;
 import io.github.terra121.dataset.vector.draw.DrawFunction;
 import io.github.terra121.dataset.vector.geometry.AbstractVectorGeometry;
 import io.github.terra121.dataset.vector.geometry.Segment;
@@ -26,7 +26,7 @@ public abstract class AbstractLine extends AbstractVectorGeometry {
         for (LineString line : lines.lines()) { //convert MultiLineString to line segments
             convertToSegments(line, segments);
         }
-        this.segments = new BVH<>(segments);
+        this.segments = BVH.of(segments.toArray(new Segment[0]));
     }
 
     @Override

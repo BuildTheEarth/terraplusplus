@@ -1,7 +1,7 @@
 package io.github.terra121.dataset.osm.config.mapper;
 
 import com.google.gson.annotations.JsonAdapter;
-import io.github.terra121.dataset.vector.geojson.geometry.MultiPolygon;
+import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
 import io.github.terra121.dataset.osm.config.OSMMapper;
 
 /**

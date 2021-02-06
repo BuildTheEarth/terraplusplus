@@ -5,15 +5,15 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import io.github.terra121.TerraConfig;
-import io.github.terra121.dataset.TiledDataset;
+import io.github.terra121.dataset.TiledHttpDataset;
 import io.github.terra121.dataset.osm.config.OSMMapper;
 import io.github.terra121.dataset.vector.geometry.VectorGeometry;
-import io.github.terra121.dataset.vector.geojson.GeoJSON;
-import io.github.terra121.dataset.vector.geojson.GeoJSONObject;
-import io.github.terra121.dataset.vector.geojson.Geometry;
-import io.github.terra121.dataset.vector.geojson.geometry.Point;
-import io.github.terra121.dataset.vector.geojson.object.Feature;
-import io.github.terra121.dataset.vector.geojson.object.Reference;
+import io.github.terra121.dataset.geojson.GeoJson;
+import io.github.terra121.dataset.geojson.GeoJsonObject;
+import io.github.terra121.dataset.geojson.Geometry;
+import io.github.terra121.dataset.geojson.geometry.Point;
+import io.github.terra121.dataset.geojson.object.Feature;
+import io.github.terra121.dataset.geojson.object.Reference;
 import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.projection.EquirectangularProjection;
 import io.github.terra121.projection.GeographicProjection;
@@ -46,7 +46,7 @@ import java.util.stream.StreamSupport;
 
 import static net.daporkchop.lib.common.util.PorkUtil.*;
 
-public class OpenStreetMap extends TiledDataset<OSMRegion> {
+public class OpenStreetMap extends TiledHttpDataset<OSMRegion> {
     protected static final Function<CompletableFuture<VectorGeometry[]>, CompletableFuture<VectorGeometry[]>> COMPOSE_FUNCTION =
             blob -> blob != null ? blob : CompletableFuture.completedFuture(null);
 
@@ -87,7 +87,6 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
     }
 
     @Override
-    @Deprecated
     public CompletableFuture<OSMRegion> load(@NonNull ChunkPos pos) throws Exception {
         String location = Http.formatUrl(ImmutableMap.of("x", String.valueOf(pos.x), "z", String.valueOf(pos.z)), TILE_SUFFIX);
 
@@ -95,9 +94,9 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
     }
 
     protected CompletableFuture<VectorGeometry[]> parseGeoJSON(@NonNull ByteBuf json) throws IOException {
-        GeoJSONObject[] objects; //parse each line as a GeoJSON object
+        GeoJsonObject[] objects; //parse each line as a GeoJSON object
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteBufInputStream(json)))) {
-            objects = reader.lines().map(GeoJSON::parse).toArray(GeoJSONObject[]::new);
+            objects = reader.lines().map(GeoJson::parse).toArray(GeoJsonObject[]::new);
         }
 
         CompletableFuture<VectorGeometry[]> nonReferenceFuture = CompletableFuture.completedFuture(Arrays.stream(objects)
@@ -109,7 +108,7 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
 
             referencedObjectFutures.add(nonReferenceFuture);
 
-            for (GeoJSONObject object : objects) {
+            for (GeoJsonObject object : objects) {
                 if (object instanceof Reference) {
                     //get from cache or send request
                     referencedObjectFutures.add(this.referencedBlobs.getUnchecked(((Reference) object).location()));
@@ -123,10 +122,10 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
         return nonReferenceFuture;
     }
 
-    protected Stream<VectorGeometry> convertToElements(String id, @NonNull Map<String, String> tags, @NonNull GeoJSONObject object) {
+    protected Stream<VectorGeometry> convertToElements(String id, @NonNull Map<String, String> tags, @NonNull GeoJsonObject object) {
         if (object instanceof Iterable) {
             //recursively process all child elements
-            return StreamSupport.stream(PorkUtil.<Iterable<? extends GeoJSONObject>>uncheckedCast(object).spliterator(), false)
+            return StreamSupport.stream(PorkUtil.<Iterable<? extends GeoJsonObject>>uncheckedCast(object).spliterator(), false)
                     .flatMap(child -> this.convertToElements(id, tags, child));
         } else if (object instanceof Feature) {
             //process child using properties from feature
@@ -152,13 +151,13 @@ public class OpenStreetMap extends TiledDataset<OSMRegion> {
             elements = new VectorGeometry[0];
         }
 
-        return new OSMRegion(pos, new BVH<>(Arrays.asList(elements)));
+        return new OSMRegion(pos, BVH.of(elements));
     }
 
     public CompletableFuture<OSMRegion[]> getRegionsAsync(@NonNull CornerBoundingBox2d bounds) throws OutOfProjectionBoundsException {
         Bounds2d localBounds = bounds.fromGeo(this.projection).axisAlign();
         CompletableFuture<OSMRegion>[] futures = uncheckedCast(Arrays.stream(localBounds.toTiles(TILE_SIZE))
-                .map(this::getTileAsync)
+                .map(this::getAsync)
                 .toArray(CompletableFuture[]::new));
 
         return CompletableFuture.allOf(futures)

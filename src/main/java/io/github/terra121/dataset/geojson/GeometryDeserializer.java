@@ -18,7 +18,7 @@
  *
  */
 
-package io.github.terra121.dataset.vector.geojson;
+package io.github.terra121.dataset.geojson;
 
 import com.google.gson.stream.JsonReader;
 
@@ -27,7 +27,7 @@ import java.io.IOException;
 /**
  * @author DaPorkchop_
  */
-final class GeometryDeserializer extends AbstractGeoJSONDeserializer<Geometry> {
+final class GeometryDeserializer extends AbstractGeoJsonDeserializer<Geometry> {
     public GeometryDeserializer() {
         super("geometry");
     }

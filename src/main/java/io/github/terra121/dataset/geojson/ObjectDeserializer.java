@@ -18,14 +18,14 @@
  *
  */
 
-package io.github.terra121.dataset.vector.geojson;
+package io.github.terra121.dataset.geojson;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import io.github.terra121.dataset.vector.geojson.object.Feature;
-import io.github.terra121.dataset.vector.geojson.object.FeatureCollection;
-import io.github.terra121.dataset.vector.geojson.object.Reference;
+import io.github.terra121.dataset.geojson.object.Feature;
+import io.github.terra121.dataset.geojson.object.FeatureCollection;
+import io.github.terra121.dataset.geojson.object.Reference;
 import lombok.Getter;
 
 import java.io.IOException;
@@ -38,7 +38,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 /**
  * @author DaPorkchop_
  */
-final class ObjectDeserializer extends AbstractGeoJSONDeserializer<GeoJSONObject> {
+final class ObjectDeserializer extends AbstractGeoJsonDeserializer<GeoJsonObject> {
     @Getter
     private final GeometryDeserializer geometryDeserializer = new GeometryDeserializer();
 
@@ -47,7 +47,7 @@ final class ObjectDeserializer extends AbstractGeoJSONDeserializer<GeoJSONObject
     }
 
     @Override
-    protected GeoJSONObject read0(String type, JsonReader in) throws IOException {
+    protected GeoJsonObject read0(String type, JsonReader in) throws IOException {
         switch (type) {
             case "Feature":
                 return this.readFeature(in);

@@ -3,7 +3,7 @@ package io.github.terra121.dataset.osm.config.match;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import io.github.terra121.dataset.osm.config.JsonParser;
-import io.github.terra121.dataset.vector.geojson.Geometry;
+import io.github.terra121.dataset.geojson.Geometry;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 

@@ -1,8 +1,9 @@
 package io.github.terra121.dataset.vector.geometry;
 
-import io.github.terra121.dataset.vector.geojson.geometry.LineString;
-import io.github.terra121.dataset.vector.geojson.geometry.Point;
+import io.github.terra121.dataset.geojson.geometry.LineString;
+import io.github.terra121.dataset.geojson.geometry.Point;
 import io.github.terra121.dataset.vector.draw.DrawFunction;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import java.util.List;
  */
 @RequiredArgsConstructor
 @Getter
+@EqualsAndHashCode
 public abstract class AbstractVectorGeometry implements VectorGeometry {
     protected static void convertToSegments(@NonNull LineString line, @NonNull List<Segment> segments) {
         Point[] points = line.points();

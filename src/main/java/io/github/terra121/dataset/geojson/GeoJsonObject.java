@@ -1,4 +1,4 @@
-package io.github.terra121.dataset.vector.geojson;
+package io.github.terra121.dataset.geojson;
 
 import com.google.gson.annotations.JsonAdapter;
 
@@ -6,5 +6,5 @@ import com.google.gson.annotations.JsonAdapter;
  * @author DaPorkchop_
  */
 @JsonAdapter(ObjectDeserializer.class)
-public interface GeoJSONObject {
+public interface GeoJsonObject {
 }

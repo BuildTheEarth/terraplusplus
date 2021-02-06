@@ -1,7 +1,7 @@
-package io.github.terra121.dataset.vector.geojson.geometry;
+package io.github.terra121.dataset.geojson.geometry;
 
 import com.google.common.collect.Iterators;
-import io.github.terra121.dataset.vector.geojson.Geometry;
+import io.github.terra121.dataset.geojson.Geometry;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.projection.ProjectionFunction;
 import io.github.terra121.util.bvh.Bounds2d;

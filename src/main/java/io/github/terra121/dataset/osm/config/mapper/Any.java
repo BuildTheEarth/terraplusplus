@@ -2,9 +2,9 @@ package io.github.terra121.dataset.osm.config.mapper;
 
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
-import io.github.terra121.dataset.vector.geojson.Geometry;
-import io.github.terra121.dataset.vector.geojson.geometry.MultiLineString;
-import io.github.terra121.dataset.vector.geojson.geometry.MultiPolygon;
+import io.github.terra121.dataset.geojson.Geometry;
+import io.github.terra121.dataset.geojson.geometry.MultiLineString;
+import io.github.terra121.dataset.geojson.geometry.MultiPolygon;
 import io.github.terra121.dataset.vector.geometry.VectorGeometry;
 import io.github.terra121.dataset.osm.config.JsonParser;
 import io.github.terra121.dataset.osm.config.OSMMapper;

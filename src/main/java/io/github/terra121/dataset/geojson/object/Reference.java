@@ -1,6 +1,6 @@
-package io.github.terra121.dataset.vector.geojson.object;
+package io.github.terra121.dataset.geojson.object;
 
-import io.github.terra121.dataset.vector.geojson.GeoJSONObject;
+import io.github.terra121.dataset.geojson.GeoJsonObject;
 import lombok.Data;
 import lombok.NonNull;
 
@@ -10,7 +10,7 @@ import lombok.NonNull;
  * @author DaPorkchop_
  */
 @Data
-public final class Reference implements GeoJSONObject {
+public final class Reference implements GeoJsonObject {
     @NonNull
     protected final String location;
 }
