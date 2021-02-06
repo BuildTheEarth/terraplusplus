@@ -3,7 +3,7 @@ package io.github.terra121.dataset.vector.draw;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import io.github.terra121.dataset.osm.config.JsonParser;
+import io.github.terra121.dataset.osm.JsonParser;
 import io.github.terra121.generator.CachedChunkData;
 import lombok.Builder;
 import lombok.NonNull;

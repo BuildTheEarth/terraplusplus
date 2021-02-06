@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import io.github.terra121.dataset.osm.config.BlockStateParser;
+import io.github.terra121.dataset.osm.BlockStateParser;
 import io.github.terra121.util.BlockStateDeserializeMixin;
 import net.minecraft.block.state.IBlockState;
 

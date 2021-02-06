@@ -1,6 +1,6 @@
 package io.github.terra121.dataset.vector.draw;
 
-import io.github.terra121.dataset.osm.config.JsonParser;
+import io.github.terra121.dataset.osm.JsonParser;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 import java.util.Map;

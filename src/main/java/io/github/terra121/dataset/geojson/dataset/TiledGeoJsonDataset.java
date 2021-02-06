@@ -4,7 +4,7 @@ import io.github.terra121.dataset.IDataset;
 import io.github.terra121.dataset.IElementDataset;
 import io.github.terra121.dataset.TiledDataset;
 import io.github.terra121.dataset.geojson.GeoJsonObject;
-import io.github.terra121.projection.GeographicProjection;
+import io.github.terra121.projection.EquirectangularProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
 import io.github.terra121.util.bvh.Bounds2d;
@@ -22,8 +22,8 @@ import static net.daporkchop.lib.common.util.PorkUtil.*;
 public class TiledGeoJsonDataset extends TiledDataset<GeoJsonObject[]> implements IElementDataset<GeoJsonObject[]> {
     protected final IDataset<String, GeoJsonObject[]> delegate;
 
-    public TiledGeoJsonDataset(@NonNull IDataset<String, GeoJsonObject[]> delegate, @NonNull GeographicProjection projection) {
-        super(projection, 1.0d);
+    public TiledGeoJsonDataset(@NonNull IDataset<String, GeoJsonObject[]> delegate) {
+        super(new EquirectangularProjection(), 1.0d / 64.0d);
 
         this.delegate = delegate;
     }

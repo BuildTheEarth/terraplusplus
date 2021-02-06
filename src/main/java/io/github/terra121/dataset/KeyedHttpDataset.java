@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -21,6 +22,6 @@ public abstract class KeyedHttpDataset<V> extends Dataset<String, V> {
 
     @Override
     public CompletableFuture<V> load(@NonNull String key) throws Exception {
-        return Http.getFirst(this.urls(), data -> this.decode(key, data));
+        return Http.getFirst(Arrays.stream(this.urls()).map(s -> s + key).toArray(String[]::new), data -> this.decode(key, data));
     }
 }

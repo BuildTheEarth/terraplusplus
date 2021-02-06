@@ -7,7 +7,7 @@ import io.github.terra121.dataset.geojson.dataset.ParsingGeoJsonDataset;
 import io.github.terra121.dataset.geojson.geometry.Point;
 import io.github.terra121.dataset.geojson.object.Feature;
 import io.github.terra121.dataset.geojson.object.Reference;
-import io.github.terra121.dataset.osm.config.OSMMapper;
+import io.github.terra121.dataset.osm.OSMMapper;
 import io.github.terra121.dataset.vector.geometry.VectorGeometry;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;

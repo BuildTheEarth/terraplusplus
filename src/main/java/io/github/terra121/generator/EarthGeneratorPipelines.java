@@ -1,9 +1,15 @@
 package io.github.terra121.generator;
 
+import io.github.terra121.TerraConfig;
 import io.github.terra121.dataset.builtin.Climate;
 import io.github.terra121.dataset.builtin.Soil;
-import io.github.terra121.dataset.osm.OpenStreetMap;
+import io.github.terra121.dataset.geojson.dataset.ParsingGeoJsonDataset;
+import io.github.terra121.dataset.geojson.dataset.ReferenceResolvingGeoJsonDataset;
+import io.github.terra121.dataset.geojson.dataset.TiledGeoJsonDataset;
+import io.github.terra121.dataset.osm.OSMMapper;
 import io.github.terra121.dataset.scalar.MultiresScalarDataset;
+import io.github.terra121.dataset.vector.GeoJsonToVectorDataset;
+import io.github.terra121.dataset.vector.VectorTiledDataset;
 import io.github.terra121.event.InitDatasetsEvent;
 import io.github.terra121.event.InitEarthRegistryEvent;
 import io.github.terra121.generator.biome.IEarthBiomeFilter;
@@ -37,7 +43,8 @@ import static net.daporkchop.lib.common.util.PorkUtil.*;
 @UtilityClass
 public class EarthGeneratorPipelines {
     public final String KEY_DATASET_HEIGHTS = "heights";
-    public final String KEY_DATASET_OSM = "osm";
+    public final String KEY_DATASET_OSM_RAW = "osm_raw";
+    public final String KEY_DATASET_OSM_PARSED = "osm_parsed";
     public final String KEY_DATASET_TERRA121_PRECIPITATION = "terra121_precipitation";
     public final String KEY_DATASET_TERRA121_SOIL = "terra121_soil";
     public final String KEY_DATASET_TERRA121_TEMPERATURE = "terra121_temperature";
@@ -54,7 +61,11 @@ public class EarthGeneratorPipelines {
         InitDatasetsEvent event = new InitDatasetsEvent(settings);
 
         event.register(KEY_DATASET_HEIGHTS, new MultiresScalarDataset(KEY_DATASET_HEIGHTS, settings.useDefaultHeights()));
-        event.register(KEY_DATASET_OSM, new OpenStreetMap(settings));
+
+        ParsingGeoJsonDataset rawOsm = new ParsingGeoJsonDataset(TerraConfig.openstreetmap.servers);
+        event.register(KEY_DATASET_OSM_RAW, new TiledGeoJsonDataset(new ReferenceResolvingGeoJsonDataset(rawOsm)));
+        event.register(KEY_DATASET_OSM_PARSED, new VectorTiledDataset(new GeoJsonToVectorDataset(rawOsm, OSMMapper.load(), settings.projection())));
+
         event.register(KEY_DATASET_TERRA121_PRECIPITATION, new Climate.Precipitation());
         event.register(KEY_DATASET_TERRA121_SOIL, new Soil());
         event.register(KEY_DATASET_TERRA121_TEMPERATURE, new Climate.Temperature());

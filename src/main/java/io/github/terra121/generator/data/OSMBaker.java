@@ -1,13 +1,13 @@
 package io.github.terra121.generator.data;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import io.github.terra121.dataset.osm.OSMRegion;
-import io.github.terra121.dataset.osm.OpenStreetMap;
+import io.github.terra121.dataset.IElementDataset;
 import io.github.terra121.dataset.vector.geometry.VectorGeometry;
 import io.github.terra121.generator.CachedChunkData;
 import io.github.terra121.generator.GeneratorDatasets;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
+import io.github.terra121.util.bvh.BVH;
 import io.github.terra121.util.bvh.Bounds2d;
 import net.minecraft.util.math.ChunkPos;
 
@@ -21,14 +21,15 @@ import static io.github.terra121.generator.EarthGeneratorPipelines.*;
 /**
  * @author DaPorkchop_
  */
-public class OSMBaker implements IEarthDataBaker<OSMRegion[]> {
+public class OSMBaker implements IEarthDataBaker<BVH<VectorGeometry>[]> {
     @Override
-    public CompletableFuture<OSMRegion[]> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
-        return datasets.<OpenStreetMap>getCustom(KEY_DATASET_OSM).getRegionsAsync(bounds.expand(16.0d).toCornerBB(datasets.projection(), false).toGeo());
+    public CompletableFuture<BVH<VectorGeometry>[]> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
+        return datasets.<IElementDataset<BVH<VectorGeometry>>>getCustom(KEY_DATASET_OSM_PARSED)
+                .getAsync(bounds.expand(16.0d).toCornerBB(datasets.projection(), false).toGeo());
     }
 
     @Override
-    public void bake(ChunkPos pos, CachedChunkData.Builder builder, OSMRegion[] regions) {
+    public void bake(ChunkPos pos, CachedChunkData.Builder builder, BVH<VectorGeometry>[] regions) {
         if (regions == null) { //there's no data in this chunk... we're going to assume it's completely out of bounds
             Arrays.fill(builder.waterDepth(), (byte) (CachedChunkData.WATERDEPTH_TYPE_OCEAN | ~CachedChunkData.WATERDEPTH_TYPE_MASK));
             return;
@@ -39,8 +40,8 @@ public class OSMBaker implements IEarthDataBaker<OSMRegion[]> {
         Bounds2d chunkBounds = Bounds2d.of(baseX, baseX + 16, baseZ, baseZ + 16);
 
         Set<VectorGeometry> elements = new TreeSet<>();
-        for (OSMRegion region : regions) {
-            region.elements.forEachIntersecting(chunkBounds, elements::add);
+        for (BVH<VectorGeometry> region : regions) {
+            region.forEachIntersecting(chunkBounds, elements::add);
         }
         elements.forEach(element -> element.apply(builder, pos.x, pos.z, chunkBounds));
     }

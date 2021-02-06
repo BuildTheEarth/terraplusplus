@@ -4,6 +4,7 @@ import io.github.terra121.dataset.IDataset;
 import io.github.terra121.dataset.IElementDataset;
 import io.github.terra121.dataset.TiledDataset;
 import io.github.terra121.dataset.vector.geometry.VectorGeometry;
+import io.github.terra121.projection.EquirectangularProjection;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.CornerBoundingBox2d;
@@ -23,8 +24,8 @@ import static net.daporkchop.lib.common.util.PorkUtil.*;
 public class VectorTiledDataset extends TiledDataset<BVH<VectorGeometry>> implements IElementDataset<BVH<VectorGeometry>> {
     protected final IDataset<String, VectorGeometry[]> delegate;
 
-    public VectorTiledDataset(@NonNull GeographicProjection projection, double tileSize, @NonNull IDataset<String, VectorGeometry[]> delegate) {
-        super(projection, tileSize);
+    public VectorTiledDataset(@NonNull IDataset<String, VectorGeometry[]> delegate) {
+        super(new EquirectangularProjection(), 1.0d / 64.0d);
 
         this.delegate = delegate;
     }
