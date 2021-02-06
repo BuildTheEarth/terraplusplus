@@ -18,10 +18,10 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 public final class DistancePolygon extends AbstractPolygon {
     protected final int maxDist;
-    
+
     public DistancePolygon(@NonNull String id, double layer, @NonNull DrawFunction draw, @NonNull MultiPolygon polygons, int maxDist) {
         super(id, layer, draw, polygons);
-        
+
         this.maxDist = positive(maxDist, "maxDist");
     }
 
@@ -42,7 +42,7 @@ public final class DistancePolygon extends AbstractPolygon {
                 double[] intersectionPoints = this.getIntersectionPoints(x + baseX);
 
                 if (intersectionPoints.length == 0) { //no intersections along this line
-                    Arrays.fill(distances, -1);
+                    Arrays.fill(distances, Integer.MIN_VALUE);
                     break DISTANCES;
                 }
 

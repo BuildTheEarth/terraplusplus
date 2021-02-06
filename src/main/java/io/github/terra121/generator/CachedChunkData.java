@@ -101,8 +101,6 @@ public class CachedChunkData extends CustomAttributeContainer {
 
         this.surfaceBlocks = new ImmutableCompactArray<>(builder.surfaceBlocks);
 
-        //this.segments = approximateSort(elements, new EqualsTieBreakComparator<Element.Cube>(Comparator.naturalOrder(), true, true)).toArray(new Element.Cube[0]);
-
         int min = Integer.MAX_VALUE;
         int max = Integer.MIN_VALUE;
         for (int i = 0; i < 16 * 16; i++) {

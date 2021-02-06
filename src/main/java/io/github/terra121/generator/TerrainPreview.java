@@ -208,7 +208,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
 
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d);
         proj = state.projection.fromGeo(12.58589, 55.68841);
-        proj = new double[] {0,0};
+        //proj = new double[] {0,0};
         state.setView(floorI(proj[0]) >> 4, floorI(proj[1]) >> 4, 0);
 
         state.update();
@@ -300,7 +300,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                                 c = r << 16 | g << 8 | b;
                             }
 
-                            //c = PMath.mix32(data.biome(cx, cz));
+                            c = PMath.mix32(data.biome(cx, cz));
 
                             dst.setRGB(baseX + cx, baseZ + cz, 0xFF000000 | c);
                         }

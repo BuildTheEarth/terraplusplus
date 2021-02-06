@@ -112,7 +112,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         this.cubiccfg = this.settings.customCubic();
         this.projection = this.settings.projection();
 
-        this.biomes = world.getBiomeProvider(); //TODO: make this not order dependent
+        this.biomes = world.getBiomeProvider();
 
         this.datasets = this.settings.datasets();
         this.cache = CacheBuilder.newBuilder()
