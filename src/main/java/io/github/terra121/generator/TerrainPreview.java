@@ -300,8 +300,6 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                                 c = r << 16 | g << 8 | b;
                             }
 
-                            c = PMath.mix32(data.biome(cx, cz));
-
                             dst.setRGB(baseX + cx, baseZ + cz, 0xFF000000 | c);
                         }
                     }

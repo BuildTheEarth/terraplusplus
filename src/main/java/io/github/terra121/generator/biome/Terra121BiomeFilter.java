@@ -53,14 +53,12 @@ public class Terra121BiomeFilter implements IEarthBiomeFilter<Terra121BiomeFilte
     }
 
     /**
-     * This monstrosity of a piece of garbage is copied directly from the original terra121 implementation of {@link EarthBiomeProvider}, with
-     * only minor modifications.
+     * This monstrosity of a piece of garbage is copied directly from the original terra121 implementation of {@link EarthBiomeProvider}.
      */
     protected Biome classify(double precipitation, double soil, double temperature) {
         switch ((int) soil) {
             case 0: //Ocean
-                //never return ocean, because it's set based on OpenStreetMap data
-                return Biomes.BEACH;
+                return Biomes.OCEAN;
             case 1: //Shifting Sand
                 return Biomes.DESERT;
             case 2: //Rock

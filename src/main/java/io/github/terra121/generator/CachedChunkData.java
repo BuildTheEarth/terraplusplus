@@ -86,7 +86,7 @@ public class CachedChunkData extends CustomAttributeContainer {
                     } else {
                         this.surfaceHeight[i] = 0;
                         this.groundHeight[i] = min(this.groundHeight[i], -2);
-                        builder.biomes[(i >>> 4) | ((i & 0xF) << 4)] = Biomes.OCEAN;
+                        builder.biomes[(i >>> 4) | ((i & 0xF) << 4)] = Biomes.DEEP_OCEAN;
                     }
                     break;
                 default:
