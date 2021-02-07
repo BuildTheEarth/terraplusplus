@@ -149,8 +149,14 @@ public class Http {
             @Override
             public void handle(FullHttpResponse response, Throwable throwable) { //stage 2: handle HTTP response
                 if (throwable != null) { //if an exception occurred, notify future and exit
+                    if (!TerraConfig.reducedConsoleMessages) {
+                        TerraMod.LOGGER.warn("Request failed: {}", this.parsed);
+                    }
                     future.completeExceptionally(throwable);
                 } else {
+                    if (!TerraConfig.reducedConsoleMessages) {
+                        TerraMod.LOGGER.info("Request succeeded: {}", this.parsed);
+                    }
                     Path cacheFile = this.cacheFile; //get here because the field might be modified if the response is a redirect
                     ByteBuf toCacheData;
                     switch (response.status().codeClass()) {
@@ -183,7 +189,7 @@ public class Http {
                             return;
                     }
 
-                    if (TerraConfig.http.cache) { //store in cache
+                    if (cacheFile != null) { //store in cache
                         Disk.write(cacheFile, toCacheData);
                     } else { //manually release the data that would have been written to cache
                         toCacheData.release();
