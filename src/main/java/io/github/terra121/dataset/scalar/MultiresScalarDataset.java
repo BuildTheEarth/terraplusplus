@@ -52,7 +52,7 @@ public class MultiresScalarDataset implements IScalarDataset {
 
         try (Stream<Path> stream = Files.list(Files.createDirectories(Disk.configFile(name)))) {
             stream.filter(Files::isRegularFile)
-                    .filter(p -> p.getFileName().toString().matches("\\.json5?$"))
+                    .filter(p -> p.getFileName().toString().matches(".*\\.json5?$"))
                     .map(Path::toUri).map((EFunction<URI, URL>) URI::toURL)
                     .forEach(configSources::add);
         }
