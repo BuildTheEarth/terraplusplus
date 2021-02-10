@@ -1,6 +1,6 @@
 [
   {
-    "modid": "terra121",
+    "modid": "terraplusplus",
     "name": "TerraPlusPlus",
     "description": "A feature-rich fork of Terra121 focusing on performance.",
     "version": "${version}",

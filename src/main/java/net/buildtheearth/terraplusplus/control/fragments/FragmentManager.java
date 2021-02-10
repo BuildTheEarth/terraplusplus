@@ -1,5 +1,6 @@
 package net.buildtheearth.terraplusplus.control.fragments;
 
+import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.control.Command;
 import net.buildtheearth.terraplusplus.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
@@ -31,7 +32,7 @@ public abstract class FragmentManager extends Command {
 
             @Override
             public String getPurpose() {
-                return TranslateUtil.translate("terra121.fragment.help.purpose").getUnformattedComponentText();
+                return TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.help.purpose").getUnformattedComponentText();
             }
 
             @Override

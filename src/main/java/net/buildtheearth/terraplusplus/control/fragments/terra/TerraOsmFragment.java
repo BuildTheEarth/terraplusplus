@@ -4,6 +4,7 @@ import java.util.Locale;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
+import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.control.fragments.CommandFragment;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
@@ -50,7 +51,7 @@ public class TerraOsmFragment extends CommandFragment {
         if (args.length > 0) {
             if(hasAdminPermission(sender)) e = sender.getEntityWorld().getPlayerEntityByName(args[0]);
             if (e == null) {
-                sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.error.unknownplayer")));
+                sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.unknownplayer")));
                 return;
             }
 
@@ -82,7 +83,7 @@ public class TerraOsmFragment extends CommandFragment {
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate("terra121.fragment.terra.osm.purpose").getUnformattedComponentText();
+        return TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.osm.purpose").getUnformattedComponentText();
     }
 
     @Override
@@ -92,6 +93,6 @@ public class TerraOsmFragment extends CommandFragment {
 
     @Override
     public String getPermission() {
-        return "terra121.commands.terra";
+        return TerraConstants.MOD_ID + ".commands.terra";
     }
 }

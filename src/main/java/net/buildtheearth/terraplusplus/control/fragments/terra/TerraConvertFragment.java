@@ -2,6 +2,7 @@ package net.buildtheearth.terraplusplus.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
+import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.control.fragments.CommandFragment;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
@@ -46,7 +47,7 @@ public class TerraConvertFragment extends CommandFragment{
             x = Double.parseDouble(args[0]);
             y = Double.parseDouble(args[1]);
         } catch (Exception e) {
-            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.error.numbers")));
+            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.numbers")));
             return;
         }
 
@@ -79,7 +80,7 @@ public class TerraConvertFragment extends CommandFragment{
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate("terra121.fragment.terra.convert.purpose").getUnformattedComponentText();
+        return TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.convert.purpose").getUnformattedComponentText();
     }
 
     @Override

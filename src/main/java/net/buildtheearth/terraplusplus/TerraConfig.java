@@ -13,7 +13,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 @Config(modid = TerraMod.MODID)
 public class TerraConfig {
     @Name("reduced_console_messages")
-    @Comment({ "Removes all of Terra121's messages which contain various links in the server console",
+    @Comment({ "Removes all of TerraPlusPlus' messages which contain various links in the server console",
             "This is just if it seems to spam the console, it is purely for appearance" })
     public static boolean reducedConsoleMessages;
 

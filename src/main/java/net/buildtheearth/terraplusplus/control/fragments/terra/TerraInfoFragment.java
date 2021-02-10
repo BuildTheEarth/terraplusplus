@@ -12,7 +12,7 @@ import net.minecraft.util.text.TextFormatting;
 public class TerraInfoFragment extends CommandFragment {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, "Terra++ v", TerraConstants.version,
+        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, "Terra++ v", TerraConstants.VERSION,
                 TextFormatting.GRAY, " by the ", TextFormatting.BLUE, "BTE Development Community"));
         sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Original mod by orangeadam3 and shejan0"));
     }
@@ -24,7 +24,7 @@ public class TerraInfoFragment extends CommandFragment {
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate("terra121.fragment.terra.info.purpose").getUnformattedComponentText();
+        return TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.info.purpose").getUnformattedComponentText();
     }
 
     @Override
@@ -34,6 +34,6 @@ public class TerraInfoFragment extends CommandFragment {
 
     @Override
     public String getPermission() {
-        return "terra121.commands.terra";
+        return TerraConstants.MOD_ID + ".commands.terra";
     }
 }

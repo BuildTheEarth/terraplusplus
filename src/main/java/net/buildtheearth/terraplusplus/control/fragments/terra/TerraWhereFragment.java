@@ -2,6 +2,7 @@ package net.buildtheearth.terraplusplus.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
+import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.control.fragments.CommandFragment;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
@@ -47,7 +48,7 @@ public class TerraWhereFragment extends CommandFragment {
 		if (args.length > 0) {
 			if(hasAdminPermission(sender)) e = sender.getEntityWorld().getPlayerEntityByName(args[0]);
 			if (e == null) {
-				sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.error.unknownplayer")));
+				sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.unknownplayer")));
 				return;
 			}
 
@@ -71,11 +72,11 @@ public class TerraWhereFragment extends CommandFragment {
 		}
 		sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Location of ", TextFormatting.BLUE, senderName));
 		if (result == null || Double.isNaN(result[0])) {
-			sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.fragment.terra.where.notproj")));
+			sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.where.notproj")));
 			return;
 		}
 		if (!Float.isFinite(azimuth)) {
-			sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.fragment.terra.where.notproj")));
+			sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.where.notproj")));
 			return;
 		}
 		sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY, "Location: ", TextFormatting.BLUE, result[1],
@@ -89,7 +90,7 @@ public class TerraWhereFragment extends CommandFragment {
 
 	@Override
 	public String getPurpose() {
-		return TranslateUtil.translate("terra121.fragment.terra.where.purpose").getUnformattedComponentText();
+		return TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.where.purpose").getUnformattedComponentText();
 	}
 
 	@Override
@@ -99,6 +100,6 @@ public class TerraWhereFragment extends CommandFragment {
 
 	@Override
 	public String getPermission() {
-		return "terra121.commands.terra";
+		return TerraConstants.MOD_ID + ".commands.terra";
 	}
 }

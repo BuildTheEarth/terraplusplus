@@ -19,7 +19,7 @@ import java.util.List;
 public class TerraCommand extends FragmentManager {
 
     public TerraCommand() {
-        super(TranslateUtil.translate("terra121.commands.terra.title").getUnformattedComponentText(), "terra");
+        super(TranslateUtil.translate(TerraConstants.controlCommandNode + "terra.title").getUnformattedComponentText(), "terra");
         register(new TerraInfoFragment());
         register(new TerraWhereFragment());
         register(new TerraWorldFragment());
@@ -42,7 +42,7 @@ public class TerraCommand extends FragmentManager {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "terra121.commands.terra.usage";
+        return TerraConstants.controlCommandNode + "terra.usage";
     }
 
     @Override

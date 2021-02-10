@@ -2,6 +2,7 @@ package net.buildtheearth.terraplusplus.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
+import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.control.fragments.CommandFragment;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
@@ -44,11 +45,11 @@ public class TerraDistortionFragment extends CommandFragment {
         }
 
         if(c == null || Double.isNaN(c[0])) {
-            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.fragment.terra.where.notproj")));
+            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.where.notproj")));
             return;
         }
         sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Distortion:"));
-        sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.format("terra121.commands.terra.tissot", Math.sqrt(Math.abs(c[0])), c[1] * 180.0 / Math.PI)));
+        sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.format(TerraConstants.MOD_ID + ".commands.terra.tissot", Math.sqrt(Math.abs(c[0])), c[1] * 180.0 / Math.PI)));
     }
 
     @Override
@@ -58,7 +59,7 @@ public class TerraDistortionFragment extends CommandFragment {
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate("terra121.fragment.terra.distortion.purpose").getUnformattedComponentText();
+        return TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.distortion.purpose").getUnformattedComponentText();
     }
 
     @Override
@@ -68,6 +69,6 @@ public class TerraDistortionFragment extends CommandFragment {
 
     @Override
     public String getPermission() {
-        return "terra121.commands.terra";
+        return TerraConstants.MOD_ID + ".commands.terra";
     }
 }

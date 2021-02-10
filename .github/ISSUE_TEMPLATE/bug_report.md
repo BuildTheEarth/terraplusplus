@@ -26,9 +26,6 @@ If applicable, add screenshots to help explain your problem.
 **Error Logs**
 If applicable, paste your server logs into `https://mclo.gs/` and include the link here.
 
-**Terra121 or Terra++ (please complete the following information):**
- - Are you running Terra121 or Terra++?
- - What version of the mod are you running?
-
 **Version (please complete the following information):**
+ - What version of TerraPlusPlus are you using?
  - What version of the BTE Modpack or Server pack are you running? (If applicable)

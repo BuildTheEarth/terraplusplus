@@ -13,7 +13,7 @@ import net.minecraft.util.text.TextFormatting;
  */
 public class ChatUtil {
     public static ITextComponent title() {
-        return new TextComponentString(TerraConstants.prefix.replace("&","\u00A7"));
+        return new TextComponentString(TerraConstants.CHAT_PREFIX.replace("&","\u00A7"));
     }
 
     public static ITextComponent titleAndCombine(Object... objects) {
@@ -54,11 +54,11 @@ public class ChatUtil {
     }
 
     public static ITextComponent getNotCC() {
-        return titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.error.notcc"));
+        return titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.notcc"));
     }
 
     public static ITextComponent getNotTerra() {
-        return titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.error.noterra"));
+        return titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.noterra"));
     }
 
     public static ITextComponent getNoPermission() {
@@ -66,6 +66,6 @@ public class ChatUtil {
     }
 
     public static ITextComponent getPlayerOnly() {
-        return titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.error.playeronly"));
+        return titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.playeronly"));
     }
 }

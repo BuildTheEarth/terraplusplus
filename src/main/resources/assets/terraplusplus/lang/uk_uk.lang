@@ -1,0 +1,42 @@
+#PARSE_ESCAPES
+
+## World Type name
+generator.EarthCubic=Планета Земля
+
+## GUI options
+terraplusplus.gui.projection=Проєкція
+terraplusplus.gui.orientation=Орієнтація
+terraplusplus.gui.roads=Створити дороги
+terraplusplus.gui.smoothblend=Гладке змішування
+terraplusplus.gui.dynamicbaseheight=Висота руди
+terraplusplus.gui.osmwater=Просунута вода (експериментально)
+terraplusplus.gui.buildings=Контури будівлі OSM
+
+## Projection types
+terraplusplus.projection.web_mercator=Меркатора
+terraplusplus.projection.equirectangular=Рівнокутна
+terraplusplus.projection.sinusoidal=Синусоїдальна
+terraplusplus.projection.equal_earth=Рівна Землі
+
+## Projection orientations
+terraplusplus.orientation.upright=Пряма
+terraplusplus.orientation.none=Без орієнтації
+terraplusplus.orientation.swapped=Перевернута вісь
+
+## command messages
+terraplusplus.commands.tpll.usage=/tpll шир дов [висота] [гравець]
+
+terraplusplus.commands.terra.usage=/terra [where:ou] [гравець]\n/terra world\n/terra osm\n/terra conv[ert] [x z]:[шир дов]
+
+terraplusplus.commands.terra.gensettings=Налаштування генератора:
+terraplusplus.commands.terra.latlon=шир дов: %.7f %.7f
+terraplusplus.commands.terra.xy=x y: %.7f %.7f
+
+## command errors
+terraplusplus.error.notcc=Повинен бути у світі Cubic Chunks!
+terraplusplus.error.notterra=Повинен бути у світі Terra 1 to 1!
+terraplusplus.error.numbers=Всі аргументи мають бути числами!
+terraplusplus.error.getcoords=Не вдалось отримати координати!
+terraplusplus.error.notplayer=Ви не гравець, будь ласка вкажіть такого!
+terraplusplus.error.unknownplayer=Невідомий гравець!
+terraplusplus.error.notopothers=Необхідне OP для інформації про інших гравців!

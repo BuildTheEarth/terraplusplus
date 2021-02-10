@@ -24,10 +24,10 @@ The latest version can always be compiled from [our Github](https://github.com/B
 - Caves, Dungeons, and other standard underground features are still available and procedurally generated using CubicWorldGen as a baseline. Though, they are left disabled by default unless modified in the generator settings.
 
 ## Permissions
-- `terra121.admin` - Gives access to all terra++ features and commands
-- `terra121.commands.terra` - Gives access to `/terra`
-- `terra121.commands.terra.utilities` - Gives access to terra++ utilities
-- `terra121.commands.tpll` - Gives access to `/tpll`
+- `terraplusplus.admin` - Gives access to all terra++ features and commands
+- `terraplusplus.commands.terra` - Gives access to `/terra`
+- `terraplusplus.commands.terra.utilities` - Gives access to terra++ utilities
+- `terraplusplus.commands.tpll` - Gives access to `/tpll`
 
 ## APIs:
 
@@ -48,6 +48,6 @@ The latest version can always be compiled from [our Github](https://github.com/B
 
 ## Obtaining
 Releases will not be found from within GitHub, but rather on our [Jenkins Continuous Integration server](https://jenkins.daporkchop.net/job/BuildTheEarth) kindly provided by DaPorkchop. Everything is automatically built and compiled for every single commit, so you can always snag the latest release.
-### [Latest Release Download Link](https://jenkins.daporkchop.net/job/BuildTheEarth/job/terraplusplus/job/master/lastSuccessfulBuild/artifact/build/libs/terra121-0.1.jar)
+### [Latest Release Download Link](https://jenkins.daporkchop.net/job/BuildTheEarth/job/terraplusplus/job/master/lastSuccessfulBuild/artifact/build/libs/)
 
 If you want to build it yourself manually, even though Jenkins does it for you, here are the [building instructions](BUILD_INSTRUCTIONS.md).

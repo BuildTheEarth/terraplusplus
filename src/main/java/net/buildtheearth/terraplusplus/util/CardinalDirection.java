@@ -1,6 +1,7 @@
 package net.buildtheearth.terraplusplus.util;
 
 import lombok.Getter;
+import net.buildtheearth.terraplusplus.TerraConstants;
 
 @Getter
 public enum CardinalDirection {
@@ -8,19 +9,17 @@ public enum CardinalDirection {
     NW(292.5, 337.5, "Northwest"), SW(202.5, 247.5, "Southwest"), SE(112.5, 157.5, "Southeast"),
     NE(22.5, 67.5, "Northeast"), UNKNOWN(360.5, 10000000.0, "Unknown");
 
-    private double min;
+    private final double min;
+    private final double max;
 
-    private double max;
+    private final String realName;
+    private final String translationKey;
 
-    private String realName;
-
-    private String translationKey;
-
-    private CardinalDirection(double min, double max, String realName) {
+    CardinalDirection(double min, double max, String realName) {
         this.min = min;
         this.max = max;
         this.realName = realName;
-        this.translationKey = "terra121.cardinal_directions." + this.name().toLowerCase();
+        this.translationKey = TerraConstants.MOD_ID + ".cardinal_directions." + this.name().toLowerCase();
     }
 
     /**

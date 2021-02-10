@@ -2,6 +2,7 @@ package net.buildtheearth.terraplusplus.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
+import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.control.fragments.CommandFragment;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
@@ -18,7 +19,7 @@ import net.minecraft.world.chunk.IChunkProvider;
 public class TerraWorldFragment extends CommandFragment {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.fragment.terra.world.header")));
+        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.world.header")));
 
         World world = sender.getEntityWorld();
         IChunkProvider cp = world.getChunkProvider();
@@ -52,7 +53,7 @@ public class TerraWorldFragment extends CommandFragment {
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate("terra121.fragment.terra.world.purpose").getUnformattedComponentText();
+        return TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.world.purpose").getUnformattedComponentText();
     }
 
     @Override
@@ -62,7 +63,7 @@ public class TerraWorldFragment extends CommandFragment {
 
     @Override
     public String getPermission() {
-        return "terra121.commands.terra";
+        return TerraConstants.MOD_ID + ".commands.terra";
     }
 
     private ITextComponent boolComponent(String name, boolean value) {

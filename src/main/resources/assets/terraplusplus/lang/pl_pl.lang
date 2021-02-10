@@ -1,0 +1,46 @@
+#PARSE_ESCAPES
+
+## World Type name
+generator.EarthCubic=Ziemia
+
+## GUI options
+terraplusplus.gui.projection=Odwzorowanie
+terraplusplus.gui.orientation=Orientacja
+terraplusplus.gui.roads=Drogi
+terraplusplus.gui.smoothblend=Wygładzanie terenu
+terraplusplus.gui.dynamicbaseheight=Wypiętrzone rudy
+terraplusplus.gui.osmwater=Wody śródlądowe (eksperymentalne)
+terraplusplus.gui.buildings=Krawędzie budynków z OSM
+
+## Projection types
+terraplusplus.projection.web_mercator=Merkatora
+terraplusplus.projection.equirectangular=Równoodległościowe
+terraplusplus.projection.sinusoidal=Sinusoidalne
+terraplusplus.projection.equal_earth=Equal Earth
+terraplusplus.projection.transverse_mercator=Poprzeczne Merkatora (UTM)
+terraplusplus.projection.airocean=Fullera (nie BTE)
+terraplusplus.projection.conformal=Równokątne Fullera (nie BTE)
+terraplusplus.projection.bteairocean=Build The Earth
+
+## Projection orientations
+terraplusplus.orientation.upright=Pionowa
+terraplusplus.orientation.none=Brak
+terraplusplus.orientation.swapped=Odwrócona oś
+
+## command messages
+terraplusplus.commands.tpll.usage=/tpll szerokość długość [wysokość] [gracz]
+
+terraplusplus.commands.terra.usage=/terra [where:ou] [gracz]\n/terra world\n/terra osm\n/terra conv[ert] [x z]:[szerokość długość]
+
+terraplusplus.commands.terra.gensettings=Ustawienia generatora:
+terraplusplus.commands.terra.latlon=szerokość długość: %.7f %.7f
+terraplusplus.commands.terra.xy=x y: %.7f %.7f
+
+## command errors
+terraplusplus.error.notcc=Wymagany świat Cubic Chunks!
+terraplusplus.error.notterra=Wymagany świat Terra 1 to 1!
+terraplusplus.error.numbers=Wszystkie argumenty muszą być liczbami!
+terraplusplus.error.getcoords=Nie udało się uzyskać współrzędnych geograficznych!
+terraplusplus.error.notplayer=Nie jesteś graczem, wymień jakiegoś!
+terraplusplus.error.unknownplayer=Podany gracz nie istnieje!
+terraplusplus.error.notopothers=Tylko OP może uzyskiwać informacje o innych graczach!

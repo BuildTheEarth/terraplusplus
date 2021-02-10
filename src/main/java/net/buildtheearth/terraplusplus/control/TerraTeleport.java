@@ -41,7 +41,7 @@ public class TerraTeleport extends Command {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return "terra121.commands.tpll.usage";
+        return TerraConstants.controlCommandNode + "tpll.usage";
     }
 
     @Override
@@ -72,13 +72,13 @@ public class TerraTeleport extends Command {
                 IChunkProvider cp = world.getChunkProvider();
 
                 if (!(cp instanceof CubeProviderServer)) {
-                    throw new CommandException("terra121.error.notcc");
+                    throw new CommandException(TerraConstants.MOD_ID + ".error.notcc");
                 }
 
                 ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
                 if (!(gen instanceof EarthGenerator)) {
-                    throw new CommandException("terra121.error.notterra");
+                    throw new CommandException(TerraConstants.MOD_ID + ".error.notterra");
                 }
 
                 EarthGenerator terrain = (EarthGenerator) gen;
@@ -144,7 +144,7 @@ public class TerraTeleport extends Command {
                 try {
                     proj = terrain.projection.fromGeo(defaultCoords.getLng(), defaultCoords.getLat());
                 } catch (Exception e) {
-                    sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.error.numbers")));
+                    sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.numbers")));
                     return;
                 }
 
@@ -156,7 +156,7 @@ public class TerraTeleport extends Command {
                                 .getAsync(defaultCoords.getLng(), defaultCoords.getLat())
                                 .thenApply(a -> a + 1.0d);
                     } catch (OutOfProjectionBoundsException e) { //out of bounds, notify user
-                        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.error.numbers")));
+                        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.numbers")));
                         return;
                     }
                 } else {
@@ -195,7 +195,7 @@ public class TerraTeleport extends Command {
 
     private boolean isOp(ICommandSender sender) {
         if (sender instanceof EntityPlayer) {
-            return PermissionAPI.hasPermission((EntityPlayer) sender, "terra121.commands.tpll");
+            return PermissionAPI.hasPermission((EntityPlayer) sender, TerraConstants.controlCommandNode + "tpll");
         }
         return sender.canUseCommand(2, "");
     }
@@ -242,9 +242,9 @@ public class TerraTeleport extends Command {
 
     private void usage(ICommandSender sender) {
         if(hasPermission(null, sender)) {
-            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.commands.tpll.admin.usage")));
+            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.controlCommandNode + "tpll.admin.usage")));
         } else {
-            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate("terra121.commands.tpll.usage")));
+            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.controlCommandNode + "tpll.usage")));
         }
     }
 

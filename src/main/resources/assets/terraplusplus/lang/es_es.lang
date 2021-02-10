@@ -1,0 +1,43 @@
+#PARSE_ESCAPES
+
+## World Type name
+generator.EarthCubic=Planeta Tierra
+
+## GUI options
+terraplusplus.gui.projection=Proyección
+terraplusplus.gui.orientation=Orientación
+terraplusplus.gui.roads=Crear Calles
+terraplusplus.gui.smoothblend=Suavizado
+terraplusplus.gui.dynamicbaseheight=Altura de Minerales Dinámica
+terraplusplus.gui.osmwater=Agua Avanzada (experimental)
+terraplusplus.gui.buildings=Guías de Construcciones
+
+## Projection types
+terraplusplus.projection.web_mercator=Mercator
+terraplusplus.projection.equirectangular=Equirectangular
+terraplusplus.projection.sinusoidal=Sinusoidal
+terraplusplus.projection.equal_earth=Equal Earth
+terraplusplus.projection.transverse_mercator=Mercator Transversal
+
+## Projection orientations
+terraplusplus.orientation.upright=Derecha
+terraplusplus.orientation.none=Ninguna
+terraplusplus.orientation.swapped=Eje Invertido
+
+## command messages
+terraplusplus.commands.tpll.usage=/tpll latitud longitud [altitud] [jugador]
+
+terraplusplus.commands.terra.usage=/terra [where:ou] [jugador]\n/terra world\n/terra osm\n/terra conv[ert] [x z]:[latitud longitud]
+
+terraplusplus.commands.terra.gensettings=Configuración del Generador:
+terraplusplus.commands.terra.latlon=latitud longitud: %.7f %.7f
+terraplusplus.commands.terra.xy=x y: %.7f %.7f
+
+## command errors
+terraplusplus.error.notcc=¡Tienes que estar en un mundo Cubic Chunks!
+terraplusplus.error.notterra=¡Tienes que estar en un mundo Terra!
+terraplusplus.error.numbers=¡Todos los argumentos tienen que ser números!
+terraplusplus.error.getcoords=¡No se pudieron obtener las coordenadas!
+terraplusplus.error.notplayer=¡No eres un jugador, por favor especifica uno!
+terraplusplus.error.unknownplayer=¡Jugador desconocido!
+terraplusplus.error.notopothers=¡Necesitas OP para obtener información de otros jugadores!
