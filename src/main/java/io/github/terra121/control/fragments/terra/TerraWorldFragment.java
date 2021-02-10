@@ -35,26 +35,19 @@ public class TerraWorldFragment extends CommandFragment {
             return;
         }
 
-        EarthGenerator terrain = (EarthGenerator) gen;
-        EarthGeneratorSettings.JsonSettings projectionSettings = terrain.cfg.settings;
+        EarthGeneratorSettings settings = ((EarthGenerator) gen).settings;
 
         sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "World Type: ", TextFormatting.GREEN, "Earth World"));
-        sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "Projection: ", TextFormatting.GREEN, projectionSettings.projection,
-                                                   TextFormatting.GRAY, String.format(" [%s]", projectionSettings.orentation.name())));
-        sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "Scale: ", TextFormatting.GRAY,
-                                                   String.format("[%s, %s]", projectionSettings.scaleX, projectionSettings.scaleY)));
-        sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "Offset: ", TextFormatting.GRAY,
-                                                   String.format("[%s, %s]", projectionSettings.offsetX, projectionSettings.offsetY)));
         sender.sendMessage(ChatUtil.combine(TextFormatting.RESET));
 
-        sender.sendMessage(boolComponent("Roads", projectionSettings.roads));
-        sender.sendMessage(boolComponent("Buildings", projectionSettings.buildings));
-        sender.sendMessage(boolComponent("Smooth Blending", projectionSettings.smoothblend));
+        sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "Projection: ", TextFormatting.GREEN, settings.projection().toString()));
+        sender.sendMessage(this.boolComponent("Default heights", settings.useDefaultHeights()));
+        sender.sendMessage(this.boolComponent("Default trees", settings.useDefaultTreeCover()));
     }
 
     @Override
     public String[] getName() {
-        return new String[]{"world"};
+        return new String[]{ "world" };
     }
 
     @Override
@@ -73,6 +66,6 @@ public class TerraWorldFragment extends CommandFragment {
     }
 
     private ITextComponent boolComponent(String name, boolean value) {
-        return ChatUtil.combine(TextFormatting.BLUE, name, ": ", (value ? TextFormatting.GREEN + "True" : TextFormatting.RED + "False"));
+        return ChatUtil.combine(TextFormatting.BLUE, name, ": ", (value ? TextFormatting.GREEN + "Yes" : TextFormatting.RED + "No"));
     }
 }

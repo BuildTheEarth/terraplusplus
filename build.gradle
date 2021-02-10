@@ -61,6 +61,8 @@ dependencies {
 
     shade "org.apache.commons:commons-imaging:1.0-alpha2"
 
+    shade "com.fasterxml.jackson.core:jackson-databind:2.11.2"
+
     shade("net.daporkchop.lib:binary:0.5.5-SNAPSHOT")  {
         exclude group: "io.netty"
     }
@@ -68,7 +70,7 @@ dependencies {
     testCompile "junit:junit:4.12"
 
     compileOnly "org.projectlombok:lombok:1.18.16"
-    annotationProcessor "org.projectlombok:lombok:1.18.0"
+    annotationProcessor "org.projectlombok:lombok:1.18.16"
 }
 
 processResources {

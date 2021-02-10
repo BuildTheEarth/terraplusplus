@@ -12,7 +12,9 @@ import javax.annotation.Nullable;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import io.github.terra121.TerraConstants;
+import io.github.terra121.dataset.IScalarDataset;
 import io.github.terra121.generator.EarthGenerator;
+import io.github.terra121.generator.EarthGeneratorPipelines;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
 import io.github.terra121.util.ChatUtil;
 import io.github.terra121.util.TranslateUtil;
@@ -149,7 +151,9 @@ public class TerraTeleport extends Command {
                 CompletableFuture<Double> altFuture;
                 if (Double.isNaN(altitude)) {
                     try {
-                        altFuture = terrain.heights.getAsync(defaultCoords.getLng(), defaultCoords.getLat())
+                        altFuture = terrain.datasets
+                                .<IScalarDataset>getCustom(EarthGeneratorPipelines.KEY_DATASET_HEIGHTS)
+                                .getAsync(defaultCoords.getLng(), defaultCoords.getLat())
                                 .thenApply(a -> a + 1.0d);
                     } catch (OutOfProjectionBoundsException e) { //out of bounds, notify user
                         sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate("terra121.error.numbers")));

@@ -2,7 +2,6 @@ package io.github.terra121.util.http;
 
 import io.github.terra121.TerraMod;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -18,9 +17,10 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
 import lombok.NonNull;
@@ -28,14 +28,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import net.daporkchop.lib.common.util.PorkUtil;
 
-import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.IdentityHashMap;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
+import java.util.concurrent.TimeUnit;
 
 import static io.github.terra121.util.http.Http.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
@@ -69,8 +67,8 @@ final class HostManager extends Host {
     /**
      * Submits a GET request to this host.
      *
-     * @param path         the path of the request
-     * @param callback       a {@link Callback} that will be notified once the request is completed
+     * @param path     the path of the request
+     * @param callback a {@link Callback} that will be notified once the request is completed
      */
     public void submit(@NonNull String path, @NonNull Callback callback) {
         NETWORK_EVENT_LOOP.submit(() -> { //force execution on network thread
@@ -102,7 +100,8 @@ final class HostManager extends Host {
 
         for (Channel channel : this.channels) {
             if (channel.attr(ATTR_REQUEST).compareAndSet(null, request)) { //the channel is currently inactive
-                channel.writeAndFlush(request.toNetty(), channel.voidPromise()); //send request
+                channel.pipeline().addFirst("read_timeout", new ReadTimeoutHandler(TIMEOUT, TimeUnit.SECONDS));
+                channel.writeAndFlush(request.toNetty()); //send request
                 this.activeRequests++;
                 return true;
             }
@@ -241,6 +240,8 @@ final class HostManager extends Host {
 
         @Override
         protected void initChannel(Channel ch) throws Exception {
+            ch.pipeline().addLast(new WriteTimeoutHandler(TIMEOUT, TimeUnit.SECONDS));
+
             if (HostManager.this.ssl) {
                 ch.pipeline().addLast(Http.SSL_CONTEXT.newHandler(ch.alloc(), HostManager.this.host, HostManager.this.port));
             }
@@ -262,12 +263,13 @@ final class HostManager extends Host {
     private final class Handler extends ChannelInboundHandlerAdapter {
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+            ctx.pipeline().remove("read_timeout"); //remove read timeout listener to prevent a fake timeout if the connection is idle
             HostManager.this.handleResponse(ctx.channel(), msg);
         }
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-            cause.printStackTrace();
+            ctx.close();
 
             Request request = ctx.channel().attr(ATTR_REQUEST).getAndSet(null);
             if (request != null) { //inform request that it failed

@@ -5,11 +5,15 @@ import io.netty.util.internal.InternalThreadLocalMap;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
+import net.daporkchop.lib.common.ref.Ref;
+import net.daporkchop.lib.common.ref.ThreadRef;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
 
 import static java.lang.Math.*;
@@ -22,12 +26,12 @@ import static net.daporkchop.lib.common.util.PorkUtil.*;
  */
 @ToString
 public class IntervalTree<V extends Interval> {
-    protected static final FastThreadLocal<Collection<?>> LIST_CACHE = new FastThreadLocal<>();
+    protected static final FastThreadLocal<List<?>> LIST_CACHE = new FastThreadLocal<>();
 
     /**
      * The number of values that must be present in a node in order for it to become eligible for splitting.
      */
-    protected static final int NODE_SPLIT_CAPACITY = 2;
+    protected static final int NODE_SPLIT_CAPACITY = 8;
 
     @SuppressWarnings("unchecked")
     protected static <V extends Interval> Node<V>[] createNodeArray(int length) {
@@ -61,14 +65,14 @@ public class IntervalTree<V extends Interval> {
     }
 
     /**
-     * Gets a {@link Collection} containing every value that contains the given point.
+     * Gets a {@link List} containing every value that contains the given point.
      *
      * @param point the interval that values must contain
      * @return the values
      */
-    public Collection<V> getAllIntersecting(double point) {
+    public List<V> getAllIntersecting(double point) {
         InternalThreadLocalMap map = InternalThreadLocalMap.get();
-        Collection<V> result = uncheckedCast(LIST_CACHE.get(map));
+        List<V> result = uncheckedCast(LIST_CACHE.get(map));
         if (result == null) { //create new list
             result = new ArrayList<>();
         }
@@ -87,12 +91,23 @@ public class IntervalTree<V extends Interval> {
     /**
      * Runs the given function on every value that contains the given point.
      *
-     * @param point the interval that values must contain
+     * @param point    the interval that values must contain
      * @param callback the callback function to run
      */
     public void forEachIntersecting(double point, @NonNull Consumer<V> callback) {
         if (this.root != null && this.root.contains(point)) {
             this.root.forEachIntersecting(point, callback);
+        }
+    }
+
+    /**
+     * Runs the given function on every value in the tree.
+     *
+     * @param callback the callback function to run
+     */
+    public void forEach(@NonNull Consumer<V> callback) {
+        if (this.root != null) {
+            this.root.forEach(callback);
         }
     }
 
@@ -153,21 +168,38 @@ public class IntervalTree<V extends Interval> {
             }
         }
 
-        @SuppressWarnings("unchecked")
         protected void forEachIntersecting(double point, Consumer<V> callback) {
             if (this.children != null) { //not a leaf node
                 for (Node<V> child : this.children) {
                     if (child != null && child.contains(point)) {
                         child.forEachIntersecting(point, callback);
+                        break;
+                    }
+                }
+            }
+
+            if (this.values != null) { //this node contains some values
+                for (Object _value : this.values) { //check intersection with each value individually
+                    V value = uncheckedCast(_value);
+                    if (value.contains(point)) {
+                        callback.accept(value);
+                    }
+                }
+            }
+        }
+
+        protected void forEach(Consumer<V> callback) {
+            if (this.children != null) { //not a leaf node
+                for (Node<V> child : this.children) {
+                    if (child != null) {
+                        child.forEach(callback);
                     }
                 }
             }
 
             if (this.values != null) { //this node contains some values
                 for (Object value : this.values) { //check intersection with each value individually
-                    if (((V) value).contains(point)) {
-                        callback.accept((V) value);
-                    }
+                    callback.accept(uncheckedCast(value));
                 }
             }
         }

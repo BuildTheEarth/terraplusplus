@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import net.daporkchop.lib.common.util.PorkUtil;
 
 import java.util.Comparator;
+import java.util.Objects;
 
 /**
  * Copied from <a href="https://github.com/PorkStudios/FarPlaneTwo/blob/2dfd92f/src/main/java/net/daporkchop/fp2/util/EqualsTieBreakComparator.java">FarPlaneTwo</a>.
@@ -25,9 +26,9 @@ public class EqualsTieBreakComparator<T> implements Comparator<T> {
             d = PorkUtil.<Comparable<T>>uncheckedCast(o1).compareTo(o2);
         }
 
-        if (d == 0 && !o1.equals(o2)) { //comparison resulted in a tie, but the objects are different
+        if (d == 0 && !Objects.equals(o1, o2)) { //comparison resulted in a tie, but the objects are different
             if (this.useHashCode) {
-                d = Integer.compare(o1.hashCode(), o2.hashCode());
+                d = Integer.compare(Objects.hashCode(o1), Objects.hash(o2));
             }
             if (d == 0) {
                 d = this.up ? 1 : -1;

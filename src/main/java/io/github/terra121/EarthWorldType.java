@@ -4,11 +4,10 @@ import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.terra121.control.EarthGui;
-import io.github.terra121.generator.EarthBiomeProvider;
 import io.github.terra121.generator.EarthGenerator;
+import io.github.terra121.generator.EarthGeneratorSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiCreateWorld;
-import net.minecraft.init.Biomes;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProviderSurface;
 import net.minecraft.world.WorldServer;
@@ -34,7 +33,7 @@ public class EarthWorldType extends WorldType implements ICubicWorldType {
 
     @Override
     public BiomeProvider getBiomeProvider(World world) {
-        return new EarthBiomeProvider(Biomes.FOREST, world);
+        return EarthGeneratorSettings.parse(world.getWorldInfo().getGeneratorOptions()).biomeProvider();
     }
 
     @Override

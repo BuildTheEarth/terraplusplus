@@ -1,89 +1,79 @@
 package io.github.terra121.projection.transform;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Preconditions;
 
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
+import lombok.Getter;
 
 /**
  * Scales the warps projection's projected space up or down.
  * More specifically, it multiplies x and y by there respective scale factors.
  */
+@JsonDeserialize
+@Getter(onMethod_ = { @JsonGetter })
 public class ScaleProjectionTransform extends ProjectionTransform {
-    private final double scaleX;
-    private final double scaleY;
+    private final double x;
+    private final double y;
 
     /**
      * Creates a new ScaleProjection with different scale factors for the x and y axis.
      *
-     * @param input - projection to transform
-     * @param scaleX - scaling to apply along the x axis
-     * @param scaleY - scaling to apply along the y axis
+     * @param delegate - projection to transform
+     * @param x        - scaling to apply along the x axis
+     * @param y        - scaling to apply along the y axis
      */
-    public ScaleProjectionTransform(GeographicProjection input, double scaleX, double scaleY) {
-        super(input);
-        Preconditions.checkArgument(Double.isFinite(scaleX) && Double.isFinite(scaleY), "Projection scales should be finite");
-        Preconditions.checkArgument(scaleX != 0 && scaleY != 0, "Projection scale cannot be 0!");
-        this.scaleX = scaleX;
-        this.scaleY = scaleY;
-    }
-
-    /**
-     * Creates a new ScaleProjection with the same scale factor for the x and y axis.
-     *
-     * @param input - projection to transform
-     * @param scale - scale factor to apply on both axis
-     */
-    public ScaleProjectionTransform(GeographicProjection input, double scale) {
-        this(input, scale, scale);
+    @JsonCreator
+    public ScaleProjectionTransform(
+            @JsonProperty(value = "delegate", required = true) GeographicProjection delegate,
+            @JsonProperty(value = "x", required = true) double x,
+            @JsonProperty(value = "y", required = true) double y) {
+        super(delegate);
+        Preconditions.checkArgument(Double.isFinite(x) && Double.isFinite(y), "Projection scales should be finite");
+        Preconditions.checkArgument(x != 0 && y != 0, "Projection scale cannot be 0!");
+        this.x = x;
+        this.y = y;
     }
 
     @Override
     public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
-        return this.input.toGeo(x / this.scaleX, y / this.scaleY);
+        return this.delegate.toGeo(x / this.x, y / this.y);
     }
 
     @Override
     public double[] fromGeo(double lon, double lat) throws OutOfProjectionBoundsException {
-        double[] p = this.input.fromGeo(lon, lat);
-        p[0] *= this.scaleX;
-        p[1] *= this.scaleY;
+        double[] p = this.delegate.fromGeo(lon, lat);
+        p[0] *= this.x;
+        p[1] *= this.y;
         return p;
     }
 
     @Override
     public boolean upright() {
-        return (this.scaleY < 0) ^ this.input.upright();
+        return (this.y < 0) ^ this.delegate.upright();
     }
 
     @Override
     public double[] bounds() {
-        double[] b = this.input.bounds();
-        b[0] *= this.scaleX;
-        b[1] *= this.scaleY;
-        b[2] *= this.scaleX;
-        b[3] *= this.scaleY;
+        double[] b = this.delegate.bounds();
+        b[0] *= this.x;
+        b[1] *= this.y;
+        b[2] *= this.x;
+        b[3] *= this.y;
         return b;
     }
 
     @Override
     public double metersPerUnit() {
-        return this.input.metersPerUnit() / Math.sqrt((this.scaleX * this.scaleX + this.scaleY * this.scaleY) / 2); //TODO: better transform
+        return this.delegate.metersPerUnit() / Math.sqrt((this.x * this.x + this.y * this.y) / 2); //TODO: better transform
     }
 
-	/**
-	 * @return the scaleX
-	 */
-	public double getScaleX() {
-		return scaleX;
-	}
-
-	/**
-	 * @return the scaleY
-	 */
-	public double getScaleY() {
-		return scaleY;
-	}
-    
-    
+    @Override
+    public String toString() {
+        return "Scale (" + super.delegate + ") by " + this.x + ", " + this.y;
+    }
 }

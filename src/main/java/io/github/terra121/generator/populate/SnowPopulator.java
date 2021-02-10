@@ -2,11 +2,9 @@ package io.github.terra121.generator.populate;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.terra121.generator.CachedChunkData;
 import io.github.terra121.generator.EarthBiomeProvider;
-import io.github.terra121.generator.cache.CachedChunkData;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -23,8 +21,10 @@ public class SnowPopulator implements IEarthPopulator {
             //this cast could fail but this function should only be called in earth anyways
             EarthBiomeProvider ebp = (EarthBiomeProvider) world.getBiomeProvider();
             try {
-                double[] proj = ebp.projection.toGeo(pos.getX(), pos.getZ());
-                return ebp.climate.isSnow(proj[0], proj[1], pos.getY());
+                /*double[] proj = ebp.projection.toGeo(pos.getX(), pos.getZ());
+                return ebp.climate.isSnow(proj[0], proj[1], pos.getY());*/
+                // return alt > 5000 || this.getPoint(x, y).temperature < 0; //high elevations or freezing temperatures
+                throw OutOfProjectionBoundsException.get(); //TODO
             } catch (OutOfProjectionBoundsException e) { //out of bounds, assume not snow
                 return false;
             }

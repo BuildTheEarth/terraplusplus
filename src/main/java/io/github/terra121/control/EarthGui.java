@@ -1,266 +1,658 @@
 package io.github.terra121.control;
 
-import io.github.terra121.generator.EarthGeneratorSettings;
+import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomCubicWorldType;
 import io.github.terra121.TerraMod;
-import io.github.terra121.control.DynamicOptions.Element;
+import io.github.terra121.config.GlobalParseRegistries;
+import io.github.terra121.generator.EarthGeneratorSettings;
 import io.github.terra121.projection.GeographicProjection;
 import io.github.terra121.projection.OutOfProjectionBoundsException;
+import io.github.terra121.projection.transform.OffsetProjectionTransform;
+import io.github.terra121.projection.transform.ProjectionTransform;
+import io.github.terra121.projection.transform.ScaleProjectionTransform;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import net.daporkchop.lib.common.function.io.IOSupplier;
+import net.daporkchop.lib.common.ref.Ref;
+import net.daporkchop.lib.common.util.PArrays;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.util.ResourceLocation;
-import org.apache.commons.io.IOUtils;
+import net.minecraft.world.WorldType;
+import net.minecraftforge.client.event.GuiOpenEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.input.Keyboard;
 
 import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiFunction;
+import java.util.stream.IntStream;
 
-public class EarthGui extends GuiScreen implements DynamicOptions.Handler {
+import static java.lang.Math.*;
+import static net.daporkchop.lib.common.util.PValidation.*;
 
-    ResourceLocation map = null;
-    ResourceLocation rightmap = null;
-    BufferedImage base;
-    GeographicProjection projection;
-    DynamicOptions settings;
-    private DynamicOptions.Element[] settingElems;
-    private GuiButton done;
-    private GuiButton cancel;
-    private GuiButton biomemapbutt;
-    private BiomeMap biomemap = null;
+/**
+ * The world configuration GUI.
+ * <p>
+ * This is a hacky mess... but still many orders of magnitude better than the previous heap of refuse.
+ *
+ * @author DaPorkchop_
+ */
+public class EarthGui extends GuiScreen {
+    protected static final int SRC_W = 2048;
+    protected static final int SRC_H = 1024;
+    protected static final Ref<int[]> SRC_CACHE = Ref.soft((IOSupplier<int[]>) () ->
+            ImageIO.read(EarthGui.class.getResource("map.png")).getRGB(0, 0, SRC_W, SRC_H, null, 0, SRC_W));
 
-    private int mapsize;
+    protected static final int SIZE = 1024;
+    protected static final int VERTICAL_PADDING = 32;
 
-    private EarthGeneratorSettings cfg;
+    protected static void projectImage(@NonNull GeographicProjection projection, @NonNull int[] src, @NonNull int[] dst) {
+        //scale should be able to fit whole earth inside texture
+        double[] bounds = projection.bounds();
 
-    GuiCreateWorld guiCreateWorld;
+        double minX = min(bounds[0], bounds[2]);
+        double maxX = max(bounds[0], bounds[2]);
+        double minY = min(bounds[1], bounds[3]);
+        double maxY = max(bounds[1], bounds[3]);
+        double dx = maxX - minX;
+        double dy = maxY - minY;
+        double scale = max(dx, dy) / (double) SIZE;
+
+        Arrays.fill(dst, 0); //fill with transparent pixels
+
+        //acually set map data (in parallel, because some projections are slow)
+        IntStream.range(0, SIZE).parallel()
+                .forEach(yi -> {
+                    double y = yi * scale + minY;
+                    if (y <= minY || y >= maxY) { //skip entire row if y value out of projection bounds
+                        return;
+                    }
+
+                    for (int xi = 0; xi < SIZE; xi++) {
+                        double x = xi * scale + minX;
+                        if (x <= minX || x >= maxX) { //sample out of bounds, skip it
+                            continue;
+                        }
+
+                        try {
+                            double[] projected = projection.toGeo(x, y);
+                            int lon = (int) (((projected[0] + 180.0d) * (SRC_W / 360.0d)));
+                            int lat = (int) (((projected[1] + 90.0d) * (SRC_H / 180.0d)));
+                            if (lon < 0 || lon >= SRC_W || lat < 0 || lat >= SRC_H) { //projected sample is out of bounds
+                                continue;
+                            }
+
+                            dst[yi * SIZE + xi] = src[lat * SRC_W + lon];
+                        } catch (OutOfProjectionBoundsException ignored) {
+                            //sample out of bounds, skip it
+                        }
+                    }
+                });
+    }
+
+    protected DynamicTexture texture;
+    protected final GuiCreateWorld guiCreateWorld;
+
+    protected EarthGeneratorSettings settings;
+
+    protected GuiButton doneButton;
+    protected GuiButton cancelButton;
+
+    protected int imgSize;
+    protected final List<Entry> entries = new ArrayList<>();
+    protected final List<GuiTextField> textFields = new CopyOnWriteArrayList<>();
 
     public EarthGui(GuiCreateWorld guiCreateWorld, Minecraft mc) {
+        super.buttonList = new CopyOnWriteArrayList<>();
 
-        this.cfg = new EarthGeneratorSettings(guiCreateWorld.chunkProviderSettingsJson);
+        this.settings = EarthGeneratorSettings.parse(guiCreateWorld.chunkProviderSettingsJson);
 
         this.mc = mc;
         this.guiCreateWorld = guiCreateWorld;
+    }
 
-        InputStream is = this.getClass().getClassLoader().getResourceAsStream("assets/terra121/data/map.png");
-        try {
-            this.base = ImageIO.read(is);
-        } catch (IOException e) {
-            this.base = new BufferedImage(512, 256, 0);
-        } finally {
-            IOUtils.closeQuietly(is);
+    private void updateMap() {
+        if (this.texture == null) {
+            this.texture = new DynamicTexture(SIZE, SIZE);
         }
-
-        String[] projs = GeographicProjection.projections.keySet().toArray(new String[0]);
-
-        this.settingElems = new DynamicOptions.Element[]{
-                this.cycleButton(6969, "projection", projs, e -> {
-                    this.projectMap(true);
-                    return I18n.format("terra121.gui.projection") + ": " + I18n.format("terra121.projection." + e);
-                }),
-                this.cycleButton(6968, "orentation", GeographicProjection.Orientation.values(), e -> {
-                    this.projectMap(true);
-                    return I18n.format("terra121.gui.orientation") + ": " + I18n.format("terra121.orientation." + e.toString());
-                }),
-                this.toggleButton(6967, "smoothblend", null),
-                this.toggleButton(6966, "roads", null),
-                this.toggleButton(6965, "osmwater", null),
-                this.toggleButton(6964, "dynamicbaseheight", null),
-                this.toggleButton(6963, "buildings", null)
-        };
-        this.projectMap(false);
-    }
-
-    private DynamicOptions.TextFieldElement textField(int id, String field, String defaultText) {
-        try {
-            return new DynamicOptions.TextFieldElement(id, EarthGeneratorSettings.JsonSettings.class.getField(field), this.cfg.settings, defaultText);
-        } catch (NoSuchFieldException | SecurityException e) {
-            TerraMod.LOGGER.error("This should never happen, but find field reflection error");
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    private <E> DynamicOptions.CycleButtonElement<E> cycleButton(int id, String field, E[] list, Function<E, String> tostring) {
-        try {
-            return new DynamicOptions.CycleButtonElement<>(id, list, EarthGeneratorSettings.JsonSettings.class.getField(field), this.cfg.settings, tostring);
-        } catch (NoSuchFieldException | SecurityException e) {
-            TerraMod.LOGGER.error("This should never happen, but find field reflection error");
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    //auto format based on field name
-    private <E> DynamicOptions.ToggleElement toggleButton(int id, String field, Consumer<Boolean> notify) {
-        return this.toggleButton(id, I18n.format("terra121.gui." + field), field, notify);
-    }
-
-    private <E> DynamicOptions.ToggleElement toggleButton(int id, String name, String field, Consumer<Boolean> notify) {
-        try {
-            return new DynamicOptions.ToggleElement(id, name, field == null ? null : EarthGeneratorSettings.JsonSettings.class.getField(field), this.cfg.settings, notify);
-        } catch (NoSuchFieldException | SecurityException e) {
-            TerraMod.LOGGER.error("This should never happen, but find field reflection error");
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    private void projectMap(boolean change) {
-
-        this.projection = this.cfg.getNormalizedProjection();
-
-        this.cfg.settings.scaleX = this.cfg.settings.scaleY = this.projection.metersPerUnit();
-
-        if (this.map != null) {
-            this.mc.renderEngine.deleteTexture(this.map);
-        } else if (this.rightmap != null) {
-            this.mc.renderEngine.deleteTexture(this.rightmap);
-        }
-
-        BufferedImage img = new BufferedImage(1024, 1024, BufferedImage.TYPE_INT_ARGB);
-
-        //scale should be able to fit whole earth inside texture
-        double[] bounds = this.projection.bounds();
-        double scale = Math.max(Math.abs(bounds[2] - bounds[0]), Math.abs(bounds[3] - bounds[1]));
-
-        int w = img.getWidth();
-        int h = img.getHeight();
-
-        for (int x = 0; x < w; x++) {
-            for (int y = 0; y < h; y++) {
-                //image coords to projection coords
-                double X = (x / (double) w) * scale + bounds[0];
-                double Y = (y / (double) h) * scale + bounds[1];
-
-                //not out of bounds
-                if (bounds[0] <= X && X <= bounds[2] && bounds[1] <= Y && Y <= bounds[3]) {
-
-                    try {
-                        double[] proj = this.projection.toGeo(X, Y); //projection coords to lon lat
-
-                        if (!(proj[0] >= -180 && proj[0] <= 180 && proj[1] >= -90 && proj[1] <= 90)) {
-                            continue; //out of bounds gets a transparent
-                        }
-
-                        if (this.biomemap != null) {
-                            img.setRGB(x, y, this.biomemap.getColor(proj)); //biome map
-                        } else { //image map
-                            //lat lon to reference image coords
-                            int lon = (int) ((proj[0] / 360 + 0.5) * this.base.getWidth());
-                            int lat = (int) ((0.5 + proj[1] / 180) * this.base.getHeight());
-
-                            //get pixel from reference image if possible
-                            if (lon >= 0 && lat >= 0 && lat < this.base.getHeight() && lon < this.base.getWidth()) {
-                                img.setRGB(x, y, this.base.getRGB(lon, this.base.getHeight() - lat - 1));
-                            }
-                        }
-                    } catch (OutOfProjectionBoundsException e) { //out of bounds, transparent
-                        continue;
-                    }
-                }
-            }
-        }
-
-        this.map = this.mc.renderEngine.getDynamicTextureLocation("mapdemo", new DynamicTexture(img));
-    }
-
-    @Override
-    public void initGui() {
-        this.mapsize = this.height - 64;
-        if (this.width - this.mapsize < 200) {
-            this.mapsize = this.width - 200;
-        }
-        if (this.mapsize < 32) {
-            this.mapsize = 0;
-        }
-		/*if(mapsize>0.75*width)
-			mapsize = (int)(0.75*width);
-		if(mapsize<300)
-			mapsize = 0;*/
-
-        this.settings = new DynamicOptions(this.mc, this.width - this.mapsize, this.height - 32, 32, this.height - 32, 32, this, this.settingElems);
-        this.done = new GuiButton(69, this.width - 106, this.height - 26, 100, 20, I18n.format("gui.done"));
-        this.cancel = new GuiButton(69, 6, this.height - 26, 100, 20, I18n.format("gui.cancel"));
-        this.biomemapbutt = new GuiButton(69, this.width - 106, 6, 100, 20, I18n.format("terra121.gui.biomemap"));
-        Keyboard.enableRepeatEvents(true); //Make it more comfortable to type in text fields
-    }
-
-    @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        this.drawBackground(0xff);
-
-        this.settings.drawScreen(mouseX, mouseY, partialTicks);
-
-        //render map texture
-        this.mc.renderEngine.bindTexture(this.map);
-        drawScaledCustomSizeModalRect(this.width - this.mapsize, (this.height - this.mapsize) / 2, 0, 0, 1024, 1024, this.mapsize, this.mapsize, 1024, 1024);
-
-        this.mc.renderEngine.bindTexture(Gui.OPTIONS_BACKGROUND);
-        //this.drawTexturedModalRect(0, height-32, 0, 0, width, 32);
-        drawScaledCustomSizeModalRect(0, this.height - 32, 0, 0, this.width, 32, this.width, 32, 32, 32); //footer, TODO: make not bad
-        drawScaledCustomSizeModalRect(0, 0, 0, 0, this.width, 32, this.width, 32, 32, 32); //header, TODO: make not bad
-
-        this.done.drawButton(this.mc, mouseX, mouseY, partialTicks);
-        this.cancel.drawButton(this.mc, mouseX, mouseY, partialTicks);
-        this.biomemapbutt.drawButton(this.mc, mouseX, mouseY, partialTicks);
-
-        //this.drawCenteredString(this.fontRenderer, "WORK IN PROGRESS", this.width/2, this.height/2, 0x00FF5555);
-
-        super.drawScreen(mouseX, mouseY, partialTicks);
-    }
-
-    @Override
-    public void mouseClicked(int mouseX, int mouseY, int mouseEvent) {
-        if (this.done.mousePressed(this.mc, mouseX, mouseY)) {
-            this.biomemap = null; //delete biome map
-            this.guiCreateWorld.chunkProviderSettingsJson = this.cfg.toString(); //save settings
-            this.mc.displayGuiScreen(this.guiCreateWorld); ///exit
-            return;
-
-        } else if (this.cancel.mousePressed(this.mc, mouseX, mouseY)) {
-            this.biomemap = null; //delete biome map
-            this.mc.displayGuiScreen(this.guiCreateWorld); //exit without saving
-            return;
-        } else if (this.biomemapbutt.mousePressed(this.mc, mouseX, mouseY)) {
-            this.biomemap = this.biomemap == null ? new BiomeMap() : null; //create biomemap or destroy based on boolean
-            this.projectMap(false);
-        }
-
-        this.settings.mouseClicked(mouseX, mouseY, mouseEvent);
-    }
-
-    @Override
-    public void handleMouseInput() throws IOException {
-        super.handleMouseInput();
-        this.settings.handleMouseInput();
-    }
-
-    @Override
-    public void onDynOptClick(Element elem) {
-    }
-
-    @Override
-    protected void keyTyped(char typedChar, int keyCode) {
-        this.settings.keyTyped(typedChar, keyCode);
-    }
-
-    @Override
-    public void updateScreen() {
-        super.updateScreen();
-        this.settings.update();
+        projectImage(this.settings.projection(), SRC_CACHE.get(), this.texture.getTextureData());
+        this.texture.updateDynamicTexture();
     }
 
     @Override
     public void onGuiClosed() {
         super.onGuiClosed();
+
         Keyboard.enableRepeatEvents(false);
+
+        this.texture.deleteGlTexture();
+        this.texture = null;
+    }
+
+    @Override
+    public void initGui() {
+        Keyboard.enableRepeatEvents(true);
+
+        this.imgSize = max(min(this.height - (VERTICAL_PADDING << 1), this.width >> 1), this.width - 400);
+
+        this.buttonList.clear();
+        this.doneButton = this.addButton(new GuiButton(0, this.width / 2 - 155, this.height - 28, 150, 20, I18n.format("gui.done")));
+        this.cancelButton = this.addButton(new GuiButton(1, this.width / 2 + 5, this.height - 28, 150, 20, I18n.format("gui.cancel")));
+
+        this.textFields.clear();
+
+        RE_ASSEMBLE:
+        if (!this.entries.isEmpty()) { //re-assemble projection
+            EarthGeneratorSettings oldSettings = this.settings;
+
+            try {
+                for (Entry entry : this.entries) {
+                    this.settings = entry.touchSettings(this.settings);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                this.settings = oldSettings;
+                break RE_ASSEMBLE;
+            }
+        }
+        this.entries.clear();
+
+        //add states
+        int y = VERTICAL_PADDING;
+        y += this.addEntry(new ProjectionEntry(this.settings, this, 5, y, this.width - this.imgSize - 10)).height();
+        y += this.addEntry(new PaddingEntry(10)).height();
+        y += this.addEntry(new ToggleEntry(this, 5, y, this.width - this.imgSize - 10, this.settings.useDefaultHeights(), "use_default_heights", EarthGeneratorSettings::withUseDefaultHeights)).height();
+        y += this.addEntry(new ToggleEntry(this, 5, y, this.width - this.imgSize - 10, this.settings.useDefaultTreeCover(), "use_default_trees", EarthGeneratorSettings::withUseDefaultTreeCover)).height();
+        y += this.addEntry(new PaddingEntry(10)).height();
+        y += this.addEntry(new CWGEntry(this.settings, this, 5, y, this.width - this.imgSize - 10)).height();
+
+        this.updateMap();
+    }
+
+    protected Entry addEntry(Entry entry) {
+        this.entries.add(entry);
+        return entry;
+    }
+
+    @Override
+    protected <T extends GuiButton> T addButton(@NonNull T button) {
+        button.id = this.buttonList.size();
+        return super.addButton(button);
+    }
+
+    protected GuiTextField addTextField(int x, int y, int width, int height) {
+        GuiTextField textField = new GuiTextField(this.textFields.size(), this.fontRenderer, x, y, width, height);
+        this.textFields.add(textField);
+        return textField;
+    }
+
+    @Override
+    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        this.drawDefaultBackground();
+        this.drawCenteredString(this.fontRenderer, I18n.format(TerraMod.MODID + ".gui.header"), this.width >> 1, VERTICAL_PADDING >> 1, 0xFFFFFFFF);
+
+        //render map texture
+        GlStateManager.bindTexture(this.texture.getGlTextureId());
+        drawScaledCustomSizeModalRect(this.width - this.imgSize, VERTICAL_PADDING, 0, 0, SIZE, SIZE, this.imgSize, this.imgSize, SIZE, SIZE);
+
+        //render list
+        int y = VERTICAL_PADDING;
+        for (Entry entry : this.entries) {
+            entry.render(this, 5, y, this.width - this.imgSize - 10);
+            y += entry.height();
+        }
+
+        //render text fields
+        for (GuiTextField textField : this.textFields) {
+            textField.drawTextBox();
+        }
+
+        super.drawScreen(mouseX, mouseY, partialTicks);
+    }
+
+    @Override
+    public void updateScreen() {
+        super.updateScreen();
+
+        for (GuiTextField textField : this.textFields) {
+            textField.updateCursorCounter();
+        }
+    }
+
+    @Override
+    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        super.keyTyped(typedChar, keyCode);
+
+        for (GuiTextField textField : this.textFields) {
+            textField.textboxKeyTyped(typedChar, keyCode);
+        }
+    }
+
+    @Override
+    public void mouseClicked(int mouseX, int mouseY, int mouseEvent) {
+        if (this.doneButton.mousePressed(this.mc, mouseX, mouseY)) {
+            this.guiCreateWorld.chunkProviderSettingsJson = this.settings.toString(); //save settings
+            this.mc.displayGuiScreen(this.guiCreateWorld); //exit
+        } else if (this.cancelButton.mousePressed(this.mc, mouseX, mouseY)) {
+            this.mc.displayGuiScreen(this.guiCreateWorld); //exit without saving
+        } else {
+            boolean updateQueued = false;
+            for (GuiTextField textField : this.textFields) {
+                boolean focused = textField.isFocused();
+                textField.mouseClicked(mouseX, mouseY, mouseEvent);
+                if (!textField.isFocused() && focused) {
+                    updateQueued = true;
+                }
+            }
+            for (GuiButton button : this.buttonList) {
+                if (button.mousePressed(this.mc, mouseX, mouseY)) {
+                    updateQueued = true;
+                }
+            }
+            if (updateQueued) {
+                this.initGui();
+            }
+        }
+    }
+
+    protected interface Entry {
+        int height();
+
+        default void render(EarthGui gui, int x, int y, int width) {
+        }
+
+        default EarthGeneratorSettings touchSettings(EarthGeneratorSettings settings) {
+            return settings;
+        }
+    }
+
+    protected static class ProjectionEntry implements Entry {
+        protected final List<SubEntry> entries = new ArrayList<>();
+        @Getter
+        protected int height = 30;
+
+        public ProjectionEntry(EarthGeneratorSettings settings, EarthGui gui, int x, int y, int width) {
+            gui.addButton(new GuiButton(0, x + (width >> 1), y, width >> 1, 20, I18n.format(TerraMod.MODID + ".gui.transformation.add")) {
+                @Override
+                public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
+                    if (super.mousePressed(mc, mouseX, mouseY)) {
+                        ProjectionEntry.this.entries.add(0, Transformation.values()[0].newSubEntry(ProjectionEntry.this, gui, 0, 0, 1));
+                        return true;
+                    }
+                    return false;
+                }
+            });
+
+            GeographicProjection projection = settings.projection();
+            while (projection instanceof ProjectionTransform) {
+                ProjectionTransform transform = (ProjectionTransform) projection;
+                TransformEntry entry = Transformation.valueOf(GlobalParseRegistries.PROJECTIONS.inverse().get(transform.getClass()))
+                        .newSubEntry(this, gui, x + 10, y + this.height, width - 10);
+                entry.initFrom(transform);
+                this.height += entry.height() + 5;
+                this.entries.add(entry);
+
+                projection = transform.delegate();
+            }
+
+            SubEntry entry = new RootEntry(GlobalParseRegistries.PROJECTIONS.inverse().get(projection.getClass()), gui, x + 10, y + this.height, width - 10);
+            this.height += entry.height();
+            this.entries.add(entry);
+        }
+
+        @Override
+        public void render(EarthGui gui, int x, int y, int width) {
+            gui.fontRenderer.drawString(I18n.format(TerraMod.MODID + ".gui.projection"), x, y + (20 - 8) / 2, 0xFFFFFFFF, true);
+
+            y += 30;
+
+            for (SubEntry entry : this.entries) {
+                entry.render(gui, x + 10, y, width - 10);
+                y += entry.height() + 5;
+            }
+        }
+
+        @Override
+        public EarthGeneratorSettings touchSettings(EarthGeneratorSettings settings) {
+            StringBuilder builder = new StringBuilder();
+            for (int i = this.entries.size() - 1; i >= 0; i--) {
+                this.entries.get(i).toJson(builder);
+            }
+            return settings.withProjection(GeographicProjection.parse(builder.toString()));
+        }
+
+        protected enum Transformation {
+            flip_horizontal,
+            flip_vertical,
+            swap_axes,
+            offset {
+                @Override
+                protected TransformEntry newSubEntry(ProjectionEntry entry, EarthGui gui, int x, int y, int width) {
+                    return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraMod.MODID + ".gui.transform.offset", "dx", "dy") {
+                        @Override
+                        public void initFrom(ProjectionTransform in) {
+                            if (in instanceof OffsetProjectionTransform) {
+                                OffsetProjectionTransform transform = (OffsetProjectionTransform) in;
+                                this.textFields[0].setText(String.valueOf(transform.dx()));
+                                this.textFields[1].setText(String.valueOf(transform.dy()));
+                            } else {
+                                this.textFields[0].setText("1.0");
+                                this.textFields[1].setText("1.0");
+                            }
+                        }
+
+                        @Override
+                        protected void appendValue(StringBuilder out, int i) {
+                            out.append(Double.parseDouble(this.textFields[i].getText()));
+                        }
+                    };
+                }
+            },
+            scale {
+                @Override
+                protected TransformEntry newSubEntry(ProjectionEntry entry, EarthGui gui, int x, int y, int width) {
+                    return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraMod.MODID + ".gui.transform.scale", "x", "y") {
+                        @Override
+                        public void initFrom(ProjectionTransform in) {
+                            if (in instanceof ScaleProjectionTransform) {
+                                ScaleProjectionTransform transform = (ScaleProjectionTransform) in;
+                                this.textFields[0].setText(String.valueOf(transform.x()));
+                                this.textFields[1].setText(String.valueOf(transform.y()));
+                            } else {
+                                this.textFields[0].setText("1.0");
+                                this.textFields[1].setText("1.0");
+                            }
+                        }
+
+                        @Override
+                        protected void appendValue(StringBuilder out, int i) {
+                            out.append(Double.parseDouble(this.textFields[i].getText()));
+                        }
+                    };
+                }
+            };
+
+            static {
+                Transformation[] values = values();
+                for (int i = 0; i < values.length; i++) {
+                    values[i].next = values[(i + 1) % values.length];
+                }
+            }
+
+            private Transformation next;
+
+            protected TransformEntry newSubEntry(ProjectionEntry entry, EarthGui gui, int x, int y, int width) {
+                return new TransformEntry(this, entry, gui, x, y, width);
+            }
+        }
+
+        protected interface SubEntry {
+            int height();
+
+            default void render(EarthGui gui, int x, int y, int width) {
+            }
+
+            void toJson(StringBuilder out);
+        }
+
+        protected static class TransformEntry implements SubEntry {
+            protected final Transformation transformation;
+
+            public TransformEntry(Transformation transformation, ProjectionEntry entry, EarthGui gui, int x, int y, int width) {
+                this.transformation = transformation;
+
+                gui.addButton(new GuiButton(0, x, y, 20, 20, "\u25B2") { //up
+                    @Override
+                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
+                        if (super.mousePressed(mc, mouseX, mouseY)) {
+                            entry.entries.remove(TransformEntry.this);
+                            entry.entries.add(0, TransformEntry.this);
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+                gui.addButton(new GuiButton(0, x + 20, y, 20, 20, "\u25BC") { //down
+                    @Override
+                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
+                        if (super.mousePressed(mc, mouseX, mouseY)) {
+                            entry.entries.remove(TransformEntry.this);
+                            entry.entries.add(entry.entries.size() - 1, TransformEntry.this);
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+                gui.addButton(new GuiButton(0, x + 40, y, 20, 20, "\u2716") { //remove
+                    @Override
+                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
+                        if (super.mousePressed(mc, mouseX, mouseY)) {
+                            entry.entries.remove(TransformEntry.this);
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+
+                gui.addButton(new GuiButton(0, x + 60, y, width - 60, 20, I18n.format(TerraMod.MODID + ".gui.transformation." + transformation.name())) {
+                    @Override
+                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
+                        if (super.mousePressed(mc, mouseX, mouseY)) {
+                            entry.entries.set(entry.entries.indexOf(TransformEntry.this), transformation.next.newSubEntry(entry, gui, 0, 0, 1));
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+            }
+
+            public void initFrom(ProjectionTransform transform) {
+                //no-op
+            }
+
+            @Override
+            public int height() {
+                return 20;
+            }
+
+            @Override
+            public void toJson(StringBuilder out) {
+                out.insert(0, "{\"" + this.transformation.name() + "\":{\"delegate\":");
+                this.appendOptions(out);
+                out.append("}}");
+            }
+
+            protected void appendOptions(StringBuilder out) {
+                //no-op
+            }
+        }
+
+        protected static abstract class ParameterizedTransformEntry extends TransformEntry {
+            protected final String fieldName;
+            protected final String[] paramNames;
+            protected final GuiTextField[] textFields;
+
+            public ParameterizedTransformEntry(Transformation transformation, ProjectionEntry entry, EarthGui gui, int x, int y, int width, String fieldName, String... paramNames) {
+                super(transformation, entry, gui, x, y, width);
+
+                this.fieldName = fieldName;
+                this.paramNames = paramNames;
+
+                int maxLen = Arrays.stream(paramNames)
+                                     .map(s -> fieldName + '.' + s)
+                                     .map(I18n::format)
+                                     .mapToInt(gui.fontRenderer::getStringWidth)
+                                     .max().getAsInt() + 5;
+
+                this.textFields = new GuiTextField[paramNames.length];
+                for (int i = 0; i < paramNames.length; i++) {
+                    this.textFields[i] = gui.addTextField(x + maxLen, y + super.height() + 2 + i * 24, width - maxLen - 2, 20);
+                }
+
+                this.initFrom(null);
+            }
+
+            @Override
+            public int height() {
+                return super.height() + 2 + this.textFields.length * 24;
+            }
+
+            @Override
+            public void render(EarthGui gui, int x, int y, int width) {
+                for (int i = 0; i < this.paramNames.length; i++) {
+                    gui.fontRenderer.drawString(I18n.format(this.fieldName + '.' + this.paramNames[i]), x, y + super.height() + 2 + i * 24 + (20 - 8) / 2, -1, true);
+                }
+            }
+
+            @Override
+            protected void appendOptions(StringBuilder out) {
+                for (int i = 0; i < this.paramNames.length; i++) {
+                    out.append(",\"").append(this.paramNames[i]).append("\":");
+                    this.appendValue(out, i);
+                }
+            }
+
+            protected abstract void appendValue(StringBuilder out, int i);
+        }
+
+        protected static class RootEntry implements SubEntry {
+            protected static final String[] PROJECTION_NAMES = GlobalParseRegistries.PROJECTIONS.entrySet().stream()
+                    .filter(e -> !ProjectionTransform.class.isAssignableFrom(e.getValue()))
+                    .map(Map.Entry::getKey)
+                    .toArray(String[]::new);
+
+            protected int index;
+
+            public RootEntry(String projectionName, EarthGui gui, int x, int y, int width) {
+                this.index = PArrays.indexOf(PROJECTION_NAMES, projectionName);
+
+                gui.addButton(new GuiButton(0, x, y, width, 20, I18n.format(TerraMod.MODID + ".gui.projection." + projectionName)) {
+                    @Override
+                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
+                        if (super.mousePressed(mc, mouseX, mouseY)) {
+                            RootEntry.this.index = (RootEntry.this.index + 1) % PROJECTION_NAMES.length;
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+            }
+
+            @Override
+            public int height() {
+                return 20;
+            }
+
+            @Override
+            public void toJson(StringBuilder out) {
+                checkArg(out.length() == 0, "must be first element in json output!");
+                out.append("{\"").append(PROJECTION_NAMES[this.index]).append("\":{}}");
+            }
+        }
+    }
+
+    protected static class ToggleEntry implements Entry {
+        protected final BiFunction<EarthGeneratorSettings, Boolean, EarthGeneratorSettings> touch;
+        protected boolean value;
+
+        public ToggleEntry(EarthGui gui, int x, int y, int width, boolean value, String name, BiFunction<EarthGeneratorSettings, Boolean, EarthGeneratorSettings> touch) {
+            this.touch = touch;
+            this.value = value;
+
+            gui.addButton(new GuiButton(0, x, y, width, 20, I18n.format(TerraMod.MODID + ".gui." + name) + ": " + I18n.format("options." + (value ? "on" : "off"))) {
+                @Override
+                public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
+                    if (super.mousePressed(mc, mouseX, mouseY)) {
+                        ToggleEntry.this.value = !ToggleEntry.this.value;
+                        return true;
+                    }
+                    return false;
+                }
+            });
+        }
+
+        @Override
+        public int height() {
+            return 20;
+        }
+
+        @Override
+        public EarthGeneratorSettings touchSettings(EarthGeneratorSettings settings) {
+            return this.touch.apply(settings, this.value);
+        }
+    }
+
+    @RequiredArgsConstructor
+    @Getter
+    protected static class PaddingEntry implements Entry {
+        protected final int height;
+    }
+
+    protected static class CWGEntry implements Entry {
+        protected String text;
+
+        public CWGEntry(EarthGeneratorSettings settings, EarthGui gui, int x, int y, int width) {
+            int text = gui.fontRenderer.getStringWidth(I18n.format(TerraMod.MODID + ".gui.cwg")) + 5;
+            x += text;
+            width -= text;
+
+            this.text = settings.cwg();
+
+            gui.addButton(new GuiButton(0, x + width - 20, y, 20, 20, "...") {
+                @Override
+                public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
+                    if (super.mousePressed(mc, mouseX, mouseY)) {
+                        GuiCreateWorld fakeParent = new GuiCreateWorld(null);
+                        fakeParent.chunkProviderSettingsJson = CWGEntry.this.text;
+
+                        MinecraftForge.EVENT_BUS.register(new Object() {
+                            @SubscribeEvent
+                            public void onGuiOpen(GuiOpenEvent event) {
+                                if (event.getGui() == fakeParent) {
+                                    CWGEntry.this.text = fakeParent.chunkProviderSettingsJson;
+                                    event.setGui(gui);
+                                    MinecraftForge.EVENT_BUS.unregister(this);
+                                }
+                            }
+                        });
+
+                        for (WorldType type : WorldType.WORLD_TYPES) { //find CustomCubicWorldType instance
+                            if (type instanceof CustomCubicWorldType) {
+                                type.onCustomizeButton(mc, fakeParent);
+                                break;
+                            }
+                        }
+                    }
+                    return false;
+                }
+            });
+        }
+
+        @Override
+        public int height() {
+            return 20;
+        }
+
+        @Override
+        public void render(EarthGui gui, int x, int y, int width) {
+            gui.fontRenderer.drawString(I18n.format(TerraMod.MODID + ".gui.cwg"), x, y + (20 - 8) / 2, 0xFFFFFFFF, true);
+        }
+
+        @Override
+        public EarthGeneratorSettings touchSettings(EarthGeneratorSettings settings) {
+            return settings.withCwg(this.text);
+        }
     }
 }

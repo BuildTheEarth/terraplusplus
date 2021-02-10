@@ -1,5 +1,6 @@
 package io.github.terra121.dataset;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import io.github.terra121.util.IntToDoubleBiFunction;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -30,7 +31,8 @@ public enum BlendMode {
             return lerp(lerp(v00, v01, fz), lerp(v10, v11, fz), fx);
         }
     },
-    SMOOTH(-0.5d, 3) {
+    @JsonAlias("SMOOTH") //old name
+    CUBIC(-0.5d, 3) {
         /**
          * Lerping produces visible square patches.
          *

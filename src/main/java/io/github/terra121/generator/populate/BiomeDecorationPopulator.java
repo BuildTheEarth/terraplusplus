@@ -3,8 +3,8 @@ package io.github.terra121.generator.populate;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.CubicBiome;
+import io.github.terra121.generator.CachedChunkData;
 import io.github.terra121.generator.EarthGeneratorSettings;
-import io.github.terra121.generator.cache.CachedChunkData;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import lombok.NonNull;
 import net.minecraft.world.World;
@@ -24,7 +24,7 @@ public class BiomeDecorationPopulator implements IEarthPopulator {
 
     public BiomeDecorationPopulator(@NonNull EarthGeneratorSettings settings) {
         for (Biome biome : ForgeRegistries.BIOMES) {
-            this.populators.put(biome, CubicBiome.getCubic(biome).getDecorator(settings.getCustomCubic()));
+            this.populators.put(biome, CubicBiome.getCubic(biome).getDecorator(settings.customCubic()));
         }
     }
 

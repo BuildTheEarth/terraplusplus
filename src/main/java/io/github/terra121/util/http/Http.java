@@ -15,7 +15,6 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http2.Http2SecurityUtil;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
@@ -36,10 +35,13 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,6 +55,8 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @UtilityClass
 public class Http {
+    protected static final long TIMEOUT = 20L;
+
     private final ThreadFactory NETWORK_THREAD_FACTORY = PThreadFactories.builder().daemon().minPriority().name("terra++ HTTP network thread").build();
 
     protected final EventLoop NETWORK_EVENT_LOOP = (Epoll.isAvailable()
@@ -62,7 +66,8 @@ public class Http {
     protected final Bootstrap DEFAULT_BOOTSTRAP = new Bootstrap()
             .group(NETWORK_EVENT_LOOP)
             .channel(Epoll.isAvailable() ? EpollSocketChannel.class : NioSocketChannel.class)
-            .option(ChannelOption.SO_KEEPALIVE, true);
+            .option(ChannelOption.SO_KEEPALIVE, true)
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, toInt(TimeUnit.SECONDS.toMillis(TIMEOUT)));
 
     protected final SslContext SSL_CONTEXT;
 
@@ -111,12 +116,10 @@ public class Http {
 
             @Override
             public void accept(ByteBuf cachedData, Throwable throwable) { //stage 1: handle value from cache
-                if (TerraMod.LOGGER != null) {
-                    if (throwable != null) {
-                        TerraMod.LOGGER.error("Unable to read cache for " + this.parsed, throwable);
-                    } else if (!TerraConfig.reducedConsoleMessages) {
-                        TerraMod.LOGGER.info("Cache {}: {}", cachedData != null ? "hit" : "miss", this.parsed);
-                    }
+                if (throwable != null) {
+                    TerraMod.LOGGER.error("Unable to read cache for " + this.parsed, throwable);
+                } else if (!TerraConfig.reducedConsoleMessages) {
+                    TerraMod.LOGGER.info("Cache {}: {}", cachedData != null ? "hit" : "miss", this.parsed);
                 }
 
                 try {
@@ -134,9 +137,7 @@ public class Http {
                         }
                     }
                 } catch (Exception e) {
-                    if (TerraMod.LOGGER != null) {
-                        TerraMod.LOGGER.error("Unable to read cache for " + this.parsed, e);
-                    }
+                    TerraMod.LOGGER.error("Unable to read cache for " + this.parsed, e);
                 } finally {
                     ReferenceCountUtil.release(cachedData);
                 }
@@ -148,8 +149,14 @@ public class Http {
             @Override
             public void handle(FullHttpResponse response, Throwable throwable) { //stage 2: handle HTTP response
                 if (throwable != null) { //if an exception occurred, notify future and exit
+                    if (!TerraConfig.reducedConsoleMessages) {
+                        TerraMod.LOGGER.warn("Request failed: {}", this.parsed);
+                    }
                     future.completeExceptionally(throwable);
                 } else {
+                    if (!TerraConfig.reducedConsoleMessages) {
+                        TerraMod.LOGGER.info("Request succeeded: {}", this.parsed);
+                    }
                     Path cacheFile = this.cacheFile; //get here because the field might be modified if the response is a redirect
                     ByteBuf toCacheData;
                     switch (response.status().codeClass()) {
@@ -178,12 +185,15 @@ public class Http {
                                 break;
                             }
                         default: //failure
-                            future.completeExceptionally(new IOException("response from server: " + response.status() + " for url " + this.parsed));
+                            future.completeExceptionally(new IOException("response from server: \"" + response.status() + "\" for url " + this.parsed));
                             return;
                     }
 
-                    //write to disk
-                    Disk.write(cacheFile, toCacheData);
+                    if (cacheFile != null) { //store in cache
+                        Disk.write(cacheFile, toCacheData);
+                    } else { //manually release the data that would have been written to cache
+                        toCacheData.release();
+                    }
                 }
             }
 
@@ -195,12 +205,27 @@ public class Http {
                 }
 
                 if ("file".equalsIgnoreCase(this.parsed.getProtocol())) { //it's a file, read from disk (also async)
+                    if (!TerraConfig.reducedConsoleMessages) {
+                        future.whenComplete((data, t) -> {
+                            if (t != null) {
+                                TerraMod.LOGGER.error("Failed to read file: " + this.parsed.getFile(), t);
+                            } else if (data != null) {
+                                TerraMod.LOGGER.info("Read file: {}", this.parsed.getFile());
+                            } else {
+                                TerraMod.LOGGER.info("File not found: {}", this.parsed.getFile());
+                            }
+                        });
+                    }
                     copyResultTo(Disk.read(Paths.get(this.parsed.getFile()), false), future);
                     return;
                 }
 
-                this.cacheFile = Disk.cacheFileFor(this.parsed.toString());
-                Disk.read(this.cacheFile, true).whenComplete(this);
+                if (TerraConfig.http.cache) { //attempt to read from cache
+                    this.cacheFile = Disk.cacheFileFor(this.parsed.toString());
+                    Disk.read(this.cacheFile, true).whenComplete(this);
+                } else { //send the actual request
+                    managerFor(this.parsed).submit(this.parsed.getFile(), this);
+                }
             }
         }
 
@@ -237,7 +262,7 @@ public class Http {
 
         class State implements BiConsumer<T, Throwable> {
             final CompletableFuture<T> future = new CompletableFuture<>();
-            RuntimeException e = null;
+            List<Throwable> suppressed;
 
             /**
              * The current iteration index.
@@ -252,10 +277,10 @@ public class Http {
             @Override
             public void accept(T value, Throwable cause) {
                 if (cause != null) {
-                    if (this.e == null) {
-                        this.e = new RuntimeException("All URLs completed exceptionally!");
+                    if (this.suppressed == null) {
+                        this.suppressed = new ArrayList<>();
                     }
-                    this.e.addSuppressed(cause);
+                    this.suppressed.add(new RuntimeException(urls[this.i], cause));
                 } else if (value == null) { //remember that one of the URLs 404'd
                     this.foundMissing = true;
                 } else { //complete the future successfully with the retrieved value
@@ -270,9 +295,16 @@ public class Http {
                 if (++this.i < urls.length) {
                     getSingle(urls[this.i], parseFunction).whenComplete(this);
                 } else if (this.foundMissing) { //the best result from any of the URLs was a 404
+                    if (this.suppressed != null) {
+                        RuntimeException e = new RuntimeException();
+                        this.suppressed.forEach(e::addSuppressed);
+                        TerraMod.LOGGER.error("Some URLs completed exceptionally", e);
+                    }
                     this.future.complete(null);
                 } else {
-                    this.future.completeExceptionally(this.e);
+                    RuntimeException e = new RuntimeException("All URLs completed exceptionally!");
+                    this.suppressed.forEach(e::addSuppressed);
+                    this.future.completeExceptionally(e);
                 }
             }
         }
@@ -321,7 +353,7 @@ public class Http {
 
     public void configChanged() {
         Matcher matcher = Pattern.compile("^(\\d+): (.+)$").matcher("");
-        for (String entry : TerraConfig.data.maxConcurrentRequests) {
+        for (String entry : TerraConfig.http.maxConcurrentRequests) {
             if (matcher.reset(entry).matches()) {
                 try {
                     setMaximumConcurrentRequestsTo(matcher.group(2), Integer.parseInt(matcher.group(1)));

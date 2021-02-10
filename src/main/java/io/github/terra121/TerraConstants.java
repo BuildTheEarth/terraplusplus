@@ -1,9 +1,12 @@
 package io.github.terra121;
 
-import io.github.terra121.util.TranslateUtil;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.TextFormatting;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import io.github.terra121.dataset.osm.BlockStateParser;
+import io.github.terra121.util.BlockStateDeserializeMixin;
+import net.minecraft.block.state.IBlockState;
 
 public class TerraConstants {
     public static final String prefix = "&2&lT++ &8&l> ";
@@ -15,6 +18,19 @@ public class TerraConstants {
 
     public static final String version = "1.0";
 
+    public static final Gson GSON = new GsonBuilder()
+            .registerTypeAdapter(IBlockState.class, BlockStateParser.INSTANCE)
+            .create();
+
+    public static final JsonMapper JSON_MAPPER = JsonMapper.builder()
+            .configure(JsonReadFeature.ALLOW_JAVA_COMMENTS, true)
+            .configure(JsonReadFeature.ALLOW_LEADING_ZEROS_FOR_NUMBERS, true)
+            .configure(JsonReadFeature.ALLOW_LEADING_DECIMAL_POINT_FOR_NUMBERS, true)
+            .configure(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS, true)
+            .configure(JsonReadFeature.ALLOW_TRAILING_COMMA, true)
+            .addMixIn(IBlockState.class, BlockStateDeserializeMixin.class)
+            .build();
+
     /**
      * Earth's circumference around the equator, in meters.
      */
@@ -24,4 +40,6 @@ public class TerraConstants {
      * Earth's circumference around the poles, in meters.
      */
     public static final double EARTH_POLAR_CIRCUMFERENCE = 40008000;
+
+    public static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
 }
