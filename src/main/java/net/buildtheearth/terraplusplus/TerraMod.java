@@ -42,17 +42,6 @@ public class TerraMod {
         DimensionManager.registerDimension(0, type);
     }
 
-    /**
-     * Let other mods detect if this is Legacy Terra121 or if it is Terra++.
-     * Terramap uses (or will use) this.
-     *
-     * @return true
-     * @throws NoSuchMethodException if Terra121 is installed instead of Terra++
-     */
-    public static boolean isTerraPlusPlus() {
-        return true;
-    }
-
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         LOGGER = event.getModLog();
