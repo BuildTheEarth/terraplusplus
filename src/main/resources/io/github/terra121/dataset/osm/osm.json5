@@ -39,10 +39,18 @@
                 "emit": {
                     "wide": {
                         "draw": {
-                            "block": {
-                                "id": "minecraft:concrete",
-                                "properties": {
-                                    "color": "gray"
+                            "all": {
+                                "no_trees": {},
+                                "weight_greater_than": {
+                                    "delegate": {
+                                        "block": {
+                                            "id": "minecraft:concrete",
+                                            "properties": {
+                                                "color": "gray"
+                                            }
+                                        }
+                                    },
+                                    "value": 3
                                 }
                             }
                         },
@@ -58,7 +66,7 @@
                                     },
                                     "constant": 2
                                 },
-                                "constant": 2
+                                "constant": 6 // 2 (original) + 4 (trees)
                             }
                         },
                         "layer": {
@@ -84,26 +92,37 @@
                 "emit": {
                     "wide": {
                         "draw": {
-                            "block": {
-                                "id": "minecraft:concrete",
-                                "properties": {
-                                    "color": "gray"
+                            "all": {
+                                "no_trees": {},
+                                "weight_greater_than": {
+                                    "delegate": {
+                                        "block": {
+                                            "id": "minecraft:concrete",
+                                            "properties": {
+                                                "color": "gray"
+                                            }
+                                        }
+                                    },
+                                    "value": 3
                                 }
                             }
                         },
                         "radius": {
-                            "floor_div": {
-                                "*": {
-                                    "max": {
-                                        "tag": {
-                                            "key": "lanes",
-                                            "fallback": 2
+                            "+": {
+                                "floor_div": {
+                                    "*": {
+                                        "max": {
+                                            "tag": {
+                                                "key": "lanes",
+                                                "fallback": 2
+                                            },
+                                            "constant": 2
                                         },
-                                        "constant": 2
+                                        "constant": 3
                                     },
-                                    "constant": 3
+                                    "constant": 2
                                 },
-                                "constant": 2
+                                "constant": 4
                             }
                         },
                         "layer": {
@@ -129,20 +148,31 @@
                 "emit": {
                     "wide": {
                         "draw": {
-                            "block": {
-                                "id": "minecraft:concrete",
-                                "properties": {
-                                    "color": "gray"
+                            "all": {
+                                "no_trees": {},
+                                "weight_greater_than": {
+                                    "delegate": {
+                                        "block": {
+                                            "id": "minecraft:concrete",
+                                            "properties": {
+                                                "color": "gray"
+                                            }
+                                        }
+                                    },
+                                    "value": 3
                                 }
                             }
                         },
                         "radius": {
-                            "*": {
-                                "tag": {
-                                    "key": "lanes",
-                                    "fallback": 2
+                            "+": {
+                                "*": {
+                                    "tag": {
+                                        "key": "lanes",
+                                        "fallback": 2
+                                    },
+                                    "constant": 2
                                 },
-                                "constant": 2
+                                "constant": 4
                             }
                         },
                         "layer": {
@@ -168,17 +198,28 @@
                 "emit": {
                     "wide": {
                         "draw": {
-                            "block": {
-                                "id": "minecraft:concrete",
-                                "properties": {
-                                    "color": "gray"
+                            "all": {
+                                "no_trees": {},
+                                "weight_greater_than": {
+                                    "delegate": {
+                                        "block": {
+                                            "id": "minecraft:concrete",
+                                            "properties": {
+                                                "color": "gray"
+                                            }
+                                        }
+                                    },
+                                    "value": 3
                                 }
                             }
                         },
                         "radius": {
-                            "tag": {
-                                "key": "lanes",
-                                "fallback": 2
+                            "+": {
+                                "tag": {
+                                    "key": "lanes",
+                                    "fallback": 2
+                                },
+                                "constant": 4
                             }
                         },
                         "layer": {
@@ -209,26 +250,37 @@
                 "emit": {
                     "wide": {
                         "draw": {
-                            "block": {
-                                "id": "minecraft:concrete",
-                                "properties": {
-                                    "color": "gray"
+                            "all": {
+                                "no_trees": {},
+                                "weight_greater_than": {
+                                    "delegate": {
+                                        "block": {
+                                            "id": "minecraft:concrete",
+                                            "properties": {
+                                                "color": "gray"
+                                            }
+                                        }
+                                    },
+                                    "value": 3
                                 }
                             }
                         },
                         "radius": {
-                            "floor_div": {
-                                "+": {
-                                    "*": {
-                                        "tag": {
-                                            "key": "lanes",
-                                            "fallback": 2
+                            "+": {
+                                "floor_div": {
+                                    "+": {
+                                        "*": {
+                                            "tag": {
+                                                "key": "lanes",
+                                                "fallback": 2
+                                            },
+                                            "constant": 3
                                         },
-                                        "constant": 3
+                                        "constant": 1
                                     },
-                                    "constant": 1
+                                    "constant": 2
                                 },
-                                "constant": 2
+                                "constant": 4
                             }
                         },
                         "layer": {
@@ -325,10 +377,24 @@
                 "emit": {
                     "wide": {
                         "draw": {
-                            "water": {}
+                            "all": {
+                                "no_trees": {},
+                                "weight_greater_than": {
+                                    "delegate": {
+                                        //offset weight by -4, because "water" actually uses the weight value and it'll be too high otherwise
+                                        "weight_add": {
+                                            "delegate": {
+                                                "water": {}
+                                            },
+                                            "value": -4
+                                        }
+                                    },
+                                    "value": 3
+                                }
+                            }
                         },
                         "radius": {
-                            "constant": 5
+                            "constant": 9 // 5 (original) + 4 (trees)
                         },
                         "layer": {
                             "tag": {
@@ -352,18 +418,34 @@
                     }
                 },
                 "emit": {
-                    "convert": {
-                        "line": {
-                            "narrow": {
-                                "draw": {
-                                    "block": {
-                                        "id": "minecraft:brick_block"
-                                    }
-                                },
-                                "layer": {
-                                    "tag": {
-                                        "key": "layer",
-                                        "fallback": 0
+                    "all": {
+                        //buildings shouldn't have trees inside of or right next to them
+                        "distance": {
+                            "draw": {
+                                "no_trees": {}
+                            },
+                            "layer": {
+                                "tag": {
+                                    "key": "layer",
+                                    "fallback": 0
+                                }
+                            },
+                            "maxDist": 4
+                        },
+                        //draw building outline normally
+                        "convert": {
+                            "line": {
+                                "narrow": {
+                                    "draw": {
+                                        "block": {
+                                            "id": "minecraft:brick_block"
+                                        }
+                                    },
+                                    "layer": {
+                                        "tag": {
+                                            "key": "layer",
+                                            "fallback": 0
+                                        }
                                     }
                                 }
                             }

@@ -26,9 +26,9 @@ import static io.github.terra121.TerraConstants.*;
  * @author DaPorkchop_
  */
 @JsonAdapter(PolygonConvert.Parser.class)
-interface PolygonConvert extends PolygonMapper {
+public interface PolygonConvert extends PolygonMapper {
     class Parser extends JsonParser.Typed<PolygonConvert> {
-        static final Map<String, Class<? extends PolygonConvert>> TYPES = new Object2ObjectOpenHashMap<>();
+        public static final Map<String, Class<? extends PolygonConvert>> TYPES = new Object2ObjectOpenHashMap<>();
 
         static {
             TYPES.put("line", Line.class);

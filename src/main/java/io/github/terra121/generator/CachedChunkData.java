@@ -173,7 +173,7 @@ public class CachedChunkData extends CustomAttributeContainer {
         }
 
         public Builder updateWaterDepth(int x, int z, int depth) {
-            depth = ((depth + 32) & 0x3F) | WATERDEPTH_TYPE_WATER;
+            depth = clamp(depth + 32, 0, 0x3F) | WATERDEPTH_TYPE_WATER;
             if (depth > this.waterDepth[x * 16 + z]) {
                 this.waterDepth[x * 16 + z] = (byte) depth;
             }
@@ -181,7 +181,7 @@ public class CachedChunkData extends CustomAttributeContainer {
         }
 
         public Builder updateOceanDepth(int x, int z, int depth) {
-            depth = ((depth + 32) & 0x3F) | WATERDEPTH_TYPE_OCEAN;
+            depth = clamp(depth + 32, 0, 0x3F) | WATERDEPTH_TYPE_OCEAN;
             if (depth > this.waterDepth[x * 16 + z]) {
                 this.waterDepth[x * 16 + z] = (byte) depth;
             }

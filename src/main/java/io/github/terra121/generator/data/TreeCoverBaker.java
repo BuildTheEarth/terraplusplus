@@ -19,7 +19,7 @@ import static net.daporkchop.lib.common.math.PMath.*;
  * @author DaPorkchop_
  */
 public class TreeCoverBaker implements IEarthDataBaker<double[]> {
-    public static final double TREE_AREA = 3.0d * 3.0d; //the surface area covered by an average tree
+    public static final double TREE_AREA = 2.0d * 2.0d; //the surface area covered by an average tree
 
     public static final byte[] FALLBACK_TREE_DENSITY = new byte[16 * 16];
 

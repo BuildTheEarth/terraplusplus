@@ -203,7 +203,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
             }
         }
 
-        State state = new State(EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS));
+        State state = new State(EarthGeneratorSettings.parseUncached(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS));
         state.initSettings();
 
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d);

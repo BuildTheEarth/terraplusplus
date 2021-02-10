@@ -28,6 +28,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.With;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.ref.Ref;
@@ -48,30 +49,7 @@ public class EarthGeneratorSettings {
 
     private static final LoadingCache<String, EarthGeneratorSettings> SETTINGS_PARSE_CACHE = CacheBuilder.newBuilder()
             .weakKeys().weakValues()
-            .build(CacheLoader.from(generatorSettings -> {
-                try {
-                    if (!generatorSettings.contains("version")) { //upgrade legacy config
-                        TerraMod.LOGGER.info("Parsing legacy config: {}", generatorSettings);
-
-                        LegacyConfig legacy = JSON_MAPPER.readValue(generatorSettings, LegacyConfig.class);
-
-                        GeographicProjection projection = JSON_MAPPER.readValue("{\"" + LegacyConfig.upgradeLegacyProjectionName(legacy.projection) + "\":{}}", GeographicProjection.class);
-                        projection = LegacyConfig.orientProjectionLegacy(projection, legacy.orentation);
-                        if (legacy.scaleX != 1.0d || legacy.scaleY != 1.0d) {
-                            projection = new ScaleProjectionTransform(projection, legacy.scaleX, legacy.scaleY);
-                        }
-                        if (legacy.offsetX != 0.0d || legacy.offsetY != 0.0d) {
-                            projection = new OffsetProjectionTransform(projection, legacy.offsetX, legacy.offsetY);
-                        }
-
-                        return new EarthGeneratorSettings(projection, legacy.customcubic, true, true, CONFIG_VERSION);
-                    }
-
-                    return JSON_MAPPER.readValue(generatorSettings, EarthGeneratorSettings.class);
-                } catch (IOException e) {
-                    throw new RuntimeException("unable to parse generator settings!", e);
-                }
-            }));
+            .build(CacheLoader.from(EarthGeneratorSettings::parseUncached));
 
     public static final String DEFAULT_SETTINGS;
     public static final String BTE_DEFAULT_SETTINGS;
@@ -101,6 +79,38 @@ public class EarthGeneratorSettings {
         }
 
         return SETTINGS_PARSE_CACHE.getUnchecked(generatorSettings);
+    }
+
+    /**
+     * Parses the given generator settings without caching.
+     *
+     * @param generatorSettings the settings string to parse
+     * @return the parsed settings
+     */
+    @SneakyThrows(IOException.class)
+    public static EarthGeneratorSettings parseUncached(String generatorSettings) {
+        if (Strings.isNullOrEmpty(generatorSettings)) {
+            generatorSettings = DEFAULT_SETTINGS;
+        }
+
+        if (!generatorSettings.contains("version")) { //upgrade legacy config
+            TerraMod.LOGGER.info("Parsing legacy config: {}", generatorSettings);
+
+            LegacyConfig legacy = JSON_MAPPER.readValue(generatorSettings, LegacyConfig.class);
+
+            GeographicProjection projection = JSON_MAPPER.readValue("{\"" + LegacyConfig.upgradeLegacyProjectionName(legacy.projection) + "\":{}}", GeographicProjection.class);
+            projection = LegacyConfig.orientProjectionLegacy(projection, legacy.orentation);
+            if (legacy.scaleX != 1.0d || legacy.scaleY != 1.0d) {
+                projection = new ScaleProjectionTransform(projection, legacy.scaleX, legacy.scaleY);
+            }
+            if (legacy.offsetX != 0.0d || legacy.offsetY != 0.0d) {
+                projection = new OffsetProjectionTransform(projection, legacy.offsetX, legacy.offsetY);
+            }
+
+            return new EarthGeneratorSettings(projection, legacy.customcubic, true, true, CONFIG_VERSION);
+        }
+
+        return JSON_MAPPER.readValue(generatorSettings, EarthGeneratorSettings.class);
     }
 
     @NonNull

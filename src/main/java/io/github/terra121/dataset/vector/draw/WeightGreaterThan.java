@@ -15,22 +15,24 @@ import static io.github.terra121.TerraConstants.*;
 /**
  * @author DaPorkchop_
  */
-@JsonAdapter(Add.Parser.class)
+@JsonAdapter(WeightGreaterThan.Parser.class)
 @Builder
-final class Add implements DrawFunction {
+final class WeightGreaterThan implements DrawFunction {
     @NonNull
     protected final DrawFunction delegate;
     protected final int value;
 
     @Override
     public void drawOnto(@NonNull CachedChunkData.Builder data, int x, int z, int weight) {
-        this.delegate.drawOnto(data, x, z, weight + this.value);
+        if (weight > this.value) {
+            this.delegate.drawOnto(data, x, z, weight);
+        }
     }
 
-    static class Parser extends JsonParser<Add> {
+    static class Parser extends JsonParser<WeightGreaterThan> {
         @Override
-        public Add read(JsonReader in) throws IOException {
-            AddBuilder builder = builder();
+        public WeightGreaterThan read(JsonReader in) throws IOException {
+            WeightGreaterThanBuilder builder = builder();
 
             in.beginObject();
             while (in.peek() != JsonToken.END_OBJECT) {

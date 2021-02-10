@@ -77,6 +77,7 @@ public class TerraMod {
         if (Side.CLIENT == event.getSide()) {
             MinecraftForge.EVENT_BUS.register(BTEWorldType.class);
         }
+        MinecraftForge.TERRAIN_GEN_BUS.register(GenerationEventDenier.class);
 
         PermissionAPI.registerNode(TerraConstants.controlCommandNode + "tpll", DefaultPermissionLevel.OP, "Allows a player to do /tpll");
         PermissionAPI.registerNode(TerraConstants.controlCommandNode + "terra", DefaultPermissionLevel.OP, "Allows access to terra commands");

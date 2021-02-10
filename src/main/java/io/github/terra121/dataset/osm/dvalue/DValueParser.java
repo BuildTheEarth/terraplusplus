@@ -8,8 +8,8 @@ import java.util.Map;
 /**
  * @author DaPorkchop_
  */
-class DValueParser extends JsonParser.Typed<DValue> {
-    private static final Map<String, Class<? extends DValue>> TYPES = new Object2ObjectOpenHashMap<>();
+public class DValueParser extends JsonParser.Typed<DValue> {
+    public static final Map<String, Class<? extends DValue>> TYPES = new Object2ObjectOpenHashMap<>();
 
     static {
         TYPES.put("+", BiOp.Add.class);

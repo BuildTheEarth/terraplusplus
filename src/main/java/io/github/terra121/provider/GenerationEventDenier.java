@@ -5,6 +5,7 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.Popula
 import io.github.terra121.EarthWorldType;
 import io.github.terra121.TerraMod;
 import io.github.terra121.generator.EarthBiomeProvider;
+import io.github.terra121.generator.EarthGenerator;
 import lombok.experimental.UtilityClass;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
@@ -17,7 +18,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class GenerationEventDenier {
     @SubscribeEvent
     public void populateCatcher(PopulateCubeEvent.Populate event) {
-        if (event.getType() == PopulateChunkEvent.Populate.EventType.ICE && event.getGenerator() instanceof EarthWorldType) {
+        if (event.getType() == PopulateChunkEvent.Populate.EventType.ICE && event.getGenerator() instanceof EarthGenerator) {
             event.setResult(PopulateCubeEvent.Populate.Result.DENY);
         }
     }
