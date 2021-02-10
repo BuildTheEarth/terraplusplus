@@ -12,6 +12,9 @@ import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException
 import net.buildtheearth.terraplusplus.util.MathUtils;
 import lombok.Getter;
 
+import java.util.Collections;
+import java.util.Map;
+
 /**
  * Implementation of the web Mercator projection, with projected space normalized between 0 and 2^zoom * 256.
  * This projection is mainly used by tiled mapping services like GoogleMaps or OpenStreetMap.
@@ -33,11 +36,11 @@ public class WebMercatorProjection implements GeographicProjection {
     protected transient final double scaleFrom;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public WebMercatorProjection(@JsonProperty(value = "zoom", required = true) int zoom) {
-        this.zoom = notNegative(zoom, "zoom");
+    public WebMercatorProjection(@JsonProperty("zoom") Integer zoom) {
+        this.zoom = zoom != null ? notNegative(zoom, "zoom") : 0;
 
-        this.scaleTo = 1.0d / (256 << zoom);
-        this.scaleFrom = 256 << zoom;
+        this.scaleTo = 1.0d / (256 << this.zoom);
+        this.scaleFrom = 256 << this.zoom;
     }
 
     @Override
@@ -60,7 +63,7 @@ public class WebMercatorProjection implements GeographicProjection {
 
     @Override
     public double[] bounds() {
-        return new double[]{ 0, 0, 1, 1 };
+        return new double[]{ 0, 0, this.scaleFrom, this.scaleFrom };
     }
 
     @Override
@@ -78,4 +81,8 @@ public class WebMercatorProjection implements GeographicProjection {
         return "Web Mercator";
     }
 
+    @Override
+    public Map<String, Object> properties() {
+        return Collections.singletonMap("zoom", this.zoom);
+    }
 }

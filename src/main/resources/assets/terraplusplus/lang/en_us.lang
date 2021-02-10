@@ -8,7 +8,7 @@ terraplusplus.gui.header=Terra++ World Options
 terraplusplus.gui.projection=Projection
 terraplusplus.gui.cwg=CubicWorldGen Preset
 terraplusplus.gui.use_default_heights=Default Elevation Datasets
-terraplusplus.gui.use_default_tree=Default Tree Cover Datasets
+terraplusplus.gui.use_default_trees=Default Tree Cover Datasets
 
 ## Transformations
 terraplusplus.gui.transformation.add=Add Transform
@@ -25,6 +25,7 @@ terraplusplus.gui.transformation.swap_axes=Swap Axes
 ## Projection types
 terraplusplus.gui.projection.centered_mercator=Mercator
 terraplusplus.gui.projection.web_mercator=Web Mercator
+terraplusplus.gui.projection.web_mercator.zoom=Zoom
 terraplusplus.gui.projection.transverse_mercator=Transverse Mercator
 terraplusplus.gui.projection.equirectangular=Equirectangular
 terraplusplus.gui.projection.sinusoidal=Sinusoidal

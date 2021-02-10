@@ -1,6 +1,7 @@
 package net.buildtheearth.terraplusplus.projection;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -234,6 +235,13 @@ public interface GeographicProjection {
 	default float azimuth(double x, double y, float angle) throws OutOfProjectionBoundsException {
 		return this.azimuth(x, y, angle, 1E-5);
 	}
+
+    /**
+     * @return any additional configuration properties used by this projection
+     */
+	default Map<String, Object> properties() {
+	    return Collections.emptyMap();
+    }
 
     class Deserializer extends TypedDeserializer<GeographicProjection> {
         @Override

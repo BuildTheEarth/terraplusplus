@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiFunction;
 import java.util.stream.IntStream;
@@ -307,7 +308,7 @@ public class EarthGui extends GuiScreen {
                 projection = transform.delegate();
             }
 
-            SubEntry entry = new RootEntry(GlobalParseRegistries.PROJECTIONS.inverse().get(projection.getClass()), gui, x + 10, y + this.height, width - 10);
+            SubEntry entry = new RootEntry(projection, gui, x + 10, y + this.height, width - 10);
             this.height += entry.height();
             this.entries.add(entry);
         }
@@ -340,7 +341,7 @@ public class EarthGui extends GuiScreen {
             offset {
                 @Override
                 protected TransformEntry newSubEntry(ProjectionEntry entry, EarthGui gui, int x, int y, int width) {
-                    return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraMod.MODID + ".gui.transform.offset", "dx", "dy") {
+                    return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraMod.MODID + ".gui.transformation.offset", "dx", "dy") {
                         @Override
                         public void initFrom(ProjectionTransform in) {
                             if (in instanceof OffsetProjectionTransform) {
@@ -363,7 +364,7 @@ public class EarthGui extends GuiScreen {
             scale {
                 @Override
                 protected TransformEntry newSubEntry(ProjectionEntry entry, EarthGui gui, int x, int y, int width) {
-                    return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraMod.MODID + ".gui.transform.scale", "x", "y") {
+                    return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraMod.MODID + ".gui.transformation.scale", "x", "y") {
                         @Override
                         public void initFrom(ProjectionTransform in) {
                             if (in instanceof ScaleProjectionTransform) {
@@ -533,12 +534,18 @@ public class EarthGui extends GuiScreen {
                     .map(Map.Entry::getKey)
                     .toArray(String[]::new);
 
+            protected final int initialIndex;
             protected int index;
 
-            public RootEntry(String projectionName, EarthGui gui, int x, int y, int width) {
-                this.index = PArrays.indexOf(PROJECTION_NAMES, projectionName);
+            protected final String fieldName;
+            protected final Map<String, Object> properties;
+            protected final GuiTextField[] textFields;
 
-                gui.addButton(new GuiButton(0, x, y, width, 20, I18n.format(TerraMod.MODID + ".gui.projection." + projectionName)) {
+            public RootEntry(GeographicProjection projection, EarthGui gui, int x, int y, int width) {
+                String projectionName = GlobalParseRegistries.PROJECTIONS.inverse().get(projection.getClass());
+                this.initialIndex = this.index = PArrays.indexOf(PROJECTION_NAMES, projectionName);
+
+                gui.addButton(new GuiButton(0, x, y, width, 20, I18n.format(this.fieldName = TerraMod.MODID + ".gui.projection." + projectionName)) {
                     @Override
                     public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
                         if (super.mousePressed(mc, mouseX, mouseY)) {
@@ -548,17 +555,61 @@ public class EarthGui extends GuiScreen {
                         return false;
                     }
                 });
+
+                this.properties = projection.properties();
+
+                int maxLen = this.properties.keySet().stream()
+                                     .map(s -> this.fieldName + '.' + s)
+                                     .map(I18n::format)
+                                     .mapToInt(gui.fontRenderer::getStringWidth)
+                                     .max().orElse(0) + 5;
+
+                this.textFields = new GuiTextField[this.properties.size()];
+                int i = 0;
+                for (Map.Entry<String, Object> entry : this.properties.entrySet()) {
+                    this.textFields[i] = gui.addTextField(x + maxLen, y + 20 + 2 + i * 24, width - maxLen - 2, 20);
+                    this.textFields[i].setText(Objects.toString(entry.getValue()));
+                    i++;
+                }
             }
 
             @Override
             public int height() {
-                return 20;
+                return 20 + 2 + this.textFields.length * 24;
+            }
+
+            @Override
+            public void render(EarthGui gui, int x, int y, int width) {
+                int i = 0;
+                for (String s : this.properties.keySet()) {
+                    gui.fontRenderer.drawString(I18n.format(this.fieldName + '.' + s), x, y + 20 + 2 + i * 24 + (20 - 8) / 2, -1, true);
+                    i++;
+                }
             }
 
             @Override
             public void toJson(StringBuilder out) {
                 checkArg(out.length() == 0, "must be first element in json output!");
-                out.append("{\"").append(PROJECTION_NAMES[this.index]).append("\":{}}");
+                out.append("{\"").append(PROJECTION_NAMES[this.index]).append("\":{");
+                if (this.initialIndex == this.index) {
+                    int i = 0;
+                    for (Map.Entry<String, Object> entry : this.properties.entrySet()) {
+                        if (i != 0) {
+                            out.append(',');
+                        }
+                        out.append('"').append(entry.getKey()).append("\":");
+                        boolean num = entry.getValue() instanceof Number;
+                        if (!num) {
+                            out.append('"');
+                        }
+                        out.append(this.textFields[i].getText());
+                        if (!num) {
+                            out.append('"');
+                        }
+                        i++;
+                    }
+                }
+                out.append("}}");
             }
         }
     }
