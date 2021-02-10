@@ -105,7 +105,7 @@ reobf { //reobfuscate the shaded JAR
 //relocate all shaded dependencies
 task relocateShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation) {
     target = tasks.shadowJar
-    prefix = "io.github.terra121.dep"
+    prefix = "net.buildtheearth.terraplusplus.dep"
 }
 shadowJar.dependsOn relocateShadowJar
 

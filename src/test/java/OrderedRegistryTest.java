@@ -1,4 +1,4 @@
-import io.github.terra121.util.OrderedRegistry;
+import net.buildtheearth.terraplusplus.util.OrderedRegistry;
 import org.junit.Test;
 
 import java.util.Arrays;
