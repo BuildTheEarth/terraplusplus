@@ -80,7 +80,7 @@ public class Disk {
     public CompletableFuture<ByteBuf> read(@NonNull Path file, boolean ttl) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                if (!Files.isRegularFile(file) || (ttl && hasExpired(file))) { //file doesn't exist or is expired
+                if (!Files.exists(file) || (ttl && hasExpired(file))) { //file doesn't exist or is expired
                     return null;
                 }
 
