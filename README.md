@@ -44,7 +44,6 @@ The latest version can always be compiled from [our Github](https://github.com/B
 - **REQUIRED**: [Minecraft Forge](https://files.minecraftforge.net/)
 - **REQUIRED**: [CubicChunks](https://github.com/OpenCubicChunks/CubicChunks/)
 - **REQUIRED**: [CubicWorldGen](https://github.com/OpenCubicChunks/CubicWorldGen/)
-- Recommended: [Malisis Core](https://www.curseforge.com/minecraft/mc-mods/malisiscore)
 
 ## Obtaining
 Releases will not be found from within GitHub, but rather on our [Jenkins Continuous Integration server](https://jenkins.daporkchop.net/job/BuildTheEarth) kindly provided by DaPorkchop. Everything is automatically built and compiled for every single commit, so you can always snag the latest release.
