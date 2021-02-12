@@ -61,7 +61,7 @@ dependencies {
 
     shade "org.apache.commons:commons-imaging:1.0-alpha2"
 
-    shade "com.fasterxml.jackson.core:jackson-databind:2.11.2"
+    shade "com.fasterxml.jackson.core:jackson-databind:2.12.1"
 
     shade "org.apache.commons:commons-compress:1.8.1" //this isn't present on the server for some reason
 
