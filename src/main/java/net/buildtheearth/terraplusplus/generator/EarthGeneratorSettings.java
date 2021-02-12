@@ -1,6 +1,7 @@
 package net.buildtheearth.terraplusplus.generator;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -227,12 +228,12 @@ public class EarthGeneratorSettings {
         public double scaleY = 100000.0d;
         public double offsetX;
         public double offsetY;
-        public boolean smoothblend = true;
-        public boolean roads = true;
         public String customcubic = "";
-        public boolean dynamicbaseheight = true;
-        public boolean osmwater = true;
-        public boolean buildings = true;
+
+        @JsonAnySetter
+        private void fallback(String key, String value) {
+            TerraMod.LOGGER.warn("Ignoring unknown legacy config option: \"{}\": \"{}\"", key, value);
+        }
 
         private enum Orientation {
             none, upright, swapped
