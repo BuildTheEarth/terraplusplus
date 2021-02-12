@@ -23,11 +23,8 @@ The latest version can always be compiled from [our Github](https://github.com/B
 - Ore spawning just below surface
 - Caves, Dungeons, and other standard underground features are still available and procedurally generated using CubicWorldGen as a baseline. Though, they are left disabled by default unless modified in the generator settings.
 
-## Permissions
-- `terraplusplus.admin` - Gives access to all terra++ features and commands
-- `terraplusplus.commands.terra` - Gives access to `/terra`
-- `terraplusplus.commands.terra.utilities` - Gives access to terra++ utilities
-- `terraplusplus.commands.tpll` - Gives access to `/tpll`
+## Commands and Permissions
+- [Click Here](https://github.com/BuildTheEarth/terraplusplus/wiki/Commands) to view a list of all commands and permissions
 
 ## APIs:
 
