@@ -1,6 +1,8 @@
 <img src="https://github.com/BuildTheEarth/terraplusplus/blob/master/docs/images/terraplusplus_logo.png" width="500" height="174">
 
-### Developed by the BuildTheEarth Development Team
+[![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/BuildTheEarth/terraplusplus/blob/master/LICENSE.MD)
+[![GitHub Release](https://img.shields.io/github/release/buildtheearth/terraplusplus.svg?style=flat)](https://github.com/BuildTheEarth/terraplusplus/releases)
+[![Discord Chat](https://img.shields.io/discord/706317564904472627.svg)](https://discord.gg/BGpmp3sfH5)  
 
 ### Fork of the [Terra 1 to 1](https://github.com/orangeadam3/terra121) project and submod of [CubicChunks](https://github.com/OpenCubicChunks/CubicChunks) and [CubicWorldGen](https://github.com/OpenCubicChunks/CubicWorldGen/).
 
