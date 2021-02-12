@@ -31,13 +31,8 @@ The latest version can always be compiled from [our Github](https://github.com/B
 
 ## APIs:
 
-- Elevation data: [AWS Terrain Tiles](https://registry.opendata.aws/terrain-tiles/). (© [Mapzen](https://www.mapzen.com/rights), and [others](https://github.com/tilezen/joerd/blob/master/docs/attribution.md))
-- Tree cover data: [ARCGIS REST TreeCover2000 Image Server hosted by the World Resources Institute](https://gis-treecover.wri.org/arcgis/rest/services/TreeCover2000/ImageServer)
-- Road data: [OpenStreetMap](https://www.openstreetmap.org/) under the [Open Database License](https://www.openstreetmap.org/copyright). It is downloaded in real-time using a public [Overpass API](http://overpass-api.de/) instance. (© OpenStreetMap contributors)
-- Climate data: [The University of Delaware Center for Climatic Research's Climate Data Archive](http://climate.geog.udel.edu/~climate/html_pages/archive.html)
-- Soil suborder data: [USDA Natural Resources Conservation Service's Global Soil Region Map](https://www.nrcs.usda.gov/wps/portal/nrcs/detail/soils/use/?cid=nrcs142p2_054013)
-
-### [More comprehensive copyright and source description](SOURCES.md)
+- Tree cover data: [ARCGIS REST TreeCover2000 Image Server hosted by the World Resources Institute](https://gis-treecover.wri.org/arcgis/rest/services/TreeCover2000/ImageServer) hosted by [@daPorkchop_](https://github.com/DaMatrix)
+- Road data: [OpenStreetMap](https://www.openstreetmap.org/) under the [Open Database License](https://www.openstreetmap.org/copyright). It is downloaded in real-time using [TerraPlusPlusOSMTileGen](https://github.com/DaMatrix/TerraPlusPlusOSMTileGen) hosted by [@daPorkchop_](https://github.com/DaMatrix). (© OpenStreetMap contributors)
 
 ## Prerequisites
 
