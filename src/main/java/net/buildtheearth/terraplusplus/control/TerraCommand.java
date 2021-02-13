@@ -1,5 +1,6 @@
 package net.buildtheearth.terraplusplus.control;
 
+import com.google.common.collect.Lists;
 import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.control.fragments.FragmentManager;
 import net.buildtheearth.terraplusplus.control.fragments.terra.TerraConvertFragment;
@@ -19,7 +20,7 @@ import java.util.List;
 public class TerraCommand extends FragmentManager {
 
     public TerraCommand() {
-        super(TranslateUtil.translate(TerraConstants.controlCommandNode + "terra.title").getUnformattedComponentText(), "terra");
+        super("terra");
         register(new TerraInfoFragment());
         register(new TerraWhereFragment());
         register(new TerraWorldFragment());
@@ -30,9 +31,7 @@ public class TerraCommand extends FragmentManager {
 
     @Override
     public List<String> getAliases() {
-        List<String> aliases = new ArrayList<>();
-        aliases.add("t");
-        return aliases;
+        return Lists.newArrayList("t");
     }
 
     @Override

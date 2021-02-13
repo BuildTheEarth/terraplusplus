@@ -2,6 +2,7 @@ package net.buildtheearth.terraplusplus.control.fragments;
 
 import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.control.Command;
+import net.buildtheearth.terraplusplus.util.ChatUtil;
 import net.buildtheearth.terraplusplus.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
@@ -16,8 +17,7 @@ import java.util.List;
 
 public abstract class FragmentManager extends Command {
 
-    public FragmentManager(String title, String command) {
-        this.title = String.format(" %s", title);
+    public FragmentManager(String command) {
         this.commandBase = String.format("/%s ", command);
         register(new CommandFragment() {
             @Override
@@ -48,7 +48,6 @@ public abstract class FragmentManager extends Command {
     }
 
     private List<ICommandFragment> fragments = new ArrayList<>();
-    private final String title;
     private final String commandBase;
 
     protected void register(ICommandFragment c) {
@@ -64,7 +63,6 @@ public abstract class FragmentManager extends Command {
                         return;
                     }
                 }
-
             }
         }
         displayCommands(sender, args);
@@ -79,7 +77,13 @@ public abstract class FragmentManager extends Command {
             if(page > Math.ceil(fragments.size() / 7.0)) page = 1;
         }
 
-        sender.sendMessage(new TextComponentString(title + ":").setStyle(new Style().setColor(TextFormatting.GRAY)));
+        for(int i = 0; i < 2; i++) {
+            sender.sendMessage(ChatUtil.combine(""));
+        }
+
+        sender.sendMessage(ChatUtil.combine(TextFormatting.DARK_GRAY + "" + TextFormatting.STRIKETHROUGH, "================",
+                TextFormatting.GREEN + "" + TextFormatting.BOLD, " Terra++ ", TextFormatting.DARK_GRAY + "" + TextFormatting.STRIKETHROUGH, "================"));
+        sender.sendMessage(ChatUtil.combine(""));
         for(int xf = (page - 1) * 7; xf < Math.min(((page - 1) * 7) + 7, fragments.size()); xf++) {
             ICommandFragment f = fragments.get(xf);
 
@@ -101,32 +105,38 @@ public abstract class FragmentManager extends Command {
             sender.sendMessage(message);
         }
 
-        if(Math.ceil(fragments.size() / 7.0) < 2) return;
+        sender.sendMessage(ChatUtil.combine(""));
+        if(Math.ceil(fragments.size() / 7.0) < 2) {
+            sender.sendMessage(ChatUtil.combine(TextFormatting.DARK_GRAY + "" + TextFormatting.STRIKETHROUGH, "=========================================="));
+            return;
+        }
 
         String end = page >= Math.ceil(fragments.size() / 7.0) ? "Use '" + commandBase + "help " + (page - 1) + "' to see the previous page."
                 : "Use '" + commandBase + "help " + (page + 1) + "' to see the next page.";
         sender.sendMessage(new TextComponentString(TextFormatting.GOLD + end));
+        sender.sendMessage(ChatUtil.combine(TextFormatting.DARK_GRAY + "" + TextFormatting.STRIKETHROUGH, "=========================================="));
     }
 
     @Override
     public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos targetPos) {
         List<String> tabCompletions = new ArrayList<>();
-
-        for(ICommandFragment fragment : fragments)
-            for(String s : fragment.getName())
-                if(args.length == 0)
+        for(ICommandFragment fragment : fragments) {
+            for(String s : fragment.getName()) {
+                if(args.length == 0) {
                     tabCompletions.add(s);
-                else if(s.startsWith(args[0].toLowerCase()))
+                } else if(s.startsWith(args[0].toLowerCase())) {
                     tabCompletions.add(s);
-
+                }
+            }
+        }
         return tabCompletions;
     }
 
     private String[] selectArray(String[] args, int index) {
         List<String> array = new ArrayList<>();
-        for(int i = index; i < args.length; i++)
+        for(int i = index; i < args.length; i++) {
             array.add(args[i]);
-
+        }
         return array.toArray(array.toArray(new String[array.size()]));
     }
 }

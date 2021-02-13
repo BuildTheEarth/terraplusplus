@@ -184,9 +184,7 @@ public class TerraTeleport extends Command {
                                     TextFormatting.GRAY));
                         }
 
-                        FMLCommonHandler.instance().getMinecraftServerInstance().getCommandManager().executeCommand(
-                                FMLCommonHandler.instance().getMinecraftServerInstance(), String.format(Locale.US, "tp %s %s %s %s", p.getName(), proj[0], s, proj[1]));
-
+                        p.attemptTeleport(proj[0], s, proj[1]);
                     }
                 }));
             }
