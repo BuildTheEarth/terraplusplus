@@ -2,6 +2,7 @@ package net.buildtheearth.terraplusplus.generator.populate;
 
 import com.google.common.collect.ImmutableSet;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
+import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorPipelines;
@@ -30,23 +31,31 @@ public class TreePopulator implements IEarthPopulator {
             Blocks.SNOW,
             Blocks.MYCELIUM);
 
-    protected static final Ref<byte[]> RNG_CACHE = ThreadRef.soft(() -> new byte[16 * 16]);
+    protected static final Ref<byte[]> RNG_CACHE = ThreadRef.soft(() -> new byte[(ICube.SIZE >> 1) * (ICube.SIZE >> 1)]);
 
     @Override
-    public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData data) {
-        if (!data.intersectsSurface(pos.getY())) { //optimization: don't try to generate trees if the cube doesn't intersect the surface
+    public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData[] datas) {
+        byte[] rng = RNG_CACHE.get();
+
+        for (int i = 0, cx = 0; cx < 2; cx++) {
+            for (int cz = 0; cz < 2; cz++) {
+                this.populateColumn(world, random, pos, biome, datas[i++], (ICube.SIZE >> 1) * (cx + 1), (ICube.SIZE >> 1) * (cz + 1), rng);
+            }
+        }
+    }
+
+    protected void populateColumn(World world, Random random, CubePos pos, Biome biome, CachedChunkData data, int x, int z, byte[] rng) {
+        if (!data.intersectsSurface(pos.getY())) { //optimization: don't try to generate snow below the surface
             return;
         }
 
         byte[] treeCover = data.getCustom(EarthGeneratorPipelines.KEY_DATA_TREE_COVER, TreeCoverBaker.FALLBACK_TREE_DENSITY);
-
-        byte[] rng = RNG_CACHE.get();
         random.nextBytes(rng);
 
-        for (int i = 0, x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++, i++) {
-                if ((rng[i] & 0xFF) < (treeCover[i] & 0xFF)) {
-                    this.tryPlace(world, random, pos, biome, x, z);
+        for (int i = 0, dx = 0; dx < ICube.SIZE >> 1; dx++) {
+            for (int dz = 0; dz < ICube.SIZE >> 1; dz++, i++) {
+                if ((rng[i] & 0xFF) < (treeCover[(((x + dx) & 0xF) << 4) | ((z + dz) & 0xF)] & 0xFF)) {
+                    this.tryPlace(world, random, pos, biome, x + dx, z + dz);
                 }
             }
         }
