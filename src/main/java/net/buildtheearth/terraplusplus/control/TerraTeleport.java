@@ -169,7 +169,7 @@ public class TerraTeleport extends Command {
                     p.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Summoned to ", TextFormatting.BLUE, TextFormatting.BLUE, formatDecimal(finalDefaultCoords.getLat()),
                             TextFormatting.GRAY, ", ", TextFormatting.BLUE, formatDecimal(finalDefaultCoords.getLng()), TextFormatting.GRAY));
                 }
-                p.attemptTeleport(proj[0], s, proj[1]);
+                p.setPositionAndUpdate(proj[0], s, proj[1]);
             }
         }));
     }
