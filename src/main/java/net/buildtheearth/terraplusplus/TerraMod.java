@@ -70,8 +70,7 @@ public class TerraMod {
 
         PermissionAPI.registerNode(TerraConstants.controlCommandNode + "tpll", DefaultPermissionLevel.OP, "Allows a player to do /tpll");
         PermissionAPI.registerNode(TerraConstants.controlCommandNode + "terra", DefaultPermissionLevel.OP, "Allows access to terra commands");
-        PermissionAPI.registerNode(TerraConstants.controlCommandNode + "terra.utility", DefaultPermissionLevel.OP, "Allows access to terra++'s utilities");
-        PermissionAPI.registerNode(TerraConstants.adminCommandNode, DefaultPermissionLevel.OP, "Allows access to terra++'s admin commands");
+        PermissionAPI.registerNode(TerraConstants.othersCommandNode, DefaultPermissionLevel.OP, "Allows a player to control another player in terra commands");
     }
 
     @EventHandler

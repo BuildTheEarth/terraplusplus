@@ -56,7 +56,7 @@ public class TerraCommand extends FragmentManager {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-        if(!hasPermission(TerraConstants.controlCommandNode + "terra", sender)) {
+        if(!hasPermission(sender, TerraConstants.controlCommandNode + "terra")) {
             sender.sendMessage(ChatUtil.getNoPermission());
             return;
         }

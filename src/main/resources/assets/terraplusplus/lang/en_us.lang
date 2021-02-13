@@ -36,7 +36,7 @@ terraplusplus.gui.projection.conformal_dymaxion=Conformal Dymaxion
 
 ## command messages
 terraplusplus.commands.tpll.usage=Usage: /tpll <latitude> <longitude> [altitude]
-terraplusplus.commands.tpll.admin.usage=Usage: /tpll [target player] <latitude> <longitude> [altitude]
+terraplusplus.commands.tpll.others.usage=Usage: /tpll [target player] <latitude> <longitude> [altitude]
 terraplusplus.commands.dataset.usage=/dataset [dataset folder path]
 
 terraplusplus.commands.terra.usage=/terra

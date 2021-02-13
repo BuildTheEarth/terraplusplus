@@ -2,6 +2,7 @@ package net.buildtheearth.terraplusplus.control.fragments.terra;
 
 import java.util.Locale;
 
+import com.flowpowered.noise.module.source.Const;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import net.buildtheearth.terraplusplus.TerraConstants;
@@ -49,7 +50,7 @@ public class TerraOsmFragment extends CommandFragment {
         Entity e = sender.getCommandSenderEntity();
         String senderName = sender.getName();
         if (args.length > 0) {
-            if(hasAdminPermission(sender)) e = sender.getEntityWorld().getPlayerEntityByName(args[0]);
+            if(hasPermission(sender, TerraConstants.othersCommandNode)) e = sender.getEntityWorld().getPlayerEntityByName(args[0]);
             if (e == null) {
                 sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.unknownplayer")));
                 return;

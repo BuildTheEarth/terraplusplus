@@ -15,7 +15,7 @@ public class TerraConstants {
 
     public static final String defaultCommandNode = MOD_ID + ".command.";
     public static final String controlCommandNode = MOD_ID + ".commands.";
-    public static final String adminCommandNode = MOD_ID + ".admin";
+    public static final String othersCommandNode = controlCommandNode + "others";
 
     public static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(IBlockState.class, BlockStateParser.INSTANCE)

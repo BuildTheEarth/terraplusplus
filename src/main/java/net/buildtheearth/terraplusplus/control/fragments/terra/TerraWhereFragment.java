@@ -14,7 +14,11 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.Style;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.event.ClickEvent;
+import net.minecraft.util.text.event.HoverEvent;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
 
@@ -46,7 +50,7 @@ public class TerraWhereFragment extends CommandFragment {
 		String senderName = sender.getName();
 		float yaw = e.rotationYaw;
 		if (args.length > 0) {
-			if(hasAdminPermission(sender)) e = sender.getEntityWorld().getPlayerEntityByName(args[0]);
+			if(hasPermission(sender, TerraConstants.othersCommandNode)) e = sender.getEntityWorld().getPlayerEntityByName(args[0]);
 			if (e == null) {
 				sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.unknownplayer")));
 				return;
@@ -78,9 +82,13 @@ public class TerraWhereFragment extends CommandFragment {
 		if (!Float.isFinite(azimuth)) {
 			sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.where.notproj")));
 			return;
+
 		}
-		sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY, "Location: ", TextFormatting.BLUE, result[1],
-				TextFormatting.GRAY, ", ", TextFormatting.BLUE, result[0], TextFormatting.GRAY, " Facing: ", TextFormatting.BLUE, CardinalDirection.azimuthToFacing(azimuth).realName(), TextFormatting.GRAY, " (", TextFormatting.BLUE, azimuth, TextFormatting.GRAY, ")"));
+
+        sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY, "Location: ", TextFormatting.BLUE, result[1],
+				TextFormatting.GRAY, ", ", TextFormatting.BLUE, result[0]).setStyle(new Style().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Click to copy")))
+                .setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, String.format("%s, %s", result[1], result[0])))));
+		sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY, "Facing: ", TextFormatting.BLUE, CardinalDirection.azimuthToFacing(azimuth).realName(), TextFormatting.GRAY, " (", TextFormatting.BLUE, azimuth, TextFormatting.GRAY, ")"));
 	}
 
 	@Override

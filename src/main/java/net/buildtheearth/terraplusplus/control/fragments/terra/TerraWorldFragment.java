@@ -42,8 +42,8 @@ public class TerraWorldFragment extends CommandFragment {
         sender.sendMessage(ChatUtil.combine(TextFormatting.RESET));
 
         sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "Projection: ", TextFormatting.GREEN, settings.projection().toString()));
-        sender.sendMessage(this.boolComponent("Default heights", settings.useDefaultHeights()));
-        sender.sendMessage(this.boolComponent("Default trees", settings.useDefaultTreeCover()));
+        sender.sendMessage(this.boolComponent("Default Heights", settings.useDefaultHeights()));
+        sender.sendMessage(this.boolComponent("Default Trees", settings.useDefaultTreeCover()));
     }
 
     @Override

@@ -13,14 +13,10 @@ public abstract class Command extends CommandBase {
         PermissionAPI.registerNode(TerraConstants.defaultCommandNode + getName(), DefaultPermissionLevel.ALL, "");
     }
 
-    protected boolean hasPermission(String perm, ICommandSender sender) {
-        if(perm == null) perm = TerraConstants.adminCommandNode;
+    protected boolean hasPermission(ICommandSender sender, String perm) {
         if (sender instanceof EntityPlayer) {
-            if(PermissionAPI.hasPermission((EntityPlayer) sender, TerraConstants.adminCommandNode)) return true;
             return PermissionAPI.hasPermission((EntityPlayer) sender, perm);
         }
-
         return sender.canUseCommand(2, "");
-
     }
 }
