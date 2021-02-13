@@ -95,6 +95,8 @@ processResources {
 shadowJar {
     classifier = null
     configurations = [project.configurations.shade]
+
+    exclude 'module-info.class'
 }
 build.dependsOn shadowJar
 
