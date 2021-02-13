@@ -63,8 +63,6 @@ dependencies {
 
     shade "com.fasterxml.jackson.core:jackson-databind:2.11.2"
 
-    shade "org.apache.commons:commons-compress:1.8.1" //this isn't present on the server for some reason
-
     shade("net.daporkchop.lib:binary:0.5.5-SNAPSHOT")  {
         exclude group: "io.netty"
     }

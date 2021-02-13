@@ -2,8 +2,8 @@ package net.buildtheearth.terraplusplus.projection.dymaxion;
 
 import java.io.InputStream;
 
+import LZMA.LzmaInputStream;
 import net.buildtheearth.terraplusplus.util.MathUtils;
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
@@ -30,7 +30,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
         double[][] vy = PArrays.filled(SIDE_LENGTH + 1, double[][]::new, i -> new double[SIDE_LENGTH + 1 - i]);
 
         ByteBuf buf;
-        try (InputStream in = new BZip2CompressorInputStream(ConformalDynmaxionProjection.class.getResourceAsStream("conformal.bz2"))) {
+        try (InputStream in = new LzmaInputStream(ConformalDynmaxionProjection.class.getResourceAsStream("conformal.lzma"))) {
             buf = Unpooled.wrappedBuffer(StreamUtil.toByteArray(in));
         }
 
