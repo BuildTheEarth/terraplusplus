@@ -1,0 +1,168 @@
+/*
+ * DEFAULT TERRA++ OpenStreetMap DATA INTERPRETATION CONFIG
+ *
+ * ROADS AND BUILDINGS ARE DISABLED
+ *
+ * @author DaPorkchop_
+ */
+
+{
+    "line": {
+        "first": {
+            //functionally equivalent to old STREAM behavior
+            "condition": {
+                "match": {
+                    "tag": {
+                        "waterway": "stream"
+                    }
+                },
+                "emit": {
+                    "wide": {
+                        "draw": {
+                            "water": {}
+                        },
+                        "radius": {
+                            "constant": 1.5
+                        },
+                        "layer": {
+                            "tag": {
+                                "key": "layer",
+                                "fallback": 0
+                            }
+                        }
+                    }
+                }
+            },
+            //functionally equivalent to old RIVER behavior
+            "condition": {
+                "match": {
+                    "tag": {
+                        "waterway": [
+                            "river",
+                            "canal"
+                        ]
+                    }
+                },
+                "emit": {
+                    "wide": {
+                        "draw": {
+                            "all": {
+                                "no_trees": {},
+                                "weight_greater_than": {
+                                    "delegate": {
+                                        //offset weight by -4, because "water" actually uses the weight value and it'll be too high otherwise
+                                        "weight_add": {
+                                            "delegate": {
+                                                "water": {}
+                                            },
+                                            "value": -4
+                                        }
+                                    },
+                                    "value": 3
+                                }
+                            }
+                        },
+                        "radius": {
+                            "constant": 9 // 5 (original) + 4 (trees)
+                        },
+                        "layer": {
+                            "tag": {
+                                "key": "layer",
+                                "fallback": 0
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "polygon": {
+        "first": {
+            "condition": {
+                "match": {
+                    "or": {
+                        "tag": {
+                            //matches anything tagged as "water"
+                            "water": null
+                        },
+                        "tag": {
+                            //matches anything tagged as "natural=water"
+                            "natural": "water"
+                        },
+                        "tag": {
+                            //matches anything tagged as "waterway=riverbank"
+                            "waterway": "riverbank"
+                        }
+                    }
+                },
+                "emit": {
+                    "distance": {
+                        "draw": {
+                            "water": {}
+                        },
+                        "layer": {
+                            "tag": {
+                                "key": "layer",
+                                "fallback": 0
+                            }
+                        },
+                        "maxDist": 6
+                    }
+                }
+            },
+            //special handling for the caspian sea: it's tagged as natural=coastline, but isn't actually at sea level...
+            "condition": {
+                "match": {
+                    "and": {
+                        "tag": {
+                            "natural": "coastline"
+                        },
+                        "intersects": {
+                            "minX": 45.637,
+                            "minZ": 34.597,
+                            "maxX": 56.536,
+                            "maxZ": 47.695
+                        }
+                    }
+                },
+                "emit": {
+                    "distance": {
+                        "draw": {
+                            "water": {}
+                        },
+                        "layer": {
+                            "tag": {
+                                "key": "layer",
+                                "fallback": 0
+                            }
+                        },
+                        "maxDist": 6
+                    }
+                }
+            },
+            //all remaining coastline polygons are treated as ocean
+            "condition": {
+                "match": {
+                    "tag": {
+                        //matches anything tagged as "natural=coastline"
+                        "natural": "coastline"
+                    }
+                },
+                "emit": {
+                    "distance": {
+                        "draw": {
+                            "ocean": {}
+                        },
+                        "layer": {
+                            "tag": {
+                                "key": "layer",
+                                "fallback": 0
+                            }
+                        },
+                        "maxDist": 7
+                    }
+                }
+            }
+        }
+    }
+}
