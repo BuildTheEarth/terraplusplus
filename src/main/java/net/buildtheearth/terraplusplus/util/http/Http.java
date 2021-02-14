@@ -205,18 +205,19 @@ public class Http {
                 }
 
                 if ("file".equalsIgnoreCase(this.parsed.getProtocol())) { //it's a file, read from disk (also async)
+                    Path path = Paths.get(url.substring("file://".length()));
                     if (!TerraConfig.reducedConsoleMessages) {
                         future.whenComplete((data, t) -> {
                             if (t != null) {
-                                TerraMod.LOGGER.error("Failed to read file: " + this.parsed.getFile(), t);
+                                TerraMod.LOGGER.error("Failed to read file: " + path, t);
                             } else if (data != null) {
-                                TerraMod.LOGGER.info("Read file: {}", this.parsed.getFile());
+                                TerraMod.LOGGER.info("Read file: {}", path);
                             } else {
-                                TerraMod.LOGGER.info("File not found: {}", this.parsed.getFile());
+                                TerraMod.LOGGER.info("File not found: {}", path);
                             }
                         });
                     }
-                    copyResultTo(Disk.read(Paths.get(this.parsed.getFile()), false), future);
+                    copyResultTo(Disk.read(path, false), future);
                     return;
                 }
 
