@@ -1,5 +1,7 @@
 package net.buildtheearth.terraplusplus.generator;
 
+import lombok.NonNull;
+import lombok.experimental.UtilityClass;
 import net.buildtheearth.terraplusplus.TerraConfig;
 import net.buildtheearth.terraplusplus.dataset.builtin.Climate;
 import net.buildtheearth.terraplusplus.dataset.builtin.Soil;
@@ -26,8 +28,6 @@ import net.buildtheearth.terraplusplus.generator.populate.IEarthPopulator;
 import net.buildtheearth.terraplusplus.generator.populate.SnowPopulator;
 import net.buildtheearth.terraplusplus.generator.populate.TreePopulator;
 import net.buildtheearth.terraplusplus.util.OrderedRegistry;
-import lombok.NonNull;
-import lombok.experimental.UtilityClass;
 import net.minecraftforge.common.MinecraftForge;
 
 import java.lang.reflect.Array;
