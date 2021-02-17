@@ -51,7 +51,7 @@ public abstract class FragmentManager extends Command {
         }
 
         sender.sendMessage(ChatUtil.combine(TextFormatting.DARK_GRAY + "" + TextFormatting.STRIKETHROUGH, "================",
-                TextFormatting.GREEN + "" + TextFormatting.BOLD, " Terra++ ", TextFormatting.DARK_GRAY + "" + TextFormatting.STRIKETHROUGH, "================"));
+                TextFormatting.DARK_GREEN + "" + TextFormatting.BOLD, " Terra++ ", TextFormatting.DARK_GRAY + "" + TextFormatting.STRIKETHROUGH, "================"));
         sender.sendMessage(ChatUtil.combine(""));
 
         for(CommandFragment f : singleFragments) {

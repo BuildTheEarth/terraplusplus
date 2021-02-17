@@ -6,15 +6,12 @@ import net.buildtheearth.terraplusplus.control.fragments.FragmentManager;
 import net.buildtheearth.terraplusplus.control.fragments.terra.TerraConvertFragment;
 import net.buildtheearth.terraplusplus.control.fragments.terra.TerraDistortionFragment;
 import net.buildtheearth.terraplusplus.control.fragments.terra.TerraInfoFragment;
-import net.buildtheearth.terraplusplus.control.fragments.terra.TerraOsmFragment;
 import net.buildtheearth.terraplusplus.control.fragments.terra.TerraWhereFragment;
 import net.buildtheearth.terraplusplus.control.fragments.terra.TerraWorldFragment;
 import net.buildtheearth.terraplusplus.util.ChatUtil;
-import net.buildtheearth.terraplusplus.util.TranslateUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class TerraCommand extends FragmentManager {
@@ -24,7 +21,6 @@ public class TerraCommand extends FragmentManager {
         register(new TerraInfoFragment());
         register(new TerraWhereFragment());
         register(new TerraWorldFragment());
-        register(new TerraOsmFragment());
         register(new TerraConvertFragment());
         register(new TerraDistortionFragment());
     }

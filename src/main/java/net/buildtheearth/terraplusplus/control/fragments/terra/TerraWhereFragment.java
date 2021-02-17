@@ -21,6 +21,7 @@ import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.util.text.event.HoverEvent;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
+import net.minecraftforge.fml.client.config.GuiConfigEntries;
 
 public class TerraWhereFragment extends CommandFragment {
 	@Override
@@ -89,11 +90,15 @@ public class TerraWhereFragment extends CommandFragment {
 				TextFormatting.GRAY, ", ", TextFormatting.BLUE, result[0]).setStyle(new Style().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Click to copy")))
                 .setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, String.format("%s, %s", result[1], result[0])))));
 		sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY, "Facing: ", TextFormatting.BLUE, CardinalDirection.azimuthToFacing(azimuth).realName(), TextFormatting.GRAY, " (", TextFormatting.BLUE, azimuth, TextFormatting.GRAY, ")"));
-	}
+        sender.sendMessage(ChatUtil.combine(new TextComponentString("Open in Google Maps").setStyle(new Style().setUnderlined(true).setColor(TextFormatting.YELLOW)
+                .setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Open map")))
+                .setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.google.com/maps/search/?api=1&query=" + result[1] + "," + result[0])))));
+
+    }
 
 	@Override
 	public String[] getName() {
-		return new String[]{"where", "ou"};
+		return new String[]{"where", "osm", "map"};
 	}
 
 	@Override
