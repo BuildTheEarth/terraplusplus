@@ -341,15 +341,20 @@ public class EarthGenerator extends BasicCubeGenerator {
             return; //population event was cancelled
         }
 
-        CachedChunkData data = this.cache.getUnchecked(cube.getCoords().chunkPos()).join();
+        CachedChunkData[] datas = new CachedChunkData[2 * 2];
+        for (int i = 0, dx = 0; dx < 2; dx++) {
+            for (int dz = 0; dz < 2; dz++) {
+                datas[i++] = this.cache.getUnchecked(new ChunkPos(cube.getX() + dx, cube.getZ() + dz)).join();
+            }
+        }
 
         Random random = Coords.coordsSeedRandom(this.world.getSeed(), cube.getX(), cube.getY(), cube.getZ());
         Biome biome = cube.getBiome(Coords.getCubeCenter(cube));
 
-        this.cubiccfg.expectedBaseHeight = (float) data.groundHeight(8, 8);
+        this.cubiccfg.expectedBaseHeight = (float) datas[0].groundHeight(15, 15);
 
         for (IEarthPopulator populator : this.populators) {
-            populator.populate(this.world, random, cube.getCoords(), biome, data);
+            populator.populate(this.world, random, cube.getCoords(), biome, datas);
         }
     }
 

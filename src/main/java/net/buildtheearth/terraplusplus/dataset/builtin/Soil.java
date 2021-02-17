@@ -1,12 +1,12 @@
 package net.buildtheearth.terraplusplus.dataset.builtin;
 
-import net.buildtheearth.terraplusplus.util.RLEByteArray;
+import LZMA.LzmaInputStream;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import net.buildtheearth.terraplusplus.util.RLEByteArray;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.function.io.IOSupplier;
 import net.daporkchop.lib.common.ref.Ref;
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 
 import java.io.InputStream;
 
@@ -18,7 +18,7 @@ public class Soil extends AbstractBuiltinDataset {
 
     private static final Ref<RLEByteArray> DATA_CACHE = Ref.soft((IOSupplier<RLEByteArray>) () -> {
         ByteBuf buf;
-        try (InputStream in = new BZip2CompressorInputStream(Climate.class.getResourceAsStream("soil.bz2"))) {
+        try (InputStream in = new LzmaInputStream(Climate.class.getResourceAsStream("soil.lzma"))) {
             buf = Unpooled.wrappedBuffer(StreamUtil.toByteArray(in));
         }
 

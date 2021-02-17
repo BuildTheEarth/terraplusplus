@@ -29,7 +29,7 @@ public class BiomeDecorationPopulator implements IEarthPopulator {
     }
 
     @Override
-    public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData data) {
+    public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData[] datas) {
         this.populators.get(biome).generate(world, random, pos, biome);
     }
 }

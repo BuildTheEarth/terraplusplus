@@ -115,6 +115,10 @@ public class CachedChunkData extends CustomAttributeContainer {
         return cubeY >= this.surfaceMinCube && cubeY <= this.surfaceMaxCube;
     }
 
+    public boolean intersectsSurface(int cubeY, int includeBelow, int includeAbove) {
+        return cubeY + includeBelow >= this.surfaceMinCube && cubeY - includeAbove <= this.surfaceMaxCube;
+    }
+
     public boolean aboveSurface(int cubeY) {
         return cubeY > this.surfaceMaxCube;
     }

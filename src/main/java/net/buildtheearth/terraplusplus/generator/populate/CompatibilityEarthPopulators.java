@@ -21,7 +21,7 @@ public class CompatibilityEarthPopulators {
      * Fires {@link PopulateCubeEvent.Pre}.
      */
     public IEarthPopulator cubePopulatePre() {
-        return (world, random, pos, biome, data) ->
+        return (world, random, pos, biome, datas) ->
                 MinecraftForge.EVENT_BUS.post(new PopulateCubeEvent.Pre(world, random, pos.getX(), pos.getY(), pos.getZ(), false));
     }
 
@@ -29,7 +29,7 @@ public class CompatibilityEarthPopulators {
      * Fires {@link PopulateCubeEvent.Post}.
      */
     public IEarthPopulator cubePopulatePost() {
-        return (world, random, pos, biome, data) ->
+        return (world, random, pos, biome, datas) ->
                 MinecraftForge.EVENT_BUS.post(new PopulateCubeEvent.Post(world, random, pos.getX(), pos.getY(), pos.getZ(), false));
     }
 
@@ -37,6 +37,6 @@ public class CompatibilityEarthPopulators {
      * Calls {@link CubeGeneratorsRegistry#generateWorld(World, Random, CubePos, Biome)}.
      */
     public IEarthPopulator cubeGeneratorsRegistry() {
-        return (world, random, pos, biome, data) -> CubeGeneratorsRegistry.generateWorld(world, random, pos, biome);
+        return (world, random, pos, biome, datas) -> CubeGeneratorsRegistry.generateWorld(world, random, pos, biome);
     }
 }

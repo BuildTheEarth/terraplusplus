@@ -17,8 +17,8 @@ import java.util.Random;
 @FunctionalInterface
 public interface IEarthPopulator {
     /**
-     * @param data the {@link CachedChunkData} for the column
+     * @param datas the {@link CachedChunkData} for the 2x2 column area being populated
      * @see ICubicPopulator#generate(World, Random, CubePos, Biome)
      */
-    void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData data);
+    void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData[] datas);
 }
