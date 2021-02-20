@@ -47,7 +47,7 @@ public class TerraConvertFragment extends CommandFragment{
             x = Double.parseDouble(args[0]);
             y = Double.parseDouble(args[1]);
         } catch (Exception e) {
-            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.numbers")));
+            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".error.numbers")));
             return;
         }
 
@@ -80,7 +80,7 @@ public class TerraConvertFragment extends CommandFragment{
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.convert.purpose").getUnformattedComponentText();
+        return TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.convert.purpose").getUnformattedComponentText();
     }
 
     @Override

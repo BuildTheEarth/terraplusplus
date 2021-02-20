@@ -53,7 +53,7 @@ public class TerraWhereFragment extends CommandFragment {
 		if (args.length > 0) {
 			if(hasPermission(sender, TerraConstants.othersCommandNode)) e = sender.getEntityWorld().getPlayerEntityByName(args[0]);
 			if (e == null) {
-				sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.unknownplayer")));
+				sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".error.unknownplayer")));
 				return;
 			}
 
@@ -77,11 +77,11 @@ public class TerraWhereFragment extends CommandFragment {
 		}
 		sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Location of ", TextFormatting.BLUE, senderName));
 		if (result == null || Double.isNaN(result[0])) {
-			sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.where.notproj")));
+			sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.where.notproj")));
 			return;
 		}
 		if (!Float.isFinite(azimuth)) {
-			sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.where.notproj")));
+			sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.where.notproj")));
 			return;
 
 		}
@@ -103,7 +103,7 @@ public class TerraWhereFragment extends CommandFragment {
 
 	@Override
 	public String getPurpose() {
-		return TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.where.purpose").getUnformattedComponentText();
+		return TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.where.purpose").getUnformattedComponentText();
 	}
 
 	@Override
@@ -113,6 +113,6 @@ public class TerraWhereFragment extends CommandFragment {
 
 	@Override
 	public String getPermission() {
-		return TerraConstants.MOD_ID + ".commands.terra";
+		return TerraConstants.MODID + ".commands.terra";
 	}
 }

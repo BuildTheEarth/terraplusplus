@@ -1,6 +1,6 @@
 package net.buildtheearth.terraplusplus.util.http;
 
-import net.buildtheearth.terraplusplus.TerraMod;
+import net.buildtheearth.terraplusplus.TerraConstants;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -222,7 +222,7 @@ final class HostManager extends Host {
             DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, this.path);
             request.headers()
                     .set(HttpHeaderNames.HOST, HostManager.this.authority)
-                    .set(HttpHeaderNames.USER_AGENT, TerraMod.USERAGENT);
+                    .set(HttpHeaderNames.USER_AGENT, TerraConstants.MODID + '/' + TerraConstants.VERSION);
             HttpUtil.setKeepAlive(request, true);
             return request;
         }

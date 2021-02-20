@@ -54,11 +54,11 @@ public class ChatUtil {
     }
 
     public static ITextComponent getNotCC() {
-        return titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.notcc"));
+        return titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".error.notcc"));
     }
 
     public static ITextComponent getNotTerra() {
-        return titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.noterra"));
+        return titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".error.noterra"));
     }
 
     public static ITextComponent getNoPermission() {
@@ -66,6 +66,6 @@ public class ChatUtil {
     }
 
     public static ITextComponent getPlayerOnly() {
-        return titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.playeronly"));
+        return titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".error.playeronly"));
     }
 }

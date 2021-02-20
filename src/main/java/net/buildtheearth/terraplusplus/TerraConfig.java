@@ -9,8 +9,8 @@ import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-@Mod.EventBusSubscriber(modid = TerraMod.MODID)
-@Config(modid = TerraMod.MODID)
+@Mod.EventBusSubscriber(modid = TerraConstants.MODID)
+@Config(modid = TerraConstants.MODID)
 public class TerraConfig {
     @Name("reduced_console_messages")
     @Comment({ "Removes all of TerraPlusPlus' messages which contain various links in the server console",
@@ -36,8 +36,8 @@ public class TerraConfig {
 
     @SubscribeEvent
     public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
-        if (TerraMod.MODID.equals(event.getModID())) {
-            ConfigManager.sync(TerraMod.MODID, Config.Type.INSTANCE);
+        if (TerraConstants.MODID.equals(event.getModID())) {
+            ConfigManager.sync(TerraConstants.MODID, Config.Type.INSTANCE);
             Http.configChanged();
         }
     }

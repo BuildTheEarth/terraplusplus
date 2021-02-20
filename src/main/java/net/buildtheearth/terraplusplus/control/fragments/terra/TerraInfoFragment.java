@@ -24,7 +24,7 @@ public class TerraInfoFragment extends CommandFragment {
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.info.purpose").getUnformattedComponentText();
+        return TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.info.purpose").getUnformattedComponentText();
     }
 
     @Override
@@ -34,6 +34,6 @@ public class TerraInfoFragment extends CommandFragment {
 
     @Override
     public String getPermission() {
-        return TerraConstants.MOD_ID + ".commands.terra";
+        return TerraConstants.MODID + ".commands.terra";
     }
 }

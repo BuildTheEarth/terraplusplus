@@ -45,11 +45,11 @@ public class TerraDistortionFragment extends CommandFragment {
         }
 
         if(c == null || Double.isNaN(c[0])) {
-            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.where.notproj")));
+            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.where.notproj")));
             return;
         }
         sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Distortion:"));
-        sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.format(TerraConstants.MOD_ID + ".commands.terra.tissot", Math.sqrt(Math.abs(c[0])), c[1] * 180.0 / Math.PI)));
+        sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.format(TerraConstants.MODID + ".commands.terra.tissot", Math.sqrt(Math.abs(c[0])), c[1] * 180.0 / Math.PI)));
     }
 
     @Override
@@ -59,7 +59,7 @@ public class TerraDistortionFragment extends CommandFragment {
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.distortion.purpose").getUnformattedComponentText();
+        return TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.distortion.purpose").getUnformattedComponentText();
     }
 
     @Override
@@ -69,6 +69,6 @@ public class TerraDistortionFragment extends CommandFragment {
 
     @Override
     public String getPermission() {
-        return TerraConstants.MOD_ID + ".commands.terra";
+        return TerraConstants.MODID + ".commands.terra";
     }
 }

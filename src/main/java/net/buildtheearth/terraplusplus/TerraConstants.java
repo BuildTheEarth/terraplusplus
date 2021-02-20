@@ -9,12 +9,12 @@ import net.buildtheearth.terraplusplus.util.BlockStateDeserializeMixin;
 import net.minecraft.block.state.IBlockState;
 
 public class TerraConstants {
-    public static final String CHAT_PREFIX = "&2&lT++ &8&l> ";
-    public static final String MOD_ID = "terraplusplus";
-    public static final String VERSION = "1.0";
+    public static final String MODID = "terraplusplus";
+    public static String VERSION = "(development snapshot)";
 
-    public static final String defaultCommandNode = MOD_ID + ".command.";
-    public static final String controlCommandNode = MOD_ID + ".commands.";
+    public static final String CHAT_PREFIX = "&2&lT++ &8&l> ";
+    public static final String defaultCommandNode = MODID + ".command.";
+    public static final String controlCommandNode = MODID + ".commands.";
     public static final String othersCommandNode = controlCommandNode + "others";
 
     public static final Gson GSON = new GsonBuilder()

@@ -19,7 +19,7 @@ public enum CardinalDirection {
         this.min = min;
         this.max = max;
         this.realName = realName;
-        this.translationKey = TerraConstants.MOD_ID + ".cardinal_directions." + this.name().toLowerCase();
+        this.translationKey = TerraConstants.MODID + ".cardinal_directions." + this.name().toLowerCase();
     }
 
     /**

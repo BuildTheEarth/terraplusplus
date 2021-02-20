@@ -19,7 +19,7 @@ import net.minecraft.world.chunk.IChunkProvider;
 public class TerraWorldFragment extends CommandFragment {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.world.header")));
+        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.world.header")));
 
         World world = sender.getEntityWorld();
         IChunkProvider cp = world.getChunkProvider();
@@ -53,7 +53,7 @@ public class TerraWorldFragment extends CommandFragment {
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate(TerraConstants.MOD_ID + ".fragment.terra.world.purpose").getUnformattedComponentText();
+        return TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.world.purpose").getUnformattedComponentText();
     }
 
     @Override
@@ -63,7 +63,7 @@ public class TerraWorldFragment extends CommandFragment {
 
     @Override
     public String getPermission() {
-        return TerraConstants.MOD_ID + ".commands.terra";
+        return TerraConstants.MODID + ".commands.terra";
     }
 
     private ITextComponent boolComponent(String name, boolean value) {

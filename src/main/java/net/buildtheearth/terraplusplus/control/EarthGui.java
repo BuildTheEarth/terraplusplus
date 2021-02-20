@@ -1,7 +1,7 @@
 package net.buildtheearth.terraplusplus.control;
 
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomCubicWorldType;
-import net.buildtheearth.terraplusplus.TerraMod;
+import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
@@ -202,7 +202,7 @@ public class EarthGui extends GuiScreen {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         this.drawDefaultBackground();
-        this.drawCenteredString(this.fontRenderer, I18n.format(TerraMod.MODID + ".gui.header"), this.width >> 1, VERTICAL_PADDING >> 1, 0xFFFFFFFF);
+        this.drawCenteredString(this.fontRenderer, I18n.format(TerraConstants.MODID + ".gui.header"), this.width >> 1, VERTICAL_PADDING >> 1, 0xFFFFFFFF);
 
         //render map texture
         GlStateManager.bindTexture(this.texture.getGlTextureId());
@@ -285,7 +285,7 @@ public class EarthGui extends GuiScreen {
         protected int height = 30;
 
         public ProjectionEntry(EarthGeneratorSettings settings, EarthGui gui, int x, int y, int width) {
-            gui.addButton(new GuiButton(0, x + (width >> 1), y, width >> 1, 20, I18n.format(TerraMod.MODID + ".gui.transformation.add")) {
+            gui.addButton(new GuiButton(0, x + (width >> 1), y, width >> 1, 20, I18n.format(TerraConstants.MODID + ".gui.transformation.add")) {
                 @Override
                 public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
                     if (super.mousePressed(mc, mouseX, mouseY)) {
@@ -315,7 +315,7 @@ public class EarthGui extends GuiScreen {
 
         @Override
         public void render(EarthGui gui, int x, int y, int width) {
-            gui.fontRenderer.drawString(I18n.format(TerraMod.MODID + ".gui.projection"), x, y + (20 - 8) / 2, 0xFFFFFFFF, true);
+            gui.fontRenderer.drawString(I18n.format(TerraConstants.MODID + ".gui.projection"), x, y + (20 - 8) / 2, 0xFFFFFFFF, true);
 
             y += 30;
 
@@ -341,7 +341,7 @@ public class EarthGui extends GuiScreen {
             offset {
                 @Override
                 protected TransformEntry newSubEntry(ProjectionEntry entry, EarthGui gui, int x, int y, int width) {
-                    return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraMod.MODID + ".gui.transformation.offset", "dx", "dy") {
+                    return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraConstants.MODID + ".gui.transformation.offset", "dx", "dy") {
                         @Override
                         public void initFrom(ProjectionTransform in) {
                             if (in instanceof OffsetProjectionTransform) {
@@ -364,7 +364,7 @@ public class EarthGui extends GuiScreen {
             scale {
                 @Override
                 protected TransformEntry newSubEntry(ProjectionEntry entry, EarthGui gui, int x, int y, int width) {
-                    return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraMod.MODID + ".gui.transformation.scale", "x", "y") {
+                    return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraConstants.MODID + ".gui.transformation.scale", "x", "y") {
                         @Override
                         public void initFrom(ProjectionTransform in) {
                             if (in instanceof ScaleProjectionTransform) {
@@ -447,7 +447,7 @@ public class EarthGui extends GuiScreen {
                     }
                 });
 
-                gui.addButton(new GuiButton(0, x + 60, y, width - 60, 20, I18n.format(TerraMod.MODID + ".gui.transformation." + transformation.name())) {
+                gui.addButton(new GuiButton(0, x + 60, y, width - 60, 20, I18n.format(TerraConstants.MODID + ".gui.transformation." + transformation.name())) {
                     @Override
                     public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
                         if (super.mousePressed(mc, mouseX, mouseY)) {
@@ -545,7 +545,7 @@ public class EarthGui extends GuiScreen {
                 String projectionName = GlobalParseRegistries.PROJECTIONS.inverse().get(projection.getClass());
                 this.initialIndex = this.index = PArrays.indexOf(PROJECTION_NAMES, projectionName);
 
-                gui.addButton(new GuiButton(0, x, y, width, 20, I18n.format(this.fieldName = TerraMod.MODID + ".gui.projection." + projectionName)) {
+                gui.addButton(new GuiButton(0, x, y, width, 20, I18n.format(this.fieldName = TerraConstants.MODID + ".gui.projection." + projectionName)) {
                     @Override
                     public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
                         if (super.mousePressed(mc, mouseX, mouseY)) {
@@ -622,7 +622,7 @@ public class EarthGui extends GuiScreen {
             this.touch = touch;
             this.value = value;
 
-            gui.addButton(new GuiButton(0, x, y, width, 20, I18n.format(TerraMod.MODID + ".gui." + name) + ": " + I18n.format("options." + (value ? "on" : "off"))) {
+            gui.addButton(new GuiButton(0, x, y, width, 20, I18n.format(TerraConstants.MODID + ".gui." + name) + ": " + I18n.format("options." + (value ? "on" : "off"))) {
                 @Override
                 public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
                     if (super.mousePressed(mc, mouseX, mouseY)) {
@@ -655,7 +655,7 @@ public class EarthGui extends GuiScreen {
         protected String text;
 
         public CWGEntry(EarthGeneratorSettings settings, EarthGui gui, int x, int y, int width) {
-            int text = gui.fontRenderer.getStringWidth(I18n.format(TerraMod.MODID + ".gui.cwg")) + 5;
+            int text = gui.fontRenderer.getStringWidth(I18n.format(TerraConstants.MODID + ".gui.cwg")) + 5;
             x += text;
             width -= text;
 
@@ -698,7 +698,7 @@ public class EarthGui extends GuiScreen {
 
         @Override
         public void render(EarthGui gui, int x, int y, int width) {
-            gui.fontRenderer.drawString(I18n.format(TerraMod.MODID + ".gui.cwg"), x, y + (20 - 8) / 2, 0xFFFFFFFF, true);
+            gui.fontRenderer.drawString(I18n.format(TerraConstants.MODID + ".gui.cwg"), x, y + (20 - 8) / 2, 0xFFFFFFFF, true);
         }
 
         @Override

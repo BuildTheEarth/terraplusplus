@@ -2,7 +2,7 @@ package net.buildtheearth.terraplusplus.provider;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.DecorateCubeBiomeEvent;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
-import net.buildtheearth.terraplusplus.TerraMod;
+import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.generator.EarthBiomeProvider;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import lombok.experimental.UtilityClass;
@@ -12,7 +12,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 //deny default tree and snow event because we have some of those already
-@Mod.EventBusSubscriber(modid = TerraMod.MODID)
+@Mod.EventBusSubscriber(modid = TerraConstants.MODID)
 @UtilityClass
 public class GenerationEventDenier {
     @SubscribeEvent

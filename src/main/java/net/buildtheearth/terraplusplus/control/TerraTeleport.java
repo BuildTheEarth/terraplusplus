@@ -3,9 +3,7 @@ package net.buildtheearth.terraplusplus.control;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.ConcurrentModificationException;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 import javax.annotation.Nullable;
@@ -23,7 +21,6 @@ import net.buildtheearth.terraplusplus.util.geo.CoordinateParseUtils;
 import net.buildtheearth.terraplusplus.util.geo.LatLng;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
@@ -31,7 +28,6 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.server.permission.PermissionAPI;
 
 public class TerraTeleport extends Command {
 
@@ -66,13 +62,13 @@ public class TerraTeleport extends Command {
         IChunkProvider cp = world.getChunkProvider();
 
         if (!(cp instanceof CubeProviderServer)) {
-            throw new CommandException(TerraConstants.MOD_ID + ".error.notcc");
+            throw new CommandException(TerraConstants.MODID + ".error.notcc");
         }
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
         if (!(gen instanceof EarthGenerator)) {
-            throw new CommandException(TerraConstants.MOD_ID + ".error.notterra");
+            throw new CommandException(TerraConstants.MODID + ".error.notterra");
         }
 
         EarthGenerator terrain = (EarthGenerator) gen;
@@ -135,7 +131,7 @@ public class TerraTeleport extends Command {
         try {
             proj = terrain.projection.fromGeo(defaultCoords.getLng(), defaultCoords.getLat());
         } catch (Exception e) {
-            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.numbers")));
+            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".error.numbers")));
             return;
         }
 
@@ -147,7 +143,7 @@ public class TerraTeleport extends Command {
                         .getAsync(defaultCoords.getLng(), defaultCoords.getLat())
                         .thenApply(a -> a + 1.0d);
             } catch (OutOfProjectionBoundsException e) { //out of bounds, notify user
-                sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MOD_ID + ".error.numbers")));
+                sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".error.numbers")));
                 return;
             }
         } else {
