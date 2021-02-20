@@ -39,7 +39,7 @@ The latest version can always be compiled from [our Github](https://github.com/B
 - **REQUIRED**: [CubicWorldGen](https://github.com/OpenCubicChunks/CubicWorldGen/)
 
 ## Obtaining
-Releases will not be found from within GitHub, but rather on our [Jenkins Continuous Integration server](https://jenkins.daporkchop.net/job/BuildTheEarth) kindly provided by DaPorkchop. Everything is automatically built and compiled for every single commit, so you can always snag the latest release.
-### [Latest Release Download Link](https://jenkins.daporkchop.net/job/BuildTheEarth/job/terraplusplus/job/master/lastSuccessfulBuild/artifact/build/libs/)
+Stable releases of TerraPlusPlus are uploaded on [our curseforge page.](https://www.curseforge.com/minecraft/mc-mods/terraplusplus/files)
+Builds for every commit can be found on our [Jenkins Page](https://jenkins.daporkchop.net/job/BuildTheEarth) kindly hosted by [@daPorkchop_](https://github.com/DaMatrix)
 
-If you want to build it yourself manually, even though Jenkins does it for you, here are the [building instructions](BUILD_INSTRUCTIONS.md).
+If you want to build it yourself manually, even though Jenkins does it for you, here are the [building instructions](https://github.com/BuildTheEarth/terraplusplus/wiki/Build-Instructions).
