@@ -37,30 +37,16 @@ terraplusplus.gui.projection.conformal_dymaxion=Conformal Dymaxion
 ## command messages
 terraplusplus.commands.tpll.usage=Usage: /tpll <latitude> <longitude> [altitude]
 terraplusplus.commands.tpll.others.usage=Usage: /tpll [target player] <latitude> <longitude> [altitude]
-terraplusplus.commands.dataset.usage=/dataset [dataset folder path]
 
 terraplusplus.commands.terra.usage=/terra
-terraplusplus.commands.terraadmin.usage=/terraadmin
 
 terraplusplus.commands.terra.gensettings=Generator Settings:
 terraplusplus.commands.terra.latlon=lat lon: %.7f %.7f
 terraplusplus.commands.terra.xy=x y: %.7f %.7f
 terraplusplus.commands.terra.environment=%.1f °C; %.1f mm/yr; soil id: %d
 terraplusplus.commands.terra.tissot= ~%.5f blocks/meter ± %.5f°
-terraplusplus.commands.terra.rstwtr=Water generation of Region ( %d, %d ) restored to default (This will only show up on newly generated chunks)
-terraplusplus.commands.terra.invwtr=Water generation of Region ( %d, %d ) inverted (This will only show up on newly generated chunks)
-
-terraplusplus.commands.overpass.usage=/terraadmin overpass <status|list|default|fallback>
-terraplusplus.commands.overpass.list.default=Default:  %s
-terraplusplus.commands.overpass.list.fallback=Fallback: %s
-terraplusplus.commands.overpass.list.nofallback=No fallback endpoint is set in the config
-terraplusplus.commands.overpass.set.default=Now using the default endpoint
-terraplusplus.commands.overpass.set.fallback=Now using the fallback endpoint
-terraplusplus.commands.overpass.status.default=Currently using default Overpass endpoint: %s
-terraplusplus.commands.overpass.status.fallback=Currently using fallback Overpass endpoint: %s
 
 terraplusplus.commands.terra.title=Terra++ Commands
-terraplusplus.commands.terraadmin.title=Terra++ Admin Commands
 
 ## fragment messages
 terraplusplus.fragment.help.purpose=List all commands
@@ -73,8 +59,6 @@ terraplusplus.fragment.terra.info.purpose=Info about Terra++
 terraplusplus.fragment.terra.convert.purpose=Convert [x,z] to [lat,lon], and [lat,lon] to [x,z]
 terraplusplus.fragment.terra.environment.purpose=Show data about the environment
 terraplusplus.fragment.terra.distortion.purpose=Show distortion in current world
-terraplusplus.fragment.terra.winvert.purpose=Fix inverted water
-terraplusplus.fragment.admin.overpass.purpose=Change OSM Overpass API Settings
 
 terraplusplus.fragment.terra.world.header=World Projection Settings:
 
@@ -88,5 +72,3 @@ terraplusplus.error.notplayer=You are not a player, please specify one!
 terraplusplus.error.unknownplayer=That player could not be found on the server!
 terraplusplus.error.notopothers=OP required for info on other players!
 terraplusplus.error.notop=Permissions or OP required to use this command!
-terraplusplus.error.nowtr=This world does not use Advanced Water!
-terraplusplus.error.invwtr=Region ( %d, %d ) is already in that state!
