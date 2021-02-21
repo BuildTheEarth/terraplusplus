@@ -1,7 +1,6 @@
 package net.buildtheearth.terraplusplus.util.http;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
@@ -81,10 +80,11 @@ public class CacheEntry {
         this.staleTime = maxAge >= 0L ? this.time + TimeUnit.SECONDS.toMillis(maxAge)
                 : this.etag != null ? this.time : -1L;
 
+        long fallbackExpireTime = this.time + TimeUnit.MINUTES.toMillis(TerraConfig.http.cacheTTL);
         long expireTime = Math.max(
-                headers.getTimeMillis(HttpHeaderNames.EXPIRES, this.time + TimeUnit.MINUTES.toMillis(TerraConfig.http.cacheTTL)),
+                headers.getTimeMillis(HttpHeaderNames.EXPIRES, fallbackExpireTime),
                 maxStale >= 0L ? this.time + TimeUnit.SECONDS.toMillis(maxStale) : -1L);
-        this.expireTime = expireTime < this.time ? this.time + TimeUnit.MINUTES.toMillis(TerraConfig.http.cacheTTL) : expireTime;
+        this.expireTime = expireTime < this.time ? fallbackExpireTime : expireTime;
 
         String location = null;
         switch (response.status().codeClass()) {

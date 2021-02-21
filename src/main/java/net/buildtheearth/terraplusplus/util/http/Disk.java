@@ -1,7 +1,5 @@
 package net.buildtheearth.terraplusplus.util.http;
 
-import net.buildtheearth.terraplusplus.TerraConfig;
-import net.buildtheearth.terraplusplus.TerraMod;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.DefaultEventLoop;
@@ -9,6 +7,8 @@ import io.netty.channel.EventLoop;
 import io.netty.util.ReferenceCountUtil;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import net.buildtheearth.terraplusplus.TerraMod;
+import net.daporkchop.lib.binary.netty.PUnpooled;
 import net.daporkchop.lib.common.function.io.IOConsumer;
 import net.daporkchop.lib.common.function.io.IOPredicate;
 import net.daporkchop.lib.common.function.io.IORunnable;
@@ -153,17 +153,42 @@ public class Disk {
         LongAdder count = new LongAdder();
         LongAdder size = new LongAdder();
 
-        /*try (Stream<Path> stream = Files.list(CACHE_ROOT)) {
+        long now = System.currentTimeMillis();
+
+        try (Stream<Path> stream = Files.list(CACHE_ROOT)) {
             stream.filter(Files::isRegularFile)
-                    .filter((IOPredicate<Path>) Disk::hasExpired)
+                    .filter((IOPredicate<Path>) p -> {
+                        try (FileChannel channel = FileChannel.open(p, StandardOpenOption.READ)) {
+                            long chSize = channel.size();
+                            try {
+                                ByteBuf buf = PUnpooled.wrap(channel.map(FileChannel.MapMode.READ_ONLY, 0L, chSize), toInt(chSize), true);
+                                try {
+                                    if (buf.readByte() == CacheEntry.CACHE_VERSION && !new CacheEntry(buf).isExpired(now)) { //file isn't expired, skip it
+                                        return false;
+                                    }
+                                } finally {
+                                    buf.release();
+                                }
+                            } catch (Throwable ignored) {
+                                //no-op
+                            }
+
+                            //delete file
+                            count.increment();
+                            size.add(chSize);
+                            return true;
+                        }
+                    })
                     .peek((IOConsumer<Path>) path -> {
                         count.increment();
                         size.add(Files.size(path));
                     })
                     .forEach((IOConsumer<Path>) Files::delete);
-        }*/
-
-        double mib = Math.round(size.sum() / (1024.0d * 1024.0d) * 10.0d) / 10.0d;
-        TerraMod.LOGGER.info("cache cleanup complete. deleted {} files, totalling {} bytes ({} MiB)", count.sum(), size.sum(), mib);
+        } catch (Throwable e) {
+            TerraMod.LOGGER.error("exception occurred during cache cleanup!", e);
+        } finally {
+            double mib = Math.round(size.sum() / (1024.0d * 1024.0d) * 10.0d) / 10.0d;
+            TerraMod.LOGGER.info("cache cleanup complete. deleted {} old files, totalling {} bytes ({} MiB)", count.sum(), size.sum(), mib);
+        }
     }
 }
