@@ -1,60 +1,52 @@
 ## World Type name
 generator.EarthCubic=Planète Terre
+generator.bte=Build the Earth
+generator.bte.info=Monde "Planète Terre" avec les paramètres de Build the Earth
 
 ## GUI options
+terraplusplus.gui.header=Option du monde Terra++
 terraplusplus.gui.projection=Projection
-terraplusplus.gui.orientation=Orientation
-terraplusplus.gui.roads=Génération des routes
-terraplusplus.gui.smoothblend=Lissage du terrain
-terraplusplus.gui.dynamicbaseheight=Minerais basés sur la hauteur
-terraplusplus.gui.osmwater=Eau avancée (experimental)
-terraplusplus.gui.buildings=Contours OSM des bâtiments
-terraplusplus.gui.lidar=Terrain custom
-terraplusplus.gui.caves=Grottes
+terraplusplus.gui.cwg=Paramètres CubicWorldGen
+terraplusplus.gui.use_default_heights=Données altimétrique par défaut
+terraplusplus.gui.use_default_trees=Données forrestières par défaut
 
-terraplusplus.gui.biomemap=Carte de debug
+## Transformations
+terraplusplus.gui.transformation.add=Ajouter une transformation
+terraplusplus.gui.transformation.flip_horizontal=Réflexion horizontale
+terraplusplus.gui.transformation.flip_vertical=Réflexion verticale
+terraplusplus.gui.transformation.offset=Décalage
+terraplusplus.gui.transformation.offset.dx=X
+terraplusplus.gui.transformation.offset.dy=Y
+terraplusplus.gui.transformation.scale=Échelle
+terraplusplus.gui.transformation.scale.x=X
+terraplusplus.gui.transformation.scale.y=Y
+terraplusplus.gui.transformation.swap_axes=Inversion des axes 
 
 ## Projection types
 terraplusplus.projection.web_mercator=Mercator
+terraplusplus.gui.projection.web_mercator=Web Mercator
+terraplusplus.gui.projection.web_mercator.zoom=Zoom
+terraplusplus.projection.transverse_mercator=Transverse de Mercator
 terraplusplus.projection.equirectangular=Cylindrique équidistante
 terraplusplus.projection.sinusoidal=Sinusoïdale
 terraplusplus.projection.equal_earth=Equal Earth
-terraplusplus.projection.transverse_mercator=Transverse de Mercator
-terraplusplus.projection.airocean=Airocean (Non BTE)
-terraplusplus.projection.conformal=Approx. conforme (Non BTE)
-terraplusplus.projection.bteairocean=Build The Earth
-
-## Projection orientations
-terraplusplus.orientation.upright=Droite
-terraplusplus.orientation.none=Pas d'orientation
-terraplusplus.orientation.swapped=Axes inversés
+terraplusplus.projection.bteairocean=Fuller de BuildTheEarth
+terraplusplus.projection.airocean=Fuller
+terraplusplus.projection.conformal=Approximation conforme de Fuller
 
 ## command messages
 terraplusplus.commands.tpll.usage=/tpll <latitude> <longitude> [altitude] [joueur]
-terraplusplus.commands.dataset.usage=/dataset [chemin du dossier des données]
+terraplusplus.commands.tpll.others.usage=Usage: /tpll [joueur ciblé] <latitude> <longitude> [altitude]
 
 terraplusplus.commands.terra.usage=/terra
-terraplusplus.commands.terraadmin.usage=/terraadmin
 
 terraplusplus.commands.terra.gensettings=Paramètres du générateur:
 terraplusplus.commands.terra.latlon=lat lon: %.7f %.7f
 terraplusplus.commands.terra.xy=x y: %.7f %.7f
 terraplusplus.commands.terra.environment=%.1f °C; %.1f mm/yr; soil id: %d
 terraplusplus.commands.terra.tissot= ~%.5f blocks/meter ± %.5f°
-terraplusplus.commands.terra.rstwtr=La génération d'eau de la région ( %d, %d ) a étée réinitialisée (Seuls les chunks nouvellement générés seront affectés)
-terraplusplus.commands.terra.invwtr=La génération d'eau de la région ( %d, %d ) a étée inversée (Seuls les chunks nouvellement générés seront affectés)
-
-terraplusplus.commands.overpass.usage=/terraadmin overpass <status|list|default|fallback>
-terraplusplus.commands.overpass.list.default=Par défaut:  %s
-terraplusplus.commands.overpass.list.fallback=Alternatif: %s
-terraplusplus.commands.overpass.list.nofallback=Aucun endpoint alternatif de configuré
-terraplusplus.commands.overpass.set.default=Utilisation du serveur Overpass par défaut
-terraplusplus.commands.overpass.set.fallback=Utilisation du serveur Overpass alternatif
-terraplusplus.commands.overpass.status.default=En train d'utiliser le serveur Overpass par défaut: %s
-terraplusplus.commands.overpass.status.fallback=En train d'utiliser le serveur Overpass alternatif: %s
 
 terraplusplus.commands.terra.title=Commandes de Terra++
-terraplusplus.commands.terraadmin.title=Commandes d'administration de Terra++
 
 ## fragment messages
 terraplusplus.fragment.help.purpose=Lister toutes les commandes
@@ -67,8 +59,6 @@ terraplusplus.fragment.terra.info.purpose=Informations sur Terra++
 terraplusplus.fragment.terra.convert.purpose=Convertit [x,z] en [lat,lon], et [lat,lon] en [x,z]
 terraplusplus.fragment.terra.environment.purpose=Affiche des données sur l'envirronement
 terraplusplus.fragment.terra.distortion.purpose=Affiche la distortion à l'emplacement actuel
-terraplusplus.fragment.terra.winvert.purpose=Résout les problèmes d'eau inversée
-terraplusplus.fragment.admin.overpass.purpose=Change les paramètres de l'API Overpass d'OSM
 
 terraplusplus.fragment.terra.world.header=Paramètres de projection du monde:
 
@@ -82,5 +72,3 @@ terraplusplus.error.notplayer=Vous n'êtes pas un joueur, merci d'en spécifier 
 terraplusplus.error.unknownplayer=Ce joueur n'a pas été trouvé sur le serveur!
 terraplusplus.error.notopothers=Des permissions sont requises pour obtenir des informations sur les autres joueurs!
 terraplusplus.error.notop=Des permissions sont requises pour utiliser cette commande!
-terraplusplus.error.nowtr=Ce monde n'utilise pas l'eau avancée!
-terraplusplus.error.invwtr=La région ( %d, %d ) est déjà dans cet état!
