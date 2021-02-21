@@ -10,7 +10,7 @@ import net.minecraft.block.state.IBlockState;
 
 public class TerraConstants {
     public static final String MODID = "terraplusplus";
-    public static String VERSION = "(development snapshot)";
+    public static String VERSION = "(development_snapshot)";
 
     public static final String CHAT_PREFIX = "&2&lT++ &8&l> ";
     public static final String defaultCommandNode = MODID + ".command.";
