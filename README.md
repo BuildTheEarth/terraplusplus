@@ -43,13 +43,3 @@ Stable releases of TerraPlusPlus are uploaded on [our curseforge page.](https://
 Builds for every commit can be found on our [Jenkins Page](https://jenkins.daporkchop.net/job/BuildTheEarth) kindly hosted by [@daPorkchop_](https://github.com/DaMatrix)
 
 If you want to build it yourself manually, even though Jenkins does it for you, here are the [building instructions](https://github.com/BuildTheEarth/terraplusplus/wiki/Build-Instructions).
-
-## Docs
-
-- [Cool locations](docs/cool_locations.md)
-- [Creations](docs/creations.md)
-- [Pictures](docs/pictures.md)
-- [Projections](docs/projections.md)
-- [Sources](docs/sources.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [Server setup guide](docs/using_server.md)
