@@ -1,5 +1,11 @@
 # Server setup instructions
 
+## Server pack
+
+Check out our [official server pack](https://github.com/Rickleuf/BTE-Server/releases) if you want to easily setup a server.
+
+## Manual setup
+
 Setup a Forge server (which can be installed through the [standard Forge installer](http://files.minecraftforge.net/)), and install the CubicChunks, CubicWorldGen, and Terra++ jars to the `/mods/` directory.
 
 Inside of the `server.properties` file, change:
@@ -22,7 +28,7 @@ level-name=world
 
 To something else, so that a new world is generated with Terra++.
 
-## Recommended
+### Recommended
 
 You should now have a Terra++ server loaded and generating properly. But to limit load on the server, change:
 
@@ -38,7 +44,7 @@ vertical-view-distance=-1
 
 To a number of chunks that your server can handle, and re-run your server (using `-1` is whatever the player's vertical distance is, for all players), you may need to tweak these numbers until you get a stable server setting.
 
-## Allocating RAM
+### Allocating RAM
 
 We also recommend launching your Forge server with more RAM in the JVM arguments:
 
