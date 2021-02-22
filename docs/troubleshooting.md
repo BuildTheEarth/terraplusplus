@@ -57,11 +57,11 @@ When running the mod, we always recommend to keep your game's log open at all ti
 
 To enable the game log, find the launcher settings:
 
-![Launcher Settings](images/LauncherSettings.png)
+![Launcher Settings](images/troubleshooting/launcher/settings.png)
 
 Enable the option **Open output log when games start**:
 
-![Launcher Settings](images/LauncherOptionChoices.png)
+![Launcher Settings](images/troubleshooting/launcher/options.png)
 
 Keeping the launcher open is also extremely helpful at times, and we recommend you enable that too, although it's not neccessary.
 
@@ -89,13 +89,13 @@ If this still does not work there is an [alternative method](#switching-jvm-cert
 
 On Windows you can tell if you have other JVMs installed by searching "java" using the Windows search:
 
-![Windows](images/WindowsJava.png)
+![Windows](images/troubleshooting/java/windows/search.png)
 
 If you select the **Configure Java** item, your system-wide Java installations will be opened. In this window, click "View" under the "Java" tab:
 
-![Windows](images/WindowsJavaView.png)
+![Windows](images/troubleshooting/java/windows/view.png)
 
-![Windows](images/WindowsDifferentJVMs.png)
+![Windows](images/troubleshooting/java/windows/jvm.png)
 
 You will see every major JVM you have installed to your machine. Copy the path up to the `/bin` part (don't include the bin). If you have multiple, choose the newest under **1.8**.
 
@@ -105,11 +105,11 @@ Then, use <kbd>Windows + R</kbd> and paste the path you copied. This will open a
 
 Follow the same instructions as for Windows, but instead of searching for "java" on Windows search, look for "java" in your "System Preferences" application:
 
-![Mac](images/MacSystemPreferences.png)
+![Mac](images/troubleshooting/java/mac/preferences.png)
 
-![Mac](images/MacJavaView.png)
+![Mac](images/troubleshooting/java/mac/view.png)
 
-![Mac](images/MacDifferentJVMs.png)
+![Mac](images/troubleshooting/java/mac/jvm.png)
 
 Once you've found the path, use the <kbd>⌘ + ⇧ + G</kbd> shortcut and paste the path into the box.
 
@@ -141,11 +141,11 @@ Once you have confirmed that **cacerts** exists, you need to make Minecraft's JV
 
 Inside your Minecraft Launcher, go to the "Installations" tab, find your Forge installation, and select "Edit":
 
-![Editing JVM](images/InstallationsEdit.png)
+![Editing JVM](images/troubleshooting/args/installations.png)
 
 Select "More Options", and find the "JVM Arguments" section:
 
-![Editing JVM](images/EditJVMArgs.png)
+![Editing JVM](images/troubleshooting/args/edit.png)
 
 Inside the JVM Arguments add the following line (ensure there is a space before and after):
 
@@ -169,7 +169,7 @@ Due to file permissions associated with standard Java installations on Mac, only
 
 Browse into the folder you copied (<kbd>⌘ + ⇧ + G</kbd> and paste the directory), inside of that folder, find the `/lib/` folder, then `/security/`, inside of that should exist a file called `cacerts`, copy (**don't cut**) this file
 
-![Copy cacerts](images/CopycacertsMac.png)
+![Copy cacerts](images/troubleshooting/cacerts/copy.png)
 
 Then, go to the JVM that's stored in the Minecraft files. The default installation directory is:
 
@@ -187,14 +187,4 @@ A good workaround is to setup the decompiliation cache on your system for Minecr
 
 ### "java.lang.OutOfMemoryError: GC overhead limit exceeded"
 
-The amount of memory that the JVM has to use was exceeded. You can edit the JVM's memory allocation by changing its arguments. If you're running a server, follow its [instructions](using_server.md) to change this.
-
-#### JVM Arguments for the client
-
-Inside of Minecraft's Launcher, go to the Installations tab, find your installation of Forge, and select Edit:
-
-![Editing JVM](images/InstallationsEdit.png)
-
-Select "More Options", and find the "JVM Arguments" section:
-
-![Editing JVM](images/EditJVMArgs.png)
+The amount of memory that the JVM has to use was exceeded. You can edit the JVM's memory allocation by changing its arguments. If you're running a server, follow our [instructions](using_server.md) to change this.

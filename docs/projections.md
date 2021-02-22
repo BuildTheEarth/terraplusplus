@@ -89,4 +89,4 @@ This projection is based on [Airocean](#Airocean) and Daniel Strebe's [Dymaxion-
 
 The difference between the Airocean and the BTE projections is that the latter flips the eastern hemisphere to partially correct north. It is the official projection used for the Build the Earth project.
 
-![BTE projection](images/bteproj.jpg)
+![BTE projection](images/projections/bte_airocean.jpg)

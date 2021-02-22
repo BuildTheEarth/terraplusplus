@@ -24,7 +24,7 @@ Check out the mod showcase by [Baccar Wozat](https://www.youtube.com/channel/UCl
 
 Here's an improved Null Island, including models of the Earth, Moon, and Sun. Created by the developers of the original Terra 1-to-1 mod (shejan0 and TheAtomBomb92), Wozat, MineCrak, and FyreBurns.
 
-![Null Island](images/UpdatedNullIsland.png)
+![Null Island](images/creations/updated_null_island.png.png)
 
 <!-- TODO: Add more videos about BTE? There've been a lot -->
 
