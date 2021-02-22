@@ -1,4 +1,4 @@
-<img src="https://github.com/BuildTheEarth/terraplusplus/blob/master/docs/images/terraplusplus_logo.png" width="500" height="250">
+<img src="https://github.com/BuildTheEarth/terraplusplus/blob/master/docs/images/logo.png" width="500" height="250">
 
 
 [![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/BuildTheEarth/terraplusplus/blob/master/LICENSE.MD)
