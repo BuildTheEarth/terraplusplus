@@ -24,13 +24,13 @@ terraplusplus.orientation.none=Без орієнтації
 terraplusplus.orientation.swapped=Перевернута вісь
 
 ## command messages
-terraplusplus.commands.tpll.usage=/tpll шир дов [висота] [гравець]
+terraplusplus.command.tpll.usage=/tpll шир дов [висота] [гравець]
 
-terraplusplus.commands.terra.usage=/terra [where:ou] [гравець]\n/terra world\n/terra osm\n/terra conv[ert] [x z]:[шир дов]
+terraplusplus.command.terra.usage=/terra [where:ou] [гравець]\n/terra world\n/terra osm\n/terra conv[ert] [x z]:[шир дов]
 
-terraplusplus.commands.terra.gensettings=Налаштування генератора:
-terraplusplus.commands.terra.latlon=шир дов: %.7f %.7f
-terraplusplus.commands.terra.xy=x y: %.7f %.7f
+terraplusplus.command.terra.gensettings=Налаштування генератора:
+terraplusplus.command.terra.latlon=шир дов: %.7f %.7f
+terraplusplus.command.terra.xy=x y: %.7f %.7f
 
 ## command errors
 terraplusplus.error.notcc=Повинен бути у світі Cubic Chunks!

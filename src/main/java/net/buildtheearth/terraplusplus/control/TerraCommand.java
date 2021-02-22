@@ -37,7 +37,7 @@ public class TerraCommand extends FragmentManager {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return TerraConstants.controlCommandNode + "terra.usage";
+        return TerraConstants.defaultCommandNode + "terra.usage";
     }
 
     @Override
@@ -52,10 +52,6 @@ public class TerraCommand extends FragmentManager {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-        if(!hasPermission(sender, TerraConstants.controlCommandNode + "terra")) {
-            sender.sendMessage(ChatUtil.getNoPermission());
-            return;
-        }
         executeFragment(server, sender, args);
     }
 }

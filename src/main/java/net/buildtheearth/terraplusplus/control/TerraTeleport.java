@@ -38,7 +38,7 @@ public class TerraTeleport extends Command {
 
     @Override
     public String getUsage(ICommandSender sender) {
-        return TerraConstants.controlCommandNode + "tpll.usage";
+        return TerraConstants.defaultCommandNode + "tpll.usage";
     }
 
     @Override
@@ -53,11 +53,6 @@ public class TerraTeleport extends Command {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-        if(!hasPermission(sender, TerraConstants.controlCommandNode + "terra")) {
-            sender.sendMessage(ChatUtil.getNoPermission());
-            return;
-        }
-
         World world = server.getEntityWorld();
         IChunkProvider cp = world.getChunkProvider();
 
@@ -216,9 +211,9 @@ public class TerraTeleport extends Command {
 
     private void usage(ICommandSender sender) {
         if(hasPermission(sender, TerraConstants.othersCommandNode)) {
-            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.controlCommandNode + "tpll.others.usage")));
+            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.defaultCommandNode + "tpll.others.usage")));
         } else {
-            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.controlCommandNode + "tpll.usage")));
+            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.defaultCommandNode + "tpll.usage")));
         }
     }
 

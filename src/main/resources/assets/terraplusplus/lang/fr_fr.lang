@@ -35,18 +35,18 @@ terraplusplus.projection.airocean=Fuller
 terraplusplus.projection.conformal=Approximation conforme de Fuller
 
 ## command messages
-terraplusplus.commands.tpll.usage=/tpll <latitude> <longitude> [altitude] [joueur]
-terraplusplus.commands.tpll.others.usage=Usage: /tpll [joueur ciblé] <latitude> <longitude> [altitude]
+terraplusplus.command.tpll.usage=/tpll <latitude> <longitude> [altitude] [joueur]
+terraplusplus.command.tpll.others.usage=Usage: /tpll [joueur ciblé] <latitude> <longitude> [altitude]
 
-terraplusplus.commands.terra.usage=/terra
+terraplusplus.command.terra.usage=/terra
 
-terraplusplus.commands.terra.gensettings=Paramètres du générateur:
-terraplusplus.commands.terra.latlon=lat lon: %.7f %.7f
-terraplusplus.commands.terra.xy=x y: %.7f %.7f
-terraplusplus.commands.terra.environment=%.1f °C; %.1f mm/yr; soil id: %d
-terraplusplus.commands.terra.tissot= ~%.5f blocks/meter ± %.5f°
+terraplusplus.command.terra.gensettings=Paramètres du générateur:
+terraplusplus.command.terra.latlon=lat lon: %.7f %.7f
+terraplusplus.command.terra.xy=x y: %.7f %.7f
+terraplusplus.command.terra.environment=%.1f °C; %.1f mm/yr; soil id: %d
+terraplusplus.command.terra.tissot= ~%.5f blocks/meter ± %.5f°
 
-terraplusplus.commands.terra.title=Commandes de Terra++
+terraplusplus.command.terra.title=Commandes de Terra++
 
 ## fragment messages
 terraplusplus.fragment.help.purpose=Lister toutes les commandes
