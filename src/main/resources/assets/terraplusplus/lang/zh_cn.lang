@@ -46,15 +46,15 @@ terraplusplus.orientation.swapped=翻转坐标轴
 
 ## command messages
 
-terraplusplus.commands.tpll.usage=/tpll <纬度> <经度> [海拔高度] [玩家]
+terraplusplus.command.tpll.usage=/tpll <纬度> <经度> [海拔高度] [玩家]
 
-terraplusplus.commands.terra.usage=/terra [where:ou] [玩家]\n/terra world\n/terra osm\n/terra conv[ert] [x z]:[纬度 经度]
+terraplusplus.command.terra.usage=/terra [where:ou] [玩家]\n/terra world\n/terra osm\n/terra conv[ert] [x z]:[纬度 经度]
 
-terraplusplus.commands.terra.gensettings=Generator Settings:
+terraplusplus.command.terra.gensettings=Generator Settings:
 
-terraplusplus.commands.terra.latlon=纬度 经度: %.7f %.7f
+terraplusplus.command.terra.latlon=纬度 经度: %.7f %.7f
 
-terraplusplus.commands.terra.xy=x y: %.7f %.7f
+terraplusplus.command.terra.xy=x y: %.7f %.7f
 
 ## command errors
 terraplusplus.error.notcc=必须在Cubic Chunks世界中执行！

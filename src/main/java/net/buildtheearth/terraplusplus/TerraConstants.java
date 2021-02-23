@@ -14,8 +14,7 @@ public class TerraConstants {
 
     public static final String CHAT_PREFIX = "&2&lT++ &8&l> ";
     public static final String defaultCommandNode = MODID + ".command.";
-    public static final String controlCommandNode = MODID + ".commands.";
-    public static final String othersCommandNode = controlCommandNode + "others";
+    public static final String othersCommandNode = MODID + ".others";
 
     public static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(IBlockState.class, BlockStateParser.INSTANCE)

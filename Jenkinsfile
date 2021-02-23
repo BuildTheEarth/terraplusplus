@@ -70,7 +70,7 @@ pipeline {
             deleteDir()
 
             withCredentials([string(credentialsId: "bte_discord_webhook", variable: "discordWebhook")]) {
-                discordSend thumbnail: "https://raw.githubusercontent.com/BuildTheEarth/terraplusplus/master/Pictures/TerraJPG.jpg",
+                discordSend thumbnail: "https://raw.githubusercontent.com/BuildTheEarth/terraplusplus/master/docs/images/logo.png",
                         result: currentBuild.currentResult,
                         description: getDiscordMessage(),
                         link: env.BUILD_URL,
