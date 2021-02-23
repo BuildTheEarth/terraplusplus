@@ -23,16 +23,16 @@ terraplusplus.gui.transformation.scale.y=Y
 terraplusplus.gui.transformation.swap_axes=Inversion des axes 
 
 ## Projection types
-terraplusplus.projection.web_mercator=Mercator
+terraplusplus.gui.projection.web_mercator=Mercator
 terraplusplus.gui.projection.web_mercator=Web Mercator
 terraplusplus.gui.projection.web_mercator.zoom=Zoom
-terraplusplus.projection.transverse_mercator=Transverse de Mercator
-terraplusplus.projection.equirectangular=Cylindrique équidistante
-terraplusplus.projection.sinusoidal=Sinusoïdale
-terraplusplus.projection.equal_earth=Equal Earth
-terraplusplus.projection.bteairocean=Fuller de BuildTheEarth
-terraplusplus.projection.airocean=Fuller
-terraplusplus.projection.conformal=Approximation conforme de Fuller
+terraplusplus.gui.projection.transverse_mercator=Transverse de Mercator
+terraplusplus.gui.projection.equirectangular=Cylindrique équidistante
+terraplusplus.gui.projection.sinusoidal=Sinusoïdale
+terraplusplus.gui.projection.equal_earth=Equal Earth
+terraplusplus.gui.projection.bteairocean=Fuller de BuildTheEarth
+terraplusplus.gui.projection.airocean=Fuller
+terraplusplus.gui.projection.conformal=Approximation conforme de Fuller
 
 ## command messages
 terraplusplus.commands.tpll.usage=/tpll <latitude> <longitude> [altitude] [joueur]
