@@ -27,6 +27,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import net.buildtheearth.terraplusplus.TerraConstants;
+import net.daporkchop.lib.common.misc.string.PStrings;
 import net.daporkchop.lib.common.util.PorkUtil;
 
 import java.util.ArrayDeque;
@@ -226,7 +227,7 @@ final class HostManager extends Host {
             request.headers()
                     .set(this.headers)
                     .set(HttpHeaderNames.HOST, HostManager.this.authority)
-                    .set(HttpHeaderNames.USER_AGENT, TerraConstants.MODID + '/' + TerraConstants.VERSION);
+                    .set(HttpHeaderNames.USER_AGENT, PStrings.fastFormat("%s/%s CubicChunks/%s", TerraConstants.MODID, TerraConstants.VERSION, TerraConstants.CC_VERSION));
             HttpUtil.setKeepAlive(request, true);
             return request;
         }

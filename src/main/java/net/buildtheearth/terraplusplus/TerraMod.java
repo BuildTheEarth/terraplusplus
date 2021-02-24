@@ -1,5 +1,6 @@
 package net.buildtheearth.terraplusplus;
 
+import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import net.buildtheearth.terraplusplus.control.TerraCommand;
 import net.buildtheearth.terraplusplus.control.TerraTeleport;
 import net.buildtheearth.terraplusplus.provider.GenerationEventDenier;
@@ -35,6 +36,8 @@ public class TerraMod {
         if (!"${version}".equals(terra.getVersion())) {
             TerraConstants.VERSION = terra.getVersion();
         }
+
+        TerraConstants.CC_VERSION = Loader.instance().getIndexedModList().get(CubicChunks.MODID).getVersion();
     }
 
     @EventHandler
