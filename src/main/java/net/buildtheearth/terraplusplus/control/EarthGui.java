@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 
 import javax.imageio.ImageIO;
@@ -51,6 +52,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
  * This is a hacky mess... but still many orders of magnitude better than the previous heap of refuse.
  *
  * @author DaPorkchop_
+ * @author SmylerMC
  */
 public class EarthGui extends GuiScreen {
 	protected static final int SRC_W = 2048;
@@ -61,7 +63,6 @@ public class EarthGui extends GuiScreen {
 	protected static final int SIZE = 1024;
 	protected static final int VERTICAL_PADDING = 32;
 
-	protected DynamicTexture texture;
 	protected final GuiCreateWorld guiCreateWorld;
 
 	protected EarthGeneratorSettings settings;
@@ -73,7 +74,7 @@ public class EarthGui extends GuiScreen {
 	protected final List<Entry> entries = new ArrayList<>();
 	protected final List<GuiTextField> textFields = new CopyOnWriteArrayList<>();
 	
-	protected PreviewTextureMaker textureWorker;
+	protected ProjectionPreview preview;
 
 	public EarthGui(GuiCreateWorld guiCreateWorld, Minecraft mc) {
 		super.buttonList = new CopyOnWriteArrayList<>();
@@ -82,14 +83,8 @@ public class EarthGui extends GuiScreen {
 
 		this.mc = mc;
 		this.guiCreateWorld = guiCreateWorld;
-	}
-
-	private void updateMap() {
-		if(this.textureWorker != null) {
-			this.textureWorker.cancel(); // Cancel updating the last texture and delete it's gl texture
-		}
-		this.textureWorker = new PreviewTextureMaker(this.settings.projection(), SIZE, SIZE);
-		this.texture = this.textureWorker.getTexture();
+		
+		this.preview = new ProjectionPreview();
 	}
 
 	@Override
@@ -98,8 +93,8 @@ public class EarthGui extends GuiScreen {
 
 		Keyboard.enableRepeatEvents(false);
 
-		this.texture.deleteGlTexture();
-		this.texture = null;
+		this.preview.finish();
+		this.preview = null;
 	}
 
 	@Override
@@ -139,7 +134,7 @@ public class EarthGui extends GuiScreen {
 		y += this.addEntry(new PaddingEntry(10)).height();
 		y += this.addEntry(new CWGEntry(this.settings, this, 5, y, this.width - this.imgSize - 10)).height();
 
-		this.updateMap();
+		this.preview.update(this.width - this.imgSize, VERTICAL_PADDING, this.imgSize - 10, this.height - VERTICAL_PADDING*2, this.settings.projection());
 	}
 
 	protected Entry addEntry(Entry entry) {
@@ -164,9 +159,7 @@ public class EarthGui extends GuiScreen {
 		this.drawDefaultBackground();
 		this.drawCenteredString(this.fontRenderer, I18n.format(TerraConstants.MODID + ".gui.header"), this.width >> 1, VERTICAL_PADDING >> 1, 0xFFFFFFFF);
 
-		//render map texture
-		GlStateManager.bindTexture(this.texture.getGlTextureId());
-		drawScaledCustomSizeModalRect(this.width - this.imgSize, VERTICAL_PADDING, 0, 0, SIZE, SIZE, this.imgSize, this.imgSize, SIZE, SIZE);
+		this.preview.draw();
 
 		//render list
 		int y = VERTICAL_PADDING;
@@ -667,53 +660,102 @@ public class EarthGui extends GuiScreen {
 		}
 	}
 
-	private class PreviewTextureMaker {
-		private volatile boolean cancelled = false;
-		private DynamicTexture tex;
+	protected class ProjectionPreview {
+		private int previewX, previewY, previewWidth, previewHeight;
+		private volatile boolean finish = false;
+		private volatile boolean reset = false;
+		private DynamicTexture previewTexture;
 		private GeographicProjection projection;
-		private int texWidth, texHeight;
-		private int[] src, dst;
+		private AtomicBoolean working = new AtomicBoolean(false);
+		private AtomicBoolean textureNeedsUpdate = new AtomicBoolean(false);
+		private int[] src;
+		private volatile int[] dst;
+		private Thread worker;
 
-		public PreviewTextureMaker(@NonNull GeographicProjection projection, int width, int height) {
-			this.projection = projection;
-			this.texWidth = width;
-			this.texHeight = height;
-		}
-
-		public DynamicTexture getTexture() {
-			if(this.tex == null) {
-				this.tex = new DynamicTexture(texWidth, texHeight);
-				this.src = SRC_CACHE.get();
-				this.dst = this.tex.getTextureData();
-				Arrays.fill(dst, 0);
-				this.tex.updateDynamicTexture();
-				this.updateTextureAsync();
-			}
-			return this.tex;
-		}
-
-		private void updateTextureAsync() {
-			Thread worker = new Thread(this::updateTexture);
+		public ProjectionPreview() {
+			this.worker = new Thread(this::work);
 			worker.setDaemon(true);
+			worker.setName("Projection preview");
 			worker.start();
-		}
-
-		private void updateTexture() {
-			if(!this.cancelled) this.projectTexture();
-			if(!this.cancelled) Minecraft.getMinecraft().addScheduledTask(this.tex::updateDynamicTexture);
+			this.src = SRC_CACHE.get();
 		}
 		
-		public void cancel() {
-			this.cancelled = true;
-			if(this.tex != null) {
-				this.tex.deleteGlTexture();
+		private void work() {
+			while(!this.finish) {
+				
+				// Wait for the client thread to tell us to start
+				synchronized (this.working) {
+					try {
+						this.working.wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					this.working.set(true);
+				}
+				
+				// Actually do the work
+				this.projectTexture(this.dst, this.previewWidth, this.previewHeight, this.projection);
+				synchronized(this.textureNeedsUpdate) {
+					this.textureNeedsUpdate.set(true);
+				}
+				
+				// Let the client thread know we are done
+				synchronized (this.working) {
+					this.working.set(false);
+					this.working.notify();
+				}
+				
 			}
 		}
 
-		private void projectTexture() {
+		public void update(int x, int y, int width, int height, @NonNull GeographicProjection proj) {
+			this.previewX = x;
+			this.previewY = y;
+			this.previewWidth = width;
+			this.previewHeight = height;
+			this.projection = proj;
+			
+			// Ensure the worker stops its task
+			this.reset = true;
+			synchronized (this.working) {
+				if(this.working.get()) {
+					try {
+						this.working.wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			
+			if(this.previewTexture != null) this.previewTexture.deleteGlTexture();
+			this.previewTexture = new DynamicTexture(width, height);
+			this.dst = this.previewTexture.getTextureData();
+			Arrays.fill(this.dst, 0); //fill with transparent pixels
+			
+			// Let the worker start the new task
+			this.reset = false;
+			synchronized (this.working) {
+				this.working.notify();
+			}
+			
+		}
+		
+		public void finish() {
+			this.reset = true;
+			this.finish = true;
+			
+			// If the worker was waiting, notify it so it exists
+			synchronized (this.working) {
+				if(!this.working.get()) {
+					this.working.notify();
+				}
+			}
+		}
 
-			//scale should be able to fit whole earth inside texture
-			double[] bounds = this.projection.bounds();
+		private void projectTexture(int[] dst, int width, int height, GeographicProjection projection) {
+
+			// Scale should be able to fit whole earth inside texture
+			double[] bounds = projection.bounds();
 
 			double minX = min(bounds[0], bounds[2]);
 			double maxX = max(bounds[0], bounds[2]);
@@ -721,39 +763,50 @@ public class EarthGui extends GuiScreen {
 			double maxY = max(bounds[1], bounds[3]);
 			double dx = maxX - minX;
 			double dy = maxY - minY;
-			double scale = max(dx, dy) / (double) SIZE;
+			double scale = max(dx, dy) / (double) Math.min(width, height);
 
-			Arrays.fill(this.dst, 0); //fill with transparent pixels
-
-			//acually set map data (in parallel, because some projections are slow)
-			for(int yi = 0; yi < this.texHeight && !this.cancelled; yi++) {
+			// Actually set map data
+			for(int yi = 0; yi < height && !this.reset; yi++) {
 				double y = yi * scale + minY;
 				if (y <= minY || y >= maxY) { //skip entire row if y value out of projection bounds
 					continue;
 				}
 
-				for (int xi = 0; xi < SIZE; xi++) {
+				for (int xi = 0; xi < width; xi++) {
 					double x = xi * scale + minX;
 					if (x <= minX || x >= maxX) { //sample out of bounds, skip it
 						continue;
 					}
 
 					try {
-						double[] projected = this.projection.toGeo(x, y);
-						int lon = (int) (((projected[0] + 180.0d) * (SRC_W / 360.0d)));
-						int lat = (int) (((projected[1] + 90.0d) * (SRC_H / 180.0d)));
-						if (lon < 0 || lon >= SRC_W || lat < 0 || lat >= SRC_H) { //projected sample is out of bounds
+						double[] projected = projection.toGeo(x, y);
+						int xPixel = (int) (((projected[0] + 180.0d) * (SRC_W / 360.0d)));
+						int yPixel = (int) (((projected[1] + 90.0d) * (SRC_H / 180.0d)));
+						if (xPixel < 0 || xPixel >= SRC_W || yPixel < 0 || yPixel >= SRC_H) { //projected sample is out of bounds
 							continue;
 						}
 
-						dst[yi * SIZE + xi] = src[lat * SRC_W + lon];
+						dst[(height - yi - 1) * width + xi] = src[(SRC_H - yPixel - 1) * SRC_W + xPixel];
 					} catch (OutOfProjectionBoundsException ignored) {
 						//sample out of bounds, skip it
 					}
 				}
+				synchronized(this.textureNeedsUpdate) {
+					this.textureNeedsUpdate.set(true);
+				}
 			}
 		}
-
+		
+		public void draw() {
+			synchronized(this.textureNeedsUpdate) {
+				if(this.textureNeedsUpdate.get()) {
+					this.previewTexture.updateDynamicTexture();
+					this.textureNeedsUpdate.set(false);
+				}
+				GlStateManager.bindTexture(this.previewTexture.getGlTextureId());
+				drawScaledCustomSizeModalRect(this.previewX, this.previewY, 0, 0, this.previewWidth, this.previewHeight, this.previewWidth, this.previewHeight, this.previewWidth, this.previewHeight);
+			}
+		}
 
 	}
 }
