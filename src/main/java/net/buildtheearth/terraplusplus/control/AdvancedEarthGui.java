@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 import javax.imageio.ImageIO;
 
@@ -47,23 +48,24 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 /**
- * The world configuration GUI.
+ * The advanced world configuration GUI.
  * <p>
  * This is a hacky mess... but still many orders of magnitude better than the previous heap of refuse.
  *
  * @author DaPorkchop_
  * @author SmylerMC
  */
-public class EarthGui extends GuiScreen {
+public class AdvancedEarthGui extends GuiScreen {
 	protected static final int SRC_W = 2048;
 	protected static final int SRC_H = 1024;
 	protected static final Ref<int[]> SRC_CACHE = Ref.soft((IOSupplier<int[]>) () ->
-	ImageIO.read(EarthGui.class.getResource("map.png")).getRGB(0, 0, SRC_W, SRC_H, null, 0, SRC_W));
+	ImageIO.read(AdvancedEarthGui.class.getResource("map.png")).getRGB(0, 0, SRC_W, SRC_H, null, 0, SRC_W));
 
 	protected static final int SIZE = 1024;
 	protected static final int VERTICAL_PADDING = 32;
 
-	protected final GuiCreateWorld guiCreateWorld;
+	protected final GuiScreen parent;
+	protected Consumer<String> whenDone;
 
 	protected EarthGeneratorSettings settings;
 
@@ -76,15 +78,14 @@ public class EarthGui extends GuiScreen {
 	
 	protected ProjectionPreview preview;
 
-	public EarthGui(GuiCreateWorld guiCreateWorld, Minecraft mc) {
+	public AdvancedEarthGui(GuiScreen parent, EarthGeneratorSettings settings, Consumer<String> whenDone) {
 		super.buttonList = new CopyOnWriteArrayList<>();
 
-		this.settings = EarthGeneratorSettings.parse(guiCreateWorld.chunkProviderSettingsJson);
-
-		this.mc = mc;
-		this.guiCreateWorld = guiCreateWorld;
+		this.settings = settings;
+		this.whenDone = whenDone;
 		
-		this.preview = new ProjectionPreview();
+		this.mc = Minecraft.getMinecraft();
+		this.parent = parent;
 	}
 
 	@Override
@@ -100,6 +101,10 @@ public class EarthGui extends GuiScreen {
 	@Override
 	public void initGui() {
 		Keyboard.enableRepeatEvents(true);
+		
+		if(this.preview == null) {
+			this.preview = new ProjectionPreview();
+		}
 
 		this.imgSize = max(min(this.height - (VERTICAL_PADDING << 1), this.width >> 1), this.width - 400);
 
@@ -197,10 +202,10 @@ public class EarthGui extends GuiScreen {
 	@Override
 	public void mouseClicked(int mouseX, int mouseY, int mouseEvent) {
 		if (this.doneButton.mousePressed(this.mc, mouseX, mouseY)) {
-			this.guiCreateWorld.chunkProviderSettingsJson = this.settings.toString(); //save settings
-			this.mc.displayGuiScreen(this.guiCreateWorld); //exit
+			this.whenDone.accept(this.settings.toString()); //save settings
+			this.mc.displayGuiScreen(this.parent); //exit
 		} else if (this.cancelButton.mousePressed(this.mc, mouseX, mouseY)) {
-			this.mc.displayGuiScreen(this.guiCreateWorld); //exit without saving
+			this.mc.displayGuiScreen(this.parent); //exit without saving
 		} else {
 			boolean updateQueued = false;
 			for (GuiTextField textField : this.textFields) {
@@ -224,7 +229,7 @@ public class EarthGui extends GuiScreen {
 	protected interface Entry {
 		int height();
 
-		default void render(EarthGui gui, int x, int y, int width) {
+		default void render(AdvancedEarthGui gui, int x, int y, int width) {
 		}
 
 		default EarthGeneratorSettings touchSettings(EarthGeneratorSettings settings) {
@@ -237,7 +242,7 @@ public class EarthGui extends GuiScreen {
 		@Getter
 		protected int height = 30;
 
-		public ProjectionEntry(EarthGeneratorSettings settings, EarthGui gui, int x, int y, int width) {
+		public ProjectionEntry(EarthGeneratorSettings settings, AdvancedEarthGui gui, int x, int y, int width) {
 			gui.addButton(new GuiButton(0, x + (width >> 1), y, width >> 1, 20, I18n.format(TerraConstants.MODID + ".gui.transformation.add")) {
 				@Override
 				public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
@@ -267,7 +272,7 @@ public class EarthGui extends GuiScreen {
 		}
 
 		@Override
-		public void render(EarthGui gui, int x, int y, int width) {
+		public void render(AdvancedEarthGui gui, int x, int y, int width) {
 			gui.fontRenderer.drawString(I18n.format(TerraConstants.MODID + ".gui.projection"), x, y + (20 - 8) / 2, 0xFFFFFFFF, true);
 
 			y += 30;
@@ -293,7 +298,7 @@ public class EarthGui extends GuiScreen {
 			swap_axes,
 			offset {
 				@Override
-				protected TransformEntry newSubEntry(ProjectionEntry entry, EarthGui gui, int x, int y, int width) {
+				protected TransformEntry newSubEntry(ProjectionEntry entry, AdvancedEarthGui gui, int x, int y, int width) {
 					return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraConstants.MODID + ".gui.transformation.offset", "dx", "dy") {
 						@Override
 						public void initFrom(ProjectionTransform in) {
@@ -316,7 +321,7 @@ public class EarthGui extends GuiScreen {
 			},
 			scale {
 				@Override
-				protected TransformEntry newSubEntry(ProjectionEntry entry, EarthGui gui, int x, int y, int width) {
+				protected TransformEntry newSubEntry(ProjectionEntry entry, AdvancedEarthGui gui, int x, int y, int width) {
 					return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraConstants.MODID + ".gui.transformation.scale", "x", "y") {
 						@Override
 						public void initFrom(ProjectionTransform in) {
@@ -347,7 +352,7 @@ public class EarthGui extends GuiScreen {
 
 			private Transformation next;
 
-			protected TransformEntry newSubEntry(ProjectionEntry entry, EarthGui gui, int x, int y, int width) {
+			protected TransformEntry newSubEntry(ProjectionEntry entry, AdvancedEarthGui gui, int x, int y, int width) {
 				return new TransformEntry(this, entry, gui, x, y, width);
 			}
 		}
@@ -355,7 +360,7 @@ public class EarthGui extends GuiScreen {
 		protected interface SubEntry {
 			int height();
 
-			default void render(EarthGui gui, int x, int y, int width) {
+			default void render(AdvancedEarthGui gui, int x, int y, int width) {
 			}
 
 			void toJson(StringBuilder out);
@@ -364,7 +369,7 @@ public class EarthGui extends GuiScreen {
 		protected static class TransformEntry implements SubEntry {
 			protected final Transformation transformation;
 
-			public TransformEntry(Transformation transformation, ProjectionEntry entry, EarthGui gui, int x, int y, int width) {
+			public TransformEntry(Transformation transformation, ProjectionEntry entry, AdvancedEarthGui gui, int x, int y, int width) {
 				this.transformation = transformation;
 
 				gui.addButton(new GuiButton(0, x, y, 20, 20, "\u25B2") { //up
@@ -438,7 +443,7 @@ public class EarthGui extends GuiScreen {
 			protected final String[] paramNames;
 			protected final GuiTextField[] textFields;
 
-			public ParameterizedTransformEntry(Transformation transformation, ProjectionEntry entry, EarthGui gui, int x, int y, int width, String fieldName, String... paramNames) {
+			public ParameterizedTransformEntry(Transformation transformation, ProjectionEntry entry, AdvancedEarthGui gui, int x, int y, int width, String fieldName, String... paramNames) {
 				super(transformation, entry, gui, x, y, width);
 
 				this.fieldName = fieldName;
@@ -464,7 +469,7 @@ public class EarthGui extends GuiScreen {
 			}
 
 			@Override
-			public void render(EarthGui gui, int x, int y, int width) {
+			public void render(AdvancedEarthGui gui, int x, int y, int width) {
 				for (int i = 0; i < this.paramNames.length; i++) {
 					gui.fontRenderer.drawString(I18n.format(this.fieldName + '.' + this.paramNames[i]), x, y + super.height() + 2 + i * 24 + (20 - 8) / 2, -1, true);
 				}
@@ -494,7 +499,7 @@ public class EarthGui extends GuiScreen {
 			protected final Map<String, Object> properties;
 			protected final GuiTextField[] textFields;
 
-			public RootEntry(GeographicProjection projection, EarthGui gui, int x, int y, int width) {
+			public RootEntry(GeographicProjection projection, AdvancedEarthGui gui, int x, int y, int width) {
 				String projectionName = GlobalParseRegistries.PROJECTIONS.inverse().get(projection.getClass());
 				this.initialIndex = this.index = PArrays.indexOf(PROJECTION_NAMES, projectionName);
 
@@ -532,7 +537,7 @@ public class EarthGui extends GuiScreen {
 			}
 
 			@Override
-			public void render(EarthGui gui, int x, int y, int width) {
+			public void render(AdvancedEarthGui gui, int x, int y, int width) {
 				int i = 0;
 				for (String s : this.properties.keySet()) {
 					gui.fontRenderer.drawString(I18n.format(this.fieldName + '.' + s), x, y + 20 + 2 + i * 24 + (20 - 8) / 2, -1, true);
@@ -571,7 +576,7 @@ public class EarthGui extends GuiScreen {
 		protected final BiFunction<EarthGeneratorSettings, Boolean, EarthGeneratorSettings> touch;
 		protected boolean value;
 
-		public ToggleEntry(EarthGui gui, int x, int y, int width, boolean value, String name, BiFunction<EarthGeneratorSettings, Boolean, EarthGeneratorSettings> touch) {
+		public ToggleEntry(AdvancedEarthGui gui, int x, int y, int width, boolean value, String name, BiFunction<EarthGeneratorSettings, Boolean, EarthGeneratorSettings> touch) {
 			this.touch = touch;
 			this.value = value;
 
@@ -607,7 +612,7 @@ public class EarthGui extends GuiScreen {
 	protected static class CWGEntry implements Entry {
 		protected String text;
 
-		public CWGEntry(EarthGeneratorSettings settings, EarthGui gui, int x, int y, int width) {
+		public CWGEntry(EarthGeneratorSettings settings, AdvancedEarthGui gui, int x, int y, int width) {
 			int text = gui.fontRenderer.getStringWidth(I18n.format(TerraConstants.MODID + ".gui.cwg")) + 5;
 			x += text;
 			width -= text;
@@ -650,7 +655,7 @@ public class EarthGui extends GuiScreen {
 		}
 
 		@Override
-		public void render(EarthGui gui, int x, int y, int width) {
+		public void render(AdvancedEarthGui gui, int x, int y, int width) {
 			gui.fontRenderer.drawString(I18n.format(TerraConstants.MODID + ".gui.cwg"), x, y + (20 - 8) / 2, 0xFFFFFFFF, true);
 		}
 

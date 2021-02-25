@@ -3,7 +3,7 @@ package net.buildtheearth.terraplusplus;
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
-import net.buildtheearth.terraplusplus.control.EarthGui;
+import net.buildtheearth.terraplusplus.control.PresetEarthGui;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
 import net.minecraft.client.Minecraft;
@@ -64,6 +64,9 @@ public class EarthWorldType extends WorldType implements ICubicWorldType {
     @Override
     @SideOnly(Side.CLIENT)
     public void onCustomizeButton(Minecraft mc, GuiCreateWorld guiCreateWorld) {
-        mc.displayGuiScreen(new EarthGui(guiCreateWorld, mc));
+    	String sanitized = EarthGeneratorSettings.parse(guiCreateWorld.chunkProviderSettingsJson).toString();
+        mc.displayGuiScreen(new PresetEarthGui(guiCreateWorld, sanitized, s -> {
+        	guiCreateWorld.chunkProviderSettingsJson = s;
+        }));
     }
 }
