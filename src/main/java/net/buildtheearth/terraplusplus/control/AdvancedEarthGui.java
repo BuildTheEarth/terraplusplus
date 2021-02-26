@@ -42,6 +42,7 @@ import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -61,8 +62,9 @@ public class AdvancedEarthGui extends GuiScreen {
 	protected static final Ref<int[]> SRC_CACHE = Ref.soft((IOSupplier<int[]>) () ->
 	ImageIO.read(AdvancedEarthGui.class.getResource("map.png")).getRGB(0, 0, SRC_W, SRC_H, null, 0, SRC_W));
 
-	protected static final int SIZE = 1024;
 	protected static final int VERTICAL_PADDING = 32;
+	
+	public static final ResourceLocation DIRECTIONS_TEXTURE = new ResourceLocation(TerraConstants.MODID, "textures/directions.png");
 
 	protected final GuiScreen parent;
 	protected Consumer<String> whenDone;
@@ -791,7 +793,7 @@ public class AdvancedEarthGui extends GuiScreen {
 							continue;
 						}
 
-						dst[(height - yi - 1) * width + xi] = src[(SRC_H - yPixel - 1) * SRC_W + xPixel];
+						dst[yi* width + xi] = src[(SRC_H - yPixel - 1) * SRC_W + xPixel];
 					} catch (OutOfProjectionBoundsException ignored) {
 						//sample out of bounds, skip it
 					}
@@ -811,6 +813,8 @@ public class AdvancedEarthGui extends GuiScreen {
 				GlStateManager.bindTexture(this.previewTexture.getGlTextureId());
 				drawScaledCustomSizeModalRect(this.previewX, this.previewY, 0, 0, this.previewWidth, this.previewHeight, this.previewWidth, this.previewHeight, this.previewWidth, this.previewHeight);
 			}
+			Minecraft.getMinecraft().getTextureManager().bindTexture(DIRECTIONS_TEXTURE);
+			drawScaledCustomSizeModalRect(this.previewX + this.previewWidth - 64, this.previewY, 0, 0, 64, 64, 64, 64, 64, 64);
 		}
 
 	}
