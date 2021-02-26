@@ -24,6 +24,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
@@ -39,6 +40,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.resources.I18n;
@@ -141,7 +143,8 @@ public class AdvancedEarthGui extends GuiScreen {
 		y += this.addEntry(new PaddingEntry(10)).height();
 		y += this.addEntry(new CWGEntry(this.settings, this, 5, y, this.width - this.imgSize - 10)).height();
 
-		this.preview.update(this.width - this.imgSize, VERTICAL_PADDING, this.imgSize - 10, this.height - VERTICAL_PADDING*2, this.settings.projection());
+		ScaledResolution scaledRes = new ScaledResolution(Minecraft.getMinecraft());
+		this.preview.update(this.width - this.imgSize, VERTICAL_PADDING, this.imgSize - 10, this.height - VERTICAL_PADDING*2, scaledRes.getScaleFactor(), this.settings.projection());
 	}
 
 	protected Entry addEntry(Entry entry) {
@@ -668,7 +671,7 @@ public class AdvancedEarthGui extends GuiScreen {
 	}
 
 	protected class ProjectionPreview {
-		private int previewX, previewY, previewWidth, previewHeight;
+		private int previewX, previewY, previewWidth, previewHeight, scaling;
 		private volatile boolean finish = false;
 		private volatile boolean reset = false;
 		private DynamicTexture previewTexture;
@@ -684,6 +687,11 @@ public class AdvancedEarthGui extends GuiScreen {
 			worker.setDaemon(true);
 			worker.setName("Projection preview");
 			worker.start();
+			try {
+				Thread.sleep(10); // Just make sure we let the worker time to initialize
+			} catch (InterruptedException e) {
+				TerraMod.LOGGER.catching(e);
+			}
 			this.src = SRC_CACHE.get();
 		}
 		
@@ -695,13 +703,13 @@ public class AdvancedEarthGui extends GuiScreen {
 					try {
 						this.working.wait();
 					} catch (InterruptedException e) {
-						e.printStackTrace();
+						TerraMod.LOGGER.catching(e);
 					}
 					this.working.set(true);
 				}
 				
 				// Actually do the work
-				this.projectTexture(this.dst, this.previewWidth, this.previewHeight, this.projection);
+				this.projectTexture(this.dst, this.previewWidth*this.scaling, this.previewHeight*this.scaling, this.projection);
 				synchronized(this.textureNeedsUpdate) {
 					this.textureNeedsUpdate.set(true);
 				}
@@ -715,12 +723,13 @@ public class AdvancedEarthGui extends GuiScreen {
 			}
 		}
 
-		public void update(int x, int y, int width, int height, @NonNull GeographicProjection proj) {
+		public void update(int x, int y, int width, int height, int scaling, @NonNull GeographicProjection proj) {
 			this.previewX = x;
 			this.previewY = y;
 			this.previewWidth = width;
 			this.previewHeight = height;
 			this.projection = proj;
+			this.scaling = scaling;
 			
 			// Ensure the worker stops its task
 			this.reset = true;
@@ -729,13 +738,13 @@ public class AdvancedEarthGui extends GuiScreen {
 					try {
 						this.working.wait();
 					} catch (InterruptedException e) {
-						e.printStackTrace();
+						TerraMod.LOGGER.catching(e);
 					}
 				}
 			}
 			
 			if(this.previewTexture != null) this.previewTexture.deleteGlTexture();
-			this.previewTexture = new DynamicTexture(width, height);
+			this.previewTexture = new DynamicTexture(width*scaling, height*scaling);
 			this.dst = this.previewTexture.getTextureData();
 			Arrays.fill(this.dst, 0); //fill with transparent pixels
 			
