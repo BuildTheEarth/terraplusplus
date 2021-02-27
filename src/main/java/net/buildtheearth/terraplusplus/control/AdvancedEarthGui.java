@@ -81,6 +81,7 @@ public class AdvancedEarthGui extends GuiScreen {
 	protected Consumer<String> whenDone;
 
 	protected EarthGeneratorSettings settings;
+	protected long worldSizeX, worldSizeY;
 
 	protected GuiButton doneButton;
 	protected GuiButton cancelButton;
@@ -162,7 +163,11 @@ public class AdvancedEarthGui extends GuiScreen {
 		y += this.addEntry(new CWGEntry(this.settings, this, 5, y, this.width - this.imgSize - 10)).height();
 
 		ScaledResolution scaledRes = new ScaledResolution(Minecraft.getMinecraft());
-		this.preview.update(this.width - this.imgSize, VERTICAL_PADDING, this.imgSize - 10, this.height - VERTICAL_PADDING*2, scaledRes.getScaleFactor(), this.settings.projection());
+		this.preview.update(this.width - this.imgSize, VERTICAL_PADDING, this.imgSize - 10, this.height - VERTICAL_PADDING*4, scaledRes.getScaleFactor(), this.settings.projection());
+		
+		double[] bounds = this.settings.projection().bounds();
+		this.worldSizeX = Math.abs(Math.round(bounds[2] - bounds[0]));
+		this.worldSizeY = Math.abs(Math.round(bounds[3] - bounds[1]));
 	}
 
 	protected Entry addEntry(Entry entry) {
@@ -206,6 +211,9 @@ public class AdvancedEarthGui extends GuiScreen {
 		for (GuiTextField textField : this.textFields) {
 			textField.drawTextBox();
 		}
+		
+		this.drawString(this.fontRenderer, I18n.format("terraplusplus.gui.world_size_header"), this.width - this.imgSize + 15, this.height - VERTICAL_PADDING - 30, 0xFFFFFFFF);
+		this.drawString(this.fontRenderer, I18n.format("terraplusplus.gui.world_size_numbers", this.worldSizeX, this.worldSizeY), this.width - this.imgSize + 15, this.height - VERTICAL_PADDING - 15, 0xFFFFFFFF);
 
 		super.drawScreen(mouseX, mouseY, partialTicks);
 	}

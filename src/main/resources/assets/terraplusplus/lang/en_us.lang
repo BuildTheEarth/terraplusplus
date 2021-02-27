@@ -9,6 +9,8 @@ terraplusplus.gui.projection=Projection
 terraplusplus.gui.cwg=CubicWorldGen Preset
 terraplusplus.gui.use_default_heights=Default Elevation Datasets
 terraplusplus.gui.use_default_trees=Default Tree Cover Datasets
+terraplusplus.gui.world_size_header=Approximate world size: 
+terraplusplus.gui.world_size_numbers=%s x %s blocks
 
 ## Presets
 terraplusplus.presetscreen.title=Choose a world preset to begin, and / or select Customize for more options
