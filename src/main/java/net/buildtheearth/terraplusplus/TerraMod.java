@@ -1,6 +1,7 @@
 package net.buildtheearth.terraplusplus;
 
 import net.buildtheearth.terraplusplus.control.AdvancedEarthGui;
+import net.buildtheearth.terraplusplus.control.PresetEarthGui;
 import net.buildtheearth.terraplusplus.control.TerraCommand;
 import net.buildtheearth.terraplusplus.control.TerraTeleport;
 import net.buildtheearth.terraplusplus.provider.GenerationEventDenier;
@@ -68,6 +69,7 @@ public class TerraMod {
     	if(event.getSide() == Side.CLIENT) {
     		// Force the static resources to load here so the GUI doesn't freeze for 5s when first opened
     		AdvancedEarthGui.DIRECTIONS_TEXTURE.hashCode();
+    		PresetEarthGui.DEFAULT_PRESETS.hashCode();
     	}
     }
 
