@@ -212,6 +212,8 @@ public class AdvancedEarthGui extends GuiScreen {
 			textField.drawTextBox();
 		}
 		
+		this.fontRenderer.drawSplitString(I18n.format("terraplusplus.gui.world_info"), this.width - this.imgSize + 15, this.height - VERTICAL_PADDING*2 - 25, this.imgSize - 25, 0xFFFFFFFF);
+		
 		this.drawString(this.fontRenderer, I18n.format("terraplusplus.gui.world_size_header"), this.width - this.imgSize + 15, this.height - VERTICAL_PADDING - 30, 0xFFFFFFFF);
 		this.drawString(this.fontRenderer, I18n.format("terraplusplus.gui.world_size_numbers", this.worldSizeX, this.worldSizeY), this.width - this.imgSize + 15, this.height - VERTICAL_PADDING - 15, 0xFFFFFFFF);
 
@@ -1006,6 +1008,23 @@ public class AdvancedEarthGui extends GuiScreen {
 				synchronized(this.textureNeedsUpdate) {
 					this.textureNeedsUpdate.set(true);
 				}
+			}
+			
+			if(0 >= minX && 0 <= maxX && 0 >= minY && 0 <= maxY) {
+				int dotSize = 3;
+				int x = (int) Math.round(- minX / scale);
+				int y = (int) Math.round(- minY / scale);
+				for(int xi = x-dotSize; xi < x+dotSize+1; xi++) {
+					if(xi < 0 || xi >= width) continue;
+					for(int yi = y-dotSize; yi < y+dotSize+1; yi++) {
+						if(yi < 0 || yi >= height) continue;
+						dst[yi* width + xi] = 0xFFFF00FF;
+					}
+				}
+			}
+			
+			synchronized(this.textureNeedsUpdate) {
+				this.textureNeedsUpdate.set(true);
 			}
 		}
 		
