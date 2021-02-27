@@ -43,21 +43,12 @@ public class TerraMod {
     public void preInit(FMLPreInitializationEvent event) {
         LOGGER = event.getModLog();
         EarthWorldType.create();
-
-        // This is just a handy shortcut when creating new BTE worlds on the client not needed on the server
-        // It is critical that this happens after the EarthWorldType is registered
-        if (Side.CLIENT == event.getSide()) {
-            BTEWorldType.create();
-        }
     }
 
     @EventHandler
     public void init(FMLInitializationEvent event) {
         if (TerraConfig.threeWater) {
             MinecraftForge.EVENT_BUS.register(WaterDenier.class);
-        }
-        if (Side.CLIENT == event.getSide()) {
-            MinecraftForge.EVENT_BUS.register(BTEWorldType.class);
         }
         MinecraftForge.TERRAIN_GEN_BUS.register(GenerationEventDenier.class);
 

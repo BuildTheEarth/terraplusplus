@@ -1,7 +1,5 @@
 ## World Type name
 generator.EarthCubic=Planet Earth
-generator.bte=Build the Earth
-generator.bte.info=Planet Earth world with the default Build the Earth settings
 
 ## GUI options
 terraplusplus.gui.header=Terra++ World Options
