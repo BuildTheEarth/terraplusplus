@@ -1,13 +1,13 @@
 package net.buildtheearth.terraplusplus.event;
 
-import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
-import net.buildtheearth.terraplusplus.util.OrderedRegistry;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
+import net.buildtheearth.terraplusplus.util.OrderedRegistry;
 import net.daporkchop.lib.common.util.GenericMatcher;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.Event;

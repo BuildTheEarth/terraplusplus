@@ -19,7 +19,7 @@ public class TerraInfoFragment extends CommandFragment {
 
     @Override
     public String[] getName() {
-        return new String[]{"info"};
+        return new String[]{ "info" };
     }
 
     @Override

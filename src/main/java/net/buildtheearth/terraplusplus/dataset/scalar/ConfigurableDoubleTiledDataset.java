@@ -5,12 +5,12 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import net.buildtheearth.terraplusplus.config.scalarparse.d.DoubleScalarParser;
-import net.buildtheearth.terraplusplus.dataset.BlendMode;
-import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import lombok.NonNull;
+import net.buildtheearth.terraplusplus.config.scalarparse.d.DoubleScalarParser;
+import net.buildtheearth.terraplusplus.dataset.BlendMode;
+import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 
 /**
  * Implementation of {@link DoubleTiledDataset} whose behavior is defined by JSON configuration.

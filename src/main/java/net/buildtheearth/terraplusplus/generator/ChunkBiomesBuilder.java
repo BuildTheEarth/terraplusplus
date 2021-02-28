@@ -1,7 +1,7 @@
 package net.buildtheearth.terraplusplus.generator;
 
-import net.buildtheearth.terraplusplus.util.ImmutableCompactArray;
 import lombok.Getter;
+import net.buildtheearth.terraplusplus.util.ImmutableCompactArray;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.ref.ThreadRef;
 import net.minecraft.world.biome.Biome;

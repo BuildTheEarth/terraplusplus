@@ -1,10 +1,10 @@
 package net.buildtheearth.terraplusplus.event;
 
-import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
-import net.buildtheearth.terraplusplus.generator.GeneratorDatasets;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
+import net.buildtheearth.terraplusplus.generator.GeneratorDatasets;
 import net.minecraftforge.common.MinecraftForge;
 
 /**

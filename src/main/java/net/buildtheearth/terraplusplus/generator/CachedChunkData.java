@@ -2,12 +2,12 @@ package net.buildtheearth.terraplusplus.generator;
 
 import com.google.common.collect.ImmutableMap;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
-import net.buildtheearth.terraplusplus.util.CustomAttributeContainer;
-import net.buildtheearth.terraplusplus.util.ImmutableCompactArray;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import net.buildtheearth.terraplusplus.util.CustomAttributeContainer;
+import net.buildtheearth.terraplusplus.util.ImmutableCompactArray;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.ref.ThreadRef;
 import net.daporkchop.lib.common.util.PorkUtil;

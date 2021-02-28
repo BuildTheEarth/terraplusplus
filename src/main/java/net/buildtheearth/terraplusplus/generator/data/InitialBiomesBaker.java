@@ -1,12 +1,12 @@
 package net.buildtheearth.terraplusplus.generator.data;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.buildtheearth.terraplusplus.generator.GeneratorDatasets;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.biome.BiomeProvider;
 

@@ -1,18 +1,16 @@
 package net.buildtheearth.terraplusplus.projection.dymaxion;
 
-import java.io.InputStream;
-
 import LZMA.LzmaInputStream;
-import net.buildtheearth.terraplusplus.util.MathUtils;
-
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import net.buildtheearth.terraplusplus.util.MathUtils;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.function.io.IOSupplier;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.util.PArrays;
+
+import java.io.InputStream;
 
 /**
  * Implementation of the Dynmaxion like conformal projection.
@@ -92,6 +90,11 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
     @Override
     public double metersPerUnit() {
         return (40075017.0d / (2.0d * Math.PI)) / VECTOR_SCALE_FACTOR;
+    }
+
+    @Override
+    public String toString() {
+        return "Conformal Dymaxion";
     }
 
     private static class InvertableVectorField {
@@ -192,10 +195,5 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
 
             return new double[]{ xest, yest };
         }
-    }
-
-    @Override
-    public String toString() {
-        return "Conformal Dymaxion";
     }
 }

@@ -2,9 +2,9 @@ package net.buildtheearth.terraplusplus.dataset.vector.draw;
 
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
-import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 
 import java.io.IOException;
 

@@ -116,7 +116,7 @@ public class IntervalTree<V extends Interval> {
         protected Node<V>[] children;
 
         protected Object[] values;
-        protected int size = 0; //only used during construction
+        protected int size; //only used during construction
 
         public Node(double min, double max) {
             super(min, max);

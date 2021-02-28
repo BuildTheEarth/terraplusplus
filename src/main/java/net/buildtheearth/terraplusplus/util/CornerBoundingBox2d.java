@@ -1,10 +1,10 @@
 package net.buildtheearth.terraplusplus.util;
 
+import lombok.NonNull;
+import lombok.ToString;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
-import lombok.NonNull;
-import lombok.ToString;
 
 import static java.lang.Math.*;
 import static net.daporkchop.lib.common.math.PMath.*;

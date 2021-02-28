@@ -1,11 +1,11 @@
 package net.buildtheearth.terraplusplus.dataset.geojson.geometry;
 
+import lombok.Data;
+import lombok.NonNull;
 import net.buildtheearth.terraplusplus.dataset.geojson.Geometry;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.projection.ProjectionFunction;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
-import lombok.Data;
-import lombok.NonNull;
 
 import static net.daporkchop.lib.common.util.PValidation.*;
 

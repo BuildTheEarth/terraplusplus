@@ -1,8 +1,8 @@
 package net.buildtheearth.terraplusplus.dataset.vector.draw;
 
 import com.google.gson.annotations.JsonAdapter;
-import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import lombok.NonNull;
+import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 
 /**
  * Draws pixels onto a {@link CachedChunkData.Builder} while processing geometry.

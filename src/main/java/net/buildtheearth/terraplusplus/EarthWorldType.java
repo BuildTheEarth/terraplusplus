@@ -18,53 +18,53 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class EarthWorldType extends WorldType implements ICubicWorldType {
 
-	public static EarthWorldType create() {
-		return new EarthWorldType();
-	}
+    public static EarthWorldType create() {
+        return new EarthWorldType();
+    }
 
-	public EarthWorldType() {
-		super("EarthCubic");
-	}
+    public EarthWorldType() {
+        super("EarthCubic");
+    }
 
-	@Override
-	public ICubeGenerator createCubeGenerator(World world) {
-		return new EarthGenerator(world);
-	}
+    @Override
+    public ICubeGenerator createCubeGenerator(World world) {
+        return new EarthGenerator(world);
+    }
 
-	@Override
-	public BiomeProvider getBiomeProvider(World world) {
-		return EarthGeneratorSettings.parse(world.getWorldInfo().getGeneratorOptions()).biomeProvider();
-	}
+    @Override
+    public BiomeProvider getBiomeProvider(World world) {
+        return EarthGeneratorSettings.parse(world.getWorldInfo().getGeneratorOptions()).biomeProvider();
+    }
 
-	@Override
-	public IntRange calculateGenerationHeightRange(WorldServer world) {
-		return new IntRange(-12000, 9000);
-	}
+    @Override
+    public IntRange calculateGenerationHeightRange(WorldServer world) {
+        return new IntRange(-12000, 9000);
+    }
 
-	@Override
-	public boolean hasCubicGeneratorForWorld(World w) {
-		return w.provider instanceof WorldProviderSurface; // an even more general way to check if it's overworld (need custom providers)
-	}
+    @Override
+    public boolean hasCubicGeneratorForWorld(World w) {
+        return w.provider instanceof WorldProviderSurface; // an even more general way to check if it's overworld (need custom providers)
+    }
 
-	@Override
-	public boolean isCustomizable() {
-		return true;
-	}
+    @Override
+    public boolean isCustomizable() {
+        return true;
+    }
 
-	@Override
-	public float getCloudHeight() {
-		return 5000;
-	}
+    @Override
+    public float getCloudHeight() {
+        return 5000;
+    }
 
-	@Override
-	public double voidFadeMagnitude() {
-		return 0;
-	}
+    @Override
+    public double voidFadeMagnitude() {
+        return 0;
+    }
 
-	@Override
-	@SideOnly(Side.CLIENT)
-	public void onCustomizeButton(Minecraft mc, GuiCreateWorld guiCreateWorld) {
-		String sanitized = EarthGeneratorSettings.parse(guiCreateWorld.chunkProviderSettingsJson).toString();
-		mc.displayGuiScreen(new PresetEarthGui(guiCreateWorld, sanitized, s -> guiCreateWorld.chunkProviderSettingsJson = s));
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void onCustomizeButton(Minecraft mc, GuiCreateWorld guiCreateWorld) {
+        String sanitized = EarthGeneratorSettings.parse(guiCreateWorld.chunkProviderSettingsJson).toString();
+        mc.displayGuiScreen(new PresetEarthGui(guiCreateWorld, sanitized, s -> guiCreateWorld.chunkProviderSettingsJson = s));
+    }
 }

@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 /**
  * Utilities for assisting in the parsing of latitude and longitude strings into Decimals.
- *
+ * <p>
  * Adapted version from gbif parsers
  */
 public class CoordinateParseUtils {
@@ -30,22 +30,13 @@ public class CoordinateParseUtils {
     private final static Pattern D_SINGLE = Pattern.compile("^" + D + "$", Pattern.CASE_INSENSITIVE);
     private final static Pattern DMS_COORD = Pattern.compile("^" + DMS + "([NSEOW])" + "[ ,;/]?" + DMS + "([NSEOW])$", Pattern.CASE_INSENSITIVE);
     private final static String POSITIVE = "NEO";
-    private CoordinateParseUtils() {
-        throw new UnsupportedOperationException("Can't initialize class");
-    }
 
     private static boolean inRange(double lat, double lon) {
-        if (Double.compare(lat, 90) <= 0 && Double.compare(lat, -90) >= 0 && Double.compare(lon, 180) <= 0 && Double.compare(lon, -180) >= 0) {
-            return true;
-        }
-        return false;
+        return Double.compare(lat, 90) <= 0 && Double.compare(lat, -90) >= 0 && Double.compare(lon, 180) <= 0 && Double.compare(lon, -180) >= 0;
     }
 
     private static boolean isLat(String direction) {
-        if ("NS".contains(direction.toUpperCase())) {
-            return true;
-        }
-        return false;
+        return "NS".contains(direction.toUpperCase());
     }
 
     private static int coordSign(String direction) {
@@ -62,8 +53,8 @@ public class CoordinateParseUtils {
             final String dir1 = m.group(4);
             final String dir2 = m.group(8);
             // first parse coords regardless whether they are lat or lon
-            double c1 = coordFromMatcher(m, 1,2,3, dir1);
-            double c2 = coordFromMatcher(m, 5,6,7, dir2);
+            double c1 = coordFromMatcher(m, 1, 2, 3, dir1);
+            double c2 = coordFromMatcher(m, 5, 6, 7, dir2);
             // now see what order the coords are in:
             if (isLat(dir1) && !isLat(dir2)) {
                 return validateAndRound(c1, c2);
@@ -75,7 +66,7 @@ public class CoordinateParseUtils {
                 return null;
             }
 
-        } else if(coordinates.length() > 4) {
+        } else if (coordinates.length() > 4) {
             // try to split and then use lat/lon parsing
             for (final char delim : ",;/ ".toCharArray()) {
                 int cnt = StringUtils.countMatches(coordinates, String.valueOf(delim));
@@ -88,7 +79,8 @@ public class CoordinateParseUtils {
                         try {
                             lat = Double.parseDouble(latlon[0]);
                             lon = Double.parseDouble(latlon[1]);
-                        } catch (Exception ignored) { }
+                        } catch (Exception ignored) {
+                        }
 
                         if (lat == null || lon == null) {
 
@@ -115,7 +107,7 @@ public class CoordinateParseUtils {
         lon = roundTo6decimals(lon);
 
         if (Double.compare(lat, 0) == 0 && Double.compare(lon, 0) == 0) {
-            return new LatLng(0,0);
+            return new LatLng(0, 0);
         }
 
         if (inRange(lat, lon)) {
@@ -134,6 +126,7 @@ public class CoordinateParseUtils {
 
     /**
      * Parses a single DMS coordinate
+     *
      * @param coord
      * @param lat
      * @return the converted decimal up to 6 decimals accuracy
@@ -149,14 +142,14 @@ public class CoordinateParseUtils {
             if (DIRS.contains(String.valueOf(coord.charAt(0)))) {
                 dir = coord.charAt(0);
                 coord = coord.substring(1);
-            } else if (DIRS.contains(String.valueOf(coord.charAt(coord.length()-1)))) {
-                dir = coord.charAt(coord.length()-1);
-                coord = coord.substring(0, coord.length()-1);
+            } else if (DIRS.contains(String.valueOf(coord.charAt(coord.length() - 1)))) {
+                dir = coord.charAt(coord.length() - 1);
+                coord = coord.substring(0, coord.length() - 1);
             }
             // without the direction chuck it at the regex
             Matcher m = DMS_SINGLE.matcher(coord);
             if (m.find()) {
-                return coordFromMatcher(m, 1,2,3, String.valueOf(dir));
+                return coordFromMatcher(m, 1, 2, 3, String.valueOf(dir));
             } else {
                 m = DM_SINGLE.matcher(coord);
                 if (m.find()) {
@@ -174,17 +167,17 @@ public class CoordinateParseUtils {
 
     private static double coordFromMatcher(Matcher m, int idx1, int idx2, int idx3, String sign) {
         return roundTo6decimals(coordSign(sign) *
-                                dmsToDecimal( Double.parseDouble(m.group(idx1)), Double.parseDouble(m.group(idx2)), Double.parseDouble(m.group(idx3)) ));
+                                dmsToDecimal(Double.parseDouble(m.group(idx1)), Double.parseDouble(m.group(idx2)), Double.parseDouble(m.group(idx3))));
     }
 
     private static double coordFromMatcher(Matcher m, int idx1, int idx2, String sign) {
         return roundTo6decimals(coordSign(sign) *
-                                dmsToDecimal( Double.parseDouble(m.group(idx1)), Double.parseDouble(m.group(idx2)), 0.0));
+                                dmsToDecimal(Double.parseDouble(m.group(idx1)), Double.parseDouble(m.group(idx2)), 0.0));
     }
 
     private static double coordFromMatcher(Matcher m, int idx1, String sign) {
         return roundTo6decimals(coordSign(sign) *
-                                dmsToDecimal( Double.parseDouble(m.group(idx1)), 0.0, 0.0));
+                                dmsToDecimal(Double.parseDouble(m.group(idx1)), 0.0, 0.0));
     }
 
     private static double dmsToDecimal(double degree, Double minutes, Double seconds) {
@@ -196,5 +189,9 @@ public class CoordinateParseUtils {
     // round to 6 decimals (~1m precision) since no way we're getting anything legitimately more precise
     private static Double roundTo6decimals(Double x) {
         return x == null ? null : Math.round(x * Math.pow(10, 6)) / Math.pow(10, 6);
+    }
+
+    private CoordinateParseUtils() {
+        throw new UnsupportedOperationException("Can't initialize class");
     }
 }

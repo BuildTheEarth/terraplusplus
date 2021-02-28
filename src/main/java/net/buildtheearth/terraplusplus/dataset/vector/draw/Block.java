@@ -2,11 +2,11 @@ package net.buildtheearth.terraplusplus.dataset.vector.draw;
 
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
-import net.buildtheearth.terraplusplus.dataset.osm.JsonParser;
-import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.dataset.osm.JsonParser;
+import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.minecraft.block.state.IBlockState;
 
 import java.io.IOException;

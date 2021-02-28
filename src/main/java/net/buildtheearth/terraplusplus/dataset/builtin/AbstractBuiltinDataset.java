@@ -1,9 +1,9 @@
 package net.buildtheearth.terraplusplus.dataset.builtin;
 
+import lombok.NonNull;
 import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
-import lombok.NonNull;
 
 import java.util.concurrent.CompletableFuture;
 

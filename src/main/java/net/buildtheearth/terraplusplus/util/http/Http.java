@@ -3,8 +3,6 @@ package net.buildtheearth.terraplusplus.util.http;
 import com.google.common.base.Preconditions;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.CompositeByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoop;
@@ -16,7 +14,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.EmptyHttpHeaders;
 import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpStatusClass;
 import io.netty.handler.codec.http2.Http2SecurityUtil;
@@ -35,10 +32,8 @@ import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.ref.ThreadRef;
 
 import javax.net.ssl.SSLException;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -338,7 +333,7 @@ public class Http {
             /**
              * Whether or not any of the URLs completed successfully, but returned {@code 404 Not Found}.
              */
-            boolean foundMissing = false;
+            boolean foundMissing;
 
             @Override
             public void accept(T value, Throwable cause) {

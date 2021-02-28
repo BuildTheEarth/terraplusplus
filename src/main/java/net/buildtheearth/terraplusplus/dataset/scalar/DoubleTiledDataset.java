@@ -1,5 +1,10 @@
 package net.buildtheearth.terraplusplus.dataset.scalar;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraplusplus.dataset.BlendMode;
 import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
 import net.buildtheearth.terraplusplus.dataset.TiledDataset;
@@ -9,11 +14,6 @@ import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraplusplus.util.IntToDoubleBiFunction;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import net.daporkchop.lib.common.math.BinMath;
 import net.minecraft.util.math.ChunkPos;
 

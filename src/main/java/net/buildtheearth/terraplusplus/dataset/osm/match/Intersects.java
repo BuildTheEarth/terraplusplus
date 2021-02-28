@@ -3,12 +3,12 @@ package net.buildtheearth.terraplusplus.dataset.osm.match;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import net.buildtheearth.terraplusplus.dataset.osm.JsonParser;
-import net.buildtheearth.terraplusplus.dataset.geojson.Geometry;
-import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
+import net.buildtheearth.terraplusplus.dataset.geojson.Geometry;
+import net.buildtheearth.terraplusplus.dataset.osm.JsonParser;
+import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 
 import java.io.IOException;
 import java.util.Map;

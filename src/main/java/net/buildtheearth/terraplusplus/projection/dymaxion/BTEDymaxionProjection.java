@@ -6,7 +6,7 @@ import net.buildtheearth.terraplusplus.util.MathUtils;
 
 /**
  * Implementation of the BTE modified Dynmaxion projection.
- * 
+ *
  * @see DymaxionProjection
  * @see ConformalDynmaxionProjection
  */
@@ -81,7 +81,9 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
         y += 0.75 * ARC * MathUtils.ROOT3;
 
         //check to make sure still in right part
-        if (easia != this.isEurasianPart(x, y)) throw OutOfProjectionBoundsException.get();
+        if (easia != this.isEurasianPart(x, y)) {
+            throw OutOfProjectionBoundsException.get();
+        }
 
         return super.toGeo(x, y);
     }

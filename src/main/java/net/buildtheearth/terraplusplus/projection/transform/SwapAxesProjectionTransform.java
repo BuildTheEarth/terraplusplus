@@ -12,10 +12,10 @@ import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException
 @JsonDeserialize
 public class SwapAxesProjectionTransform extends ProjectionTransform {
 
-	/**
-	 * @param delegate - projection to transform
-	 */
-	@JsonCreator
+    /**
+     * @param delegate - projection to transform
+     */
+    @JsonCreator
     public SwapAxesProjectionTransform(
             @JsonProperty(value = "delegate", required = true) GeographicProjection delegate) {
         super(delegate);

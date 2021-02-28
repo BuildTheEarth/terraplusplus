@@ -1,12 +1,12 @@
 package net.buildtheearth.terraplusplus.dataset.vector.geometry;
 
-import net.buildtheearth.terraplusplus.dataset.geojson.geometry.LineString;
-import net.buildtheearth.terraplusplus.dataset.geojson.geometry.Point;
-import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunction;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import net.buildtheearth.terraplusplus.dataset.geojson.geometry.LineString;
+import net.buildtheearth.terraplusplus.dataset.geojson.geometry.Point;
+import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunction;
 
 import java.util.List;
 

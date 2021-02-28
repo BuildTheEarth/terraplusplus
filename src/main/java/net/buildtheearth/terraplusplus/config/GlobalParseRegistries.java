@@ -2,6 +2,9 @@ package net.buildtheearth.terraplusplus.config;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.UtilityClass;
 import net.buildtheearth.terraplusplus.config.condition.AndDC;
 import net.buildtheearth.terraplusplus.config.condition.DoubleCondition;
 import net.buildtheearth.terraplusplus.config.condition.EqualDC;
@@ -17,6 +20,7 @@ import net.buildtheearth.terraplusplus.config.scalarparse.d.MultiplyDSP;
 import net.buildtheearth.terraplusplus.config.scalarparse.i.AddISP;
 import net.buildtheearth.terraplusplus.config.scalarparse.i.AndISP;
 import net.buildtheearth.terraplusplus.config.scalarparse.i.FlipXISP;
+import net.buildtheearth.terraplusplus.config.scalarparse.i.FlipZISP;
 import net.buildtheearth.terraplusplus.config.scalarparse.i.GrayscaleExtractISP;
 import net.buildtheearth.terraplusplus.config.scalarparse.i.IntScalarParser;
 import net.buildtheearth.terraplusplus.config.scalarparse.i.ParseJpgISP;
@@ -25,25 +29,21 @@ import net.buildtheearth.terraplusplus.config.scalarparse.i.ParseTiffISP;
 import net.buildtheearth.terraplusplus.config.scalarparse.i.RGBExtractISP;
 import net.buildtheearth.terraplusplus.config.scalarparse.i.RequireOpaqueISP;
 import net.buildtheearth.terraplusplus.config.scalarparse.i.SwapAxesISP;
-import net.buildtheearth.terraplusplus.config.scalarparse.i.FlipZISP;
-import net.buildtheearth.terraplusplus.projection.mercator.CenteredMercatorProjection;
 import net.buildtheearth.terraplusplus.projection.EqualEarthProjection;
 import net.buildtheearth.terraplusplus.projection.EquirectangularProjection;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.SinusoidalProjection;
-import net.buildtheearth.terraplusplus.projection.mercator.WebMercatorProjection;
-import net.buildtheearth.terraplusplus.projection.mercator.TransverseMercatorProjection;
-import net.buildtheearth.terraplusplus.projection.dymaxion.DymaxionProjection;
-import net.buildtheearth.terraplusplus.projection.dymaxion.ConformalDynmaxionProjection;
 import net.buildtheearth.terraplusplus.projection.dymaxion.BTEDymaxionProjection;
+import net.buildtheearth.terraplusplus.projection.dymaxion.ConformalDynmaxionProjection;
+import net.buildtheearth.terraplusplus.projection.dymaxion.DymaxionProjection;
+import net.buildtheearth.terraplusplus.projection.mercator.CenteredMercatorProjection;
+import net.buildtheearth.terraplusplus.projection.mercator.TransverseMercatorProjection;
+import net.buildtheearth.terraplusplus.projection.mercator.WebMercatorProjection;
 import net.buildtheearth.terraplusplus.projection.transform.FlipHorizontalProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.FlipVerticalProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.OffsetProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ScaleProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.SwapAxesProjectionTransform;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.UtilityClass;
 
 /**
  * Identifies implementation classes by their type names.

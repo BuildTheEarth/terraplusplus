@@ -1,5 +1,6 @@
 package net.buildtheearth.terraplusplus.dataset.geojson.dataset;
 
+import lombok.NonNull;
 import net.buildtheearth.terraplusplus.dataset.IDataset;
 import net.buildtheearth.terraplusplus.dataset.IElementDataset;
 import net.buildtheearth.terraplusplus.dataset.TiledDataset;
@@ -8,7 +9,6 @@ import net.buildtheearth.terraplusplus.projection.EquirectangularProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
-import lombok.NonNull;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.Arrays;

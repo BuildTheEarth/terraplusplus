@@ -19,7 +19,7 @@ public abstract class CustomAttributeContainer {
     /**
      * Gets the custom attribute with the given key.
      *
-     * @param key      the key of the attribute to get
+     * @param key the key of the attribute to get
      * @return the attribute
      * @throws IllegalArgumentException if a property with the given name couldn't be found
      */

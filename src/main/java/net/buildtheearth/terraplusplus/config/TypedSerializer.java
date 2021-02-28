@@ -35,8 +35,8 @@ public abstract class TypedSerializer<T> extends JsonSerializer<T> {
     }
 
     protected abstract Map<Class<? extends T>, String> registry();
-    
+
     @JsonSerialize
     private class MixIn {} // Have this here to avoid a bug in forge gradle (https://forums.minecraftforge.net/topic/40670-build-terminates-at-extractrangemapreplacedmain/)
-    
+
 }

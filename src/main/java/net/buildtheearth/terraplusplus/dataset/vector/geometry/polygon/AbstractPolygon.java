@@ -1,16 +1,16 @@
 package net.buildtheearth.terraplusplus.dataset.vector.geometry.polygon;
 
-import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunction;
-import net.buildtheearth.terraplusplus.dataset.vector.geometry.AbstractVectorGeometry;
-import net.buildtheearth.terraplusplus.dataset.vector.geometry.Segment;
+import lombok.Getter;
+import lombok.NonNull;
+import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.LineString;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.MultiPolygon;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.Point;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.Polygon;
+import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunction;
+import net.buildtheearth.terraplusplus.dataset.vector.geometry.AbstractVectorGeometry;
+import net.buildtheearth.terraplusplus.dataset.vector.geometry.Segment;
 import net.buildtheearth.terraplusplus.util.interval.IntervalTree;
-import lombok.Getter;
-import lombok.NonNull;
-import net.buildtheearth.terraplusplus.TerraConstants;
 
 import java.util.ArrayList;
 import java.util.Arrays;

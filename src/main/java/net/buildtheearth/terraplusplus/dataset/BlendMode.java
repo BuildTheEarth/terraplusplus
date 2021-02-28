@@ -1,9 +1,9 @@
 package net.buildtheearth.terraplusplus.dataset;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
-import net.buildtheearth.terraplusplus.util.IntToDoubleBiFunction;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
+import net.buildtheearth.terraplusplus.util.IntToDoubleBiFunction;
 
 import static java.lang.Math.*;
 import static net.daporkchop.lib.common.math.PMath.*;

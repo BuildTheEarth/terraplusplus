@@ -1,11 +1,11 @@
 package net.buildtheearth.terraplusplus.dataset.geojson.dataset;
 
-import net.buildtheearth.terraplusplus.dataset.KeyedHttpDataset;
-import net.buildtheearth.terraplusplus.dataset.geojson.GeoJson;
-import net.buildtheearth.terraplusplus.dataset.geojson.GeoJsonObject;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import lombok.NonNull;
+import net.buildtheearth.terraplusplus.dataset.KeyedHttpDataset;
+import net.buildtheearth.terraplusplus.dataset.geojson.GeoJson;
+import net.buildtheearth.terraplusplus.dataset.geojson.GeoJsonObject;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

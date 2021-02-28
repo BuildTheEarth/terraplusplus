@@ -1,10 +1,10 @@
 package net.buildtheearth.terraplusplus.util.bvh;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.NonNull;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
-import lombok.NonNull;
 import net.minecraft.util.math.ChunkPos;
 
 import static java.lang.Math.*;

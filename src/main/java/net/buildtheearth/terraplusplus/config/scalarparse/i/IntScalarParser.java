@@ -2,11 +2,11 @@ package net.buildtheearth.terraplusplus.config.scalarparse.i;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.netty.buffer.ByteBuf;
+import lombok.NonNull;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.config.TypedDeserializer;
 import net.buildtheearth.terraplusplus.config.TypedSerializer;
-import io.netty.buffer.ByteBuf;
-import lombok.NonNull;
 
 import java.io.IOException;
 import java.util.Map;

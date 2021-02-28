@@ -8,7 +8,7 @@ import net.buildtheearth.terraplusplus.util.MathUtils;
 /**
  * Implementation of the Dynmaxion projection.
  * Also known as Airocean or Fuller projection.
- * 
+ *
  * @see <a href="https://en.wikipedia.org/wiki/Dymaxion_map">Wikipedia's article on the Dynmaxion projection</a>
  */
 @JsonDeserialize
@@ -20,117 +20,117 @@ public class DymaxionProjection implements GeographicProjection {
     protected static final double EL6 = EL / 6;
     protected static final double DVE = Math.sqrt(3 + Math.sqrt(5)) / Math.sqrt(5 + Math.sqrt(5));
     protected static final double R = -3 * EL6 / DVE;
-    
+
     /**
      * Number of iterations for Newton's method
      */
     private static final int NEWTON = 5;
-    
-	/**
-	 * This contains the vertices of the icosahedron,
-	 * identified by their geographic longitude and latitude in degrees.
-	 * When the class is loaded, a static block below converts all these coordinates
-	 * to the equivalent spherical coordinates (longitude and colatitude), in radians.
-	 * 
-	 * @see <a href="https://en.wikipedia.org/wiki/Regular_icosahedron#Spherical_coordinates">Wikipedia</a>
-	 */
-	protected static final double[][] VERTICES = {
-		{10.536199, 64.700000},
-		{-5.245390, 2.300882},
-		{58.157706, 10.447378},
-		{122.300000, 39.100000},
-		{-143.478490, 50.103201},
-		{-67.132330, 23.717925},
-		{36.521510, -50.103200},
-		{112.867673, -23.717930},
-		{174.754610, -2.300882},
-		{-121.842290, -10.447350},
-		{-57.700000, -39.100000},
-		{-169.463800, -64.700000},
-	};
-    
-	/**
-	 * Indicates the vertices forming each face of the icosahedron.
-	 * Each entry refers to the index of a vertex in {@link #VERTICES}
-	 */
-	protected static final int[][] ISO = {
-		{2, 1, 6},
-		{1, 0, 2},
-		{0, 1, 5},
-		{1, 5, 10},
-		{1, 6, 10},
-		{7, 2, 6},
-		{2, 3, 7},
-		{3, 0, 2},
-		{0, 3, 4},
-		{4, 0, 5}, //9, qubec
-		{5, 4, 9},
-		{9, 5, 10},
-		{10, 9, 11},
-		{11, 6, 10},
-		{6, 7, 11},
-		{8, 3, 7},
-		{8, 3, 4},
-		{8, 4, 9},
-		{9, 8, 11},
-		{7, 8, 11},
-		{11, 6, 7}, //child of 14
-		{3, 7, 8} //child of 15
-	};
-    
-    protected static final double[][] CENTER_MAP = {
-            {-3, 7},
-            {-2, 5},
-            {-1, 7},
-            {2, 5},
-            {4, 5},
-            {-4, 1},
-            {-3, -1},
-            {-2, 1},
-            {-1, -1},
-            {0, 1},
-            {1, -1},
-            {2, 1},
-            {3, -1},
-            {4, 1},
-            {5, -1}, //14, left side, right to be cut
-            {-3, -5},
-            {-1, -5},
-            {1, -5},
-            {2, -7},
-            {-4, -7},
-            {-5, -5}, //20, pseudo triangle, child of 14
-            {-2, -7} //21 , pseudo triangle, child of 15
+
+    /**
+     * This contains the vertices of the icosahedron,
+     * identified by their geographic longitude and latitude in degrees.
+     * When the class is loaded, a static block below converts all these coordinates
+     * to the equivalent spherical coordinates (longitude and colatitude), in radians.
+     *
+     * @see <a href="https://en.wikipedia.org/wiki/Regular_icosahedron#Spherical_coordinates">Wikipedia</a>
+     */
+    protected static final double[][] VERTICES = {
+            { 10.536199, 64.700000 },
+            { -5.245390, 2.300882 },
+            { 58.157706, 10.447378 },
+            { 122.300000, 39.100000 },
+            { -143.478490, 50.103201 },
+            { -67.132330, 23.717925 },
+            { 36.521510, -50.103200 },
+            { 112.867673, -23.717930 },
+            { 174.754610, -2.300882 },
+            { -121.842290, -10.447350 },
+            { -57.700000, -39.100000 },
+            { -169.463800, -64.700000 },
     };
-    
-	/**
-	 * Indicates for each face if it needs to be flipped after projecting
-	 */
-	protected static final boolean[] FLIP_TRIANGLE = {
-			true, false, true, false , false,
-			true, false, true, false, true, false, true, false, true, false,
-			true, true, true , false, false,
-			true, false
-	};
-    
-	/**
-	 * This contains the Cartesian coordinates the centroid
-	 * of each face of the icosahedron.
-	 */
-	protected static final double[][] CENTROIDS = new double[22][3];
-    
-	/**
-	 * Rotation matrices to move the triangles to the reference coordinates from the original positions.
-	 * Indexed by the face's indices.
-	 */
+
+    /**
+     * Indicates the vertices forming each face of the icosahedron.
+     * Each entry refers to the index of a vertex in {@link #VERTICES}
+     */
+    protected static final int[][] ISO = {
+            { 2, 1, 6 },
+            { 1, 0, 2 },
+            { 0, 1, 5 },
+            { 1, 5, 10 },
+            { 1, 6, 10 },
+            { 7, 2, 6 },
+            { 2, 3, 7 },
+            { 3, 0, 2 },
+            { 0, 3, 4 },
+            { 4, 0, 5 }, //9, qubec
+            { 5, 4, 9 },
+            { 9, 5, 10 },
+            { 10, 9, 11 },
+            { 11, 6, 10 },
+            { 6, 7, 11 },
+            { 8, 3, 7 },
+            { 8, 3, 4 },
+            { 8, 4, 9 },
+            { 9, 8, 11 },
+            { 7, 8, 11 },
+            { 11, 6, 7 }, //child of 14
+            { 3, 7, 8 } //child of 15
+    };
+
+    protected static final double[][] CENTER_MAP = {
+            { -3, 7 },
+            { -2, 5 },
+            { -1, 7 },
+            { 2, 5 },
+            { 4, 5 },
+            { -4, 1 },
+            { -3, -1 },
+            { -2, 1 },
+            { -1, -1 },
+            { 0, 1 },
+            { 1, -1 },
+            { 2, 1 },
+            { 3, -1 },
+            { 4, 1 },
+            { 5, -1 }, //14, left side, right to be cut
+            { -3, -5 },
+            { -1, -5 },
+            { 1, -5 },
+            { 2, -7 },
+            { -4, -7 },
+            { -5, -5 }, //20, pseudo triangle, child of 14
+            { -2, -7 } //21 , pseudo triangle, child of 15
+    };
+
+    /**
+     * Indicates for each face if it needs to be flipped after projecting
+     */
+    protected static final boolean[] FLIP_TRIANGLE = {
+            true, false, true, false, false,
+            true, false, true, false, true, false, true, false, true, false,
+            true, true, true, false, false,
+            true, false
+    };
+
+    /**
+     * This contains the Cartesian coordinates the centroid
+     * of each face of the icosahedron.
+     */
+    protected static final double[][] CENTROIDS = new double[22][3];
+
+    /**
+     * Rotation matrices to move the triangles to the reference coordinates from the original positions.
+     * Indexed by the face's indices.
+     */
     protected static final double[][][] ROTATION_MATRICES = new double[22][3][3];
-    
+
     /**
      * Rotation matrices to move the triangles from the reference coordinates to their original positions.
      * Indexed by the face's indices.
      */
     protected static final double[][][] INVERSE_ROTATION_MATRICES = new double[22][3][3];
-    
+
     protected static final int[] FACE_ON_GRID = {
             -1, -1, 0, 1, 2, -1, -1, 3, -1, 4, -1,
             -1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
@@ -138,82 +138,49 @@ public class DymaxionProjection implements GeographicProjection {
     };
 
     static {
-    	
+
         for (int i = 0; i < 22; i++) {
             CENTER_MAP[i][0] *= 0.5 * ARC;
             CENTER_MAP[i][1] *= ARC * MathUtils.ROOT3 / 12;
         }
 
-		// Will contain the list of vertices in Cartesian coordinates
-		double[][] verticesCartesian = new double[VERTICES.length][3];
+        // Will contain the list of vertices in Cartesian coordinates
+        double[][] verticesCartesian = new double[VERTICES.length][3];
 
-		// Convert the geographic vertices to spherical in radians
-		for(int i=0; i < VERTICES.length; i++) {
-			double[] vertexSpherical = MathUtils.geo2Spherical(VERTICES[i]);
-			double[] vertex = MathUtils.spherical2Cartesian(vertexSpherical);
-			verticesCartesian[i] = vertex;
-			VERTICES[i] = vertexSpherical;
-		}
+        // Convert the geographic vertices to spherical in radians
+        for (int i = 0; i < VERTICES.length; i++) {
+            double[] vertexSpherical = MathUtils.geo2Spherical(VERTICES[i]);
+            double[] vertex = MathUtils.spherical2Cartesian(vertexSpherical);
+            verticesCartesian[i] = vertex;
+            VERTICES[i] = vertexSpherical;
+        }
 
-		for(int i = 0; i < 22; i++) {
+        for (int i = 0; i < 22; i++) {
 
-			// Vertices of the current face
-			double[] vec1 = verticesCartesian[ISO[i][0]];
-			double[] vec2 = verticesCartesian[ISO[i][1]];
-			double[] vec3 = verticesCartesian[ISO[i][2]];
-			
-			// Find the centroid's projection onto the sphere
+            // Vertices of the current face
+            double[] vec1 = verticesCartesian[ISO[i][0]];
+            double[] vec2 = verticesCartesian[ISO[i][1]];
+            double[] vec3 = verticesCartesian[ISO[i][2]];
+
+            // Find the centroid's projection onto the sphere
             double xsum = vec1[0] + vec2[0] + vec3[0];
             double ysum = vec1[1] + vec2[1] + vec3[1];
             double zsum = vec1[2] + vec2[2] + vec3[2];
             double mag = Math.sqrt(xsum * xsum + ysum * ysum + zsum * zsum);
-			CENTROIDS[i] = new double[] {xsum / mag, ysum / mag, zsum / mag};
+            CENTROIDS[i] = new double[]{ xsum / mag, ysum / mag, zsum / mag };
 
-			double[] centroidSpherical = MathUtils.cartesian2Spherical(CENTROIDS[i]);
-			double centroidLambda = centroidSpherical[0];
-			double centroidPhi = centroidSpherical[1];
+            double[] centroidSpherical = MathUtils.cartesian2Spherical(CENTROIDS[i]);
+            double centroidLambda = centroidSpherical[0];
+            double centroidPhi = centroidSpherical[1];
 
-			double vertex[] = VERTICES[ISO[i][0]];
-			double v[] = new double[] {vertex[0] - centroidLambda, vertex[1]};
-			v = yRot(v, -centroidPhi);
+            double[] vertex = VERTICES[ISO[i][0]];
+            double[] v = { vertex[0] - centroidLambda, vertex[1] };
+            v = yRot(v, -centroidPhi);
 
-			ROTATION_MATRICES[i] = MathUtils.produceZYZRotationMatrix(-centroidLambda, -centroidPhi, (Math.PI/2) - v[0]);
-			INVERSE_ROTATION_MATRICES[i] = MathUtils.produceZYZRotationMatrix(v[0] - (Math.PI/2), centroidPhi, centroidLambda);
+            ROTATION_MATRICES[i] = MathUtils.produceZYZRotationMatrix(-centroidLambda, -centroidPhi, (Math.PI / 2) - v[0]);
+            INVERSE_ROTATION_MATRICES[i] = MathUtils.produceZYZRotationMatrix(v[0] - (Math.PI / 2), centroidPhi, centroidLambda);
 
-		}
-    }
-
-	/**
-	 * Finds the face of the icosahedron on which to project a point.
-	 * In practice, it works by finding the face with the closest centroid to the point.
-	 * 
-	 * @param vector - position vector as double array of length 3, using Cartesian coordinates
-	 * @return an integer identifying the face on which to project the point
-	 */
-    protected int findTriangle(double[] vector) {
-
-        double min = Double.MAX_VALUE;
-        int face = 0;
-
-        for (int i = 0; i < 20; i++) {
-            double xd = CENTROIDS[i][0] - vector[0];
-            double yd = CENTROIDS[i][1] - vector[1];
-            double zd = CENTROIDS[i][2] - vector[2];
-
-            double dissq = xd * xd + yd * yd + zd * zd;
-            if (dissq < min) {
-
-                if (dissq < 0.1) //TODO: enlarge radius
-                {
-                    return i;
-                }
-
-                face = i;
-                min = dissq;
-            }
         }
-
-        return face;
     }
 
     protected static int findTriangleGrid(double x, double y) {
@@ -275,6 +242,39 @@ public class DymaxionProjection implements GeographicProjection {
                 Math.atan2(c[1], c[0]),
                 Math.atan2(Math.sqrt(c[0] * c[0] + c[1] * c[1]), c[2])
         };
+    }
+
+    /**
+     * Finds the face of the icosahedron on which to project a point.
+     * In practice, it works by finding the face with the closest centroid to the point.
+     *
+     * @param vector - position vector as double array of length 3, using Cartesian coordinates
+     * @return an integer identifying the face on which to project the point
+     */
+    protected int findTriangle(double[] vector) {
+
+        double min = Double.MAX_VALUE;
+        int face = 0;
+
+        for (int i = 0; i < 20; i++) {
+            double xd = CENTROIDS[i][0] - vector[0];
+            double yd = CENTROIDS[i][1] - vector[1];
+            double zd = CENTROIDS[i][2] - vector[2];
+
+            double dissq = xd * xd + yd * yd + zd * zd;
+            if (dissq < min) {
+
+                if (dissq < 0.1) //TODO: enlarge radius
+                {
+                    return i;
+                }
+
+                face = i;
+                min = dissq;
+            }
+        }
+
+        return face;
     }
 
     protected double[] triangleTransform(double[] vec) {
@@ -346,9 +346,9 @@ public class DymaxionProjection implements GeographicProjection {
     @Override
     public double[] fromGeo(double longitude, double latitude) {
 
-        double[] vector = MathUtils.spherical2Cartesian(MathUtils.geo2Spherical(new double[] {longitude, latitude}));
+        double[] vector = MathUtils.spherical2Cartesian(MathUtils.geo2Spherical(new double[]{ longitude, latitude }));
 
-        int face = findTriangle(vector);
+        int face = this.findTriangle(vector);
 
         //apply rotation matrix (move triangle onto template triangle)
         double[] pvec = MathUtils.matVecProdD(ROTATION_MATRICES[face], vector);
@@ -378,7 +378,9 @@ public class DymaxionProjection implements GeographicProjection {
     public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
         int face = findTriangleGrid(x, y);
 
-        if (face == -1) throw OutOfProjectionBoundsException.get();
+        if (face == -1) {
+            throw OutOfProjectionBoundsException.get();
+        }
 
         x -= CENTER_MAP[face][0];
         y -= CENTER_MAP[face][1];
@@ -386,16 +388,24 @@ public class DymaxionProjection implements GeographicProjection {
         //deal with bounds of special snowflakes
         switch (face) {
             case 14:
-                if (x > 0) throw OutOfProjectionBoundsException.get();
+                if (x > 0) {
+                    throw OutOfProjectionBoundsException.get();
+                }
                 break;
             case 20:
-                if (-y * MathUtils.ROOT3 > x) throw OutOfProjectionBoundsException.get();
+                if (-y * MathUtils.ROOT3 > x) {
+                    throw OutOfProjectionBoundsException.get();
+                }
                 break;
             case 15:
-                if (x > 0 && x > y * MathUtils.ROOT3) throw OutOfProjectionBoundsException.get();
+                if (x > 0 && x > y * MathUtils.ROOT3) {
+                    throw OutOfProjectionBoundsException.get();
+                }
                 break;
             case 21:
-                if (x < 0 || -y * MathUtils.ROOT3 > x) throw OutOfProjectionBoundsException.get();
+                if (x < 0 || -y * MathUtils.ROOT3 > x) {
+                    throw OutOfProjectionBoundsException.get();
+                }
                 break;
         }
 
@@ -411,10 +421,10 @@ public class DymaxionProjection implements GeographicProjection {
         y = c[1];
         double z = c[2];
 
-        double[] vec = {x, y, z};
+        double[] vec = { x, y, z };
         //apply inverse rotation matrix (move triangle from template triangle to correct position on globe)
         double[] vecp = MathUtils.matVecProdD(INVERSE_ROTATION_MATRICES[face], vec);
-        
+
         //convert back to geo coordinates
         return MathUtils.spherical2Geo(MathUtils.cartesian2Spherical(vecp));
     }

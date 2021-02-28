@@ -13,7 +13,7 @@ import net.minecraft.util.text.TextFormatting;
  */
 public class ChatUtil {
     public static ITextComponent title() {
-        return new TextComponentString(TerraConstants.CHAT_PREFIX.replace("&","\u00A7"));
+        return new TextComponentString(TerraConstants.CHAT_PREFIX.replace("&", "\u00A7"));
     }
 
     public static ITextComponent titleAndCombine(Object... objects) {
@@ -28,28 +28,33 @@ public class ChatUtil {
         ITextComponent textComponent = title ? title() : new TextComponentString("");
         StringBuilder builder = null;
         TextFormatting lastFormat = null;
-        for(Object o : objects) {
-            if(o instanceof ITextComponent) {
-                if(builder != null) {
+        for (Object o : objects) {
+            if (o instanceof ITextComponent) {
+                if (builder != null) {
                     textComponent.appendSibling(new TextComponentString(builder.toString()));
                     builder = null;
                 }
 
                 ITextComponent component = (ITextComponent) o;
-                if(component.getStyle().getColor() == null && lastFormat != null)
+                if (component.getStyle().getColor() == null && lastFormat != null) {
                     component.setStyle(new Style().setColor(lastFormat));
+                }
 
                 textComponent.appendSibling(component);
             } else {
-                if(o instanceof TextFormatting)
+                if (o instanceof TextFormatting) {
                     lastFormat = (TextFormatting) o;
-                if(builder == null) builder = new StringBuilder();
+                }
+                if (builder == null) {
+                    builder = new StringBuilder();
+                }
                 builder.append(o);
             }
         }
 
-        if(builder != null)
+        if (builder != null) {
             textComponent.appendSibling(new TextComponentString(builder.toString()));
+        }
         return textComponent;
     }
 

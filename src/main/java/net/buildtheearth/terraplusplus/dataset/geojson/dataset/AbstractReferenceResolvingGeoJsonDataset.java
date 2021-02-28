@@ -5,11 +5,11 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import lombok.Getter;
+import lombok.NonNull;
 import net.buildtheearth.terraplusplus.dataset.Dataset;
 import net.buildtheearth.terraplusplus.dataset.geojson.GeoJsonObject;
 import net.buildtheearth.terraplusplus.dataset.geojson.object.Reference;
-import lombok.Getter;
-import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;

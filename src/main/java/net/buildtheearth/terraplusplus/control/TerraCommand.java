@@ -8,7 +8,6 @@ import net.buildtheearth.terraplusplus.control.fragments.terra.TerraDistortionFr
 import net.buildtheearth.terraplusplus.control.fragments.terra.TerraInfoFragment;
 import net.buildtheearth.terraplusplus.control.fragments.terra.TerraWhereFragment;
 import net.buildtheearth.terraplusplus.control.fragments.terra.TerraWorldFragment;
-import net.buildtheearth.terraplusplus.util.ChatUtil;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 
@@ -18,11 +17,11 @@ public class TerraCommand extends FragmentManager {
 
     public TerraCommand() {
         super("terra");
-        register(new TerraInfoFragment());
-        register(new TerraWhereFragment());
-        register(new TerraWorldFragment());
-        register(new TerraConvertFragment());
-        register(new TerraDistortionFragment());
+        this.register(new TerraInfoFragment());
+        this.register(new TerraWhereFragment());
+        this.register(new TerraWorldFragment());
+        this.register(new TerraConvertFragment());
+        this.register(new TerraDistortionFragment());
     }
 
     @Override
@@ -52,6 +51,6 @@ public class TerraCommand extends FragmentManager {
 
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-        executeFragment(server, sender, args);
+        this.executeFragment(server, sender, args);
     }
 }

@@ -23,10 +23,10 @@ package net.buildtheearth.terraplusplus.dataset.geojson;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import lombok.Getter;
 import net.buildtheearth.terraplusplus.dataset.geojson.object.Feature;
 import net.buildtheearth.terraplusplus.dataset.geojson.object.FeatureCollection;
 import net.buildtheearth.terraplusplus.dataset.geojson.object.Reference;
-import lombok.Getter;
 
 import java.io.IOException;
 import java.util.ArrayList;

@@ -21,98 +21,99 @@ import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.util.text.event.HoverEvent;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
-import net.minecraftforge.fml.client.config.GuiConfigEntries;
 
 public class TerraWhereFragment extends CommandFragment {
-	@Override
-	public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-		if(sender instanceof MinecraftServer && args.length < 1) {
-			sender.sendMessage(ChatUtil.getPlayerOnly());
-			return;
-		}
+    @Override
+    public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
+        if (sender instanceof MinecraftServer && args.length < 1) {
+            sender.sendMessage(ChatUtil.getPlayerOnly());
+            return;
+        }
 
-		World world = sender.getEntityWorld();
-		IChunkProvider cp = world.getChunkProvider();
+        World world = sender.getEntityWorld();
+        IChunkProvider cp = world.getChunkProvider();
 
-		if (!(cp instanceof CubeProviderServer)) {
-			sender.sendMessage(ChatUtil.getNotCC());
-			return;
-		}
+        if (!(cp instanceof CubeProviderServer)) {
+            sender.sendMessage(ChatUtil.getNotCC());
+            return;
+        }
 
-		ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
+        ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
-		if (!(gen instanceof EarthGenerator)) {
-			sender.sendMessage(ChatUtil.getNotTerra());
-			return;
-		}
+        if (!(gen instanceof EarthGenerator)) {
+            sender.sendMessage(ChatUtil.getNotTerra());
+            return;
+        }
 
-		Vec3d pos = sender.getPositionVector();
-		Entity e = sender.getCommandSenderEntity();
-		String senderName = sender.getName();
-		float yaw = e.rotationYaw;
-		if (args.length > 0) {
-			if(hasPermission(sender, TerraConstants.othersCommandNode)) e = sender.getEntityWorld().getPlayerEntityByName(args[0]);
-			if (e == null) {
-				sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".error.unknownplayer")));
-				return;
-			}
+        Vec3d pos = sender.getPositionVector();
+        Entity e = sender.getCommandSenderEntity();
+        String senderName = sender.getName();
+        float yaw = e.rotationYaw;
+        if (args.length > 0) {
+            if (this.hasPermission(sender, TerraConstants.othersCommandNode)) {
+                e = sender.getEntityWorld().getPlayerEntityByName(args[0]);
+            }
+            if (e == null) {
+                sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".error.unknownplayer")));
+                return;
+            }
 
-			pos = e.getPositionVector();
-			senderName = e.getName();
-			yaw = e.rotationYaw;
-		}
+            pos = e.getPositionVector();
+            senderName = e.getName();
+            yaw = e.rotationYaw;
+        }
 
-		EarthGenerator terrain = (EarthGenerator) gen;
-		GeographicProjection projection = terrain.projection;
+        EarthGenerator terrain = (EarthGenerator) gen;
+        GeographicProjection projection = terrain.projection;
 
 
-		double[] result;
-		float azimuth;
-		try {
-			result = projection.toGeo(pos.x, pos.z);
-			azimuth = projection.azimuth(pos.x, pos.z, yaw);
-		} catch (OutOfProjectionBoundsException e1) { //out of bounds, set to null to print error
-			result = null;
-			azimuth = Float.NaN;
-		}
-		sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Location of ", TextFormatting.BLUE, senderName));
-		if (result == null || Double.isNaN(result[0])) {
-			sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.where.notproj")));
-			return;
-		}
-		if (!Float.isFinite(azimuth)) {
-			sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.where.notproj")));
-			return;
+        double[] result;
+        float azimuth;
+        try {
+            result = projection.toGeo(pos.x, pos.z);
+            azimuth = projection.azimuth(pos.x, pos.z, yaw);
+        } catch (OutOfProjectionBoundsException e1) { //out of bounds, set to null to print error
+            result = null;
+            azimuth = Float.NaN;
+        }
+        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Location of ", TextFormatting.BLUE, senderName));
+        if (result == null || Double.isNaN(result[0])) {
+            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.where.notproj")));
+            return;
+        }
+        if (!Float.isFinite(azimuth)) {
+            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.where.notproj")));
+            return;
 
-		}
+        }
 
         sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY, "Location: ", TextFormatting.BLUE, result[1],
-				TextFormatting.GRAY, ", ", TextFormatting.BLUE, result[0]).setStyle(new Style().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Click to copy")))
+                TextFormatting.GRAY, ", ", TextFormatting.BLUE, result[0]).setStyle(new Style().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Click to copy")))
                 .setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, String.format("%s, %s", result[1], result[0])))));
-		sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY, "Facing: ", TextFormatting.BLUE, CardinalDirection.azimuthToFacing(azimuth).realName(), TextFormatting.GRAY, " (", TextFormatting.BLUE, azimuth, TextFormatting.GRAY, ")"));
+        sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY, "Facing: ", TextFormatting.BLUE, CardinalDirection.azimuthToFacing(azimuth).realName(), TextFormatting.GRAY, " (", TextFormatting.BLUE, azimuth, TextFormatting.GRAY, ")"));
         sender.sendMessage(ChatUtil.combine(new TextComponentString("Open in Google Maps").setStyle(new Style().setUnderlined(true).setColor(TextFormatting.YELLOW)
                 .setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Open map")))
                 .setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.google.com/maps/search/?api=1&query=" + result[1] + "," + result[0])))));
 
     }
 
-	@Override
-	public String[] getName() {
-		return new String[]{"where", "osm", "map"};
-	}
+    @Override
+    public String[] getName() {
+        return new String[]{ "where", "osm", "map" };
+    }
 
-	@Override
-	public String getPurpose() {
-		return TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.where.purpose").getUnformattedComponentText();
-	}
+    @Override
+    public String getPurpose() {
+        return TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.where.purpose").getUnformattedComponentText();
+    }
 
-	@Override
-	public String[] getArguments() {
-		return new String[]{"[player]"};
-	}
+    @Override
+    public String[] getArguments() {
+        return new String[]{ "[player]" };
+    }
 
-	@Override
-	public String getPermission() {
-		return TerraConstants.MODID + ".commands.terra";
-	}
+    @Override
+    public String getPermission() {
+        return TerraConstants.MODID + ".commands.terra";
+    }
 }

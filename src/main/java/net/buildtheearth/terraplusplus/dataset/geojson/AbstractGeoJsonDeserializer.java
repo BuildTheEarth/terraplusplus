@@ -4,6 +4,8 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.GeometryCollection;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.LineString;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.MultiLineString;
@@ -11,8 +13,6 @@ import net.buildtheearth.terraplusplus.dataset.geojson.geometry.MultiPoint;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.MultiPolygon;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.Point;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.Polygon;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 import java.util.ArrayList;

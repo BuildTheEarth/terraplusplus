@@ -3,11 +3,11 @@ package net.buildtheearth.terraplusplus.dataset.vector.draw;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import net.buildtheearth.terraplusplus.dataset.osm.JsonParser;
-import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import lombok.Builder;
 import lombok.NonNull;
 import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.dataset.osm.JsonParser;
+import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.daporkchop.lib.common.math.PMath;
 
 import java.io.IOException;

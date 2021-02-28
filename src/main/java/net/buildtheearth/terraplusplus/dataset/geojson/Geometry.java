@@ -21,10 +21,10 @@
 package net.buildtheearth.terraplusplus.dataset.geojson;
 
 import com.google.gson.annotations.JsonAdapter;
+import lombok.NonNull;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.projection.ProjectionFunction;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
-import lombok.NonNull;
 
 /**
  * @author DaPorkchop_

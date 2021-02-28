@@ -1,8 +1,8 @@
 package net.buildtheearth.terraplusplus.provider;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
-import net.buildtheearth.terraplusplus.generator.EarthBiomeProvider;
 import lombok.experimental.UtilityClass;
+import net.buildtheearth.terraplusplus.generator.EarthBiomeProvider;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;

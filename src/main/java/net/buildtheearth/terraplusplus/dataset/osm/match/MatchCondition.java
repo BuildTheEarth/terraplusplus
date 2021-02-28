@@ -1,8 +1,8 @@
 package net.buildtheearth.terraplusplus.dataset.osm.match;
 
 import com.google.gson.annotations.JsonAdapter;
-import net.buildtheearth.terraplusplus.dataset.geojson.Geometry;
 import lombok.NonNull;
+import net.buildtheearth.terraplusplus.dataset.geojson.Geometry;
 
 import java.util.Map;
 

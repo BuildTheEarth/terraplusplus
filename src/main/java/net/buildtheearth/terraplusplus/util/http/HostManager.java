@@ -52,10 +52,10 @@ final class HostManager extends Host {
     private final Bootstrap bootstrap;
 
     private int maxConcurrentRequests = 1;
-    private int activeRequests = 0;
+    private int activeRequests;
 
     private final Set<Channel> channels = Collections.newSetFromMap(new IdentityHashMap<>());
-    private ChannelFuture channelFuture = null;
+    private ChannelFuture channelFuture;
 
     public HostManager(@NonNull Host host) {
         super(host);

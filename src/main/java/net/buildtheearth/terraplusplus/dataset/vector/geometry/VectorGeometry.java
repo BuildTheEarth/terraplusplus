@@ -1,8 +1,8 @@
 package net.buildtheearth.terraplusplus.dataset.vector.geometry;
 
+import lombok.NonNull;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
-import lombok.NonNull;
 
 /**
  * A generate-able OpenStreetMap element.

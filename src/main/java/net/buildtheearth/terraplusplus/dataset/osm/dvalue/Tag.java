@@ -3,9 +3,9 @@ package net.buildtheearth.terraplusplus.dataset.osm.dvalue;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import net.buildtheearth.terraplusplus.dataset.osm.JsonParser;
 import lombok.Builder;
 import lombok.NonNull;
+import net.buildtheearth.terraplusplus.dataset.osm.JsonParser;
 
 import java.io.IOException;
 import java.util.Map;

@@ -2,11 +2,11 @@ package net.buildtheearth.terraplusplus.dataset.vector.geometry.line;
 
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.MathUtil;
+import lombok.NonNull;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.MultiLineString;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunction;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
-import lombok.NonNull;
 import net.minecraft.util.math.MathHelper;
 
 import static java.lang.Math.*;

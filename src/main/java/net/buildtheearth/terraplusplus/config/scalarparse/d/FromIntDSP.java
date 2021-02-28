@@ -4,10 +4,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import net.buildtheearth.terraplusplus.config.scalarparse.i.IntScalarParser;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import lombok.NonNull;
+import net.buildtheearth.terraplusplus.config.scalarparse.i.IntScalarParser;
 
 import java.io.IOException;
 

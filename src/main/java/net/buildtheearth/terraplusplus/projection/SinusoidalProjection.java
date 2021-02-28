@@ -5,9 +5,8 @@ import net.buildtheearth.terraplusplus.TerraConstants;
 
 /**
  * Implementation of the Sinusoidal projection.
- * 
- * @see <a href="https://en.wikipedia.org/wiki/Sinusoidal_projection"> Wikipedia's article on the sinusoidal projection</a>
  *
+ * @see <a href="https://en.wikipedia.org/wiki/Sinusoidal_projection"> Wikipedia's article on the sinusoidal projection</a>
  */
 @JsonDeserialize
 public class SinusoidalProjection implements GeographicProjection {

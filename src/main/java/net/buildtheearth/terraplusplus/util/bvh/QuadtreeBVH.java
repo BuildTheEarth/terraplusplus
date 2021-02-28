@@ -132,7 +132,7 @@ final class QuadtreeBVH<V extends Bounds2d> implements BVH<V> {
         protected Node<V>[] children;
 
         protected V[] values;
-        protected int size = 0; //only used during construction
+        protected int size; //only used during construction
 
         public Node(double minX, double maxX, double minZ, double maxZ) {
             super(minX, maxX, minZ, maxZ);

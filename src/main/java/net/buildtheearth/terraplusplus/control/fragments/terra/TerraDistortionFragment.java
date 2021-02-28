@@ -44,7 +44,7 @@ public class TerraDistortionFragment extends CommandFragment {
             e.printStackTrace();
         }
 
-        if(c == null || Double.isNaN(c[0])) {
+        if (c == null || Double.isNaN(c[0])) {
             sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.where.notproj")));
             return;
         }
@@ -54,7 +54,7 @@ public class TerraDistortionFragment extends CommandFragment {
 
     @Override
     public String[] getName() {
-        return new String[]{"distortion", "tissot", "tiss"};
+        return new String[]{ "distortion", "tissot", "tiss" };
     }
 
     @Override

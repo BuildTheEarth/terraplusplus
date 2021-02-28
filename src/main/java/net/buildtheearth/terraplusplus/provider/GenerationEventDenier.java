@@ -2,10 +2,10 @@ package net.buildtheearth.terraplusplus.provider;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.DecorateCubeBiomeEvent;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.event.PopulateCubeEvent;
+import lombok.experimental.UtilityClass;
 import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.generator.EarthBiomeProvider;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
-import lombok.experimental.UtilityClass;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.fml.common.Mod;

@@ -5,10 +5,9 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Preconditions;
-
+import lombok.Getter;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
-import lombok.Getter;
 
 /**
  * Applies a simple translation to the projected space, such that:
@@ -22,8 +21,8 @@ public class OffsetProjectionTransform extends ProjectionTransform {
 
     /**
      * @param delegate - Input projection
-     * @param dx - how much to move along the X axis
-     * @param dy - how much to move along the Y axis
+     * @param dx       - how much to move along the X axis
+     * @param dy       - how much to move along the Y axis
      */
     @JsonCreator
     public OffsetProjectionTransform(
@@ -37,27 +36,27 @@ public class OffsetProjectionTransform extends ProjectionTransform {
     }
 
     @Override
-	public double[] bounds() {
-		double[] b = this.delegate.bounds();
+    public double[] bounds() {
+        double[] b = this.delegate.bounds();
         b[0] += this.dx;
         b[1] += this.dy;
         b[2] += this.dx;
         b[3] += this.dy;
-		return b;
-	}
+        return b;
+    }
 
-	@Override
-	public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
-		return this.delegate.toGeo(x - this.dx, y - this.dy);
-	}
+    @Override
+    public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
+        return this.delegate.toGeo(x - this.dx, y - this.dy);
+    }
 
-	@Override
-	public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
-		double[] pos = this.delegate.fromGeo(longitude, latitude);
-		pos[0] += this.dx;
-		pos[1] += this.dy;
-		return pos;
-	}
+    @Override
+    public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
+        double[] pos = this.delegate.fromGeo(longitude, latitude);
+        pos[0] += this.dx;
+        pos[1] += this.dy;
+        return pos;
+    }
 
     @Override
     public String toString() {

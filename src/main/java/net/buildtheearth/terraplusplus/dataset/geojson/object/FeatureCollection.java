@@ -1,9 +1,9 @@
 package net.buildtheearth.terraplusplus.dataset.geojson.object;
 
 import com.google.common.collect.Iterators;
-import net.buildtheearth.terraplusplus.dataset.geojson.GeoJsonObject;
 import lombok.Data;
 import lombok.NonNull;
+import net.buildtheearth.terraplusplus.dataset.geojson.GeoJsonObject;
 
 import java.util.Iterator;
 

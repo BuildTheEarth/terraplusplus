@@ -1,7 +1,7 @@
 package net.buildtheearth.terraplusplus.dataset.geojson.dataset;
 
-import net.buildtheearth.terraplusplus.dataset.geojson.GeoJsonObject;
 import lombok.NonNull;
+import net.buildtheearth.terraplusplus.dataset.geojson.GeoJsonObject;
 
 import java.util.Arrays;
 import java.util.stream.Stream;

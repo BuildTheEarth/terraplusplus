@@ -8,11 +8,13 @@ import net.minecraftforge.server.permission.PermissionAPI;
 
 public abstract class CommandFragment {
     protected boolean hasPermission(ICommandSender sender) {
-        return hasPermission(sender, getPermission());
+        return this.hasPermission(sender, this.getPermission());
     }
 
     protected boolean hasPermission(ICommandSender sender, String permission) {
-        if(FMLCommonHandler.instance().getMinecraftServerInstance().isSinglePlayer() && sender.getEntityWorld().getWorldInfo().areCommandsAllowed()) return true;
+        if (FMLCommonHandler.instance().getMinecraftServerInstance().isSinglePlayer() && sender.getEntityWorld().getWorldInfo().areCommandsAllowed()) {
+            return true;
+        }
         if (sender instanceof EntityPlayer) {
             return PermissionAPI.hasPermission((EntityPlayer) sender, permission);
         }

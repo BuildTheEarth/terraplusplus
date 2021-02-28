@@ -6,7 +6,7 @@ import net.buildtheearth.terraplusplus.util.MathUtils;
 
 /**
  * Implementation of the Equal Earth projection
- * 
+ *
  * @see <a href="https://en.wikipedia.org/wiki/Equal_Earth_projection"> Wikipedia's article on the Equal Earth projection</a>
  */
 @JsonDeserialize
@@ -50,7 +50,7 @@ public class EqualEarthProjection implements GeographicProjection {
         dx += 9 * A4 * (tpow *= thetasquare); //9 A4 t^8
 
         return new double[]{ Math.toDegrees(x * dx * 3 / (2 * MathUtils.ROOT3 * Math.cos(theta))),
-                Math.toDegrees(Math.asin(Math.sin(theta) * 2 / MathUtils.ROOT3))};
+                Math.toDegrees(Math.asin(Math.sin(theta) * 2 / MathUtils.ROOT3)) };
     }
 
     @Override

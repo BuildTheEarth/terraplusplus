@@ -10,15 +10,15 @@ public class LatLng {
     }
 
     public LatLng() {
-        lat = null;
-        lng = null;
+        this.lat = null;
+        this.lng = null;
     }
 
     public Double getLat() {
-        return lat;
+        return this.lat;
     }
 
     public Double getLng() {
-        return lng;
+        return this.lng;
     }
 }

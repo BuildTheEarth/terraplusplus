@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public abstract class TypedDeserializer<T> extends JsonDeserializer<T> {
     @Override
-    public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
         String name = p.nextFieldName();
         if (name == null) {
             throw JsonMappingException.from(p, "expected type name, found: " + p.currentToken());

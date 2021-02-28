@@ -10,7 +10,7 @@ import net.minecraftforge.server.permission.PermissionAPI;
 public abstract class Command extends CommandBase {
 
     public Command() {
-        PermissionAPI.registerNode(TerraConstants.defaultCommandNode + getName(), DefaultPermissionLevel.OP, "");
+        PermissionAPI.registerNode(TerraConstants.defaultCommandNode + this.getName(), DefaultPermissionLevel.OP, "");
     }
 
     protected boolean hasPermission(ICommandSender sender, String perm) {

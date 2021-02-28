@@ -2,17 +2,17 @@ package net.buildtheearth.terraplusplus.dataset.osm.mapper;
 
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.dataset.geojson.Geometry;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.LineString;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.MultiLineString;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.MultiPolygon;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.Polygon;
-import net.buildtheearth.terraplusplus.dataset.vector.geometry.VectorGeometry;
 import net.buildtheearth.terraplusplus.dataset.osm.JsonParser;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.dataset.vector.geometry.VectorGeometry;
 
 import java.io.IOException;
 import java.util.ArrayList;

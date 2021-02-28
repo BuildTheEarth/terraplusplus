@@ -1,5 +1,7 @@
 package net.buildtheearth.terraplusplus.dataset.vector;
 
+import lombok.Getter;
+import lombok.NonNull;
 import net.buildtheearth.terraplusplus.dataset.geojson.GeoJsonObject;
 import net.buildtheearth.terraplusplus.dataset.geojson.Geometry;
 import net.buildtheearth.terraplusplus.dataset.geojson.dataset.AbstractReferenceResolvingGeoJsonDataset;
@@ -11,8 +13,6 @@ import net.buildtheearth.terraplusplus.dataset.osm.OSMMapper;
 import net.buildtheearth.terraplusplus.dataset.vector.geometry.VectorGeometry;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
-import lombok.Getter;
-import lombok.NonNull;
 import net.daporkchop.lib.common.util.PorkUtil;
 
 import java.util.Arrays;

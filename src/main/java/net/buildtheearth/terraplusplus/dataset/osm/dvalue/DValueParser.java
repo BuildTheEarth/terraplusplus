@@ -1,7 +1,7 @@
 package net.buildtheearth.terraplusplus.dataset.osm.dvalue;
 
-import net.buildtheearth.terraplusplus.dataset.osm.JsonParser;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.buildtheearth.terraplusplus.dataset.osm.JsonParser;
 
 import java.util.Map;
 

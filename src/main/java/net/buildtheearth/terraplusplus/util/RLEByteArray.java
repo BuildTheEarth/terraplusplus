@@ -45,11 +45,12 @@ public class RLEByteArray {
     public static class Builder {
         protected final IntList index = new IntArrayList();
         protected final ByteList data = new ByteArrayList();
-        protected int size = 0;
+        protected int size;
         protected byte last;
 
         /**
          * Appends a value to this builder.
+         *
          * @param val the value to append
          */
         public void append(byte val) {

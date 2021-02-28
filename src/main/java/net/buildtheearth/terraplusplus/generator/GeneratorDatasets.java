@@ -1,9 +1,9 @@
 package net.buildtheearth.terraplusplus.generator;
 
-import net.buildtheearth.terraplusplus.projection.GeographicProjection;
-import net.buildtheearth.terraplusplus.util.CustomAttributeContainer;
 import lombok.Getter;
 import lombok.NonNull;
+import net.buildtheearth.terraplusplus.projection.GeographicProjection;
+import net.buildtheearth.terraplusplus.util.CustomAttributeContainer;
 
 /**
  * Wrapper class which contains all of the datasets used by {@link EarthGenerator}.

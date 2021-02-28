@@ -1,10 +1,5 @@
 package net.buildtheearth.terraplusplus.generator;
 
-import static net.daporkchop.lib.common.util.PValidation.checkState;
-
-import java.io.IOException;
-import java.io.InputStream;
-
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -19,7 +14,6 @@ import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-
 import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.JsonGrammar;
 import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.api.DeserializationException;
 import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.api.SyntaxError;
@@ -47,18 +41,21 @@ import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.ref.Ref;
 import net.minecraft.world.biome.BiomeProvider;
 
+import java.io.IOException;
+import java.io.InputStream;
+
+import static net.daporkchop.lib.common.util.PValidation.*;
+
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter(onMethod_ = { @JsonGetter })
 @With
 public class EarthGeneratorSettings {
     public static final int CONFIG_VERSION = 2;
-
+    public static final String DEFAULT_SETTINGS;
     private static final LoadingCache<String, EarthGeneratorSettings> SETTINGS_PARSE_CACHE = CacheBuilder.newBuilder()
             .weakKeys().weakValues()
             .build(CacheLoader.from(EarthGeneratorSettings::parseUncached));
-
-    public static final String DEFAULT_SETTINGS;
     public static final String BTE_DEFAULT_SETTINGS;
 
     static {
@@ -163,7 +160,7 @@ public class EarthGeneratorSettings {
         this.cwg = Strings.isNullOrEmpty(cwg) ? "" : CustomGeneratorSettingsFixer.INSTANCE.fixJson(cwg).toJson(JsonGrammar.COMPACT);
         this.useDefaultHeights = useDefaultHeights != null ? useDefaultHeights : true;
         this.useDefaultTreeCover = useDefaultTreeCover != null ? useDefaultTreeCover : true;
-        
+
     }
 
     @Override
@@ -191,67 +188,70 @@ public class EarthGeneratorSettings {
     public GeneratorDatasets datasets() {
         return this.datasets.get();
     }
-    
+
     /**
      * Tries to convert this generator settings to a String Terra121 could understand.
-     * 
+     *
      * @return a valid String representing this settings for Terra121, or null if not possible (e.g. using Terra++ features like offsets)
-     * 
      * @author SmylerMC
      */
     @JsonIgnore
     public String getLegacyGeneratorString() {
-    	LegacyConfig legacy = new LegacyConfig();
-    	legacy.scaleX = 1;
-    	legacy.scaleY = 1;
-    	GeographicProjection proj = this.projection();
-    	GeographicProjection base = proj;
-    	ProjectionTransform transform = null;
-    	
-    	while(base instanceof ProjectionTransform) {
-    		base = ((ProjectionTransform)base).delegate();
-    	}
-    	
-    	legacy.projection = LegacyConfig.downgradeToLegacyProjectionName(GlobalParseRegistries.PROJECTIONS.inverse().get(base.getClass()));
-    	if(legacy.projection == null) return null;
-    	
-    	while(proj instanceof ProjectionTransform) {
-    		ProjectionTransform trs = (ProjectionTransform) proj;
-    		if(proj instanceof ScaleProjectionTransform) {
-    			ScaleProjectionTransform scale = (ScaleProjectionTransform)proj;
-    			legacy.scaleX *= scale.x();
-    			legacy.scaleY *= scale.y();
-    		} else if(proj instanceof FlipVerticalProjectionTransform || proj instanceof SwapAxesProjectionTransform) {
-    			if(transform != null) return null; // Terra121 does not support multiple transformations
-    			transform = trs;
-    		} else if(proj instanceof FlipHorizontalProjectionTransform || proj instanceof OffsetProjectionTransform) {
-    			return null; // Terra121 does not support horizontal flips and offsets
-    		}
-    		proj = trs.delegate();
-    	}
-    	
-    	if(base.upright()) {
-    		if(transform == null) {
-    			legacy.orentation = LegacyConfig.Orientation.upright;
-    		} else if(transform instanceof FlipVerticalProjectionTransform) {
-    			legacy.orentation = LegacyConfig.Orientation.none; // Terra121 will flip it anyway because it's upright
-    		} else if(transform instanceof SwapAxesProjectionTransform){
-    			return null; // There is one case we are not handling here, that of an upright, swapped and flipped vertically projection
-    		}
-    	} else {
-    		if(transform == null) {
-    			legacy.orentation = LegacyConfig.Orientation.none;
-    		} else if(transform instanceof FlipVerticalProjectionTransform) {
-    			legacy.orentation = LegacyConfig.Orientation.upright;
-    		} else if(transform instanceof SwapAxesProjectionTransform){
-    			legacy.orentation = LegacyConfig.Orientation.swapped;
-    		}
-    	}
-    	try {
-			return TerraConstants.JSON_MAPPER.writeValueAsString(legacy);
-		} catch (JsonProcessingException e) {
-			return null;
-		}
+        LegacyConfig legacy = new LegacyConfig();
+        legacy.scaleX = 1;
+        legacy.scaleY = 1;
+        GeographicProjection proj = this.projection();
+        GeographicProjection base = proj;
+        ProjectionTransform transform = null;
+
+        while (base instanceof ProjectionTransform) {
+            base = ((ProjectionTransform) base).delegate();
+        }
+
+        legacy.projection = LegacyConfig.downgradeToLegacyProjectionName(GlobalParseRegistries.PROJECTIONS.inverse().get(base.getClass()));
+        if (legacy.projection == null) {
+            return null;
+        }
+
+        while (proj instanceof ProjectionTransform) {
+            ProjectionTransform trs = (ProjectionTransform) proj;
+            if (proj instanceof ScaleProjectionTransform) {
+                ScaleProjectionTransform scale = (ScaleProjectionTransform) proj;
+                legacy.scaleX *= scale.x();
+                legacy.scaleY *= scale.y();
+            } else if (proj instanceof FlipVerticalProjectionTransform || proj instanceof SwapAxesProjectionTransform) {
+                if (transform != null) {
+                    return null; // Terra121 does not support multiple transformations
+                }
+                transform = trs;
+            } else if (proj instanceof FlipHorizontalProjectionTransform || proj instanceof OffsetProjectionTransform) {
+                return null; // Terra121 does not support horizontal flips and offsets
+            }
+            proj = trs.delegate();
+        }
+
+        if (base.upright()) {
+            if (transform == null) {
+                legacy.orentation = LegacyConfig.Orientation.upright;
+            } else if (transform instanceof FlipVerticalProjectionTransform) {
+                legacy.orentation = LegacyConfig.Orientation.none; // Terra121 will flip it anyway because it's upright
+            } else if (transform instanceof SwapAxesProjectionTransform) {
+                return null; // There is one case we are not handling here, that of an upright, swapped and flipped vertically projection
+            }
+        } else {
+            if (transform == null) {
+                legacy.orentation = LegacyConfig.Orientation.none;
+            } else if (transform instanceof FlipVerticalProjectionTransform) {
+                legacy.orentation = LegacyConfig.Orientation.upright;
+            } else if (transform instanceof SwapAxesProjectionTransform) {
+                legacy.orentation = LegacyConfig.Orientation.swapped;
+            }
+        }
+        try {
+            return TerraConstants.JSON_MAPPER.writeValueAsString(legacy);
+        } catch (JsonProcessingException e) {
+            return null;
+        }
     }
 
     @JsonDeserialize
@@ -288,7 +288,7 @@ public class EarthGeneratorSettings {
                     return name;
             }
         }
-        
+
         private static String downgradeToLegacyProjectionName(String name) {
             switch (name) {
                 case "centered_mercator":
@@ -303,7 +303,7 @@ public class EarthGeneratorSettings {
                 case "sinusoidal":
                 case "equal_earth":
                 case "transverse_mercator":
-                	return name;
+                    return name;
                 default:
                     return null;
             }

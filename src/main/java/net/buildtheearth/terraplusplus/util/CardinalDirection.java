@@ -9,19 +9,6 @@ public enum CardinalDirection {
     NW(292.5, 337.5, "Northwest"), SW(202.5, 247.5, "Southwest"), SE(112.5, 157.5, "Southeast"),
     NE(22.5, 67.5, "Northeast"), UNKNOWN(360.5, 10000000.0, "Unknown");
 
-    private final double min;
-    private final double max;
-
-    private final String realName;
-    private final String translationKey;
-
-    CardinalDirection(double min, double max, String realName) {
-        this.min = min;
-        this.max = max;
-        this.realName = realName;
-        this.translationKey = TerraConstants.MODID + ".cardinal_directions." + this.name().toLowerCase();
-    }
-
     /**
      * @param azimuth - an azimuth
      * @return the CardinalDirection the given azimuth faces
@@ -42,6 +29,17 @@ public enum CardinalDirection {
             }
         }
         return CardinalDirection.UNKNOWN;
+    }
+    private final double min;
+    private final double max;
+    private final String realName;
+    private final String translationKey;
+
+    CardinalDirection(double min, double max, String realName) {
+        this.min = min;
+        this.max = max;
+        this.realName = realName;
+        this.translationKey = TerraConstants.MODID + ".cardinal_directions." + this.name().toLowerCase();
     }
 
     /**

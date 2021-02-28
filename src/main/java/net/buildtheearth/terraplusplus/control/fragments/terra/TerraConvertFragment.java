@@ -15,7 +15,7 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
 
-public class TerraConvertFragment extends CommandFragment{
+public class TerraConvertFragment extends CommandFragment {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         World world = sender.getEntityWorld();
@@ -36,7 +36,7 @@ public class TerraConvertFragment extends CommandFragment{
         EarthGenerator terrain = (EarthGenerator) gen;
         GeographicProjection projection = terrain.projection;
 
-        if(args.length < 2) {
+        if (args.length < 2) {
             sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, "Usage: /terra convert <x/lat> <z/lon>"));
             return;
         }
@@ -52,7 +52,7 @@ public class TerraConvertFragment extends CommandFragment{
         }
 
 
-        double[] c = new double[]{x, y};
+        double[] c = { x, y };
 
         if (-180 <= c[1] && c[1] <= 180 && -90 <= c[0] && c[0] <= 90) {
             try {
@@ -75,7 +75,7 @@ public class TerraConvertFragment extends CommandFragment{
 
     @Override
     public String[] getName() {
-        return new String[]{"convert", "conv"};
+        return new String[]{ "convert", "conv" };
     }
 
     @Override
@@ -85,7 +85,7 @@ public class TerraConvertFragment extends CommandFragment{
 
     @Override
     public String[] getArguments() {
-        return new String[]{"<x/lat>", "<z/lon>"};
+        return new String[]{ "<x/lat>", "<z/lon>" };
     }
 
     @Override
