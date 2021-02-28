@@ -74,7 +74,7 @@ public class AdvancedEarthGui extends GuiScreen {
 	ImageIO.read(AdvancedEarthGui.class.getResource("map.png")).getRGB(0, 0, SRC_W, SRC_H, null, 0, SRC_W));
 
 	protected static final int VERTICAL_PADDING = 32;
-	
+
 	public static final ResourceLocation DIRECTIONS_TEXTURE = new ResourceLocation(TerraConstants.MODID, "textures/directions.png");
 
 	protected final GuiScreen parent;
@@ -90,9 +90,9 @@ public class AdvancedEarthGui extends GuiScreen {
 	protected final List<Entry> entries = new ArrayList<>();
 	protected final List<GuiTextField> textFields = new CopyOnWriteArrayList<>();
 	protected ProjectionEntry projectionEntry;
-	
+
 	protected ProjectionPreview preview;
-	
+
 	private int lastClickMoveX, lastClickMoveY;
 
 	public AdvancedEarthGui(GuiScreen parent, EarthGeneratorSettings settings, Consumer<String> whenDone) {
@@ -100,7 +100,7 @@ public class AdvancedEarthGui extends GuiScreen {
 
 		this.settings = settings;
 		this.whenDone = whenDone;
-		
+
 		this.mc = Minecraft.getMinecraft();
 		this.parent = parent;
 	}
@@ -118,7 +118,7 @@ public class AdvancedEarthGui extends GuiScreen {
 	@Override
 	public void initGui() {
 		Keyboard.enableRepeatEvents(true);
-		
+
 		if(this.preview == null) {
 			this.preview = new ProjectionPreview();
 		}
@@ -148,7 +148,7 @@ public class AdvancedEarthGui extends GuiScreen {
 		this.entries.clear();
 
 		int previousDY = this.projectionEntry != null ? this.projectionEntry.deltaY: 0; // Restore scrollbar position
-		
+
 		//add states
 		int y = VERTICAL_PADDING;
 		ProjectionEntry proj = new ProjectionEntry(this.settings, this, 5, y, this.width - this.imgSize - 10);
@@ -164,7 +164,7 @@ public class AdvancedEarthGui extends GuiScreen {
 
 		ScaledResolution scaledRes = new ScaledResolution(Minecraft.getMinecraft());
 		this.preview.update(this.width - this.imgSize, VERTICAL_PADDING, this.imgSize - 10, this.height - VERTICAL_PADDING*4, scaledRes.getScaleFactor(), this.settings.projection());
-		
+
 		double[] bounds = this.settings.projection().bounds();
 		this.worldSizeX = Math.abs(Math.round(bounds[2] - bounds[0]));
 		this.worldSizeY = Math.abs(Math.round(bounds[3] - bounds[1]));
@@ -186,7 +186,7 @@ public class AdvancedEarthGui extends GuiScreen {
 		this.textFields.add(textField);
 		return textField;
 	}
-	
+
 	protected EntryTextField addEntryTextField(int x, int y, int width, int height) {
 		EntryTextField textField = new EntryTextField(this.textFields.size(), this.fontRenderer, x, y, width, height);
 		this.textFields.add(textField);
@@ -211,9 +211,9 @@ public class AdvancedEarthGui extends GuiScreen {
 		for (GuiTextField textField : this.textFields) {
 			textField.drawTextBox();
 		}
-		
+
 		this.fontRenderer.drawSplitString(I18n.format("terraplusplus.gui.world_info"), this.width - this.imgSize + 15, this.height - VERTICAL_PADDING*2 - 25, this.imgSize - 25, 0xFFFFFFFF);
-		
+
 		this.drawString(this.fontRenderer, I18n.format("terraplusplus.gui.world_size_header"), this.width - this.imgSize + 15, this.height - VERTICAL_PADDING - 30, 0xFFFFFFFF);
 		this.drawString(this.fontRenderer, I18n.format("terraplusplus.gui.world_size_numbers", this.worldSizeX, this.worldSizeY), this.width - this.imgSize + 15, this.height - VERTICAL_PADDING - 15, 0xFFFFFFFF);
 
@@ -265,21 +265,21 @@ public class AdvancedEarthGui extends GuiScreen {
 				this.initGui();
 			}
 		}
-		
+
 		int y = VERTICAL_PADDING;
 		for (Entry entry : this.entries) {
 			entry.onClick(5, y, mouseX, mouseY, this.width - this.imgSize - 10);
 			y += entry.height();
 		}
 	}
-	
+
 	@Override
 	public void handleMouseInput() throws IOException {
 		super.handleMouseInput();
 		int scroll = Mouse.getDWheel();
 		if(scroll != 0) for(Entry entry : this.entries) entry.onScroll(scroll);
 	}
-	
+
 
 	@Override
 	protected void mouseReleased(int mouseX, int mouseY, int state) {
@@ -315,19 +315,19 @@ public class AdvancedEarthGui extends GuiScreen {
 		default EarthGeneratorSettings touchSettings(EarthGeneratorSettings settings) {
 			return settings;
 		}
-		
+
 		default void onClick(int x, int y, int mouseX, int mouseY, int width) {
 		}
-		
+
 		default void onRelease(int x, int y, int mouseX, int mouseY, int width) {
 		}
-		
+
 		default void onClickMove(int x, int y, int mouseX, int mouseY, int dX, int dY, int width) {
 		}
-		
+
 		default void onScroll(int amount) {
 		}
-		
+
 	}
 
 	protected static class ProjectionEntry implements Entry {
@@ -368,10 +368,10 @@ public class AdvancedEarthGui extends GuiScreen {
 			SubEntry entry = new RootEntry(projection, gui, x + 2, y + this.height, width - 10);
 			this.height += entry.height();
 			this.entries.add(entry);
-			
+
 			this.height += 10;
 		}
-		
+
 		@Override
 		public int height() {
 			return min(this.height, this.maxApparentHeight);
@@ -380,11 +380,11 @@ public class AdvancedEarthGui extends GuiScreen {
 		@Override
 		public void render(AdvancedEarthGui gui, int x, int y, int mouseX, int mouseY, int width) {
 			gui.fontRenderer.drawString(I18n.format(TerraConstants.MODID + ".gui.projection"), x, y + (20 - 8) / 2, 0xFFFFFFFF, true);
-			
+
 			int topY = y;
 			y += 40;
-			
-			
+
+
 			ScaledResolution scale = new ScaledResolution(Minecraft.getMinecraft());
 			int sc = scale.getScaleFactor();
 			GL11.glEnable(GL11.GL_SCISSOR_TEST);
@@ -394,41 +394,41 @@ public class AdvancedEarthGui extends GuiScreen {
 				entry.render(gui, x + 2, y - this.deltaY, mouseX, mouseY, width - 10);
 				y += entry.height() + 5;
 			}
-			
+
 			// scroll bar
 			int listHeight = this.height - 30;
 			int maxListHeight = height + 10;
 			float viewPort = maxListHeight / (float)listHeight;
 			int barHeight = (int)(maxListHeight *  viewPort);
 			int barY = topY + 30 + (int)((this.deltaY / (float)(listHeight - maxListHeight)) * (maxListHeight - barHeight));
-			
+
 			Gui.drawRect(x + width - 4, topY + 30, x + width, topY + 30 + maxListHeight, 0xB0000000);
 			if(barHeight > 0 && viewPort < 1) {
 				Gui.drawRect(x + width - 4, barY, x + width, barY + barHeight, 0xFFDDDDDD);
 			}
-			
+
 			GL11.glDisable(GL11.GL_SCISSOR_TEST);
-			
-			
+
+
 			GlStateManager.enableAlpha();
 			GlStateManager.disableTexture2D();
 			GlStateManager.enableBlend();
 			GlStateManager.shadeModel(7425);
-	        Tessellator tessellator = Tessellator.getInstance();
-	        BufferBuilder bufferbuilder = tessellator.getBuffer();
-	        bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-	        bufferbuilder.pos(x, topY + 29 + 10, 0).color(0, 0, 0, 0).endVertex();
-	        bufferbuilder.pos(x + width, topY + 29 + 10, 0).color(0, 0, 0, 0).endVertex();
-	        bufferbuilder.pos(x + width, topY + 29, 0).color(0, 0, 0, 255).endVertex();
-	        bufferbuilder.pos(x, topY + 29 , 0).color(0, 0, 0, 255).endVertex();
-	        tessellator.draw();
-	        bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-	        bufferbuilder.pos(x, topY + height + 40, 0).color(0, 0, 0, 255).endVertex();
-	        bufferbuilder.pos(x + width, topY + height + 40, 0).color(0, 0, 0, 255).endVertex();
-	        bufferbuilder.pos(x + width, topY + height + 30, 0).color(0, 0, 0, 0).endVertex();
-	        bufferbuilder.pos(x, topY + height + 30, 0).color(0, 0, 0, 0).endVertex();
-	        tessellator.draw();
-	        GlStateManager.enableTexture2D();
+			Tessellator tessellator = Tessellator.getInstance();
+			BufferBuilder bufferbuilder = tessellator.getBuffer();
+			bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+			bufferbuilder.pos(x, topY + 29 + 10, 0).color(0, 0, 0, 0).endVertex();
+			bufferbuilder.pos(x + width, topY + 29 + 10, 0).color(0, 0, 0, 0).endVertex();
+			bufferbuilder.pos(x + width, topY + 29, 0).color(0, 0, 0, 255).endVertex();
+			bufferbuilder.pos(x, topY + 29 , 0).color(0, 0, 0, 255).endVertex();
+			tessellator.draw();
+			bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+			bufferbuilder.pos(x, topY + height + 40, 0).color(0, 0, 0, 255).endVertex();
+			bufferbuilder.pos(x + width, topY + height + 40, 0).color(0, 0, 0, 255).endVertex();
+			bufferbuilder.pos(x + width, topY + height + 30, 0).color(0, 0, 0, 0).endVertex();
+			bufferbuilder.pos(x, topY + height + 30, 0).color(0, 0, 0, 0).endVertex();
+			tessellator.draw();
+			GlStateManager.enableTexture2D();
 		}
 
 		@Override
@@ -541,12 +541,12 @@ public class AdvancedEarthGui extends GuiScreen {
 
 		protected static class TransformEntry implements SubEntry {
 			protected final Transformation transformation;
-			
+
 			protected final EntryButton upButton;
 			protected final EntryButton downButton;
 			protected final EntryButton removeButton;
 			protected final EntryButton nameButton;
-			
+
 			protected Minecraft mc = Minecraft.getMinecraft();
 
 			public TransformEntry(Transformation transformation, ProjectionEntry entry, AdvancedEarthGui gui, int x, int y, int width) {
@@ -596,7 +596,7 @@ public class AdvancedEarthGui extends GuiScreen {
 					}
 				});
 			}
-			
+
 			@Override
 			public void render(AdvancedEarthGui gui, int x, int y, int mouseX, int mouseY, int width) {
 				this.upButton.y = this.downButton.y = this.removeButton.y = this.nameButton.y = y;
@@ -678,7 +678,7 @@ public class AdvancedEarthGui extends GuiScreen {
 			}
 
 			protected abstract void appendValue(StringBuilder out, int i);
-			
+
 		}
 
 		protected static class RootEntry implements SubEntry {
@@ -867,7 +867,7 @@ public class AdvancedEarthGui extends GuiScreen {
 			return settings.withCwg(this.text);
 		}
 	}
-	
+
 	protected class ProjectionPreview {
 		private int previewX, previewY, previewWidth, previewHeight, scaling;
 		private volatile boolean finish = false;
@@ -892,10 +892,10 @@ public class AdvancedEarthGui extends GuiScreen {
 			}
 			this.src = SRC_CACHE.get();
 		}
-		
+
 		private void work() {
 			while(!this.finish) {
-				
+
 				// Wait for the client thread to tell us to start
 				synchronized (this.working) {
 					try {
@@ -905,19 +905,19 @@ public class AdvancedEarthGui extends GuiScreen {
 					}
 					this.working.set(true);
 				}
-				
+
 				// Actually do the work
 				this.projectTexture(this.dst, this.previewWidth*this.scaling, this.previewHeight*this.scaling, this.projection);
 				synchronized(this.textureNeedsUpdate) {
 					this.textureNeedsUpdate.set(true);
 				}
-				
+
 				// Let the client thread know we are done
 				synchronized (this.working) {
 					this.working.set(false);
 					this.working.notify();
 				}
-				
+
 			}
 		}
 
@@ -928,7 +928,7 @@ public class AdvancedEarthGui extends GuiScreen {
 			this.previewHeight = height;
 			this.projection = proj;
 			this.scaling = scaling;
-			
+
 			// Ensure the worker stops its task
 			this.reset = true;
 			synchronized (this.working) {
@@ -940,24 +940,24 @@ public class AdvancedEarthGui extends GuiScreen {
 					}
 				}
 			}
-			
+
 			if(this.previewTexture != null) this.previewTexture.deleteGlTexture();
 			this.previewTexture = new DynamicTexture(width*scaling, height*scaling);
 			this.dst = this.previewTexture.getTextureData();
 			Arrays.fill(this.dst, 0); //fill with transparent pixels
-			
+
 			// Let the worker start the new task
 			this.reset = false;
 			synchronized (this.working) {
 				this.working.notify();
 			}
-			
+
 		}
-		
+
 		public void finish() {
 			this.reset = true;
 			this.finish = true;
-			
+
 			// If the worker was waiting, notify it so it exists
 			synchronized (this.working) {
 				if(!this.working.get()) {
@@ -1009,7 +1009,7 @@ public class AdvancedEarthGui extends GuiScreen {
 					this.textureNeedsUpdate.set(true);
 				}
 			}
-			
+
 			if(0 >= minX && 0 <= maxX && 0 >= minY && 0 <= maxY) {
 				int dotSize = 3;
 				int x = (int) Math.round(- minX / scale);
@@ -1022,12 +1022,12 @@ public class AdvancedEarthGui extends GuiScreen {
 					}
 				}
 			}
-			
+
 			synchronized(this.textureNeedsUpdate) {
 				this.textureNeedsUpdate.set(true);
 			}
 		}
-		
+
 		public void draw() {
 			synchronized(this.textureNeedsUpdate) {
 				if(this.textureNeedsUpdate.get()) {
@@ -1042,7 +1042,7 @@ public class AdvancedEarthGui extends GuiScreen {
 		}
 
 	}
-	
+
 	/**
 	 * Did you have enough hacky stuff yet ?
 	 */
@@ -1059,17 +1059,17 @@ public class AdvancedEarthGui extends GuiScreen {
 		public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
 			// No-op
 		}
-		
+
 		/**
 		 * This is so we control when the buttons are drawn
 		 */
 		public void actuallyDrawButton(Minecraft mc, int mouseX, int mouseY) {
 			super.drawButton(mc, mouseX, mouseY, 0);
 		}
-		
-		
+
+
 	}
-	
+
 	/**
 	 * Did you have enough hacky stuff yet ?
 	 */
@@ -1083,14 +1083,14 @@ public class AdvancedEarthGui extends GuiScreen {
 		public void drawTextBox() {
 			// no-op
 		}
-		
+
 		public void actuallyDrawTextBox() {
 			super.drawTextBox();
 		}
-		
-		
-		
-		
+
+
+
+
 	}
-	
+
 }

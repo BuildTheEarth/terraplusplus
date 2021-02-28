@@ -27,15 +27,15 @@ import net.minecraft.util.ResourceLocation;
  * @author SmylerMC
  */
 public class PresetEarthGui extends GuiScreen {
-	
+
 	public static final Map<String, String> DEFAULT_PRESETS = new HashMap<String, String>();
-	
+
 	static {
 		// We parse then toString to remove all whitespaces
 		DEFAULT_PRESETS.put("default", EarthGeneratorSettings.parse(EarthGeneratorSettings.DEFAULT_SETTINGS).toString());
 		DEFAULT_PRESETS.put("bte", EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).toString());
 	}
-	
+
 	protected GuiScreen parentScreen;
 	protected Consumer<String> whenDone;
 	protected String settings;
@@ -48,7 +48,7 @@ public class PresetEarthGui extends GuiScreen {
 	public static final int OPTION_IMG_HEIGHT = OPTION_IMG_WIDTH;
 	public static final int OPTION_FOOTER_HEIGHT = Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT + 10;
 	public static final int PADDING = 40;
-	
+
 	public PresetEarthGui(GuiScreen parentScreen, String settings, Consumer<String> whenDone) {
 		this.parentScreen = parentScreen;
 		this.whenDone = whenDone;
@@ -58,9 +58,9 @@ public class PresetEarthGui extends GuiScreen {
 	@Override
 	public void initGui() {
 		super.initGui();
-		
+
 		Keyboard.enableRepeatEvents(true);
-		
+
 		this.buttonList.clear();
 		this.doneButton = this.addButton(new GuiButton(0, this.width / 2 - 155, this.height - 28, 150, 20, I18n.format("gui.done")));
 		this.cancelButton = this.addButton(new GuiButton(1, this.width / 2 + 5, this.height - 28, 150, 20, I18n.format("gui.cancel")));
@@ -82,13 +82,13 @@ public class PresetEarthGui extends GuiScreen {
 		AdvancedPreset advanced = new AdvancedPreset(x, y);
 		if(!foundPreset) advanced.selected = true;
 		this.presets.add(advanced);
-		
+
 		this.presetTextField = new GuiTextField(0, this.fontRenderer, this.width / 2 - 100, 40, 200, 20);
 		this.presetTextField.setMaxStringLength(Integer.MAX_VALUE);
 		this.setSettingsJson(this.settings);
-		
+
 	}
-	
+
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
 		super.drawDefaultBackground();
@@ -99,13 +99,13 @@ public class PresetEarthGui extends GuiScreen {
 			preset.draw(this.isMouseOverEntry(mouseX, mouseY, preset));
 		}
 	}
-	
+
 	@Override
 	public void updateScreen() {
 		super.updateScreen();
 		this.presetTextField.updateCursorCounter();
 	}
-	
+
 	@Override
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
 		super.keyTyped(typedChar, keyCode);
@@ -123,7 +123,7 @@ public class PresetEarthGui extends GuiScreen {
 			}
 		}
 	}
-	
+
 	@Override
 	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
 		super.mouseClicked(mouseX, mouseY, mouseButton);
@@ -148,11 +148,11 @@ public class PresetEarthGui extends GuiScreen {
 			Minecraft.getMinecraft().displayGuiScreen(this.parentScreen);
 		}
 	}
-	
+
 	private boolean isMouseOverEntry(int x, int y, Preset preset) {
 		return preset.x < x && x < preset.x+ OPTION_IMG_WIDTH && preset.y < y && y < preset.y + OPTION_IMG_HEIGHT;
 	}
-	
+
 	private void setSettingsJson(String settings) {
 		this.settings = settings;
 		this.presetTextField.setText(settings);
@@ -160,7 +160,7 @@ public class PresetEarthGui extends GuiScreen {
 		this.presetTextField.setCursorPosition(0);
 		this.doneButton.enabled = true;
 	}
-	
+
 	@Override
 	public void onGuiClosed() {
 		super.onGuiClosed();
@@ -170,19 +170,19 @@ public class PresetEarthGui extends GuiScreen {
 
 
 	private abstract class Preset {
-		
+
 		protected ResourceLocation texture;
 		protected String langKey;
 		protected int x, y;
 		protected boolean selected = false;
-		
+
 		public Preset(int x, int y, String name) {
 			this.x = x;
 			this.y = y;
 			this.langKey = TerraConstants.MODID + ".preset." + name;
 			this.texture = new ResourceLocation(TerraConstants.MODID, "textures/presets/" + name + ".png");
 		}
-		
+
 		public void draw(boolean hover) {
 			Minecraft.getMinecraft().getTextureManager().bindTexture(this.texture);
 			if(this.selected) {
@@ -210,13 +210,13 @@ public class PresetEarthGui extends GuiScreen {
 			Gui.drawModalRectWithCustomSizedTexture(x, y, 0, 0, width, height, width, height);
 			PresetEarthGui.this.drawCenteredString(Minecraft.getMinecraft().fontRenderer, I18n.format(this.langKey), this.x + OPTION_IMG_WIDTH / 2, this.y + OPTION_IMG_HEIGHT + 10, textColor);
 		}
-		
+
 		public abstract void onClick();
-		
+
 	}
-	
+
 	private class DefaultPreset extends Preset {
-		
+
 		protected String presetSettings;
 
 		public DefaultPreset(int x, int y, String name, String settings) {
@@ -228,9 +228,9 @@ public class PresetEarthGui extends GuiScreen {
 		public void onClick() {
 			PresetEarthGui.this.setSettingsJson(this.presetSettings);
 		}
-		
+
 	}
-	
+
 	private class AdvancedPreset extends Preset {
 
 		public AdvancedPreset(int x, int y) {
@@ -242,7 +242,7 @@ public class PresetEarthGui extends GuiScreen {
 			EarthGeneratorSettings genSettings = EarthGeneratorSettings.parse(PresetEarthGui.this.settings);
 			Minecraft.getMinecraft().displayGuiScreen(new AdvancedEarthGui(PresetEarthGui.this, genSettings, PresetEarthGui.this::setSettingsJson));
 		}
-		
+
 	}
 
 }
