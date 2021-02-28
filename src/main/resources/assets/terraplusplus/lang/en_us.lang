@@ -1,7 +1,5 @@
 ## World Type name
 generator.EarthCubic=Planet Earth
-generator.bte=Build the Earth
-generator.bte.info=Planet Earth world with the default Build the Earth settings
 
 ## GUI options
 terraplusplus.gui.header=Terra++ World Options
@@ -9,6 +7,15 @@ terraplusplus.gui.projection=Projection
 terraplusplus.gui.cwg=CubicWorldGen Preset
 terraplusplus.gui.use_default_heights=Default Elevation Datasets
 terraplusplus.gui.use_default_trees=Default Tree Cover Datasets
+terraplusplus.gui.world_size_header=Approximate world size: 
+terraplusplus.gui.world_size_numbers=%s x %s blocks
+terraplusplus.gui.world_info=Directions are those of minecraft, pink dot is minecraft 0,0.
+
+## Presets
+terraplusplus.presetscreen.title=Choose a world preset to begin, and / or select Customize for more options
+terraplusplus.preset.default=Default
+terraplusplus.preset.bte=Build the Earth
+terraplusplus.preset.advanced=Customize
 
 ## Transformations
 terraplusplus.gui.transformation.add=Add Transform

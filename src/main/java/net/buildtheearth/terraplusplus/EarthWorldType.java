@@ -3,7 +3,7 @@ package net.buildtheearth.terraplusplus;
 import io.github.opencubicchunks.cubicchunks.api.util.IntRange;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorldType;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
-import net.buildtheearth.terraplusplus.control.EarthGui;
+import net.buildtheearth.terraplusplus.control.PresetEarthGui;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
 import net.minecraft.client.Minecraft;
@@ -17,53 +17,54 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class EarthWorldType extends WorldType implements ICubicWorldType {
-	
-    public static EarthWorldType create() {
-        return new EarthWorldType();
-    }
 
-    public EarthWorldType() {
-        super("EarthCubic");
-    }
+	public static EarthWorldType create() {
+		return new EarthWorldType();
+	}
 
-    @Override
-    public ICubeGenerator createCubeGenerator(World world) {
-        return new EarthGenerator(world);
-    }
+	public EarthWorldType() {
+		super("EarthCubic");
+	}
 
-    @Override
-    public BiomeProvider getBiomeProvider(World world) {
-        return EarthGeneratorSettings.parse(world.getWorldInfo().getGeneratorOptions()).biomeProvider();
-    }
+	@Override
+	public ICubeGenerator createCubeGenerator(World world) {
+		return new EarthGenerator(world);
+	}
 
-    @Override
-    public IntRange calculateGenerationHeightRange(WorldServer world) {
-        return new IntRange(-12000, 9000);
-    }
+	@Override
+	public BiomeProvider getBiomeProvider(World world) {
+		return EarthGeneratorSettings.parse(world.getWorldInfo().getGeneratorOptions()).biomeProvider();
+	}
 
-    @Override
-    public boolean hasCubicGeneratorForWorld(World w) {
-        return w.provider instanceof WorldProviderSurface; // an even more general way to check if it's overworld (need custom providers)
-    }
+	@Override
+	public IntRange calculateGenerationHeightRange(WorldServer world) {
+		return new IntRange(-12000, 9000);
+	}
 
-    @Override
-    public boolean isCustomizable() {
-        return true;
-    }
+	@Override
+	public boolean hasCubicGeneratorForWorld(World w) {
+		return w.provider instanceof WorldProviderSurface; // an even more general way to check if it's overworld (need custom providers)
+	}
 
-    @Override
-    public float getCloudHeight() {
-        return 5000;
-    }
+	@Override
+	public boolean isCustomizable() {
+		return true;
+	}
 
-    @Override
-    public double voidFadeMagnitude() {
-        return 0;
-    }
+	@Override
+	public float getCloudHeight() {
+		return 5000;
+	}
 
-    @Override
-    @SideOnly(Side.CLIENT)
-    public void onCustomizeButton(Minecraft mc, GuiCreateWorld guiCreateWorld) {
-        mc.displayGuiScreen(new EarthGui(guiCreateWorld, mc));
-    }
+	@Override
+	public double voidFadeMagnitude() {
+		return 0;
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public void onCustomizeButton(Minecraft mc, GuiCreateWorld guiCreateWorld) {
+		String sanitized = EarthGeneratorSettings.parse(guiCreateWorld.chunkProviderSettingsJson).toString();
+		mc.displayGuiScreen(new PresetEarthGui(guiCreateWorld, sanitized, s -> guiCreateWorld.chunkProviderSettingsJson = s));
+	}
 }
