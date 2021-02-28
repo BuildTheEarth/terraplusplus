@@ -108,5 +108,56 @@
         "condition": {
             "less_than": 1.0
         }
+    },
+
+    //
+    // Estonia
+    // https://geoportaal.maaamet.ee/eng/Maps-and-Data/Elevation-data/Download-Elevation-Data-p664.html
+    //
+    {
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/elevation/ee/14/${x}/${z}.png"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 14
+                }
+            },
+            "resolution": 256,
+            "blend": "CUBIC",
+            "parse": {
+                "divide": {
+                    "delegate": {
+                        "add": {
+                            "delegate": {
+                                "from_int": {
+                                    "delegate": {
+                                        "rgb_extract": {
+                                            "delegate": {
+                                                "parse_png": {},
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "value": -8388608
+                        }
+                    },
+                    "value": 256.0
+                }
+            }
+        },
+        "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/ee.json
+            "minX": 21.3826069,
+            "maxX": 28.2100175,
+            "minZ": 57.5093124,
+            "maxZ": 59.9383754
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
     }
 ]
