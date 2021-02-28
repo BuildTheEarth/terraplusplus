@@ -1,5 +1,11 @@
 package net.buildtheearth.terraplusplus;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.simple.SimpleLogger;
+import org.apache.logging.log4j.util.PropertiesUtil;
+
+import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import net.buildtheearth.terraplusplus.control.AdvancedEarthGui;
 import net.buildtheearth.terraplusplus.control.PresetEarthGui;
 import net.buildtheearth.terraplusplus.control.TerraCommand;
@@ -19,10 +25,6 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.server.permission.DefaultPermissionLevel;
 import net.minecraftforge.server.permission.PermissionAPI;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.simple.SimpleLogger;
-import org.apache.logging.log4j.util.PropertiesUtil;
 
 @Mod(modid = TerraConstants.MODID,
 dependencies = "required-after:cubicchunks; required-after:cubicgen",
@@ -31,13 +33,15 @@ useMetadata = true)
 public class TerraMod {
 	public static Logger LOGGER = new SimpleLogger("[terra++ bootstrap]", Level.INFO, true, false, true, false, "[yyyy/MM/dd HH:mm:ss:SSS]", null, new PropertiesUtil("log4j2.simplelog.properties"), System.out);
 
-	@EventHandler
-	public void construction(FMLConstructionEvent event) {
-		ModContainer terra = Loader.instance().getIndexedModList().get(TerraConstants.MODID);
-		if (!"${version}".equals(terra.getVersion())) {
-			TerraConstants.VERSION = terra.getVersion();
-		}
-	}
+    @EventHandler
+    public void construction(FMLConstructionEvent event) {
+        ModContainer terra = Loader.instance().getIndexedModList().get(TerraConstants.MODID);
+        if (!"${version}".equals(terra.getVersion())) {
+            TerraConstants.VERSION = terra.getVersion();
+        }
+
+        TerraConstants.CC_VERSION = Loader.instance().getIndexedModList().get(CubicChunks.MODID).getVersion();
+    }
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {

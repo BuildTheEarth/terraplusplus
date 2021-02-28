@@ -212,6 +212,8 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
 
         state.run().join();
         state.dispose();
+
+        System.gc();
     }
 
     protected final LoadingCache<TilePos, CompletableFuture<BufferedImage>> cache;

@@ -26,6 +26,7 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGenerato
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicCaveGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicRavineGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.feature.CubicStrongholdGenerator;
+import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.generator.data.IEarthDataBaker;
 import net.buildtheearth.terraplusplus.generator.populate.IEarthPopulator;
@@ -64,7 +65,7 @@ public class EarthGenerator extends BasicCubeGenerator {
     static {
         ModContainer cubicchunks = Loader.instance().getIndexedModList().get(CubicChunks.MODID);
         String asyncVersion = "1.12.2-0.0.1175.0"; //the version at which async terrain gen was added
-        if (cubicchunks != null && asyncVersion.compareTo(cubicchunks.getVersion()) <= 0) {
+        if (cubicchunks != null && asyncVersion.compareTo(TerraConstants.CC_VERSION) <= 0) {
             //async terrain is supported on this version! register async generation callbacks
             CubeGeneratorsRegistry.registerColumnAsyncLoadingCallback((world, data) -> asyncCallback(world, data.getPos()));
             CubeGeneratorsRegistry.registerCubeAsyncLoadingCallback((world, data) -> asyncCallback(world, data.getPos().chunkPos()));

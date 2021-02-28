@@ -1,7 +1,5 @@
 package net.buildtheearth.terraplusplus.util.http;
 
-import net.buildtheearth.terraplusplus.TerraConfig;
-import net.buildtheearth.terraplusplus.TerraMod;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.DefaultEventLoop;
@@ -9,6 +7,8 @@ import io.netty.channel.EventLoop;
 import io.netty.util.ReferenceCountUtil;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import net.buildtheearth.terraplusplus.TerraMod;
+import net.daporkchop.lib.binary.netty.PUnpooled;
 import net.daporkchop.lib.common.function.io.IOConsumer;
 import net.daporkchop.lib.common.function.io.IOPredicate;
 import net.daporkchop.lib.common.function.io.IORunnable;
@@ -73,14 +73,12 @@ public class Disk {
      * Asynchronously reads a file's contents into a {@link ByteBuf}.
      *
      * @param file the file
-     * @param ttl  whether or not to check if the file's TTL has expired. If older than this timestamp, the file will be
-     *             treated as if it were missing.
      * @return a {@link CompletableFuture} which will be notified when the file has been read
      */
-    public CompletableFuture<ByteBuf> read(@NonNull Path file, boolean ttl) {
+    public CompletableFuture<ByteBuf> read(@NonNull Path file) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                if (!Files.exists(file) || (ttl && hasExpired(file))) { //file doesn't exist or is expired
+                if (!Files.exists(file)) { //file doesn't exist
                     return null;
                 }
 
@@ -149,33 +147,48 @@ public class Disk {
         return CACHE_ROOT.resolveSibling("config").resolve(name);
     }
 
-    /**
-     * Checks whether or not the given file's TTL has expired.
-     *
-     * @param file the file to check
-     * @return whether or not the file's TTL has expired
-     */
-    public boolean hasExpired(@NonNull Path file) throws IOException {
-        return System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(TerraConfig.http.cacheTTL) > Files.getLastModifiedTime(file).toMillis();
-    }
-
     private void pruneCache() throws IOException {
         TerraMod.LOGGER.info("running cache cleanup...");
 
         LongAdder count = new LongAdder();
         LongAdder size = new LongAdder();
 
+        long now = System.currentTimeMillis();
+
         try (Stream<Path> stream = Files.list(CACHE_ROOT)) {
             stream.filter(Files::isRegularFile)
-                    .filter((IOPredicate<Path>) Disk::hasExpired)
+                    .filter((IOPredicate<Path>) p -> {
+                        try (FileChannel channel = FileChannel.open(p, StandardOpenOption.READ)) {
+                            long chSize = channel.size();
+                            try {
+                                ByteBuf buf = PUnpooled.wrap(channel.map(FileChannel.MapMode.READ_ONLY, 0L, chSize), toInt(chSize), true);
+                                try {
+                                    if (buf.readByte() == CacheEntry.CACHE_VERSION && !new CacheEntry(buf).isExpired(now)) { //file isn't expired, skip it
+                                        return false;
+                                    }
+                                } finally {
+                                    buf.release();
+                                }
+                            } catch (Throwable ignored) {
+                                //no-op
+                            }
+
+                            //delete file
+                            count.increment();
+                            size.add(chSize);
+                            return true;
+                        }
+                    })
                     .peek((IOConsumer<Path>) path -> {
                         count.increment();
                         size.add(Files.size(path));
                     })
                     .forEach((IOConsumer<Path>) Files::delete);
+        } catch (Throwable e) {
+            TerraMod.LOGGER.error("exception occurred during cache cleanup!", e);
+        } finally {
+            double mib = Math.round(size.sum() / (1024.0d * 1024.0d) * 10.0d) / 10.0d;
+            TerraMod.LOGGER.info("cache cleanup complete. deleted {} old files, totalling {} bytes ({} MiB)", count.sum(), size.sum(), mib);
         }
-
-        double mib = Math.round(size.sum() / (1024.0d * 1024.0d) * 10.0d) / 10.0d;
-        TerraMod.LOGGER.info("cache cleanup complete. deleted {} files, totalling {} bytes ({} MiB)", count.sum(), size.sum(), mib);
     }
 }

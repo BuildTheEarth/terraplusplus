@@ -1,6 +1,5 @@
 package net.buildtheearth.terraplusplus.util.http;
 
-import net.buildtheearth.terraplusplus.TerraConstants;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -14,6 +13,7 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequest;
@@ -26,6 +26,8 @@ import io.netty.util.ReferenceCountUtil;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+import net.buildtheearth.terraplusplus.TerraConstants;
+import net.daporkchop.lib.common.misc.string.PStrings;
 import net.daporkchop.lib.common.util.PorkUtil;
 
 import java.util.ArrayDeque;
@@ -70,9 +72,9 @@ final class HostManager extends Host {
      * @param path     the path of the request
      * @param callback a {@link Callback} that will be notified once the request is completed
      */
-    public void submit(@NonNull String path, @NonNull Callback callback) {
+    public void submit(@NonNull String path, @NonNull Callback callback, @NonNull HttpHeaders headers) {
         NETWORK_EVENT_LOOP.submit(() -> { //force execution on network thread
-            this.pendingRequests.add(new Request(path, callback)); //add to request queue
+            this.pendingRequests.add(new Request(path, callback, headers)); //add to request queue
 
             this.tryWorkOffQueue();
         });
@@ -217,12 +219,15 @@ final class HostManager extends Host {
         protected final String path;
         @NonNull
         protected final Callback callback;
+        @NonNull
+        protected final HttpHeaders headers;
 
         public HttpRequest toNetty() {
             DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, this.path);
             request.headers()
+                    .set(this.headers)
                     .set(HttpHeaderNames.HOST, HostManager.this.authority)
-                    .set(HttpHeaderNames.USER_AGENT, TerraConstants.MODID + '/' + TerraConstants.VERSION);
+                    .set(HttpHeaderNames.USER_AGENT, PStrings.fastFormat("%s/%s CubicChunks/%s", TerraConstants.MODID, TerraConstants.VERSION, TerraConstants.CC_VERSION));
             HttpUtil.setKeepAlive(request, true);
             return request;
         }
