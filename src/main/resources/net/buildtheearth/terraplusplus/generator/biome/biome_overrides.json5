@@ -1,0 +1,26 @@
+[
+    /*{
+        "biome": "minecraft:hell",
+        "bounds": {
+            "minX": 5,
+            "maxX": 50,
+            "minZ": 5,
+            "maxZ": 50
+        },
+        "priority": 100.0
+    },
+    {
+        "biome": "minecraft:void",
+        "replace": [ //this part is optional
+            "minecraft:ocean",
+            "minecraft:deep_ocean"
+        ],
+        "bounds": {
+            "minX": -50,
+            "maxX": -5,
+            "minZ": -50,
+            "maxZ": -5
+        },
+        "priority": 3.0
+    }*/
+]

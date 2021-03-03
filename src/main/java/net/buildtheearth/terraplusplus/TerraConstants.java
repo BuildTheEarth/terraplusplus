@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.buildtheearth.terraplusplus.dataset.osm.BlockStateParser;
+import net.buildtheearth.terraplusplus.util.BiomeDeserializeMixin;
 import net.buildtheearth.terraplusplus.util.BlockStateDeserializeMixin;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.world.biome.Biome;
 
 public class TerraConstants {
     public static final String MODID = "terraplusplus";
@@ -28,6 +30,7 @@ public class TerraConstants {
             .configure(JsonReadFeature.ALLOW_LEADING_DECIMAL_POINT_FOR_NUMBERS, true)
             .configure(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS, true)
             .configure(JsonReadFeature.ALLOW_TRAILING_COMMA, true)
+            .addMixIn(Biome.class, BiomeDeserializeMixin.class)
             .addMixIn(IBlockState.class, BlockStateDeserializeMixin.class)
             .build();
 
