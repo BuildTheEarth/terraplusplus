@@ -217,7 +217,7 @@ public class Http {
                     CacheEntry cacheEntry = new CacheEntry(response, this.parsed);
 
                     if (!TerraConfig.reducedConsoleMessages) {
-                        TerraMod.LOGGER.warn(this.cacheEntry != null ? cacheEntry.status == CacheEntry.STATUS_NOT_MODIFIED
+                        TerraMod.LOGGER.info(this.cacheEntry != null ? cacheEntry.status == CacheEntry.STATUS_NOT_MODIFIED
                                 ? "Refresh succeeded, data in cache not modified: {}"
                                 : "Refresh succeeded, updating data in cache: {}"
                                 : "Request succeeded: {}", this.parsed);
