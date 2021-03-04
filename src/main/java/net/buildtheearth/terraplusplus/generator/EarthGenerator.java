@@ -37,6 +37,8 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
@@ -46,6 +48,8 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.InitMapGenEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.ArrayList;
@@ -73,6 +77,17 @@ public class EarthGenerator extends BasicCubeGenerator {
             //we're on an older version of CC that doesn't support async terrain
             TerraMod.LOGGER.error("Async terrain not available!");
             TerraMod.LOGGER.error("Consider updating to the latest version of Cubic Chunks for maximum performance.");
+
+            MinecraftForge.EVENT_BUS.register(new Object() {
+                @SubscribeEvent
+                public void onPlayerLogIn(PlayerEvent.PlayerLoggedInEvent event) {
+                    event.player.sendMessage(new TextComponentString(
+                            "\u00A7c\u00A7lTerra++ is unable to use async terrain!\n"
+                            + "\u00A7c\u00A7lThis will cause significant performance issues.\n"
+                            + "\u00A7c\u00A7lUpdate Cubic Chunks to version 1.12.2-0.0.1175.0 or newer to remove this message."
+                    ));
+                }
+            });
         }
     }
 
