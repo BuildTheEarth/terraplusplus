@@ -49,7 +49,7 @@ public class TerraDistortionFragment extends CommandFragment {
             return;
         }
         sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Distortion:"));
-        sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.format(TerraConstants.MODID + ".commands.terra.tissot", Math.sqrt(Math.abs(c[0])), c[1] * 180.0 / Math.PI)));
+        sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.format(TerraConstants.MODID + ".command.terra.tissot", Math.sqrt(Math.abs(c[0])), c[1] * 180.0 / Math.PI)));
     }
 
     @Override
