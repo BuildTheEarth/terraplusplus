@@ -31,6 +31,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
+import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -40,9 +42,11 @@ import javax.imageio.ImageIO;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
@@ -160,6 +164,9 @@ public class AdvancedEarthGui extends GuiScreen {
         y += this.addEntry(new ToggleEntry(this, 5, y, this.entriesWidth, this.settings.useDefaultTreeCover(), "use_default_trees", EarthGeneratorSettings::withUseDefaultTreeCover)).height();
         y += this.addEntry(new PaddingEntry(10)).height();
         y += this.addEntry(new CWGEntry(this.settings, this, 5, y, this.entriesWidth)).height();
+        y += this.addEntry(new PaddingEntry(10)).height();
+        y += this.addEntry(new EnumSelectionListEntry<>(this, 5, y, this.entriesWidth, this.settings.skipChunkPopulation(), "skip_chunk_population", EarthGeneratorSettings::withSkipChunkPopulation, PopulateChunkEvent.Populate.EventType.values())).height();
+        y += this.addEntry(new EnumSelectionListEntry<>(this, 5, y, this.entriesWidth, this.settings.skipBiomeDecoration(), "skip_biome_decoration", EarthGeneratorSettings::withSkipBiomeDecoration, DecorateBiomeEvent.Decorate.EventType.values())).height();
 
         this.entriesHeight = y - VERTICAL_PADDING;
 
@@ -275,7 +282,7 @@ public class AdvancedEarthGui extends GuiScreen {
             boolean updateQueued = false;
             for (GuiTextField textField : this.textFields) {
                 boolean focused = textField.isFocused();
-                textField.mouseClicked(mouseX, mouseY, mouseEvent);
+                textField.mouseClicked(mouseX, mouseY + this.deltaY, mouseEvent);
                 if (!textField.isFocused() && focused) {
                     updateQueued = true;
                 }
@@ -848,6 +855,50 @@ public class AdvancedEarthGui extends GuiScreen {
         }
 
 
+    }
+
+    public static class EnumSelectionListEntry<T extends Enum<T>> implements Entry {
+        protected final BiFunction<EarthGeneratorSettings, Set<T>, EarthGeneratorSettings> touch;
+        protected final String name;
+        protected Set<T> values;
+        protected int height = 20;
+
+        public EnumSelectionListEntry(AdvancedEarthGui gui, int x, int y, int width, Set<T> values, String name, BiFunction<EarthGeneratorSettings, Set<T>, EarthGeneratorSettings> touch, T[] allValues) {
+            this.touch = touch;
+            this.name = name;
+            this.values = EnumSet.copyOf(values);
+
+            for (T value : allValues) {
+                gui.addButton(new GuiButton(0, x + 2, y + this.height, width - 2, 20, value + ": " + I18n.format("options." + (this.values.contains(value) ? "off" : "on"))) {
+                    @Override
+                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
+                        if (super.mousePressed(mc, mouseX, mouseY)) {
+                            if (!EnumSelectionListEntry.this.values.add(value)) {
+                                EnumSelectionListEntry.this.values.remove(value);
+                            }
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+                this.height += 20;
+            }
+        }
+
+        @Override
+        public int height() {
+            return this.height;
+        }
+
+        @Override
+        public void render(AdvancedEarthGui gui, int x, int y, int mouseX, int mouseY, int width) {
+            gui.fontRenderer.drawString(I18n.format(TerraConstants.MODID + ".gui." + this.name), x, y + (20 - 8) / 2, 0xFFFFFFFF, true);
+        }
+
+        @Override
+        public EarthGeneratorSettings touchSettings(EarthGeneratorSettings settings) {
+            return this.touch.apply(settings, this.values);
+        }
     }
 
     protected class ProjectionPreview {

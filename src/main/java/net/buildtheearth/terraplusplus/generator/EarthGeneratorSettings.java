@@ -14,6 +14,7 @@ import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.JsonGrammar;
 import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.api.DeserializationException;
 import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.api.SyntaxError;
@@ -40,15 +41,20 @@ import net.buildtheearth.terraplusplus.projection.transform.SwapAxesProjectionTr
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.ref.Ref;
 import net.minecraft.world.biome.BiomeProvider;
+import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
+import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-@Getter(onMethod_ = { @JsonGetter })
 @With
 public class EarthGeneratorSettings {
     public static final int CONFIG_VERSION = 2;
@@ -108,23 +114,25 @@ public class EarthGeneratorSettings {
                 projection = new ScaleProjectionTransform(projection, legacy.scaleX, legacy.scaleY);
             }
 
-            return new EarthGeneratorSettings(projection, legacy.customcubic, true, true, CONFIG_VERSION);
+            return new EarthGeneratorSettings(projection, legacy.customcubic, true, true, Collections.emptyList(), Collections.emptyList(), CONFIG_VERSION);
         }
 
         return TerraConstants.JSON_MAPPER.readValue(generatorSettings, EarthGeneratorSettings.class);
     }
 
     @NonNull
+    @Getter(onMethod_ = { @JsonGetter })
     protected final GeographicProjection projection;
     @NonNull
+    @Getter(onMethod_ = { @JsonGetter })
     protected final String cwg;
 
+    @Getter(onMethod_ = { @JsonGetter })
     protected final boolean useDefaultHeights;
+    @Getter(onMethod_ = { @JsonGetter })
     protected final boolean useDefaultTreeCover;
 
-    @Getter(AccessLevel.NONE)
     protected transient final Ref<BiomeProvider> biomeProvider = Ref.soft(() -> new EarthBiomeProvider(this));
-    @Getter(AccessLevel.NONE)
     protected transient final Ref<CustomGeneratorSettings> customCubic = Ref.soft(() -> {
         CustomGeneratorSettings cfg;
         if (this.cwg().isEmpty()) { //use new minimal defaults
@@ -144,8 +152,12 @@ public class EarthGeneratorSettings {
         cfg.waterLevel = 0;
         return cfg;
     });
-    @Getter(AccessLevel.NONE)
     protected transient final Ref<GeneratorDatasets> datasets = Ref.soft(() -> new GeneratorDatasets(this));
+
+    @Getter
+    protected transient final Set<PopulateChunkEvent.Populate.EventType> skipChunkPopulation;
+    @Getter
+    protected transient final Set<DecorateBiomeEvent.Decorate.EventType> skipBiomeDecoration;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public EarthGeneratorSettings(
@@ -153,6 +165,8 @@ public class EarthGeneratorSettings {
             @JsonProperty(value = "cwg") String cwg,
             @JsonProperty(value = "useDefaultHeights") Boolean useDefaultHeights,
             @JsonProperty(value = "useDefaultTreeCover") @JsonAlias("useDefaultTrees") Boolean useDefaultTreeCover,
+            @JsonProperty(value = "skipChunkPopulation") List<PopulateChunkEvent.Populate.EventType> skipChunkPopulation,
+            @JsonProperty(value = "skipBiomeDecoration") List<DecorateBiomeEvent.Decorate.EventType> skipBiomeDecoration,
             @JsonProperty(value = "version", required = true) int version) {
         checkState(version == CONFIG_VERSION, "invalid version %d (expected: %d)", version, CONFIG_VERSION);
 
@@ -161,6 +175,8 @@ public class EarthGeneratorSettings {
         this.useDefaultHeights = useDefaultHeights != null ? useDefaultHeights : true;
         this.useDefaultTreeCover = useDefaultTreeCover != null ? useDefaultTreeCover : true;
 
+        this.skipChunkPopulation = skipChunkPopulation != null ? Sets.immutableEnumSet(skipChunkPopulation) : Sets.immutableEnumSet(PopulateChunkEvent.Populate.EventType.ICE);
+        this.skipBiomeDecoration = skipBiomeDecoration != null ? Sets.immutableEnumSet(skipBiomeDecoration) : Sets.immutableEnumSet(DecorateBiomeEvent.Decorate.EventType.TREE);
     }
 
     @Override
@@ -173,8 +189,18 @@ public class EarthGeneratorSettings {
     }
 
     @JsonGetter("version")
-    private int getVersion() {
+    private int version() {
         return CONFIG_VERSION;
+    }
+
+    @JsonGetter("skipChunkPopulation")
+    private PopulateChunkEvent.Populate.EventType[] getSkipChunkPopulation() {
+        return this.skipChunkPopulation.toArray(new PopulateChunkEvent.Populate.EventType[0]);
+    }
+
+    @JsonGetter("skipBiomeDecoration")
+    private DecorateBiomeEvent.Decorate.EventType[] getSkipBiomeDecoration() {
+        return this.skipBiomeDecoration.toArray(new DecorateBiomeEvent.Decorate.EventType[0]);
     }
 
     public BiomeProvider biomeProvider() {

@@ -7,7 +7,9 @@ terraplusplus.gui.projection=Projection
 terraplusplus.gui.cwg=CubicWorldGen Preset
 terraplusplus.gui.use_default_heights=Default Elevation Datasets
 terraplusplus.gui.use_default_trees=Default Tree Cover Datasets
-terraplusplus.gui.world_size_header=Approximate world size: 
+terraplusplus.gui.skip_chunk_population=Vanilla chunk populators
+terraplusplus.gui.skip_biome_decoration=Vanilla biome decorators
+terraplusplus.gui.world_size_header=Approximate world size:
 terraplusplus.gui.world_size_numbers=%s x %s blocks
 terraplusplus.gui.world_info=Directions are those of minecraft, pink dot is minecraft 0,0.
 

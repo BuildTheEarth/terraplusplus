@@ -78,16 +78,20 @@ public class EarthGenerator extends BasicCubeGenerator {
             TerraMod.LOGGER.error("Async terrain not available!");
             TerraMod.LOGGER.error("Consider updating to the latest version of Cubic Chunks for maximum performance.");
 
-            MinecraftForge.EVENT_BUS.register(new Object() {
-                @SubscribeEvent
-                public void onPlayerLogIn(PlayerEvent.PlayerLoggedInEvent event) {
-                    event.player.sendMessage(new TextComponentString(
-                            "\u00A7c\u00A7lTerra++ is unable to use async terrain!\n"
-                            + "\u00A7c\u00A7lThis will cause significant performance issues.\n"
-                            + "\u00A7c\u00A7lUpdate Cubic Chunks to version 1.12.2-0.0.1175.0 or newer to remove this message."
-                    ));
-                }
-            });
+            try {
+                MinecraftForge.EVENT_BUS.register(new Object() {
+                    @SubscribeEvent
+                    public void onPlayerLogIn(PlayerEvent.PlayerLoggedInEvent event) {
+                        event.player.sendMessage(new TextComponentString(
+                                "\u00A7c\u00A7lTerra++ is unable to use async terrain!\n"
+                                + "\u00A7c\u00A7lThis will cause significant performance issues.\n"
+                                + "\u00A7c\u00A7lUpdate Cubic Chunks to version 1.12.2-0.0.1175.0 or newer to remove this message."
+                        ));
+                    }
+                });
+            } catch (Throwable ignored) {
+                //this only happens if launching the debug terrain preview without a minecraft context
+            }
         }
     }
 
