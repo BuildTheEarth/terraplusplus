@@ -1,35 +1,12 @@
-buildscript {
-    repositories {
-        jcenter()
-        maven {
-            name = "Minecraft Forge"
-            url = "https://files.minecraftforge.net/maven"
-        }
-    }
-    dependencies {
-        classpath "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
-        classpath "com.github.jengelman.gradle.plugins:shadow:4.0.0"
-    }
+plugins {
+    id "java"
+    id "com.github.johnrengelman.shadow" version "6.1.0"
+    id "eclipse"
 }
-apply plugin: "net.minecraftforge.gradle.forge"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "maven-publish"
 
 version = "1.1.0." + ('git rev-list --count HEAD'.execute().text.trim()) + "-1.12.2"
 group = "net.buildtheearth"
-archivesBaseName = "terraplusplus"
 
-compileJava {
-    sourceCompatibility = targetCompatibility = "1.8"
-}
-
-minecraft {
-    version = "1.12.2-14.23.5.2847"
-    runDir = "run"
-
-    mappings = "stable_39"
-    makeObfSourceJar = false
-}
 
 configurations {
     shade
@@ -52,13 +29,6 @@ repositories {
 }
 
 dependencies {
-    deobfProvided ("com.github.OpenCubicChunks.CubicChunks:cubicchunks:f71aafb9854466ac5ffa0ccd2796921684f1d8b1") {
-        transitive = false
-    }
-    deobfProvided ("com.github.OpenCubicChunks:CubicWorldGen:27de56d2f792513873584b2f8fd9f3082fb259ec") {
-        transitive = false
-    }
-
     shade "org.apache.commons:commons-imaging:1.0-alpha2"
 
     shade "com.fasterxml.jackson.core:jackson-databind:2.11.2"
@@ -67,30 +37,12 @@ dependencies {
         exclude group: "io.netty"
     }
 
-    testCompile "junit:junit:4.12"
+    testImplementation "junit:junit:4.12"
 
     compileOnly "org.projectlombok:lombok:1.18.16"
     annotationProcessor "org.projectlombok:lombok:1.18.16"
 }
 
-processResources {
-    // this will ensure that this task is redone when the versions change.
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
-
-    // replace stuff in mcmod.info, nothing else
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-
-        // replace version and mcversion
-        expand 'version': project.version, 'mcversion': project.minecraft.version
-    }
-
-    // copy everything else except the mcmod.info
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
-    }
-}
 
 shadowJar {
     classifier = null
@@ -100,33 +52,10 @@ shadowJar {
 }
 build.dependsOn shadowJar
 
-reobf { //reobfuscate the shaded JAR
-    shadowJar {}
-}
-
 //relocate all shaded dependencies
 task relocateShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation) {
     target = tasks.shadowJar
-    prefix = "net.buildtheearth.terraplusplus.dep"
+    prefix = "net.buildtheearth.terraminusminus.dep"
 }
 shadowJar.dependsOn relocateShadowJar
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = "net.buildtheearth"
-            artifactId = "terraplusplus"
-            version = project.version
-
-            from components.java
-
-            artifacts.clear()
-            artifact(shadowJar) {
-                classifier = ""
-            }
-            artifact sourceJar {
-                classifier "sources"
-            }
-        }
-    }
-}
