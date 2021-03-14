@@ -1,5 +1,6 @@
-import net.buildtheearth.terraplusplus.util.OrderedRegistry;
 import org.junit.Test;
+
+import net.buildtheearth.terraminusminus.util.OrderedRegistry;
 
 import java.util.Arrays;
 import java.util.Map;
