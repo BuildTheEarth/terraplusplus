@@ -38,7 +38,7 @@ public final class ImmutableCompactArray<T> {
         this.data = new PaddedBitArray(max(32 - Integer.numberOfLeadingZeros(idCounter - 1), 1), data.length);
 
         for (int i = 0; i < data.length; i++) { //set values
-            this.data.set(i, valueIds.get(data[i]));
+            this.data.set(i, valueIds.getInt(data[i]));
         }
     }
 
