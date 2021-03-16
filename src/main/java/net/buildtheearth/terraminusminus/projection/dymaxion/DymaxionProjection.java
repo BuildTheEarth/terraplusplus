@@ -345,7 +345,9 @@ public class DymaxionProjection implements GeographicProjection {
     }
 
     @Override
-    public double[] fromGeo(double longitude, double latitude) {
+    public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
+    	
+    	OutOfProjectionBoundsException.checkLongitudeLatitudeInRange(longitude, latitude);
 
         double[] vector = MathUtils.spherical2Cartesian(MathUtils.geo2Spherical(new double[]{ longitude, latitude }));
 

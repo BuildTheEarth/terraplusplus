@@ -29,7 +29,7 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
     protected static final double ALEUTIAN_B = BERING_Y - ALEUTIAN_M * BERING_X;
 
     @Override
-    public double[] fromGeo(double longitude, double latitude) {
+    public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
         double[] c = super.fromGeo(longitude, latitude);
         double x = c[0];
         double y = c[1];

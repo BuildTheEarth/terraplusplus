@@ -17,7 +17,8 @@ public class SinusoidalProjection implements GeographicProjection {
     }
 
     @Override
-    public double[] fromGeo(double longitude, double latitude) {
+    public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
+    	OutOfProjectionBoundsException.checkLongitudeLatitudeInRange(longitude, latitude);
         return new double[]{ longitude * Math.cos(Math.toRadians(latitude)), latitude };
     }
 

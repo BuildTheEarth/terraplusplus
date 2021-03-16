@@ -43,6 +43,7 @@ public class ChunkBiomesBuilder implements IEarthAsyncDataBuilder<ImmutableCompa
     /**
      * @return the array of biomes in this chunk
      */
+    @Override
     public ImmutableCompactArray<Biome> build() {
         for (int i = 0; i < 16 * 16; i++) {
             if (this.state[i] == null) {
