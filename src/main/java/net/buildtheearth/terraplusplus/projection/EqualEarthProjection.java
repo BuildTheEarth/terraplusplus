@@ -54,7 +54,8 @@ public class EqualEarthProjection implements GeographicProjection {
     }
 
     @Override
-    public double[] fromGeo(double longitude, double latitude) {
+    public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
+    	OutOfProjectionBoundsException.checkLongitudeLatitudeInRange(longitude, latitude);
         double sintheta = MathUtils.ROOT3 * Math.sin(Math.toRadians(latitude)) / 2;
         double theta = Math.asin(sintheta);
         double tpow = theta;

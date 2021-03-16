@@ -46,7 +46,6 @@ import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;

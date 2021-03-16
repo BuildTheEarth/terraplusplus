@@ -38,7 +38,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
@@ -222,7 +221,8 @@ public class EarthGenerator extends BasicCubeGenerator {
         return true;
     }
 
-    @Override
+    @Deprecated
+	@Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) { //legacy compat method
         CubePrimer primer = new CubePrimer();
         CachedChunkData data = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ)).join();
