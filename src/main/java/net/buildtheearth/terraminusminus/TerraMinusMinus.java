@@ -7,6 +7,6 @@ import org.apache.logging.log4j.util.PropertiesUtil;
 
 public class TerraMinusMinus {
 	
-    public static Logger LOGGER = new SimpleLogger("[terra++ bootstrap]", Level.INFO, true, false, true, false, "[yyyy/MM/dd HH:mm:ss:SSS]", null, new PropertiesUtil("log4j2.simplelog.properties"), System.out);
+    public static Logger LOGGER = new SimpleLogger("[terra--]", Level.INFO, true, false, true, false, "[yyyy/MM/dd HH:mm:ss:SSS]", null, new PropertiesUtil("log4j2.simplelog.properties"), System.out);
     
 }

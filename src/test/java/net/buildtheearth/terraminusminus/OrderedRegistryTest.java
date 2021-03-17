@@ -1,3 +1,4 @@
+package net.buildtheearth.terraminusminus;
 import org.junit.Test;
 
 import net.buildtheearth.terraminusminus.util.OrderedRegistry;

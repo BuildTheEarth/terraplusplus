@@ -49,4 +49,25 @@ public class ChunkPos {
         return cubeToMinBlock(val) + 15;
     }
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + x;
+		result = prime * result + z;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (this == other) return true;
+		if (other == null) return false;
+		if(!(other instanceof ChunkPos)) return false;
+		ChunkPos otherChunkPos = (ChunkPos) other;
+		if (x != otherChunkPos.x || z != otherChunkPos.z) return false;
+		return true;
+	}
+    
+    
+
 }

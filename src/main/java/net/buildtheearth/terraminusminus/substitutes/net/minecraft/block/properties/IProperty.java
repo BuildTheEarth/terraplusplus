@@ -4,8 +4,8 @@ import java.util.Collection;
 
 import com.google.common.base.Optional;
 
-public interface IProperty<T extends Comparable<T>>
-{
+public interface IProperty<T extends Comparable<T>> {
+	
     String getName();
 
     Collection<T> getAllowedValues();

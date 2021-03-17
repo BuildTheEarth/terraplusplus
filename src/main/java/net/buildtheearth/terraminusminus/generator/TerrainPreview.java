@@ -51,6 +51,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
     }
 
     public static void main(String... args) throws OutOfProjectionBoundsException {
+    	
         Http.configChanged();
 
         while (true) {
@@ -207,7 +208,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
 
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d);
         proj = state.projection.fromGeo(12.58589, 55.68841);
-        proj = new double[] {0,0};
+        //proj = new double[] {0,0};
         state.setView(floorI(proj[0]) >> 4, floorI(proj[1]) >> 4, 0);
 
         state.update();

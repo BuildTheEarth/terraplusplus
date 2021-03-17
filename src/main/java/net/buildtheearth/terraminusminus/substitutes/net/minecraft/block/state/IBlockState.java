@@ -27,5 +27,6 @@ public interface IBlockState {
 
 //    IBlockState getActualState(IBlockAccess blockAccess, BlockPos pos); TODO
     
-//    MapColor getMapColor(IBlockAccess p_185909_1_, BlockPos p_185909_2_); TODO
+//    MapColor getMapColor(IBlockAccess access, BlockPos pos); TODO
+    
 }
