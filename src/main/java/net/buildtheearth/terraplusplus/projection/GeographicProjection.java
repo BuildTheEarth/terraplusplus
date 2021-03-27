@@ -8,6 +8,7 @@ import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.config.TypedDeserializer;
 import net.buildtheearth.terraplusplus.config.TypedSerializer;
+import net.buildtheearth.terraplusplus.util.MathUtils;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -23,7 +24,6 @@ import java.util.Map;
  * <p>
  * All geographic coordinates are in degrees.
  *
- * @see <a href="https://en.wikipedia.org/wiki/Equirectangular_projection">Wikipedia's article on the equirectangular projection</a>
  */
 @JsonDeserialize(using = GeographicProjection.Deserializer.class)
 @JsonSerialize(using = GeographicProjection.Serializer.class)
@@ -202,9 +202,11 @@ public interface GeographicProjection {
         double y2 = y + d * Math.cos(Math.toRadians(angle));
         double[] geo1 = this.toGeo(x, y);
         double[] geo2 = this.toGeo(x2, y2);
+        MathUtils.toRadians(geo1);
+        MathUtils.toRadians(geo2);
         double dlon = geo2[0] - geo1[0];
         double dlat = geo2[1] - geo1[1];
-        double a = Math.toDegrees(Math.atan2(dlat, dlon));
+        double a = Math.toDegrees(Math.atan2(dlat, dlon*Math.cos(geo1[1])));
         a = 90 - a;
         if (a < 0) {
             a += 360;
