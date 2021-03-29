@@ -22,25 +22,7 @@
             "resolution": 256,
             "blend": "CUBIC",
             "parse": {
-                "divide": {
-                    "delegate": {
-                        "add": {
-                            "delegate": {
-                                "from_int": {
-                                    "delegate": {
-                                        "rgb_extract": {
-                                            "delegate": {
-                                                "parse_png": {},
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            "value": -8388608
-                        }
-                    },
-                    "value": 256.0
-                }
+                "parse_png_terrarium": {}
             }
         },
         "bounds": {
@@ -73,25 +55,7 @@
             "resolution": 256,
             "blend": "CUBIC",
             "parse": {
-                "divide": {
-                    "delegate": {
-                        "add": {
-                            "delegate": {
-                                "from_int": {
-                                    "delegate": {
-                                        "rgb_extract": {
-                                            "delegate": {
-                                                "parse_png": {},
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            "value": -8388608
-                        }
-                    },
-                    "value": 256.0
-                }
+                "parse_png_terrarium": {}
             }
         },
         "bounds": {
@@ -127,25 +91,7 @@
             "resolution": 256,
             "blend": "CUBIC",
             "parse": {
-                "divide": {
-                    "delegate": {
-                        "add": {
-                            "delegate": {
-                                "from_int": {
-                                    "delegate": {
-                                        "rgb_extract": {
-                                            "delegate": {
-                                                "parse_png": {},
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            "value": -8388608
-                        }
-                    },
-                    "value": 256.0
-                }
+                "parse_png_terrarium": {}
             }
         },
         "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/ee.json
