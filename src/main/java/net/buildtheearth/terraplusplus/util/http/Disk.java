@@ -7,6 +7,7 @@ import io.netty.channel.EventLoop;
 import io.netty.util.ReferenceCountUtil;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import net.buildtheearth.terraplusplus.TerraConfig;
 import net.buildtheearth.terraplusplus.TerraMod;
 import net.daporkchop.lib.binary.netty.PUnpooled;
 import net.daporkchop.lib.common.function.io.IOConsumer;
@@ -148,7 +149,9 @@ public class Disk {
     }
 
     private void pruneCache() throws IOException {
-        TerraMod.LOGGER.info("running cache cleanup...");
+        if (!TerraConfig.reducedConsoleMessages) {
+            TerraMod.LOGGER.info("running cache cleanup...");
+        }
 
         LongAdder count = new LongAdder();
         LongAdder size = new LongAdder();
@@ -187,8 +190,10 @@ public class Disk {
         } catch (Throwable e) {
             TerraMod.LOGGER.error("exception occurred during cache cleanup!", e);
         } finally {
-            double mib = Math.round(size.sum() / (1024.0d * 1024.0d) * 10.0d) / 10.0d;
-            TerraMod.LOGGER.info("cache cleanup complete. deleted {} old files, totalling {} bytes ({} MiB)", count.sum(), size.sum(), mib);
+            if (!TerraConfig.reducedConsoleMessages) {
+                double mib = Math.round(size.sum() / (1024.0d * 1024.0d) * 10.0d) / 10.0d;
+                TerraMod.LOGGER.info("cache cleanup complete. deleted {} old files, totalling {} bytes ({} MiB)", count.sum(), size.sum(), mib);
+            }
         }
     }
 }
