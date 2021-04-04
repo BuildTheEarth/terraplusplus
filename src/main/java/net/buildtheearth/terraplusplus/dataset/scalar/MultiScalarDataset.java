@@ -35,18 +35,18 @@ import java.util.stream.Stream;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
- * Implementation of {@link IScalarDataset} which can sample from multiple {@link IScalarDataset}s at different resolutions and combine the results.
+ * Implementation of {@link IScalarDataset} which can sample from multiple {@link IScalarDataset}s and combine the results.
  *
  * @author DaPorkchop_
  */
-public class MultiresScalarDataset implements IScalarDataset {
+public class MultiScalarDataset implements IScalarDataset {
     protected final BVH<WrappedDataset> bvh;
 
     @SneakyThrows(IOException.class)
-    public MultiresScalarDataset(@NonNull String name, boolean useDefault) {
+    public MultiScalarDataset(@NonNull String name, boolean useDefault) {
         List<URL> configSources = new ArrayList<>();
         if (useDefault) { //add default configuration
-            configSources.add(MultiresScalarDataset.class.getResource(name + ".json5"));
+            configSources.add(MultiScalarDataset.class.getResource(name + ".json5"));
         }
 
         try (Stream<Path> stream = Files.list(Files.createDirectories(Disk.configFile(name)))) {
