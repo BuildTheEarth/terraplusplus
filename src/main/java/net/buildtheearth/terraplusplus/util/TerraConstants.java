@@ -1,30 +1,32 @@
-package net.buildtheearth.terraplusplus;
+package net.buildtheearth.terraplusplus.util;
 
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import lombok.experimental.UtilityClass;
 import net.buildtheearth.terraplusplus.dataset.osm.BlockStateParser;
-import net.buildtheearth.terraplusplus.util.BiomeDeserializeMixin;
-import net.buildtheearth.terraplusplus.util.BlockStateDeserializeMixin;
+import net.buildtheearth.terraplusplus.util.jackson.mixin.BiomeDeserializeMixin;
+import net.buildtheearth.terraplusplus.util.jackson.mixin.BlockStateDeserializeMixin;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.biome.Biome;
 
+@UtilityClass
 public class TerraConstants {
-    public static final String MODID = "terraplusplus";
-    public static String VERSION = "(development_snapshot)";
+    public final String MODID = "terraplusplus";
+    public String VERSION = "(development_snapshot)";
 
-    public static String CC_VERSION = "unknown";
+    public String CC_VERSION = "unknown";
 
-    public static final String CHAT_PREFIX = "&2&lT++ &8&l> ";
-    public static final String defaultCommandNode = MODID + ".command.";
-    public static final String othersCommandNode = MODID + ".others";
+    public final String CHAT_PREFIX = "&2&lT++ &8&l> ";
+    public final String defaultCommandNode = MODID + ".command.";
+    public final String othersCommandNode = MODID + ".others";
 
-    public static final Gson GSON = new GsonBuilder()
+    public final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(IBlockState.class, BlockStateParser.INSTANCE)
             .create();
 
-    public static final JsonMapper JSON_MAPPER = JsonMapper.builder()
+    public final JsonMapper JSON_MAPPER = JsonMapper.builder()
             .configure(JsonReadFeature.ALLOW_JAVA_COMMENTS, true)
             .configure(JsonReadFeature.ALLOW_LEADING_ZEROS_FOR_NUMBERS, true)
             .configure(JsonReadFeature.ALLOW_LEADING_DECIMAL_POINT_FOR_NUMBERS, true)
@@ -37,12 +39,12 @@ public class TerraConstants {
     /**
      * Earth's circumference around the equator, in meters.
      */
-    public static final double EARTH_CIRCUMFERENCE = 40075017;
+    public final double EARTH_CIRCUMFERENCE = 40075017;
 
     /**
      * Earth's circumference around the poles, in meters.
      */
-    public static final double EARTH_POLAR_CIRCUMFERENCE = 40008000;
+    public final double EARTH_POLAR_CIRCUMFERENCE = 40008000;
 
-    public static final double[] EMPTY_DOUBLE_ARRAY = new double[0];
+    public final double[] EMPTY_DOUBLE_ARRAY = new double[0];
 }

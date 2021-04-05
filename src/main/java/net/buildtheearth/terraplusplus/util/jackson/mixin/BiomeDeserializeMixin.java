@@ -1,4 +1,4 @@
-package net.buildtheearth.terraplusplus.util;
+package net.buildtheearth.terraplusplus.util.jackson.mixin;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.util.StdConverter;

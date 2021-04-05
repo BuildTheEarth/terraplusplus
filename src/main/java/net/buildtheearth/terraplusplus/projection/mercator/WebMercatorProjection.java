@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraplusplus.util.MathUtils;
+import net.buildtheearth.terraplusplus.util.TerraUtils;
 
 import java.util.Collections;
 import java.util.Map;
@@ -48,8 +48,8 @@ public class WebMercatorProjection implements GeographicProjection {
             throw OutOfProjectionBoundsException.get();
         }
         return new double[]{
-                Math.toDegrees(this.scaleTo * x * MathUtils.TAU - Math.PI),
-                Math.toDegrees(Math.atan(Math.exp(Math.PI - this.scaleTo * y * MathUtils.TAU)) * 2 - Math.PI / 2)
+                Math.toDegrees(this.scaleTo * x * TerraUtils.TAU - Math.PI),
+                Math.toDegrees(Math.atan(Math.exp(Math.PI - this.scaleTo * y * TerraUtils.TAU)) * 2 - Math.PI / 2)
         };
     }
 
@@ -57,8 +57,8 @@ public class WebMercatorProjection implements GeographicProjection {
     public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
         OutOfProjectionBoundsException.checkInRange(longitude, latitude, 180, LIMIT_LATITUDE);
         return new double[]{
-                this.scaleFrom * (Math.toRadians(longitude) + Math.PI) / MathUtils.TAU,
-                this.scaleFrom * (Math.PI - Math.log(Math.tan((Math.PI / 2 + Math.toRadians(latitude)) / 2))) / MathUtils.TAU
+                this.scaleFrom * (Math.toRadians(longitude) + Math.PI) / TerraUtils.TAU,
+                this.scaleFrom * (Math.PI - Math.log(Math.tan((Math.PI / 2 + Math.toRadians(latitude)) / 2))) / TerraUtils.TAU
         };
     }
 

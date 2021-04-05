@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.config.TypedDeserializer;
 import net.buildtheearth.terraplusplus.config.TypedSerializer;
-import net.buildtheearth.terraplusplus.util.MathUtils;
+import net.buildtheearth.terraplusplus.util.TerraUtils;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -60,6 +60,7 @@ public interface GeographicProjection {
      *
      * @return an estimation of the scale of this projection
      */
+    //TODO: compute this individually at each point rather than globally
     double metersPerUnit();
 
     /**
@@ -202,8 +203,8 @@ public interface GeographicProjection {
         double y2 = y + d * Math.cos(Math.toRadians(angle));
         double[] geo1 = this.toGeo(x, y);
         double[] geo2 = this.toGeo(x2, y2);
-        MathUtils.toRadians(geo1);
-        MathUtils.toRadians(geo2);
+        TerraUtils.toRadians(geo1);
+        TerraUtils.toRadians(geo2);
         double dlon = geo2[0] - geo1[0];
         double dlat = geo2[1] - geo1[1];
         double a = Math.toDegrees(Math.atan2(dlat, dlon*Math.cos(geo1[1])));

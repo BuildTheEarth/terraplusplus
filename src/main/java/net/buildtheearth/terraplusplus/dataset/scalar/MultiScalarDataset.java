@@ -8,15 +8,15 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.config.condition.DoubleCondition;
 import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
-import net.buildtheearth.terraplusplus.util.IntRange;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.util.bvh.BVH;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 import net.buildtheearth.terraplusplus.util.http.Disk;
+import net.buildtheearth.terraplusplus.util.jackson.IntRange;
 import net.daporkchop.lib.common.function.io.IOFunction;
 import net.daporkchop.lib.common.function.throwing.EFunction;
 
@@ -60,6 +60,10 @@ public class MultiScalarDataset implements IScalarDataset {
                 .map((IOFunction<URL, WrappedDataset[]>) url -> TerraConstants.JSON_MAPPER.readValue(url, WrappedDataset[].class))
                 .flatMap(Arrays::stream)
                 .toArray(WrappedDataset[]::new));
+    }
+
+    public MultiScalarDataset(@NonNull BoundedPriorityScalarDataset... sources) {
+        this.bvh = BVH.of(sources);
     }
 
     @Override

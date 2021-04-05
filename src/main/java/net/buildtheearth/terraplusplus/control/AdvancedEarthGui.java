@@ -4,7 +4,7 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomCubicWor
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;

@@ -1,21 +1,51 @@
 package net.buildtheearth.terraplusplus.util;
 
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.Style;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.translation.I18n;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static net.daporkchop.lib.common.util.PValidation.*;
+import static net.daporkchop.lib.common.util.PorkUtil.*;
 
+/**
+ * @author DaPorkchop_
+ */
 @UtilityClass
-public class MathUtils {
+public class TerraUtils {
     /**
      * Square root of 3
      */
     public static final double ROOT3 = Math.sqrt(3);
-
     /**
      * Two times pi
      */
     public static final double TAU = 2 * Math.PI;
 
+    public static ITextComponent translate(String key) {
+        if (FMLCommonHandler.instance().getMinecraftServerInstance().isSinglePlayer()) {
+            return new TextComponentTranslation(key);
+        }
+        return new TextComponentString(net.minecraft.util.text.translation.I18n.translateToLocal(key));
+    }
+
+    public static ITextComponent format(String key, Object... args) {
+        if (FMLCommonHandler.instance().getMinecraftServerInstance().isSinglePlayer()) {
+            return new TextComponentTranslation(key, args);
+        }
+        return new TextComponentString(I18n.translateToLocalFormatted(key, args));
+    }
 
     /**
      * Converts geographic latitude and longitude coordinates to spherical coordinates on a sphere of radius 1.
@@ -29,7 +59,6 @@ public class MathUtils {
         return new double[]{ lambda, phi };
     }
 
-
     /**
      * Converts spherical coordinates to geographic coordinates on a sphere of radius 1.
      *
@@ -41,7 +70,6 @@ public class MathUtils {
         double lat = 90 - Math.toDegrees(spherical[1]);
         return new double[]{ lon, lat };
     }
-
 
     /**
      * Converts spherical coordinates to Cartesian coordinates on a sphere of radius 1.
@@ -68,7 +96,6 @@ public class MathUtils {
         double phi = Math.atan2(Math.sqrt(cartesian[0] * cartesian[0] + cartesian[1] * cartesian[1]), cartesian[2]);
         return new double[]{ lambda, phi };
     }
-
 
     /**
      * TODO produceZYZRotationMatrix javadoc
@@ -120,23 +147,27 @@ public class MathUtils {
         }
         return result;
     }
-    
+
     /**
      * Converts all values in a double array from degrees to radians
-     * 
+     *
      * @param arr - array to work on
      */
     public static void toRadians(double[] arr) {
-    	for(int i=0; i<arr.length; i++) arr[i] = Math.toRadians(arr[i]);
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] = Math.toRadians(arr[i]);
+        }
     }
-    
+
     /**
      * Converts all values in a double array from radians to degrees
-     * 
+     *
      * @param arr - array to work on
      */
     public static void toDegrees(double[] arr) {
-    	for(int i=0; i<arr.length; i++) arr[i] = Math.toDegrees(arr[i]);
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] = Math.toDegrees(arr[i]);
+        }
     }
 
     /**
@@ -157,5 +188,79 @@ public class MathUtils {
             res = val >> -shift;
         }
         return res;
+    }
+
+    public static ITextComponent title() {
+        return new TextComponentString(TerraConstants.CHAT_PREFIX.replace("&", "\u00A7"));
+    }
+
+    public static ITextComponent titleAndCombine(Object... objects) {
+        return combine(true, objects);
+    }
+
+    public static ITextComponent combine(Object... objects) {
+        return combine(false, objects);
+    }
+
+    public static ITextComponent combine(boolean title, Object... objects) {
+        ITextComponent textComponent = title ? title() : new TextComponentString("");
+        StringBuilder builder = null;
+        TextFormatting lastFormat = null;
+        for (Object o : objects) {
+            if (o instanceof ITextComponent) {
+                if (builder != null) {
+                    textComponent.appendSibling(new TextComponentString(builder.toString()));
+                    builder = null;
+                }
+
+                ITextComponent component = (ITextComponent) o;
+                if (component.getStyle().getColor() == null && lastFormat != null) {
+                    component.setStyle(new Style().setColor(lastFormat));
+                }
+
+                textComponent.appendSibling(component);
+            } else {
+                if (o instanceof TextFormatting) {
+                    lastFormat = (TextFormatting) o;
+                }
+                if (builder == null) {
+                    builder = new StringBuilder();
+                }
+                builder.append(o);
+            }
+        }
+
+        if (builder != null) {
+            textComponent.appendSibling(new TextComponentString(builder.toString()));
+        }
+        return textComponent;
+    }
+
+    public static ITextComponent getNotCC() {
+        return titleAndCombine(TextFormatting.RED, translate(TerraConstants.MODID + ".error.notcc"));
+    }
+
+    public static ITextComponent getNotTerra() {
+        return titleAndCombine(TextFormatting.RED, translate(TerraConstants.MODID + ".error.noterra"));
+    }
+
+    public static ITextComponent getNoPermission() {
+        return titleAndCombine(TextFormatting.RED, "You do not have permission to use this command");
+    }
+
+    public static ITextComponent getPlayerOnly() {
+        return titleAndCombine(TextFormatting.RED, translate(TerraConstants.MODID + ".error.playeronly"));
+    }
+
+    /**
+     * Merges multiple {@link CompletableFuture}s together asynchronously.
+     *
+     * @param futures a {@link Stream} containing the {@link CompletableFuture}s to merge
+     * @param <T>     the type of value
+     * @return a {@link CompletableFuture} which will be notified once all of the futures have been completed
+     */
+    public <T> CompletableFuture<List<T>> mergeFuturesAsync(@NonNull Stream<CompletableFuture<T>> futures) {
+        CompletableFuture<T>[] arr = uncheckedCast(futures.toArray(CompletableFuture[]::new));
+        return CompletableFuture.allOf(arr).thenApply(unused -> Arrays.stream(arr).map(CompletableFuture::join).collect(Collectors.toList()));
     }
 }

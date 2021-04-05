@@ -2,13 +2,12 @@ package net.buildtheearth.terraplusplus.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.control.fragments.CommandFragment;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraplusplus.util.ChatUtil;
-import net.buildtheearth.terraplusplus.util.TranslateUtil;
+import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextFormatting;
@@ -22,14 +21,14 @@ public class TerraConvertFragment extends CommandFragment {
         IChunkProvider cp = world.getChunkProvider();
 
         if (!(cp instanceof CubeProviderServer)) {
-            sender.sendMessage(ChatUtil.getNotCC());
+            sender.sendMessage(TerraUtils.getNotCC());
             return;
         }
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
         if (!(gen instanceof EarthGenerator)) {
-            sender.sendMessage(ChatUtil.getNotTerra());
+            sender.sendMessage(TerraUtils.getNotTerra());
             return;
         }
 
@@ -37,7 +36,7 @@ public class TerraConvertFragment extends CommandFragment {
         GeographicProjection projection = terrain.projection;
 
         if (args.length < 2) {
-            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, "Usage: /terra convert <x/lat> <z/lon>"));
+            sender.sendMessage(TerraUtils.titleAndCombine(TextFormatting.RED, "Usage: /terra convert <x/lat> <z/lon>"));
             return;
         }
 
@@ -47,7 +46,7 @@ public class TerraConvertFragment extends CommandFragment {
             x = Double.parseDouble(args[0]);
             y = Double.parseDouble(args[1]);
         } catch (Exception e) {
-            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".error.numbers")));
+            sender.sendMessage(TerraUtils.titleAndCombine(TextFormatting.RED, TerraUtils.translate(TerraConstants.MODID + ".error.numbers")));
             return;
         }
 
@@ -60,7 +59,7 @@ public class TerraConvertFragment extends CommandFragment {
             } catch (OutOfProjectionBoundsException e) {
                 e.printStackTrace();
             }
-            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Result: ",
+            sender.sendMessage(TerraUtils.titleAndCombine(TextFormatting.GRAY, "Result: ",
                     TextFormatting.BLUE, c[0], TextFormatting.GRAY, ", ", TextFormatting.BLUE, c[1]));
         } else {
             try {
@@ -68,7 +67,7 @@ public class TerraConvertFragment extends CommandFragment {
             } catch (OutOfProjectionBoundsException e) {
                 e.printStackTrace();
             }
-            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Result: ",
+            sender.sendMessage(TerraUtils.titleAndCombine(TextFormatting.GRAY, "Result: ",
                     TextFormatting.BLUE, c[1], TextFormatting.GRAY, ", ", TextFormatting.BLUE, c[0]));
         }
     }
@@ -80,7 +79,7 @@ public class TerraConvertFragment extends CommandFragment {
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.convert.purpose").getUnformattedComponentText();
+        return TerraUtils.translate(TerraConstants.MODID + ".fragment.terra.convert.purpose").getUnformattedComponentText();
     }
 
     @Override

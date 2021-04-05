@@ -40,4 +40,11 @@ public interface IScalarDataset {
      * @return a {@link CompletableFuture} which will be completed with the values
      */
     CompletableFuture<double[]> getAsync(@NonNull CornerBoundingBox2d bounds, int sizeX, int sizeZ) throws OutOfProjectionBoundsException;
+
+    /**
+     * @return the number of raw (unscaled) sample points contained in the given bounding box
+     */
+    default double sampleCountIn(@NonNull CornerBoundingBox2d bounds) throws OutOfProjectionBoundsException {
+        throw new UnsupportedOperationException(this.getClass().getCanonicalName());
+    }
 }

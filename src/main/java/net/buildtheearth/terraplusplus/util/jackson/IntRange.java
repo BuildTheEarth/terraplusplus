@@ -1,4 +1,4 @@
-package net.buildtheearth.terraplusplus.util;
+package net.buildtheearth.terraplusplus.util.jackson;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

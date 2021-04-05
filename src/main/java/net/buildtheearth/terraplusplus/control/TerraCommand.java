@@ -1,7 +1,7 @@
 package net.buildtheearth.terraplusplus.control;
 
 import com.google.common.collect.Lists;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.control.fragments.FragmentManager;
 import net.buildtheearth.terraplusplus.control.fragments.terra.TerraConvertFragment;
 import net.buildtheearth.terraplusplus.control.fragments.terra.TerraDistortionFragment;

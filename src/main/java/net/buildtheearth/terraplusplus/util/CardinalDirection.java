@@ -1,7 +1,6 @@
 package net.buildtheearth.terraplusplus.util;
 
 import lombok.Getter;
-import net.buildtheearth.terraplusplus.TerraConstants;
 
 @Getter
 public enum CardinalDirection {

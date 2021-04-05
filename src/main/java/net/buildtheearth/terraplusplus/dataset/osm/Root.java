@@ -6,7 +6,7 @@ import com.google.gson.stream.JsonToken;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.dataset.geojson.Geometry;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.LineString;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.MultiLineString;

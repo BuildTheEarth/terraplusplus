@@ -5,7 +5,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import lombok.Builder;
 import lombok.NonNull;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.dataset.osm.JsonParser;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.daporkchop.lib.common.math.PMath;

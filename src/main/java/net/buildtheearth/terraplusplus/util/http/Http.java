@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static net.daporkchop.lib.common.util.PValidation.*;
 
@@ -55,6 +56,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  * @author DaPorkchop_
  */
 @UtilityClass
+//TODO: use some sort of cache to prevent multiple concurrent requests to the same URL (unlikely, but probably still possible in some rare circumstances)
 public class Http {
     protected static final long TIMEOUT = 20L;
 
@@ -105,7 +107,7 @@ public class Http {
         return future;
     }
 
-    public void get(@NonNull String _url, @NonNull CompletableFuture<ByteBuf> future) {
+    private void get(@NonNull String _url, @NonNull CompletableFuture<ByteBuf> future) {
         class State implements BiConsumer<ByteBuf, Throwable>, HostManager.Callback {
             URL parsed;
             Path cacheFile;
@@ -393,6 +395,29 @@ public class Http {
                         buf.release();
                     }
                 }));
+    }
+
+    public static String[] suffixAll(@NonNull String[] urls, @NonNull String suffix) {
+        for (String url : urls) {
+            checkArg(url.charAt(url.length() - 1) == '/', "url must end with a '/': %s", url);
+        }
+        String[] result = urls.clone();
+        for (int i = 0; i < result.length; i++) {
+            result[i] += suffix;
+        }
+        return result;
+    }
+
+    public static String[] flatten(@NonNull String[] baseUrls, @NonNull String[] outputs) {
+        return Stream.of(outputs)
+                .flatMap(output -> {
+                    if (output.matches("^[a-z]+://.+")) { //output is absolute (it has a protocol)
+                        return Stream.of(output);
+                    } else { //output is relative, so duplicate it for every base URL
+                        return Stream.of(baseUrls).map(baseUrl -> baseUrl + output);
+                    }
+                })
+                .toArray(String[]::new);
     }
 
     public static String formatUrl(@NonNull Map<String, String> properties, @NonNull String url) {

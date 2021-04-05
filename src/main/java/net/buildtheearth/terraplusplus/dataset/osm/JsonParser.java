@@ -6,7 +6,7 @@ import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.daporkchop.lib.common.function.io.IOBiFunction;
 import net.daporkchop.lib.common.function.io.IOFunction;
 

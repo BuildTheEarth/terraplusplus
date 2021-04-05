@@ -4,7 +4,7 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.dataset.osm.JsonParser;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.minecraft.block.state.IBlockState;

@@ -1,6 +1,6 @@
 package net.buildtheearth.terraplusplus.control;
 
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;

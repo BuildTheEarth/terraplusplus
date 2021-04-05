@@ -4,7 +4,7 @@ import LZMA.LzmaInputStream;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import net.buildtheearth.terraplusplus.util.MathUtils;
+import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.function.io.IOSupplier;
 import net.daporkchop.lib.common.ref.Ref;
@@ -55,7 +55,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
         c[1] /= ARC;
 
         c[0] += 0.5;
-        c[1] += MathUtils.ROOT3 / 6;
+        c[1] += TerraUtils.ROOT3 / 6;
 
         //use another interpolated vector to have a really good guess before using Newton's method
         //Note: foward was removed for now, will need to be added back if this improvement is ever re-implemented
@@ -66,7 +66,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
         c = this.inverse.applyNewtonsMethod(x, y, c[0], c[1], 5);//c[0]/ARC + 0.5, c[1]/ARC + ROOT3/6
 
         c[0] -= 0.5;
-        c[1] -= MathUtils.ROOT3 / 6;
+        c[1] -= TerraUtils.ROOT3 / 6;
 
         c[0] *= ARC;
         c[1] *= ARC;
@@ -81,7 +81,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
         y /= ARC;
 
         x += 0.5;
-        y += MathUtils.ROOT3 / 6;
+        y += TerraUtils.ROOT3 / 6;
 
         double[] c = this.inverse.getInterpolatedVector(x, y);
         return super.inverseTriangleTransform(c[0], c[1]);
@@ -112,7 +112,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
             y *= SIDE_LENGTH;
 
             //convert to triangle units
-            double v = 2 * y / MathUtils.ROOT3;
+            double v = 2 * y / TerraUtils.ROOT3;
             double u = x - v * 0.5;
 
             int u1 = (int) u;
@@ -141,7 +141,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
 
             double flip = 1;
 
-            if (y < -MathUtils.ROOT3 * (x - u1 - v1 - 1) || v1 == SIDE_LENGTH - u1 - 1) {
+            if (y < -TerraUtils.ROOT3 * (x - u1 - v1 - 1) || v1 == SIDE_LENGTH - u1 - 1) {
                 valx1 = this.vx[u1][v1];
                 valy1 = this.vy[u1][v1];
                 valx2 = this.vx[u1][v1 + 1];
@@ -149,7 +149,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
                 valx3 = this.vx[u1 + 1][v1];
                 valy3 = this.vy[u1 + 1][v1];
 
-                y3 = 0.5 * MathUtils.ROOT3 * v1;
+                y3 = 0.5 * TerraUtils.ROOT3 * v1;
                 x3 = (u1 + 1) + 0.5 * v1;
             } else {
                 valx1 = this.vx[u1][v1 + 1];
@@ -162,18 +162,18 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
                 flip = -1;
                 y = -y;
 
-                y3 = -(0.5 * MathUtils.ROOT3 * (v1 + 1));
+                y3 = -(0.5 * TerraUtils.ROOT3 * (v1 + 1));
                 x3 = (u1 + 1) + 0.5 * (v1 + 1);
             }
 
             //TODO: not sure if weights are right (but weirdly mirrors stuff so there may be simplifcation yet)
-            double w1 = -(y - y3) / MathUtils.ROOT3 - (x - x3);
-            double w2 = 2 * (y - y3) / MathUtils.ROOT3;
+            double w1 = -(y - y3) / TerraUtils.ROOT3 - (x - x3);
+            double w2 = 2 * (y - y3) / TerraUtils.ROOT3;
             double w3 = 1 - w1 - w2;
 
             return new double[]{ valx1 * w1 + valx2 * w2 + valx3 * w3, valy1 * w1 + valy2 * w2 + valy3 * w3,
-                    (valx3 - valx1) * SIDE_LENGTH, SIDE_LENGTH * flip * (2 * valx2 - valx1 - valx3) / MathUtils.ROOT3,
-                    (valy3 - valy1) * SIDE_LENGTH, SIDE_LENGTH * flip * (2 * valy2 - valy1 - valy3) / MathUtils.ROOT3 };
+                    (valx3 - valx1) * SIDE_LENGTH, SIDE_LENGTH * flip * (2 * valx2 - valx1 - valx3) / TerraUtils.ROOT3,
+                    (valy3 - valy1) * SIDE_LENGTH, SIDE_LENGTH * flip * (2 * valy2 - valy1 - valy3) / TerraUtils.ROOT3 };
         }
 
         public double[] applyNewtonsMethod(double expectedf, double expectedg, double xest, double yest, int iter) {

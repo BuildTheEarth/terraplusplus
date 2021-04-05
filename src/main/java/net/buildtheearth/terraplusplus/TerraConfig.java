@@ -1,5 +1,6 @@
 package net.buildtheearth.terraplusplus;
 
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.util.http.Http;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.Config.Comment;
@@ -25,7 +26,12 @@ public class TerraConfig {
     public static boolean threeWater;
 
     @Comment({
-            "Configure how terraplusplus' will retrieve OpenStreetMap data."
+            "Configure how terraplusplus will retrieve surface elevation data."
+    })
+    public static ElevationOpts elevation = new ElevationOpts();
+
+    @Comment({
+            "Configure how terraplusplus will retrieve OpenStreetMap data."
     })
     public static OSMOpts openstreetmap = new OSMOpts();
 
@@ -40,6 +46,12 @@ public class TerraConfig {
             ConfigManager.sync(TerraConstants.MODID, Config.Type.INSTANCE);
             Http.configChanged();
         }
+    }
+
+    public static class ElevationOpts {
+        public String[] servers = {
+                "http://10.0.0.20/public/gis/dem/earth/"
+        };
     }
 
     public static class OSMOpts {
@@ -61,10 +73,7 @@ public class TerraConfig {
         })
         public String[] maxConcurrentRequests = {
                 "8: https://cloud.daporkchop.net/",
-                "8: https://s3.amazonaws.com/",
-                "1: http://gis-treecover.wri.org/",
-                "1: https://overpass.kumi.systems/",
-                "1: https://lz4.overpass-api.de/"
+                "8: https://s3.amazonaws.com/"
         };
 
         @Comment({

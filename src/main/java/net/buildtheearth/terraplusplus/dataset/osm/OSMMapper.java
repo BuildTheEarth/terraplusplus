@@ -4,7 +4,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.stream.JsonReader;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.dataset.geojson.Geometry;
 import net.buildtheearth.terraplusplus.dataset.vector.geometry.VectorGeometry;
 import net.buildtheearth.terraplusplus.util.http.Disk;

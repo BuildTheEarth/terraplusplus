@@ -9,7 +9,7 @@ import com.google.common.collect.ImmutableSet;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.generator.ChunkBiomesBuilder;
 import net.buildtheearth.terraplusplus.generator.GeneratorDatasets;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;

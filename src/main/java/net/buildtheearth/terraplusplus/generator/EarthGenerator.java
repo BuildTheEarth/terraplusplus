@@ -27,7 +27,7 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.Cubi
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicRavineGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.feature.CubicStrongholdGenerator;
 import lombok.NonNull;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.generator.data.IEarthDataBaker;
 import net.buildtheearth.terraplusplus.generator.populate.IEarthPopulator;

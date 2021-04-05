@@ -2,14 +2,13 @@ package net.buildtheearth.terraplusplus.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.control.fragments.CommandFragment;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CardinalDirection;
-import net.buildtheearth.terraplusplus.util.ChatUtil;
-import net.buildtheearth.terraplusplus.util.TranslateUtil;
+import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.MinecraftServer;
@@ -26,7 +25,7 @@ public class TerraWhereFragment extends CommandFragment {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         if (sender instanceof MinecraftServer && args.length < 1) {
-            sender.sendMessage(ChatUtil.getPlayerOnly());
+            sender.sendMessage(TerraUtils.getPlayerOnly());
             return;
         }
 
@@ -34,14 +33,14 @@ public class TerraWhereFragment extends CommandFragment {
         IChunkProvider cp = world.getChunkProvider();
 
         if (!(cp instanceof CubeProviderServer)) {
-            sender.sendMessage(ChatUtil.getNotCC());
+            sender.sendMessage(TerraUtils.getNotCC());
             return;
         }
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
         if (!(gen instanceof EarthGenerator)) {
-            sender.sendMessage(ChatUtil.getNotTerra());
+            sender.sendMessage(TerraUtils.getNotTerra());
             return;
         }
 
@@ -54,7 +53,7 @@ public class TerraWhereFragment extends CommandFragment {
                 e = sender.getEntityWorld().getPlayerEntityByName(args[0]);
             }
             if (e == null) {
-                sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".error.unknownplayer")));
+                sender.sendMessage(TerraUtils.titleAndCombine(TextFormatting.RED, TerraUtils.translate(TerraConstants.MODID + ".error.unknownplayer")));
                 return;
             }
 
@@ -76,22 +75,22 @@ public class TerraWhereFragment extends CommandFragment {
             result = null;
             azimuth = Float.NaN;
         }
-        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Location of ", TextFormatting.BLUE, senderName));
+        sender.sendMessage(TerraUtils.titleAndCombine(TextFormatting.GRAY, "Location of ", TextFormatting.BLUE, senderName));
         if (result == null || Double.isNaN(result[0])) {
-            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.where.notproj")));
+            sender.sendMessage(TerraUtils.combine(TextFormatting.RED, TerraUtils.translate(TerraConstants.MODID + ".fragment.terra.where.notproj")));
             return;
         }
         if (!Float.isFinite(azimuth)) {
-            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.where.notproj")));
+            sender.sendMessage(TerraUtils.combine(TextFormatting.RED, TerraUtils.translate(TerraConstants.MODID + ".fragment.terra.where.notproj")));
             return;
 
         }
 
-        sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY, "Location: ", TextFormatting.BLUE, result[1],
+        sender.sendMessage(TerraUtils.combine(TextFormatting.GRAY, "Location: ", TextFormatting.BLUE, result[1],
                 TextFormatting.GRAY, ", ", TextFormatting.BLUE, result[0]).setStyle(new Style().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Click to copy")))
                 .setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, String.format("%s, %s", result[1], result[0])))));
-        sender.sendMessage(ChatUtil.combine(TextFormatting.GRAY, "Facing: ", TextFormatting.BLUE, CardinalDirection.azimuthToFacing(azimuth).realName(), TextFormatting.GRAY, " (", TextFormatting.BLUE, azimuth, TextFormatting.GRAY, ")"));
-        sender.sendMessage(ChatUtil.combine(new TextComponentString("Open in Google Maps").setStyle(new Style().setUnderlined(true).setColor(TextFormatting.YELLOW)
+        sender.sendMessage(TerraUtils.combine(TextFormatting.GRAY, "Facing: ", TextFormatting.BLUE, CardinalDirection.azimuthToFacing(azimuth).realName(), TextFormatting.GRAY, " (", TextFormatting.BLUE, azimuth, TextFormatting.GRAY, ")"));
+        sender.sendMessage(TerraUtils.combine(new TextComponentString("Open in Google Maps").setStyle(new Style().setUnderlined(true).setColor(TextFormatting.YELLOW)
                 .setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new TextComponentString("Open map")))
                 .setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.google.com/maps/search/?api=1&query=" + result[1] + "," + result[0])))));
 
@@ -104,7 +103,7 @@ public class TerraWhereFragment extends CommandFragment {
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.where.purpose").getUnformattedComponentText();
+        return TerraUtils.translate(TerraConstants.MODID + ".fragment.terra.where.purpose").getUnformattedComponentText();
     }
 
     @Override
