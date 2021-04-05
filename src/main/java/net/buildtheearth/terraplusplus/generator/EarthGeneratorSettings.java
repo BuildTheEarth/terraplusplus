@@ -131,7 +131,7 @@ public class EarthGeneratorSettings {
     @Getter(onMethod_ = { @JsonGetter })
     protected final boolean useDefaultTreeCover;
 
-    protected transient final Ref<BiomeProvider> biomeProvider = Ref.soft(() -> new EarthBiomeProvider(this));
+    protected transient final Ref<EarthBiomeProvider> biomeProvider = Ref.soft(() -> new EarthBiomeProvider(this));
     protected transient final Ref<CustomGeneratorSettings> customCubic = Ref.soft(() -> {
         CustomGeneratorSettings cfg;
         if (this.cwg().isEmpty()) { //use new minimal defaults
@@ -202,7 +202,7 @@ public class EarthGeneratorSettings {
         return this.skipBiomeDecoration.toArray(new DecorateBiomeEvent.Decorate.EventType[0]);
     }
 
-    public BiomeProvider biomeProvider() {
+    public EarthBiomeProvider biomeProvider() {
         return this.biomeProvider.get();
     }
 
