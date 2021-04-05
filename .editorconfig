@@ -480,7 +480,7 @@ ij_groovy_while_on_new_line = false
 ij_groovy_wrap_long_lines = false
 
 [{*.har, *.json, mcmod.info}]
-indent_size = 2
+indent_size = 4
 ij_json_keep_blank_lines_in_code = 0
 ij_json_keep_indents_on_empty_lines = false
 ij_json_keep_line_breaks = true
