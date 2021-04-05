@@ -105,5 +105,38 @@
             "max": 1
         },
         "priority": 100.0
+    },
+
+    //
+    // Slovenia
+    // http://www.evode.gov.si/index.php?id=69
+    //
+    {
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/si/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "CUBIC",
+            "parse": {
+                "parse_tiff_fp": {}
+            }
+        },
+        "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/si.json
+            "minX": 13.3754696,
+            "maxX": 16.6114561,
+            "minZ": 45.4214242,
+            "maxZ": 46.8766816
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
     }
 ]
