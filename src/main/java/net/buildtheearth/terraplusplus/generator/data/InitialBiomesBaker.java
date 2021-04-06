@@ -30,6 +30,10 @@ public class InitialBiomesBaker implements IEarthDataBaker<ImmutableCompactArray
 
     @Override
     public void bake(ChunkPos pos, CachedChunkData.Builder builder, ImmutableCompactArray<Biome> biomes) {
+        if (biomes == null) { //can occur if chunk coordinates are outside projection bounds
+            return;
+        }
+
         for (int zz = 0; zz < 16; zz++) {
             for (int xx = 0; xx < 16; xx++) { //reverse coordinate order
                 builder.biomes()[zz * 16 + xx] = biomes.get(xx * 16 + zz);
