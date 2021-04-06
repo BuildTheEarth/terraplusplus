@@ -50,6 +50,7 @@ import net.buildtheearth.terraplusplus.projection.dymaxion.BTEDymaxionProjection
 import net.buildtheearth.terraplusplus.projection.dymaxion.ConformalDynmaxionProjection;
 import net.buildtheearth.terraplusplus.projection.dymaxion.DymaxionProjection;
 import net.buildtheearth.terraplusplus.projection.mercator.CenteredMercatorProjection;
+import net.buildtheearth.terraplusplus.projection.standard.epsg.EPSG3857Projection;
 import net.buildtheearth.terraplusplus.projection.mercator.TransverseMercatorProjection;
 import net.buildtheearth.terraplusplus.projection.mercator.WebMercatorProjection;
 import net.buildtheearth.terraplusplus.projection.transform.FlipHorizontalProjectionTransform;
@@ -75,6 +76,7 @@ public class GlobalParseRegistries {
             //normal projections
             .put("centered_mercator", CenteredMercatorProjection.class)
             .put("web_mercator", WebMercatorProjection.class)
+            .put("EPSG:3857", EPSG3857Projection.class)
             .put("transverse_mercator", TransverseMercatorProjection.class)
             .put("equirectangular", EquirectangularProjection.class)
             .put("sinusoidal", SinusoidalProjection.class)
@@ -185,7 +187,7 @@ public class GlobalParseRegistries {
         public JavaType typeFromId(DatabindContext context, String id) throws IOException {
             Class<? extends T> clazz = this.registry.get(id);
             checkArg(clazz != null, "unknown id: %s", id);
-            return this._typeFactory.constructType(clazz);
+            return context.getConfig().getTypeFactory().constructType(clazz);
         }
 
         @Override

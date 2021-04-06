@@ -50,7 +50,7 @@ public class TerraConfig {
 
     public static class ElevationOpts {
         public String[] servers = {
-                "http://10.0.0.20/public/gis/dem/earth/"
+                "https://cloud.daporkchop.net/gis/dem/earth/"
         };
     }
 

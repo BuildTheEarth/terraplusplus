@@ -36,15 +36,6 @@ public class BoundedPriorityScalarDataset implements Bounds2d, IScalarDataset, C
     }
 
     @Override
-    public double sampleCountIn(@NonNull CornerBoundingBox2d bounds) throws OutOfProjectionBoundsException {
-        if (!this.bounds.intersects(bounds.axisAlign())) {
-            //entire bounding box is out of bounds, don't bother checking
-            return 0.0d;
-        }
-        return this.delegate.sampleCountIn(bounds);
-    }
-
-    @Override
     public int compareTo(BoundedPriorityScalarDataset o) {
         return -Double.compare(this.priority, o.priority);
     }

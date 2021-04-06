@@ -10,6 +10,7 @@ import net.buildtheearth.terraplusplus.dataset.geojson.dataset.ReferenceResolvin
 import net.buildtheearth.terraplusplus.dataset.geojson.dataset.TiledGeoJsonDataset;
 import net.buildtheearth.terraplusplus.dataset.osm.OSMMapper;
 import net.buildtheearth.terraplusplus.dataset.scalar.MultiScalarDataset;
+import net.buildtheearth.terraplusplus.dataset.scalar.ScalarDatasetConfigurationParser;
 import net.buildtheearth.terraplusplus.dataset.vector.GeoJsonToVectorDataset;
 import net.buildtheearth.terraplusplus.dataset.vector.VectorTiledDataset;
 import net.buildtheearth.terraplusplus.event.InitDatasetsEvent;
@@ -33,6 +34,7 @@ import net.minecraftforge.common.MinecraftForge;
 
 import java.lang.reflect.Array;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static net.daporkchop.lib.common.util.PorkUtil.*;
 
@@ -61,7 +63,7 @@ public class EarthGeneratorPipelines {
     public Map<String, Object> datasets(@NonNull EarthGeneratorSettings settings) {
         InitDatasetsEvent event = new InitDatasetsEvent(settings);
 
-        event.register(KEY_DATASET_HEIGHTS, new MultiScalarDataset(KEY_DATASET_HEIGHTS, settings.useDefaultHeights()));
+        event.register(KEY_DATASET_HEIGHTS, ScalarDatasetConfigurationParser.loadAndMerge(Stream.<String[]>of(TerraConfig.elevation.servers)).join());
 
         ParsingGeoJsonDataset rawOsm = new ParsingGeoJsonDataset(TerraConfig.openstreetmap.servers);
         event.register(KEY_DATASET_OSM_RAW, new TiledGeoJsonDataset(new ReferenceResolvingGeoJsonDataset(rawOsm)));
@@ -70,7 +72,8 @@ public class EarthGeneratorPipelines {
         event.register(KEY_DATASET_TERRA121_PRECIPITATION, new Climate.Precipitation());
         event.register(KEY_DATASET_TERRA121_SOIL, new Soil());
         event.register(KEY_DATASET_TERRA121_TEMPERATURE, new Climate.Temperature());
-        event.register(KEY_DATASET_TREE_COVER, new MultiScalarDataset(KEY_DATASET_TREE_COVER, settings.useDefaultTreeCover()));
+        //event.register(KEY_DATASET_TREE_COVER, new MultiScalarDataset(KEY_DATASET_TREE_COVER, settings.useDefaultTreeCover()));
+        event.register(KEY_DATASET_TREE_COVER, new Soil()); //TODO: remove this
 
         MinecraftForge.TERRAIN_GEN_BUS.post(event);
         return event.getAllCustomProperties();

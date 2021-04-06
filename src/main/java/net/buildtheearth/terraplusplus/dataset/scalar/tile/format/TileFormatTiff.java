@@ -20,6 +20,7 @@ import org.apache.commons.imaging.formats.tiff.constants.GdalLibraryTagConstants
 import java.io.IOException;
 
 import static net.daporkchop.lib.common.util.PValidation.*;
+import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 /**
  * {@link TileFormat} implementation for parsing scalar data tiles from TIFF images.
@@ -38,12 +39,12 @@ public class TileFormatTiff implements TileFormat {
     public TileFormatTiff(
             @JsonProperty(value = "type", required = true) @NonNull Type type,
             @JsonProperty(value = "band", required = true) int band,
-            @JsonProperty("factor") double factor,
-            @JsonProperty("offset") double offset) {
+            @JsonProperty("factor") Double factor,
+            @JsonProperty("offset") Double offset) {
         this.type = type;
         this.band = notNegative(band, "band");
-        this.factor = factor;
-        this.offset = offset;
+        this.factor = fallbackIfNull(factor, 1.0d);
+        this.offset = fallbackIfNull(offset, 0.0d);
     }
 
     @Override
@@ -75,11 +76,15 @@ public class TileFormatTiff implements TileFormat {
                 int w = data.getWidth();
                 int h = data.getHeight();
                 checkArg(w == resolution && h == resolution, "invalid image resolution: %dx%d (expected: %dx%3$d)", w, h, resolution);
+                checkArg(data.getData().length == dst.length, "data length invalid?!?");
 
                 TiffField nodataField = directory.findField(GdalLibraryTagConstants.EXIF_TAG_GDAL_NO_DATA);
                 float nodata = nodataField != null ? Float.parseFloat(nodataField.getStringValue()) : Float.NaN;
 
-                throw new UnsupportedOperationException();
+                for (int i = 0; i < dst.length; i++) {
+                    float v = data.getData()[i];
+                    dst[i] = v != nodata ? v : Double.NaN;
+                }
             }
         };
 

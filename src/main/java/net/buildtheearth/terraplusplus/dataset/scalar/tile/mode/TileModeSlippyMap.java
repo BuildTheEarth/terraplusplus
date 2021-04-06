@@ -23,6 +23,6 @@ public class TileModeSlippyMap implements TileMode {
 
     @Override
     public String path(int tileX, int tileZ, int zoom) {
-        return PStrings.fastFormat(this.format, zoom, tileX, ((1 << zoom) - 1) - tileZ);
+        return PStrings.fastFormat(this.format, zoom, tileX, tileZ);
     }
 }

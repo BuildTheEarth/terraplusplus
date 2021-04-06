@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.util.StdConverter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import lombok.NonNull;
@@ -14,16 +15,16 @@ import net.buildtheearth.terraplusplus.dataset.geojson.GeoJson;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.format.TileFormat;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.mode.TileMode;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
-import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 import net.buildtheearth.terraplusplus.util.http.Http;
-import net.buildtheearth.terraplusplus.util.jackson.IntSetDeserializeBuilder;
+import net.buildtheearth.terraplusplus.util.jackson.IntListDeserializer;
 
 import java.io.DataInput;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
@@ -59,14 +60,14 @@ public class ScalarDatasetConfigurationParser {
                                             throw new IllegalStateException("unable to find dataset file at any of the given source URLs: " + Arrays.toString(Http.suffixAll(datasetUrls, "dataset.json")));
                                         }
 
-                                        return dataset.toScalar(datasetUrls);
+                                        return dataset.toScalar(datasetUrls, manifest.priority);
                                     })))
                             .thenApply(list -> list.toArray(new BoundedPriorityScalarDataset[0]));
                 });
     }
 
     public IScalarDataset merge(@NonNull Stream<BoundedPriorityScalarDataset> datasets) {
-        throw new UnsupportedOperationException();
+        return new MultiScalarDataset(datasets.toArray(BoundedPriorityScalarDataset[]::new));
     }
 
     /**
@@ -116,9 +117,9 @@ public class ScalarDatasetConfigurationParser {
         @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
         public Dataset(
                 @JsonProperty(value = "version", required = true) @NonNull Version version, //validation is done in Version constructor during deserialization
-                @JsonProperty(value = "zoom", required = true) @JsonDeserialize(builder = IntSetDeserializeBuilder.class) @NonNull int[] zoom,
+                @JsonProperty(value = "zoom", required = true) @JsonDeserialize(using = IntListDeserializer.class) @NonNull int[] zoom,
                 @JsonProperty(value = "tiles", required = true) @NonNull Tiles tiles,
-                @JsonProperty(value = "bounds") @JsonDeserialize(builder = BoundsBuilder.class) @NonNull Bounds2d bounds) {
+                @JsonProperty(value = "bounds") @JsonDeserialize(converter = BoundsConverter.class) @NonNull Bounds2d bounds) {
             checkArg(zoom.length >= 1, "at least one zoom level must be set!");
 
             this.zoom = zoom;
@@ -126,8 +127,10 @@ public class ScalarDatasetConfigurationParser {
             this.bounds = bounds;
         }
 
-        public BoundedPriorityScalarDataset toScalar(@NonNull String[] urls) {
-            throw new UnsupportedOperationException();
+        public BoundedPriorityScalarDataset toScalar(@NonNull String[] urls, double priority) {
+            return new BoundedPriorityScalarDataset(
+                    new MultiresScalarDataset(IntStream.of(this.zoom).mapToObj(zoom -> this.tiles.toScalar(urls, zoom)).toArray(IScalarDataset[]::new)),
+                    this.bounds, priority);
         }
 
         @JsonDeserialize
@@ -148,26 +151,35 @@ public class ScalarDatasetConfigurationParser {
                 this.mode = mode;
                 this.format = format;
             }
+
+            public IScalarDataset toScalar(@NonNull String[] urls, int zoom) {
+                return new ZoomedTiledScalarDataset(urls, this.resolution, zoom, this.mode, this.format, this.projection);
+            }
         }
 
         @JsonDeserialize
         protected static class BoundsBuilder {
-            protected final GeographicProjection projection;
             protected final JsonNode geometryJson;
 
             @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
             public BoundsBuilder(
-                    @JsonProperty(value = "projection", required = true) @NonNull GeographicProjection projection,
+                    @JsonProperty(value = "projection", required = true) @NonNull String projection,
                     @JsonProperty(value = "geometry", required = true) @NonNull JsonNode geometryJson) {
-                this.projection = projection;
+                checkArg("EPSG:4326".equals(projection), "unsupported projection: %s", projection);
+                //TODO: this is currently using plain cartesian coordinates, not EPSG:4236
+
                 this.geometryJson = geometryJson;
             }
 
-            @SneakyThrows(OutOfProjectionBoundsException.class)
             public Bounds2d build() {
-                return GeoJson.parseGeometry(this.geometryJson.toString())
-                        .project(this.projection::toGeo)
-                        .bounds();
+                return GeoJson.parseGeometry(this.geometryJson.toString()).bounds();
+            }
+        }
+
+        protected static class BoundsConverter extends StdConverter<BoundsBuilder, Bounds2d> {
+            @Override
+            public Bounds2d convert(BoundsBuilder value) {
+                return value.build();
             }
         }
     }
