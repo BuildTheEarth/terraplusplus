@@ -17,6 +17,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpStatusClass;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.timeout.ReadTimeoutHandler;
@@ -162,6 +163,9 @@ final class HostManager extends Host {
                 throw new IllegalArgumentException(PorkUtil.className(msg));
             }
             FullHttpResponse response = (FullHttpResponse) msg;
+            if (response.status().codeClass() == HttpStatusClass.INFORMATIONAL) { //do nothing
+                return;
+            }
 
             request = channel.attr(ATTR_REQUEST).getAndSet(null);
             checkState(request != null, "received response on inactive channel?!?");
