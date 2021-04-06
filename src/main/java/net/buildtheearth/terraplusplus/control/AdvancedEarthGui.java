@@ -630,8 +630,6 @@ public class AdvancedEarthGui extends GuiScreen {
             protected int index;
 
             protected final String fieldName;
-            protected final Map<String, Object> properties;
-            protected final EntryTextField[] textFields;
             protected final EntryButton button;
             protected final Minecraft mc = Minecraft.getMinecraft();
 
@@ -649,67 +647,23 @@ public class AdvancedEarthGui extends GuiScreen {
                         return false;
                     }
                 });
-
-                this.properties = projection.properties();
-
-                int maxLen = this.properties.keySet().stream()
-                                     .map(s -> this.fieldName + '.' + s)
-                                     .map(I18n::format)
-                                     .mapToInt(gui.fontRenderer::getStringWidth)
-                                     .max().orElse(0) + 5;
-
-                this.textFields = new EntryTextField[this.properties.size()];
-                int i = 0;
-                for (Map.Entry<String, Object> entry : this.properties.entrySet()) {
-                    this.textFields[i] = gui.addEntryTextField(x + maxLen, y + 20 + 2 + i * 24, width - maxLen - 2, 20);
-                    this.textFields[i].setText(Objects.toString(entry.getValue()));
-                    i++;
-                }
             }
 
             @Override
             public int height() {
-                return 20 + 2 + this.textFields.length * 24;
+                return 20 + 2;
             }
 
             @Override
             public void render(AdvancedEarthGui gui, int x, int y, int mouseX, int mouseY, int width) {
-                int i = 0;
-                for (String s : this.properties.keySet()) {
-                    gui.fontRenderer.drawString(I18n.format(this.fieldName + '.' + s), x, y + 20 + 2 + i * 24 + (20 - 8) / 2, -1, true);
-                    i++;
-                }
                 this.button.y = y;
-                for (int j = 0; j < this.textFields.length; j++) {
-                    this.textFields[j].y = y + 20 + 2 + j * 24;
-                    this.textFields[j].actuallyDrawTextBox();
-                }
                 this.button.actuallyDrawButton(this.mc, mouseX, mouseY);
             }
 
             @Override
             public void toJson(StringBuilder out) {
                 checkArg(out.length() == 0, "must be first element in json output!");
-                out.append("{\"").append(PROJECTION_NAMES[this.index]).append("\":{");
-                if (this.initialIndex == this.index) {
-                    int i = 0;
-                    for (Map.Entry<String, Object> entry : this.properties.entrySet()) {
-                        if (i != 0) {
-                            out.append(',');
-                        }
-                        out.append('"').append(entry.getKey()).append("\":");
-                        boolean num = entry.getValue() instanceof Number;
-                        if (!num) {
-                            out.append('"');
-                        }
-                        out.append(this.textFields[i].getText());
-                        if (!num) {
-                            out.append('"');
-                        }
-                        i++;
-                    }
-                }
-                out.append("}}");
+                out.append("{\"").append(PROJECTION_NAMES[this.index]).append("\":{}}");
             }
         }
     }

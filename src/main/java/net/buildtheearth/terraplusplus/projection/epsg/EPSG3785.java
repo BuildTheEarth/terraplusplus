@@ -10,7 +10,7 @@ import net.buildtheearth.terraplusplus.projection.mercator.WebMercatorProjection
  * @see <a href="https://epsg.io/3785>https://epsg.io/3785</a>
  */
 public class EPSG3785 extends EPSGProjection {
-    protected static final WebMercatorProjection WEB_MERCATOR_PROJECTION = new WebMercatorProjection(0);
+    protected static final WebMercatorProjection WEB_MERCATOR_PROJECTION = new WebMercatorProjection();
 
     public EPSG3785() {
         super(3785);

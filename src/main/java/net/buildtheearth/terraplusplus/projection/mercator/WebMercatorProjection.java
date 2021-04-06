@@ -1,18 +1,9 @@
 package net.buildtheearth.terraplusplus.projection.mercator;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import lombok.Getter;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.TerraUtils;
-
-import java.util.Collections;
-import java.util.Map;
-
-import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * Implementation of the web Mercator projection, with projected space normalized between 0 and 2^zoom * 256.
@@ -25,31 +16,19 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @JsonDeserialize
 public class WebMercatorProjection implements GeographicProjection {
-
     public static final double LIMIT_LATITUDE = Math.toDegrees(2 * Math.atan(Math.pow(Math.E, Math.PI)) - Math.PI / 2);
 
-    @Getter(onMethod_ = { @JsonGetter })
-    protected final int zoom;
-
-    protected transient final double scaleTo;
-    protected transient final double scaleFrom;
-
-    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public WebMercatorProjection(@JsonProperty("zoom") Integer zoom) {
-        this.zoom = zoom != null ? notNegative(zoom, "zoom") : 0;
-
-        this.scaleTo = 1.0d / (256 << this.zoom);
-        this.scaleFrom = 256 << this.zoom;
-    }
+    public static final double SCALE_FROM = 256.0d;
+    public static final double SCALE_TO = 1.0d / SCALE_FROM;
 
     @Override
     public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
-        if (x < 0 || y < 0 || x > this.scaleFrom || y > this.scaleFrom) {
+        if (x < 0 || y < 0 || x > SCALE_FROM || y > SCALE_FROM) {
             throw OutOfProjectionBoundsException.get();
         }
         return new double[]{
-                Math.toDegrees(this.scaleTo * x * TerraUtils.TAU - Math.PI),
-                Math.toDegrees(Math.atan(Math.exp(Math.PI - this.scaleTo * y * TerraUtils.TAU)) * 2 - Math.PI / 2)
+                Math.toDegrees(SCALE_TO * x * TerraUtils.TAU - Math.PI),
+                Math.toDegrees(Math.atan(Math.exp(Math.PI - SCALE_TO * y * TerraUtils.TAU)) * 2 - Math.PI / 2)
         };
     }
 
@@ -57,14 +36,14 @@ public class WebMercatorProjection implements GeographicProjection {
     public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
         OutOfProjectionBoundsException.checkInRange(longitude, latitude, 180, LIMIT_LATITUDE);
         return new double[]{
-                this.scaleFrom * (Math.toRadians(longitude) + Math.PI) / TerraUtils.TAU,
-                this.scaleFrom * (Math.PI - Math.log(Math.tan((Math.PI / 2 + Math.toRadians(latitude)) / 2))) / TerraUtils.TAU
+                SCALE_FROM * (Math.toRadians(longitude) + Math.PI) / TerraUtils.TAU,
+                SCALE_FROM * (Math.PI - Math.log(Math.tan((Math.PI / 2 + Math.toRadians(latitude)) / 2))) / TerraUtils.TAU
         };
     }
 
     @Override
     public double[] bounds() {
-        return new double[]{ 0, 0, this.scaleFrom, this.scaleFrom };
+        return new double[]{ 0, 0, SCALE_FROM, SCALE_FROM };
     }
 
     @Override
@@ -80,10 +59,5 @@ public class WebMercatorProjection implements GeographicProjection {
     @Override
     public String toString() {
         return "Web Mercator";
-    }
-
-    @Override
-    public Map<String, Object> properties() {
-        return Collections.singletonMap("zoom", this.zoom);
     }
 }

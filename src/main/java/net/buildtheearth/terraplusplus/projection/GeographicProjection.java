@@ -7,16 +7,15 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import net.buildtheearth.terraplusplus.projection.epsg.EPSG3785;
-import net.buildtheearth.terraplusplus.projection.epsg.EPSG4326;
-import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.config.TypedDeserializer;
 import net.buildtheearth.terraplusplus.config.TypedSerializer;
+import net.buildtheearth.terraplusplus.projection.epsg.EPSG3785;
+import net.buildtheearth.terraplusplus.projection.epsg.EPSG4326;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.util.TerraUtils;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -28,7 +27,6 @@ import java.util.Map;
  * A projection as defined here is something that projects a point in the geographic space to a point of the projected space (and vice versa).
  * <p>
  * All geographic coordinates are in degrees.
- *
  */
 @JsonDeserialize(using = GeographicProjection.Deserializer.class)
 @JsonSerialize(using = GeographicProjection.Serializer.class)
@@ -212,7 +210,7 @@ public interface GeographicProjection {
         TerraUtils.toRadians(geo2);
         double dlon = geo2[0] - geo1[0];
         double dlat = geo2[1] - geo1[1];
-        double a = Math.toDegrees(Math.atan2(dlat, dlon*Math.cos(geo1[1])));
+        double a = Math.toDegrees(Math.atan2(dlat, dlon * Math.cos(geo1[1])));
         a = 90 - a;
         if (a < 0) {
             a += 360;
@@ -234,13 +232,6 @@ public interface GeographicProjection {
      */
     default float azimuth(double x, double y, float angle) throws OutOfProjectionBoundsException {
         return this.azimuth(x, y, angle, 1E-5);
-    }
-
-    /**
-     * @return any additional configuration properties used by this projection
-     */
-    default Map<String, Object> properties() {
-        return Collections.emptyMap();
     }
 
     class Deserializer extends TypedDeserializer<GeographicProjection> {
