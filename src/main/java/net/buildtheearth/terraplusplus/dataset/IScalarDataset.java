@@ -1,8 +1,6 @@
 package net.buildtheearth.terraplusplus.dataset;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.NonNull;
-import net.buildtheearth.terraplusplus.dataset.scalar.ConfigurableDoubleTiledDataset;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 
@@ -13,7 +11,6 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author DaPorkchop_
  */
-@JsonDeserialize(as = ConfigurableDoubleTiledDataset.class)
 public interface IScalarDataset {
     /**
      * @param point the point

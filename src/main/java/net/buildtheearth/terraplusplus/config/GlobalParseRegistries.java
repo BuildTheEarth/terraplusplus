@@ -9,35 +9,6 @@ import com.google.common.collect.HashBiMap;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
-import net.buildtheearth.terraplusplus.config.condition.AndDC;
-import net.buildtheearth.terraplusplus.config.condition.DoubleCondition;
-import net.buildtheearth.terraplusplus.config.condition.EqualDC;
-import net.buildtheearth.terraplusplus.config.condition.GreaterThanDC;
-import net.buildtheearth.terraplusplus.config.condition.LessThanDC;
-import net.buildtheearth.terraplusplus.config.condition.NotDC;
-import net.buildtheearth.terraplusplus.config.condition.OrDC;
-import net.buildtheearth.terraplusplus.config.scalarparse.d.AddDSP;
-import net.buildtheearth.terraplusplus.config.scalarparse.d.DivideDSP;
-import net.buildtheearth.terraplusplus.config.scalarparse.d.DoubleScalarParser;
-import net.buildtheearth.terraplusplus.config.scalarparse.d.FlipXDSP;
-import net.buildtheearth.terraplusplus.config.scalarparse.d.FlipZDSP;
-import net.buildtheearth.terraplusplus.config.scalarparse.d.FromIntDSP;
-import net.buildtheearth.terraplusplus.config.scalarparse.d.MultiplyDSP;
-import net.buildtheearth.terraplusplus.config.scalarparse.d.ParseFloatingPointTiffDSP;
-import net.buildtheearth.terraplusplus.config.scalarparse.d.ParseTerrariumPngDSP;
-import net.buildtheearth.terraplusplus.config.scalarparse.d.SwapAxesDSP;
-import net.buildtheearth.terraplusplus.config.scalarparse.i.AddISP;
-import net.buildtheearth.terraplusplus.config.scalarparse.i.AndISP;
-import net.buildtheearth.terraplusplus.config.scalarparse.i.FlipXISP;
-import net.buildtheearth.terraplusplus.config.scalarparse.i.FlipZISP;
-import net.buildtheearth.terraplusplus.config.scalarparse.i.GrayscaleExtractISP;
-import net.buildtheearth.terraplusplus.config.scalarparse.i.IntScalarParser;
-import net.buildtheearth.terraplusplus.config.scalarparse.i.ParseJpgISP;
-import net.buildtheearth.terraplusplus.config.scalarparse.i.ParsePngISP;
-import net.buildtheearth.terraplusplus.config.scalarparse.i.ParseTiffISP;
-import net.buildtheearth.terraplusplus.config.scalarparse.i.RGBExtractISP;
-import net.buildtheearth.terraplusplus.config.scalarparse.i.RequireOpaqueISP;
-import net.buildtheearth.terraplusplus.config.scalarparse.i.SwapAxesISP;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.format.TileFormat;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.format.TileFormatTiff;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.mode.TileMode;
@@ -89,50 +60,6 @@ public class GlobalParseRegistries {
             .put("offset", OffsetProjectionTransform.class)
             .put("scale", ScaleProjectionTransform.class)
             .put("swap_axes", SwapAxesProjectionTransform.class)
-            .build();
-
-    public final BiMap<String, Class<? extends DoubleCondition>> DOUBLE_CONDITIONS = new BiMapBuilder<String, Class<? extends DoubleCondition>>()
-            //conditions
-            .put("equal", EqualDC.class)
-            .put("greater_than", GreaterThanDC.class)
-            .put("less_than", LessThanDC.class)
-            //logical operators
-            .put("and", AndDC.class)
-            .put("not", NotDC.class)
-            .put("or", OrDC.class)
-            .build();
-
-    public final BiMap<String, Class<? extends DoubleScalarParser>> SCALAR_PARSERS_DOUBLE = new BiMapBuilder<String, Class<? extends DoubleScalarParser>>()
-            //arithmetic operators
-            .put("add", AddDSP.class)
-            .put("divide", DivideDSP.class)
-            .put("multiply", MultiplyDSP.class)
-            //conversion operators
-            .put("flip_x", FlipXDSP.class)
-            .put("flip_z", FlipZDSP.class)
-            .put("from_int", FromIntDSP.class)
-            .put("swap_axes", SwapAxesDSP.class)
-            //parse operators
-            .put("parse_png_terrarium", ParseTerrariumPngDSP.class)
-            .put("parse_tiff_fp", ParseFloatingPointTiffDSP.class)
-            .build();
-
-    public final BiMap<String, Class<? extends IntScalarParser>> SCALAR_PARSERS_INT = new BiMapBuilder<String, Class<? extends IntScalarParser>>()
-            //arithmetic operators
-            .put("add", AddISP.class)
-            //logical operators
-            .put("and", AndISP.class)
-            //conversion operators
-            .put("flip_x", FlipXISP.class)
-            .put("flip_z", FlipZISP.class)
-            .put("grayscale_extract", GrayscaleExtractISP.class)
-            .put("require_opaque", RequireOpaqueISP.class)
-            .put("rgb_extract", RGBExtractISP.class)
-            .put("swap_axes", SwapAxesISP.class)
-            //parse operators
-            .put("parse_jpg", ParseJpgISP.class)
-            .put("parse_png", ParsePngISP.class)
-            .put("parse_tiff", ParseTiffISP.class)
             .build();
 
     public final BiMap<String, Class<? extends TileFormat>> TILE_FORMATS = new BiMapBuilder<String, Class<? extends TileFormat>>()
