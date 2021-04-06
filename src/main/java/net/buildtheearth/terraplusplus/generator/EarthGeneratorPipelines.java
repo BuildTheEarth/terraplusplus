@@ -72,8 +72,7 @@ public class EarthGeneratorPipelines {
         event.register(KEY_DATASET_TERRA121_PRECIPITATION, new Climate.Precipitation());
         event.register(KEY_DATASET_TERRA121_SOIL, new Soil());
         event.register(KEY_DATASET_TERRA121_TEMPERATURE, new Climate.Temperature());
-        //event.register(KEY_DATASET_TREE_COVER, new MultiScalarDataset(KEY_DATASET_TREE_COVER, settings.useDefaultTreeCover()));
-        event.register(KEY_DATASET_TREE_COVER, new Soil()); //TODO: remove this
+        event.register(KEY_DATASET_TREE_COVER, new MultiScalarDataset(KEY_DATASET_TREE_COVER, settings.useDefaultTreeCover()));
 
         MinecraftForge.TERRAIN_GEN_BUS.post(event);
         return event.getAllCustomProperties();

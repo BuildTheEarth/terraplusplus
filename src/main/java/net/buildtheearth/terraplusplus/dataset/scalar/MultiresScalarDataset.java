@@ -15,6 +15,12 @@ import static java.lang.Math.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
+ * Implementation of {@link IScalarDataset} which combines multiple datasets that all cover the same area at varying resolutions.
+ * <p>
+ * Point queries will be resolved using the highest-resolution dataset.
+ * <p>
+ * Area queries will be resolved using the dataset whose resolution is closest to that of the requested area (rounded up).
+ *
  * @author DaPorkchop_
  */
 public class MultiresScalarDataset implements IScalarDataset {
@@ -39,11 +45,14 @@ public class MultiresScalarDataset implements IScalarDataset {
 
     @Override
     public CompletableFuture<double[]> getAsync(@NonNull CornerBoundingBox2d bounds, int sizeX, int sizeZ) throws OutOfProjectionBoundsException {
-        Bounds2d aabb = bounds.axisAlign();
+        Bounds2d aabb = bounds.axisAlign(); //calculate the degrees/sample of the query bounds
         double degreesPerSample = min((aabb.maxX() - aabb.minX()) / sizeX, (aabb.maxZ() - aabb.minZ()) / sizeZ);
 
+        //find the dataset whose resolution is closest (rounding up)
         Map.Entry<Double, IScalarDataset> entry = this.datasetsByDegreesPerSample.floorEntry(degreesPerSample);
-        return (entry != null ? entry.getValue() : this.maxResDataset).getAsync(bounds, sizeX, sizeZ);
+        //fall back to max resolution dataset if none match (the query BB is higher-res than the best dataset)
+        IScalarDataset dataset = entry != null ? entry.getValue() : this.maxResDataset;
+        return dataset.getAsync(bounds, sizeX, sizeZ);
     }
 
     @Override

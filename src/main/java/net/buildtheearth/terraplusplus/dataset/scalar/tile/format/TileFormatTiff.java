@@ -8,6 +8,7 @@ import io.netty.buffer.ByteBufInputStream;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import org.apache.commons.imaging.FormatCompliance;
+import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.ImagingException;
 import org.apache.commons.imaging.common.bytesource.ByteSourceInputStream;
 import org.apache.commons.imaging.formats.tiff.TiffContents;
@@ -16,6 +17,7 @@ import org.apache.commons.imaging.formats.tiff.TiffField;
 import org.apache.commons.imaging.formats.tiff.TiffRasterData;
 import org.apache.commons.imaging.formats.tiff.TiffReader;
 import org.apache.commons.imaging.formats.tiff.constants.GdalLibraryTagConstants;
+import org.apache.commons.imaging.formats.tiff.constants.GeoTiffTagConstants;
 
 import java.io.IOException;
 
@@ -60,7 +62,28 @@ public class TileFormatTiff implements TileFormat {
         for (int i = 0; i < out.length; i++) { //scale and offset values (this will likely be auto-vectorized)
             out[i] = out[i] * this.factor + this.offset;
         }
+
+        this.applyModelPixelScale(out, resolution, directory);
         return out;
+    }
+
+    protected void applyModelPixelScale(@NonNull double[] arr, int resolution, @NonNull TiffDirectory directory) throws ImageReadException {
+        //why are geotiff docs so damn hard to find? i have no idea if this is "correct", but it *works* so idrc
+
+        double[] modelPixelScale = directory.getFieldValue(GeoTiffTagConstants.EXIF_TAG_MODEL_PIXEL_SCALE_TAG, false);
+        if (modelPixelScale == null) { //unset
+            return;
+        }
+
+        if (modelPixelScale[0] > 0.0d && modelPixelScale[1] < 0.0d) {
+            //no-op
+        } else if (modelPixelScale[0] > 0.0d && modelPixelScale[1] > 0.0d) {
+            TileFormatUtils.flipZ(arr, resolution);
+        } else if (modelPixelScale[0] < 0.0d && modelPixelScale[1] < 0.0d) {
+            TileFormatUtils.flipX(arr, resolution);
+        } else if (modelPixelScale[0] < 0.0d && modelPixelScale[1] > 0.0d) {
+            TileFormatUtils.swapAxes(arr, resolution);
+        }
     }
 
     /**

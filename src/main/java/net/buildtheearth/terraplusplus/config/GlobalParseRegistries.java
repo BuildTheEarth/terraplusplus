@@ -41,6 +41,7 @@ import net.buildtheearth.terraplusplus.config.scalarparse.i.SwapAxesISP;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.format.TileFormat;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.format.TileFormatTiff;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.mode.TileMode;
+import net.buildtheearth.terraplusplus.dataset.scalar.tile.mode.TileModeSimple;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.mode.TileModeSlippyMap;
 import net.buildtheearth.terraplusplus.projection.EqualEarthProjection;
 import net.buildtheearth.terraplusplus.projection.EquirectangularProjection;
@@ -50,7 +51,6 @@ import net.buildtheearth.terraplusplus.projection.dymaxion.BTEDymaxionProjection
 import net.buildtheearth.terraplusplus.projection.dymaxion.ConformalDynmaxionProjection;
 import net.buildtheearth.terraplusplus.projection.dymaxion.DymaxionProjection;
 import net.buildtheearth.terraplusplus.projection.mercator.CenteredMercatorProjection;
-import net.buildtheearth.terraplusplus.projection.standard.epsg.EPSG3857Projection;
 import net.buildtheearth.terraplusplus.projection.mercator.TransverseMercatorProjection;
 import net.buildtheearth.terraplusplus.projection.mercator.WebMercatorProjection;
 import net.buildtheearth.terraplusplus.projection.transform.FlipHorizontalProjectionTransform;
@@ -76,7 +76,6 @@ public class GlobalParseRegistries {
             //normal projections
             .put("centered_mercator", CenteredMercatorProjection.class)
             .put("web_mercator", WebMercatorProjection.class)
-            .put("EPSG:3857", EPSG3857Projection.class)
             .put("transverse_mercator", TransverseMercatorProjection.class)
             .put("equirectangular", EquirectangularProjection.class)
             .put("sinusoidal", SinusoidalProjection.class)
@@ -141,6 +140,7 @@ public class GlobalParseRegistries {
             .build();
 
     public final BiMap<String, Class<? extends TileMode>> TILE_MODES = new BiMapBuilder<String, Class<? extends TileMode>>()
+            .put("simple", TileModeSimple.class)
             .put("slippy", TileModeSlippyMap.class)
             .build();
 

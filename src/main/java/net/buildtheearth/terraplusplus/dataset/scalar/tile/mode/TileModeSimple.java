@@ -7,22 +7,22 @@ import lombok.NonNull;
 import net.daporkchop.lib.common.misc.string.PStrings;
 
 /**
- * The OpenStreetMap "Slippy Map" tile format.
+ * Simple tile format in which tile coordinates are simply used as-is.
  *
  * @author DaPorkchop_
  */
 @JsonDeserialize
-public class TileModeSlippyMap implements TileMode {
+public class TileModeSimple implements TileMode {
     protected final String format;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public TileModeSlippyMap(
+    public TileModeSimple(
             @JsonProperty(value = "extension", required = true) @NonNull String extension) {
         this.format = "%d/%d/%d." + extension;
     }
 
     @Override
     public String path(int tileX, int tileZ, int zoom) {
-        return PStrings.fastFormat(this.format, zoom, tileX, ((1 << zoom) - 1) - tileZ);
+        return PStrings.fastFormat(this.format, zoom, tileX, tileZ);
     }
 }

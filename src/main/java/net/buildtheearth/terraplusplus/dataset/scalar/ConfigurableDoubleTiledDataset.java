@@ -20,6 +20,7 @@ import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 @JsonDeserialize
 @JsonSerialize
 @Getter(onMethod_ = { @JsonGetter })
+@Deprecated
 public class ConfigurableDoubleTiledDataset extends DoubleTiledDataset {
     protected final String[] urls;
     protected final DoubleScalarParser parse;

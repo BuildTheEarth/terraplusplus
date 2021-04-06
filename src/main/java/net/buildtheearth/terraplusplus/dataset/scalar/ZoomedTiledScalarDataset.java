@@ -12,6 +12,8 @@ import net.buildtheearth.terraplusplus.util.http.Http;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
+ * Implementation of {@link DoubleTiledDataset} which combines a {@link TileMode}, {@link TileFormat}, tile resolution, and some number of base URLs at a fixed zoom level.
+ *
  * @author DaPorkchop_
  */
 public class ZoomedTiledScalarDataset extends DoubleTiledDataset {

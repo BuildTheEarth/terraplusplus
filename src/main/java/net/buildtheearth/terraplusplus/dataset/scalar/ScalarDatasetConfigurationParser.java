@@ -15,6 +15,8 @@ import net.buildtheearth.terraplusplus.dataset.geojson.GeoJson;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.format.TileFormat;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.mode.TileMode;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
+import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
+import net.buildtheearth.terraplusplus.projection.mercator.WebMercatorProjection;
 import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 import net.buildtheearth.terraplusplus.util.http.Http;
@@ -159,20 +161,22 @@ public class ScalarDatasetConfigurationParser {
 
         @JsonDeserialize
         protected static class BoundsBuilder {
+            protected final GeographicProjection projection;
             protected final JsonNode geometryJson;
 
             @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
             public BoundsBuilder(
-                    @JsonProperty(value = "projection", required = true) @NonNull String projection,
+                    @JsonProperty(value = "projection", required = true) @NonNull GeographicProjection projection,
                     @JsonProperty(value = "geometry", required = true) @NonNull JsonNode geometryJson) {
-                checkArg("EPSG:4326".equals(projection), "unsupported projection: %s", projection);
-                //TODO: this is currently using plain cartesian coordinates, not EPSG:4236
-
+                this.projection = projection;
                 this.geometryJson = geometryJson;
             }
 
+            @SneakyThrows(OutOfProjectionBoundsException.class)
             public Bounds2d build() {
-                return GeoJson.parseGeometry(this.geometryJson.toString()).bounds();
+                return GeoJson.parseGeometry(this.geometryJson.toString())
+                        .project(this.projection::toGeo)
+                        .bounds();
             }
         }
 

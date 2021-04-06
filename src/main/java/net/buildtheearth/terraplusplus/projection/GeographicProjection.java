@@ -1,9 +1,14 @@
 package net.buildtheearth.terraplusplus.projection;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import net.buildtheearth.terraplusplus.projection.epsg.EPSG3785;
+import net.buildtheearth.terraplusplus.projection.epsg.EPSG4326;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.config.TypedDeserializer;
@@ -242,6 +247,26 @@ public interface GeographicProjection {
         @Override
         protected Map<String, Class<? extends GeographicProjection>> registry() {
             return GlobalParseRegistries.PROJECTIONS;
+        }
+
+        @Override
+        public GeographicProjection deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            if (p.currentToken() == JsonToken.VALUE_STRING) {
+                return this.parseFromString(p.getValueAsString());
+            } else {
+                return super.deserialize(p, ctxt);
+            }
+        }
+
+        private GeographicProjection parseFromString(@NonNull String s) {
+            switch (s) {
+                case "EPSG:3785":
+                case "EPSG:3857": //TODO: EPSG:3857 actually uses the WGS84 ellipsoid rather than a sphere
+                    return new EPSG3785();
+                case "EPSG:4326":
+                    return new EPSG4326();
+            }
+            throw new IllegalArgumentException("unsupported projection: " + s);
         }
     }
 
