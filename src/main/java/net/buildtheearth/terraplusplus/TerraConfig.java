@@ -31,6 +31,11 @@ public class TerraConfig {
     public static ElevationOpts elevation = new ElevationOpts();
 
     @Comment({
+            "Configure how terraplusplus will retrieve tree cover data."
+    })
+    public static TreeCoverOpts treeCover = new TreeCoverOpts();
+
+    @Comment({
             "Configure how terraplusplus will retrieve OpenStreetMap data."
     })
     public static OSMOpts openstreetmap = new OSMOpts();
@@ -51,6 +56,12 @@ public class TerraConfig {
     public static class ElevationOpts {
         public String[] servers = {
                 "https://cloud.daporkchop.net/gis/dem/earth/"
+        };
+    }
+
+    public static class TreeCoverOpts {
+        public String[] servers = {
+                "https://cloud.daporkchop.net/gis/treecover2000/"
         };
     }
 

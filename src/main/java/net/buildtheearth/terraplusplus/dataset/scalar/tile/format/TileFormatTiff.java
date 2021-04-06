@@ -18,8 +18,11 @@ import org.apache.commons.imaging.formats.tiff.TiffRasterData;
 import org.apache.commons.imaging.formats.tiff.TiffReader;
 import org.apache.commons.imaging.formats.tiff.constants.GdalLibraryTagConstants;
 import org.apache.commons.imaging.formats.tiff.constants.GeoTiffTagConstants;
+import sun.awt.image.IntegerComponentRaster;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.nio.ByteOrder;
 
 import static net.daporkchop.lib.common.util.PValidation.*;
 import static net.daporkchop.lib.common.util.PorkUtil.*;
@@ -72,6 +75,7 @@ public class TileFormatTiff implements TileFormat {
 
         double[] modelPixelScale = directory.getFieldValue(GeoTiffTagConstants.EXIF_TAG_MODEL_PIXEL_SCALE_TAG, false);
         if (modelPixelScale == null) { //unset
+            TileFormatUtils.flipZ(arr, resolution);
             return;
         }
 
@@ -92,6 +96,26 @@ public class TileFormatTiff implements TileFormat {
      * @author DaPorkchop_
      */
     public enum Type {
+        Byte {
+            @Override
+            protected void getData(@NonNull TiffDirectory directory, @NonNull double[] dst, int resolution) throws ImagingException, IOException {
+                BufferedImage img = directory.getTiffImage();
+                int w = img.getWidth();
+                int h = img.getHeight();
+                checkArg(w == resolution && h == resolution, "invalid image resolution: %dx%d (expected: %dx%3$d)", w, h, resolution);
+
+                TiffField nodataField = directory.findField(GdalLibraryTagConstants.EXIF_TAG_GDAL_NO_DATA);
+                int nodata = nodataField != null ? Integer.parseInt(nodataField.getStringValue()) : -1;
+
+                int[] data = ((IntegerComponentRaster) img.getRaster()).getDataStorage();
+                checkArg(data.length == dst.length, "data length invalid?!?");
+
+                for (int i = 0; i < dst.length; i++) {
+                    int v = data[i] & 0xFF;
+                    dst[i] = v != nodata ? v : Double.NaN;
+                }
+            }
+        },
         Float32 {
             @Override
             protected void getData(@NonNull TiffDirectory directory, @NonNull double[] dst, int resolution) throws ImagingException, IOException {

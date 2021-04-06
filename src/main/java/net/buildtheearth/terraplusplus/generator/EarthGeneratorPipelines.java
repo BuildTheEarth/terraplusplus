@@ -3,13 +3,13 @@ package net.buildtheearth.terraplusplus.generator;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import net.buildtheearth.terraplusplus.TerraConfig;
+import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
 import net.buildtheearth.terraplusplus.dataset.builtin.Climate;
 import net.buildtheearth.terraplusplus.dataset.builtin.Soil;
 import net.buildtheearth.terraplusplus.dataset.geojson.dataset.ParsingGeoJsonDataset;
 import net.buildtheearth.terraplusplus.dataset.geojson.dataset.ReferenceResolvingGeoJsonDataset;
 import net.buildtheearth.terraplusplus.dataset.geojson.dataset.TiledGeoJsonDataset;
 import net.buildtheearth.terraplusplus.dataset.osm.OSMMapper;
-import net.buildtheearth.terraplusplus.dataset.scalar.MultiScalarDataset;
 import net.buildtheearth.terraplusplus.dataset.scalar.ScalarDatasetConfigurationParser;
 import net.buildtheearth.terraplusplus.dataset.vector.GeoJsonToVectorDataset;
 import net.buildtheearth.terraplusplus.dataset.vector.VectorTiledDataset;
@@ -34,6 +34,7 @@ import net.minecraftforge.common.MinecraftForge;
 
 import java.lang.reflect.Array;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import static net.daporkchop.lib.common.util.PorkUtil.*;
@@ -63,7 +64,11 @@ public class EarthGeneratorPipelines {
     public Map<String, Object> datasets(@NonNull EarthGeneratorSettings settings) {
         InitDatasetsEvent event = new InitDatasetsEvent(settings);
 
-        event.register(KEY_DATASET_HEIGHTS, ScalarDatasetConfigurationParser.loadAndMerge(Stream.<String[]>of(TerraConfig.elevation.servers)).join());
+        //start loading both datasets at once to reduce blocking time
+        CompletableFuture<IScalarDataset> elevationFuture = ScalarDatasetConfigurationParser.loadAndMerge(Stream.<String[]>of(TerraConfig.elevation.servers));
+        CompletableFuture<IScalarDataset> treeCoverFuture = ScalarDatasetConfigurationParser.loadAndMerge(Stream.<String[]>of(TerraConfig.treeCover.servers));
+        event.register(KEY_DATASET_HEIGHTS, elevationFuture.join());
+        event.register(KEY_DATASET_TREE_COVER, treeCoverFuture.join());
 
         ParsingGeoJsonDataset rawOsm = new ParsingGeoJsonDataset(TerraConfig.openstreetmap.servers);
         event.register(KEY_DATASET_OSM_RAW, new TiledGeoJsonDataset(new ReferenceResolvingGeoJsonDataset(rawOsm)));
@@ -72,7 +77,6 @@ public class EarthGeneratorPipelines {
         event.register(KEY_DATASET_TERRA121_PRECIPITATION, new Climate.Precipitation());
         event.register(KEY_DATASET_TERRA121_SOIL, new Soil());
         event.register(KEY_DATASET_TERRA121_TEMPERATURE, new Climate.Temperature());
-        event.register(KEY_DATASET_TREE_COVER, new MultiScalarDataset(KEY_DATASET_TREE_COVER, settings.useDefaultTreeCover()));
 
         MinecraftForge.TERRAIN_GEN_BUS.post(event);
         return event.getAllCustomProperties();

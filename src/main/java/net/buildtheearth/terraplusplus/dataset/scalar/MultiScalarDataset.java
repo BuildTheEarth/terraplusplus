@@ -1,36 +1,15 @@
 package net.buildtheearth.terraplusplus.dataset.scalar;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.SneakyThrows;
-import net.buildtheearth.terraplusplus.config.condition.DoubleCondition;
 import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
-import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.util.bvh.BVH;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
-import net.buildtheearth.terraplusplus.util.http.Disk;
-import net.buildtheearth.terraplusplus.util.jackson.IntRange;
-import net.daporkchop.lib.common.function.io.IOFunction;
-import net.daporkchop.lib.common.function.throwing.EFunction;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
-import java.util.stream.Stream;
 
 import static net.daporkchop.lib.common.util.PValidation.*;
 
@@ -43,27 +22,6 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 public class MultiScalarDataset implements IScalarDataset {
     protected final BVH<BoundedPriorityScalarDataset> bvh;
-
-    @SneakyThrows(IOException.class)
-    public MultiScalarDataset(@NonNull String name, boolean useDefault) {
-        List<URL> configSources = new ArrayList<>();
-        if (useDefault) { //add default configuration
-            configSources.add(MultiScalarDataset.class.getResource(name + ".json5"));
-        }
-
-        try (Stream<Path> stream = Files.list(Files.createDirectories(Disk.configFile(name)))) {
-            stream.filter(Files::isRegularFile)
-                    .filter(p -> p.getFileName().toString().matches(".*\\.json5?$"))
-                    .map(Path::toUri).map((EFunction<URI, URL>) URI::toURL)
-                    .forEach(configSources::add);
-        }
-
-        this.bvh = BVH.of(configSources.stream()
-                .map((IOFunction<URL, WrappedDataset[]>) url -> TerraConstants.JSON_MAPPER.readValue(url, WrappedDataset[].class))
-                .flatMap(Arrays::stream)
-                .map(d -> new BoundedPriorityScalarDataset(d.dataset, d, d.priority))
-                .toArray(BoundedPriorityScalarDataset[]::new));
-    }
 
     public MultiScalarDataset(@NonNull BoundedPriorityScalarDataset... sources) {
         this.bvh = BVH.of(sources);
@@ -174,63 +132,5 @@ public class MultiScalarDataset implements IScalarDataset {
         State state = new State();
         state.advance();
         return state.future;
-    }
-
-    /**
-     * Wrapper around a dataset with a bounding box.
-     *
-     * @author DaPorkchop_
-     */
-    @JsonDeserialize
-    @JsonSerialize
-    @Getter
-    public static class WrappedDataset implements Bounds2d, Comparable<WrappedDataset>, DoubleCondition {
-        @Getter(onMethod_ = { @JsonGetter })
-        protected final IScalarDataset dataset;
-        @Getter(onMethod_ = { @JsonGetter })
-        protected final DoubleCondition condition;
-        @Getter(onMethod_ = { @JsonGetter })
-        protected final IntRange zooms; //TODO: use this
-
-        protected final double minX;
-        protected final double maxX;
-        protected final double minZ;
-        protected final double maxZ;
-
-        @Getter(onMethod_ = { @JsonGetter })
-        protected final double priority;
-
-        @JsonCreator
-        public WrappedDataset(
-                @JsonProperty(value = "dataset", required = true) @NonNull IScalarDataset dataset,
-                @JsonProperty(value = "bounds", required = true) @NonNull Bounds2d bounds,
-                @JsonProperty(value = "zooms", required = true) @NonNull IntRange zooms,
-                @JsonProperty(value = "priority", defaultValue = "0.0") double priority,
-                @JsonProperty("condition") DoubleCondition condition) {
-            this.dataset = dataset;
-            this.condition = condition;
-            this.zooms = zooms;
-            this.priority = priority;
-
-            this.minX = bounds.minX();
-            this.maxX = bounds.maxX();
-            this.minZ = bounds.minZ();
-            this.maxZ = bounds.maxZ();
-        }
-
-        @Override
-        public int compareTo(WrappedDataset o) {
-            return -Double.compare(this.priority, o.priority);
-        }
-
-        @Override
-        public boolean test(double value) {
-            return this.condition == null || this.condition.test(value);
-        }
-
-        @JsonGetter("bounds")
-        public Bounds2d bounds() {
-            return Bounds2d.of(this.minX, this.maxX, this.minZ, this.maxZ);
-        }
     }
 }
