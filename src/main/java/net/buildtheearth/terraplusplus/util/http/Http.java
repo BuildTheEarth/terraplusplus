@@ -194,10 +194,6 @@ public class Http {
 
             @Override
             public synchronized void handle(FullHttpResponse response, Throwable throwable) { //stage 2: handle HTTP response
-                if (response.status().codeClass() == HttpStatusClass.INFORMATIONAL) { //do nothing
-                    return;
-                }
-
                 try {
                     //if cacheEntry is non-null, it means we're currently attempting to refresh a stale entry
 
