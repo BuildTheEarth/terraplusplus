@@ -5,9 +5,8 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.experimental.UtilityClass;
-import net.buildtheearth.terraplusplus.dataset.osm.BlockStateParser;
 import net.buildtheearth.terraplusplus.util.jackson.mixin.BiomeDeserializeMixin;
-import net.buildtheearth.terraplusplus.util.jackson.mixin.BlockStateDeserializeMixin;
+import net.buildtheearth.terraplusplus.util.jackson.mixin.BlockStateMixin;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.biome.Biome;
 
@@ -23,7 +22,6 @@ public class TerraConstants {
     public final String othersCommandNode = MODID + ".others";
 
     public final Gson GSON = new GsonBuilder()
-            .registerTypeAdapter(IBlockState.class, BlockStateParser.INSTANCE)
             .create();
 
     public final JsonMapper JSON_MAPPER = JsonMapper.builder()
@@ -33,7 +31,7 @@ public class TerraConstants {
             .configure(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS, true)
             .configure(JsonReadFeature.ALLOW_TRAILING_COMMA, true)
             .addMixIn(Biome.class, BiomeDeserializeMixin.class)
-            .addMixIn(IBlockState.class, BlockStateDeserializeMixin.class)
+            .addMixIn(IBlockState.class, BlockStateMixin.class)
             .build();
 
     /**

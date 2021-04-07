@@ -9,6 +9,10 @@ import com.google.common.collect.HashBiMap;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
+import net.buildtheearth.terraplusplus.dataset.osm.dvalue.DValue;
+import net.buildtheearth.terraplusplus.dataset.osm.dvalue.DValueBinaryOperator;
+import net.buildtheearth.terraplusplus.dataset.osm.dvalue.DValueConstant;
+import net.buildtheearth.terraplusplus.dataset.osm.dvalue.DValueTag;
 import net.buildtheearth.terraplusplus.dataset.osm.mapper.line.LineMapper;
 import net.buildtheearth.terraplusplus.dataset.osm.mapper.line.LineMapperAll;
 import net.buildtheearth.terraplusplus.dataset.osm.mapper.line.LineMapperAny;
@@ -17,20 +21,37 @@ import net.buildtheearth.terraplusplus.dataset.osm.mapper.line.LineMapperFirst;
 import net.buildtheearth.terraplusplus.dataset.osm.mapper.line.LineMapperNarrow;
 import net.buildtheearth.terraplusplus.dataset.osm.mapper.line.LineMapperNothing;
 import net.buildtheearth.terraplusplus.dataset.osm.mapper.line.LineMapperWide;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapper;
 import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapperAll;
 import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapperAny;
 import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapperCondition;
 import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapperConvertToLines;
 import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapperDistance;
 import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapperFill;
-import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapper;
 import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapperFirst;
 import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapperNothing;
+import net.buildtheearth.terraplusplus.dataset.osm.match.MatchCondition;
+import net.buildtheearth.terraplusplus.dataset.osm.match.MatchConditionAnd;
+import net.buildtheearth.terraplusplus.dataset.osm.match.MatchConditionId;
+import net.buildtheearth.terraplusplus.dataset.osm.match.MatchConditionIntersects;
+import net.buildtheearth.terraplusplus.dataset.osm.match.MatchConditionNot;
+import net.buildtheearth.terraplusplus.dataset.osm.match.MatchConditionOr;
+import net.buildtheearth.terraplusplus.dataset.osm.match.MatchConditionTag;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.format.TileFormat;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.format.TileFormatTiff;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.mode.TileMode;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.mode.TileModeSimple;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.mode.TileModeSlippyMap;
+import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunction;
+import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionAll;
+import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionBlock;
+import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionNoTrees;
+import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionOcean;
+import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWater;
+import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWeightAdd;
+import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWeightClamp;
+import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWeightGreaterThan;
+import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWeightLessThan;
 import net.buildtheearth.terraplusplus.projection.EqualEarthProjection;
 import net.buildtheearth.terraplusplus.projection.EquirectangularProjection;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
@@ -111,8 +132,49 @@ public class GlobalParseRegistries {
             .put("convert_to_lines", PolygonMapperConvertToLines.class)
             .put("nothing", PolygonMapperNothing.class)
             //emitters
-            .put("distance", PolygonMapperDistance.class)
-            .put("fill", PolygonMapperFill.class)
+            .put("rasterize_distance", PolygonMapperDistance.class)
+            .put("rasterize_fill", PolygonMapperFill.class)
+            .build();
+
+    public final BiMap<String, Class<? extends DValue>> OSM_DVALUES = new BiMapBuilder<String, Class<? extends DValue>>()
+            //math operators
+            .put("+", DValueBinaryOperator.Add.class)
+            .put("-", DValueBinaryOperator.Subtract.class)
+            .put("*", DValueBinaryOperator.Multiply.class)
+            .put("/", DValueBinaryOperator.Divide.class)
+            .put("floor_div", DValueBinaryOperator.FloorDiv.class)
+            .put("min", DValueBinaryOperator.Min.class)
+            .put("max", DValueBinaryOperator.Max.class)
+            //misc.
+            .put("constant", DValueConstant.class)
+            .put("tag", DValueTag.class)
+            .build();
+
+    public final BiMap<String, Class<? extends MatchCondition>> OSM_MATCH_CONDITIONS = new BiMapBuilder<String, Class<? extends MatchCondition>>()
+            //logical operations
+            .put("and", MatchConditionAnd.class)
+            .put("not", MatchConditionNot.class)
+            .put("or", MatchConditionOr.class)
+            //misc.
+            .put("id", MatchConditionId.class)
+            .put("intersects", MatchConditionIntersects.class)
+            .put("tag", MatchConditionTag.class)
+            .build();
+
+    public final BiMap<String, Class<? extends DrawFunction>> VECTOR_DRAW_FUNCTIONS = new BiMapBuilder<String, Class<? extends DrawFunction>>()
+            //mergers
+            .put("all", DrawFunctionAll.class)
+            //weight modifiers
+            .put("weight_add", DrawFunctionWeightAdd.class)
+            .put("weight_clamp", DrawFunctionWeightClamp.class)
+            //weight conditions
+            .put("weight_greater_than", DrawFunctionWeightGreaterThan.class)
+            .put("weight_less_than", DrawFunctionWeightLessThan.class)
+            //misc.
+            .put("block", DrawFunctionBlock.class)
+            .put("no_trees", DrawFunctionNoTrees.class)
+            .put("ocean", DrawFunctionOcean.class)
+            .put("water", DrawFunctionWater.class)
             .build();
 
     /**

@@ -1,24 +1,21 @@
 package net.buildtheearth.terraplusplus.dataset.osm;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.common.collect.BiMap;
-import com.google.gson.JsonParseException;
-import com.google.gson.stream.JsonReader;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
-import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.dataset.geojson.Geometry;
 import net.buildtheearth.terraplusplus.dataset.vector.geometry.VectorGeometry;
 import net.buildtheearth.terraplusplus.util.http.Disk;
-import net.daporkchop.lib.binary.oio.reader.UTF8FileReader;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
+
+import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
+import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 /**
  * Consumes a GeoJSON geometry object and emits some number of generateable elements.
@@ -31,14 +28,8 @@ public interface OSMMapper<G extends Geometry> {
     @SneakyThrows(IOException.class)
     static OSMMapper<Geometry> load() {
         Path path = Disk.configFile("osm.json5");
-        try (JsonReader reader = new JsonReader(Files.exists(path)
-                ? new UTF8FileReader(path.toString())
-                : new InputStreamReader(OSMMapper.class.getResourceAsStream("osm.json5")))) {
-            try {
-                return TerraConstants.GSON.fromJson(reader, Root.class);
-            } catch (Exception e) {
-                throw new JsonParseException(reader.toString(), e);
-            }
+        try (InputStream in = Files.exists(path) ? Files.newInputStream(path) : OSMMapper.class.getResourceAsStream("osm.json5")) {
+            return uncheckedCast(JSON_MAPPER.readValue(in, OSMMapper.class));
         }
     }
 
