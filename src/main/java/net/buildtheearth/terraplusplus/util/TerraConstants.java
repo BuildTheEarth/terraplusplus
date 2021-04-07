@@ -2,8 +2,6 @@ package net.buildtheearth.terraplusplus.util;
 
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import lombok.experimental.UtilityClass;
 import net.buildtheearth.terraplusplus.util.jackson.mixin.BiomeDeserializeMixin;
 import net.buildtheearth.terraplusplus.util.jackson.mixin.BlockStateMixin;
@@ -20,9 +18,6 @@ public class TerraConstants {
     public final String CHAT_PREFIX = "&2&lT++ &8&l> ";
     public final String defaultCommandNode = MODID + ".command.";
     public final String othersCommandNode = MODID + ".others";
-
-    public final Gson GSON = new GsonBuilder()
-            .create();
 
     public final JsonMapper JSON_MAPPER = JsonMapper.builder()
             .configure(JsonReadFeature.ALLOW_JAVA_COMMENTS, true)

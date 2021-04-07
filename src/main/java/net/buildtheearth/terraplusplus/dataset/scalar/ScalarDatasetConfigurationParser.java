@@ -2,7 +2,6 @@ package net.buildtheearth.terraplusplus.dataset.scalar;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
@@ -10,7 +9,7 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
-import net.buildtheearth.terraplusplus.dataset.geojson.GeoJson;
+import net.buildtheearth.terraplusplus.dataset.geojson.Geometry;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.format.TileFormat;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.mode.TileMode;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
@@ -163,21 +162,19 @@ public class ScalarDatasetConfigurationParser {
         @JsonDeserialize
         protected static class Bounds {
             protected final GeographicProjection projection;
-            protected final JsonNode geometryJson;
+            protected final Geometry geometry;
 
             @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
             public Bounds(
                     @JsonProperty(value = "projection", required = true) @NonNull GeographicProjection projection,
-                    @JsonProperty(value = "geometry", required = true) @NonNull JsonNode geometryJson) {
+                    @JsonProperty(value = "geometry", required = true) @NonNull Geometry geometry) {
                 this.projection = projection;
-                this.geometryJson = geometryJson;
+                this.geometry = geometry;
             }
 
             @SneakyThrows(OutOfProjectionBoundsException.class)
             public Bounds2d build() {
-                return GeoJson.parseGeometry(this.geometryJson.toString())
-                        .project(this.projection::toGeo)
-                        .bounds();
+                return this.geometry.project(this.projection::toGeo).bounds();
             }
         }
     }

@@ -1,8 +1,16 @@
 package net.buildtheearth.terraplusplus.dataset.geojson.geometry;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.Iterators;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.ToString;
 import net.buildtheearth.terraplusplus.dataset.geojson.Geometry;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.projection.ProjectionFunction;
@@ -14,10 +22,23 @@ import java.util.Iterator;
 /**
  * @author DaPorkchop_
  */
-@Data
+@Getter
+@ToString
+@EqualsAndHashCode
+@JsonDeserialize
+@JsonTypeName("MultiPolygon")
 public final class MultiPolygon implements Geometry, Iterable<Polygon> {
-    @NonNull
+    @Getter(onMethod_ = {
+            @JsonGetter("coordinates"),
+            @JsonSerialize(using = Polygon.ArraySerializer.class)
+    })
     protected final Polygon[] polygons;
+
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    public MultiPolygon(
+            @JsonProperty(value = "coordinates", required = true) @JsonDeserialize(using = Polygon.ArrayDeserializer.class) @NonNull Polygon[] polygons) {
+        this.polygons = polygons;
+    }
 
     @Override
     public Iterator<Polygon> iterator() {
