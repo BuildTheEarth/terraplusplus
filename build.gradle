@@ -63,9 +63,6 @@ dependencies {
     deobfProvided("com.github.OpenCubicChunks.CubicChunks:cubicchunks:f71aafb9854466ac5ffa0ccd2796921684f1d8b1") {
         transitive = false
     }
-    annotationProcessor("com.github.OpenCubicChunks.CubicChunks:cubicchunks:f71aafb9854466ac5ffa0ccd2796921684f1d8b1") {
-        transitive = false
-    }
     deobfProvided("com.github.OpenCubicChunks:CubicWorldGen:27de56d2f792513873584b2f8fd9f3082fb259ec") {
         transitive = false
     }
@@ -78,10 +75,16 @@ dependencies {
         exclude group: "io.netty"
     }
 
-    testCompile "junit:junit:4.12"
+    annotationProcessor "com.google.code.gson:gson:2.8.0"
+    annotationProcessor "com.google.guava:guava:21.0"
+    annotationProcessor "org.apache.logging.log4j:log4j-core:2.8.1"
+    annotationProcessor "org.ow2.asm:asm-debug-all:5.2"
+    annotationProcessor "org.spongepowered:mixin:0.8.1"
 
     compileOnly "org.projectlombok:lombok:1.18.16"
     annotationProcessor "org.projectlombok:lombok:1.18.16"
+
+    testCompile "junit:junit:4.12"
     testCompileOnly "org.projectlombok:lombok:1.18.16"
     testAnnotationProcessor "org.projectlombok:lombok:1.18.16"
 }
