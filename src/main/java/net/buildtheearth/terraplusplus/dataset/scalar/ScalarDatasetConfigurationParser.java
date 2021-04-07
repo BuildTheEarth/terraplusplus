@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.util.StdConverter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import lombok.NonNull;
@@ -16,7 +15,6 @@ import net.buildtheearth.terraplusplus.dataset.scalar.tile.format.TileFormat;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.mode.TileMode;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraplusplus.projection.mercator.WebMercatorProjection;
 import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 import net.buildtheearth.terraplusplus.util.http.Http;
@@ -39,12 +37,12 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @UtilityClass
 public class ScalarDatasetConfigurationParser {
-    public CompletableFuture<IScalarDataset> loadAndMerge(@NonNull Stream<String[]> srcs) {
-        return TerraUtils.mergeFuturesAsync(srcs.map(ScalarDatasetConfigurationParser::load))
-                .thenApply(datasetGroups -> merge(datasetGroups.stream().flatMap(Stream::of)));
+    public CompletableFuture<IScalarDataset> loadAndMergeDatasetsFromManifests(@NonNull Stream<String[]> srcs) {
+        return TerraUtils.mergeFuturesAsync(srcs.map(ScalarDatasetConfigurationParser::loadDatasetsFromManifest))
+                .thenApply(list -> merge(list.stream().flatMap(Stream::of)));
     }
 
-    public CompletableFuture<BoundedPriorityScalarDataset[]> load(@NonNull String[] src) {
+    public CompletableFuture<BoundedPriorityScalarDataset[]> loadDatasetsFromManifest(@NonNull String[] src) {
         return Http.getFirst(Http.suffixAll(src, "manifest.json"), Manifest::parse)
                 .thenComposeAsync(manifest -> {
                     if (manifest == null) {
@@ -55,16 +53,19 @@ public class ScalarDatasetConfigurationParser {
                         manifest.datasets[i] = Http.flatten(src, manifest.datasets[i]);
                     }
 
-                    return TerraUtils.mergeFuturesAsync(Stream.of(manifest.datasets)
-                            .map(datasetUrls -> Http.getFirst(Http.suffixAll(datasetUrls, "dataset.json"), Dataset::parse)
-                                    .thenApplyAsync(dataset -> {
-                                        if (dataset == null) {
-                                            throw new IllegalStateException("unable to find dataset file at any of the given source URLs: " + Arrays.toString(Http.suffixAll(datasetUrls, "dataset.json")));
-                                        }
-
-                                        return dataset.toScalar(datasetUrls, manifest.priority);
-                                    })))
+                    return TerraUtils.mergeFuturesAsync(Stream.of(manifest.datasets).map(datasetUrls -> loadDataset(manifest.priority, datasetUrls)))
                             .thenApply(list -> list.toArray(new BoundedPriorityScalarDataset[0]));
+                });
+    }
+
+    public CompletableFuture<BoundedPriorityScalarDataset> loadDataset(double priority, @NonNull String... urls) {
+        return Http.getFirst(Http.suffixAll(urls, "dataset.json"), Dataset::parse)
+                .thenApplyAsync(dataset -> {
+                    if (dataset == null) {
+                        throw new IllegalStateException("unable to find dataset file at any of the given source URLs: " + Arrays.toString(Http.suffixAll(urls, "dataset.json")));
+                    }
+
+                    return dataset.toScalar(urls, priority);
                 });
     }
 
@@ -114,14 +115,14 @@ public class ScalarDatasetConfigurationParser {
 
         protected final int[] zoom;
         protected final Tiles tiles;
-        protected final Bounds2d bounds;
+        protected final Bounds bounds;
 
         @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
         public Dataset(
                 @JsonProperty(value = "version", required = true) @NonNull Version version, //validation is done in Version constructor during deserialization
                 @JsonProperty(value = "zoom", required = true) @JsonDeserialize(using = IntListDeserializer.class) @NonNull int[] zoom,
                 @JsonProperty(value = "tiles", required = true) @NonNull Tiles tiles,
-                @JsonProperty(value = "bounds") @JsonDeserialize(converter = BoundsConverter.class) @NonNull Bounds2d bounds) {
+                @JsonProperty(value = "bounds", required = true) @NonNull Bounds bounds) {
             checkArg(zoom.length >= 1, "at least one zoom level must be set!");
 
             this.zoom = zoom;
@@ -132,7 +133,7 @@ public class ScalarDatasetConfigurationParser {
         public BoundedPriorityScalarDataset toScalar(@NonNull String[] urls, double priority) {
             return new BoundedPriorityScalarDataset(
                     new MultiresScalarDataset(IntStream.of(this.zoom).mapToObj(zoom -> this.tiles.toScalar(urls, zoom)).toArray(IScalarDataset[]::new)),
-                    this.bounds, priority);
+                    this.bounds.build(), priority);
         }
 
         @JsonDeserialize
@@ -160,12 +161,12 @@ public class ScalarDatasetConfigurationParser {
         }
 
         @JsonDeserialize
-        protected static class BoundsBuilder {
+        protected static class Bounds {
             protected final GeographicProjection projection;
             protected final JsonNode geometryJson;
 
             @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-            public BoundsBuilder(
+            public Bounds(
                     @JsonProperty(value = "projection", required = true) @NonNull GeographicProjection projection,
                     @JsonProperty(value = "geometry", required = true) @NonNull JsonNode geometryJson) {
                 this.projection = projection;
@@ -177,13 +178,6 @@ public class ScalarDatasetConfigurationParser {
                 return GeoJson.parseGeometry(this.geometryJson.toString())
                         .project(this.projection::toGeo)
                         .bounds();
-            }
-        }
-
-        protected static class BoundsConverter extends StdConverter<BoundsBuilder, Bounds2d> {
-            @Override
-            public Bounds2d convert(BoundsBuilder value) {
-                return value.build();
             }
         }
     }

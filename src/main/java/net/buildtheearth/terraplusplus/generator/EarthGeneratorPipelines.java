@@ -65,8 +65,12 @@ public class EarthGeneratorPipelines {
         InitDatasetsEvent event = new InitDatasetsEvent(settings);
 
         //start loading both datasets at once to reduce blocking time
-        CompletableFuture<IScalarDataset> elevationFuture = ScalarDatasetConfigurationParser.loadAndMerge(Stream.<String[]>of(TerraConfig.elevation.servers));
-        CompletableFuture<IScalarDataset> treeCoverFuture = ScalarDatasetConfigurationParser.loadAndMerge(Stream.<String[]>of(TerraConfig.treeCover.servers));
+        CompletableFuture<IScalarDataset> elevationFuture = ScalarDatasetConfigurationParser.loadAndMergeDatasetsFromManifests(settings.useDefaultHeights()
+                ? Stream.concat(Stream.<String[]>of(TerraConfig.elevation.servers), Stream.of(settings.customHeights()))
+                : Stream.of(settings.customHeights()));
+        CompletableFuture<IScalarDataset> treeCoverFuture = ScalarDatasetConfigurationParser.loadAndMergeDatasetsFromManifests(settings.useDefaultTreeCover()
+                ? Stream.concat(Stream.<String[]>of(TerraConfig.treeCover.servers), Stream.of(settings.customTreeCover()))
+                : Stream.of(settings.customTreeCover()));
         event.register(KEY_DATASET_HEIGHTS, elevationFuture.join());
         event.register(KEY_DATASET_TREE_COVER, treeCoverFuture.join());
 

@@ -46,10 +46,16 @@ import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import static java.nio.file.StandardCopyOption.*;
+import static java.nio.file.StandardOpenOption.*;
+import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -113,10 +119,27 @@ public class EarthGeneratorSettings {
                 projection = new ScaleProjectionTransform(projection, legacy.scaleX, legacy.scaleY);
             }
 
-            return new EarthGeneratorSettings(projection, legacy.customcubic, true, true, Collections.emptyList(), Collections.emptyList(), CONFIG_VERSION);
+            return new EarthGeneratorSettings(projection, legacy.customcubic, true, null, true, null, Collections.emptyList(), Collections.emptyList(), CONFIG_VERSION);
         }
 
         return TerraConstants.JSON_MAPPER.readValue(generatorSettings, EarthGeneratorSettings.class);
+    }
+
+    public static Path settingsFile(@NonNull Path worldDirectory) {
+        return worldDirectory.resolve("data").resolve(MODID).resolve("generator_settings.json5");
+    }
+
+    @SneakyThrows(IOException.class)
+    public static String readSettings(@NonNull Path settingsFile) {
+        return new String(Files.readAllBytes(settingsFile), StandardCharsets.UTF_8);
+    }
+
+    @SneakyThrows(IOException.class)
+    public static void writeSettings(@NonNull Path settingsFile, @NonNull String settings) {
+        Files.createDirectories(settingsFile.getParent());
+        Path tmpFile = settingsFile.resolveSibling(settingsFile.getFileName().toString() + ".tmp");
+        Files.write(tmpFile, settings.getBytes(StandardCharsets.UTF_8), CREATE, TRUNCATE_EXISTING, WRITE, SYNC);
+        Files.move(tmpFile, settingsFile, REPLACE_EXISTING, ATOMIC_MOVE);
     }
 
     @NonNull
@@ -129,7 +152,11 @@ public class EarthGeneratorSettings {
     @Getter(onMethod_ = { @JsonGetter })
     protected final boolean useDefaultHeights;
     @Getter(onMethod_ = { @JsonGetter })
+    protected final String[][] customHeights;
+    @Getter(onMethod_ = { @JsonGetter })
     protected final boolean useDefaultTreeCover;
+    @Getter(onMethod_ = { @JsonGetter })
+    protected final String[][] customTreeCover;
 
     protected transient final Ref<EarthBiomeProvider> biomeProvider = Ref.soft(() -> new EarthBiomeProvider(this));
     protected transient final Ref<CustomGeneratorSettings> customCubic = Ref.soft(() -> {
@@ -138,6 +165,7 @@ public class EarthGeneratorSettings {
             cfg = new CustomGeneratorSettings();
             cfg.mineshafts = cfg.caves = cfg.strongholds = cfg.dungeons = cfg.ravines = false;
             cfg.lakes.clear();
+            cfg.waterLevel = 0;
         } else {
             try {
                 cfg = CustomGenSettingsSerialization.jankson().fromJsonCarefully(this.cwg(), CustomGeneratorSettings.class);
@@ -148,7 +176,6 @@ public class EarthGeneratorSettings {
                 throw new RuntimeException(message, err);
             }
         }
-        cfg.waterLevel = 0;
         return cfg;
     });
     protected transient final Ref<GeneratorDatasets> datasets = Ref.soft(() -> new GeneratorDatasets(this));
@@ -163,7 +190,9 @@ public class EarthGeneratorSettings {
             @JsonProperty(value = "projection", required = true) @NonNull GeographicProjection projection,
             @JsonProperty(value = "cwg") String cwg,
             @JsonProperty(value = "useDefaultHeights") Boolean useDefaultHeights,
+            @JsonProperty(value = "customHeights") String[][] customHeights,
             @JsonProperty(value = "useDefaultTreeCover") @JsonAlias("useDefaultTrees") Boolean useDefaultTreeCover,
+            @JsonProperty(value = "customTreeCover") String[][] customTreeCover,
             @JsonProperty(value = "skipChunkPopulation") List<PopulateChunkEvent.Populate.EventType> skipChunkPopulation,
             @JsonProperty(value = "skipBiomeDecoration") List<DecorateBiomeEvent.Decorate.EventType> skipBiomeDecoration,
             @JsonProperty(value = "version", required = true) int version) {
@@ -172,7 +201,9 @@ public class EarthGeneratorSettings {
         this.projection = projection;
         this.cwg = Strings.isNullOrEmpty(cwg) ? "" : CustomGeneratorSettingsFixer.INSTANCE.fixJson(cwg).toJson(JsonGrammar.COMPACT);
         this.useDefaultHeights = useDefaultHeights != null ? useDefaultHeights : true;
+        this.customHeights = customHeights != null ? customHeights : new String[0][];
         this.useDefaultTreeCover = useDefaultTreeCover != null ? useDefaultTreeCover : true;
+        this.customTreeCover = customTreeCover != null ? customTreeCover : new String[0][];
 
         this.skipChunkPopulation = skipChunkPopulation != null ? Sets.immutableEnumSet(skipChunkPopulation) : Sets.immutableEnumSet(PopulateChunkEvent.Populate.EventType.ICE);
         this.skipBiomeDecoration = skipBiomeDecoration != null ? Sets.immutableEnumSet(skipBiomeDecoration) : Sets.immutableEnumSet(DecorateBiomeEvent.Decorate.EventType.TREE);

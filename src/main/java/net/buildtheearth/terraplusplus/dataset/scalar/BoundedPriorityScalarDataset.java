@@ -1,5 +1,8 @@
 package net.buildtheearth.terraplusplus.dataset.scalar;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
@@ -58,5 +61,22 @@ public class BoundedPriorityScalarDataset implements Bounds2d, IScalarDataset, C
     @Override
     public double maxZ() {
         return this.bounds.maxZ();
+    }
+
+    /**
+     * A {@link BoundedPriorityScalarDataset} which may be serialized as an arbitrary Jackson-serializable value.
+     *
+     * @author DaPorkchop_
+     */
+    @JsonSerialize
+    @Getter(onMethod_ = { @JsonValue })
+    public static class Serializable extends BoundedPriorityScalarDataset {
+        protected final Object toSerializeAs;
+
+        public Serializable(@NonNull IScalarDataset delegate, @NonNull Bounds2d bounds, double priority, Object toSerializeAs) {
+            super(delegate, bounds, priority);
+
+            this.toSerializeAs = toSerializeAs;
+        }
     }
 }

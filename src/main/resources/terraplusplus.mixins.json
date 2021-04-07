@@ -1,0 +1,15 @@
+{
+    "required": true,
+    "package": "net.buildtheearth.terraplusplus.asm",
+    "refmap": "terraplusplus.refmap.json",
+    "compatibilityLevel": "JAVA_8",
+    "minVersion": "0.7.10",
+    "mixins": [
+        "world.storage.MixinSaveHandler",
+        "world.storage.MixinWorldInfo"
+    ],
+    "client": [
+    ],
+    "server": [
+    ]
+}

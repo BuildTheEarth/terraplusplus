@@ -5,13 +5,19 @@ buildscript {
             name = "Minecraft Forge"
             url = "https://files.minecraftforge.net/maven"
         }
+        maven {
+            name = "SpongePowered"
+            url = "https://repo.spongepowered.org/maven"
+        }
     }
     dependencies {
         classpath "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
+        classpath "org.spongepowered:mixingradle:0.6-SNAPSHOT"
         classpath "com.github.jengelman.gradle.plugins:shadow:4.0.0"
     }
 }
 apply plugin: "net.minecraftforge.gradle.forge"
+apply plugin: "org.spongepowered.mixin"
 apply plugin: "com.github.johnrengelman.shadow"
 apply plugin: "maven-publish"
 
@@ -29,6 +35,8 @@ minecraft {
 
     mappings = "stable_39"
     makeObfSourceJar = false
+
+    coreMod = "net.buildtheearth.terraplusplus.asm.TerraPlusPlusMixinLoader"
 }
 
 configurations {
@@ -52,10 +60,13 @@ repositories {
 }
 
 dependencies {
-    deobfProvided ("com.github.OpenCubicChunks.CubicChunks:cubicchunks:f71aafb9854466ac5ffa0ccd2796921684f1d8b1") {
+    deobfProvided("com.github.OpenCubicChunks.CubicChunks:cubicchunks:f71aafb9854466ac5ffa0ccd2796921684f1d8b1") {
         transitive = false
     }
-    deobfProvided ("com.github.OpenCubicChunks:CubicWorldGen:27de56d2f792513873584b2f8fd9f3082fb259ec") {
+    annotationProcessor("com.github.OpenCubicChunks.CubicChunks:cubicchunks:f71aafb9854466ac5ffa0ccd2796921684f1d8b1") {
+        transitive = false
+    }
+    deobfProvided("com.github.OpenCubicChunks:CubicWorldGen:27de56d2f792513873584b2f8fd9f3082fb259ec") {
         transitive = false
     }
 
@@ -63,7 +74,7 @@ dependencies {
 
     shade "com.fasterxml.jackson.core:jackson-databind:2.11.2"
 
-    shade("net.daporkchop.lib:binary:0.5.5-SNAPSHOT")  {
+    shade("net.daporkchop.lib:binary:0.5.5-SNAPSHOT") {
         exclude group: "io.netty"
     }
 
@@ -92,11 +103,27 @@ processResources {
     }
 }
 
+mixin {
+    defaultObfuscationEnv searge
+    add sourceSets.main, "mixins.fp2.refmap.json"
+}
+
 shadowJar {
     classifier = null
     configurations = [project.configurations.shade]
 
     exclude 'module-info.class'
+
+    manifest {
+        attributes(
+                "MixinConfigs": "terraplusplus.mixins.json",
+                "tweakClass": "org.spongepowered.asm.launch.MixinTweaker",
+                "TweakOrder": 0,
+                "FMLCorePluginContainsFMLMod": "true",
+                "FMLCorePlugin": "net.buildtheearth.terraplusplus.asm.TerraPlusPlusMixinLoader",
+                "ForceLoadAsMod": "true"
+        )
+    }
 }
 build.dependsOn shadowJar
 
