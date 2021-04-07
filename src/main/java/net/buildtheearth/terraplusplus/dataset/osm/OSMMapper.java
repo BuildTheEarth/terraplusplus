@@ -1,9 +1,12 @@
 package net.buildtheearth.terraplusplus.dataset.osm;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.BiMap;
 import com.google.gson.JsonParseException;
 import com.google.gson.stream.JsonReader;
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.dataset.geojson.Geometry;
 import net.buildtheearth.terraplusplus.dataset.vector.geometry.VectorGeometry;
@@ -22,6 +25,7 @@ import java.util.Map;
  *
  * @author DaPorkchop_
  */
+@JsonDeserialize(as = Root.class)
 @FunctionalInterface
 public interface OSMMapper<G extends Geometry> {
     @SneakyThrows(IOException.class)

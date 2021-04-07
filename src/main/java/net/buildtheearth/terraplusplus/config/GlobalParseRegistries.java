@@ -9,6 +9,23 @@ import com.google.common.collect.HashBiMap;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.line.LineMapper;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.line.LineMapperAll;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.line.LineMapperAny;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.line.LineMapperCondition;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.line.LineMapperFirst;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.line.LineMapperNarrow;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.line.LineMapperNothing;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.line.LineMapperWide;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapperAll;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapperAny;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapperCondition;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapperConvertToLines;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapperDistance;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapperFill;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapper;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapperFirst;
+import net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon.PolygonMapperNothing;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.format.TileFormat;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.format.TileFormatTiff;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.mode.TileMode;
@@ -69,6 +86,33 @@ public class GlobalParseRegistries {
     public final BiMap<String, Class<? extends TileMode>> TILE_MODES = new BiMapBuilder<String, Class<? extends TileMode>>()
             .put("simple", TileModeSimple.class)
             .put("slippy", TileModeSlippyMap.class)
+            .build();
+
+    public final BiMap<String, Class<? extends LineMapper>> OSM_LINE_MAPPERS = new BiMapBuilder<String, Class<? extends LineMapper>>()
+            //mergers
+            .put("all", LineMapperAll.class)
+            .put("any", LineMapperAny.class)
+            .put("first", LineMapperFirst.class)
+            //misc.
+            .put("condition", LineMapperCondition.class)
+            .put("nothing", LineMapperNothing.class)
+            //emitters
+            .put("narrow", LineMapperNarrow.class)
+            .put("wide", LineMapperWide.class)
+            .build();
+
+    public final BiMap<String, Class<? extends PolygonMapper>> OSM_POLYGON_MAPPERS = new BiMapBuilder<String, Class<? extends PolygonMapper>>()
+            //mergers
+            .put("all", PolygonMapperAll.class)
+            .put("any", PolygonMapperAny.class)
+            .put("first", PolygonMapperFirst.class)
+            //misc.
+            .put("condition", PolygonMapperCondition.class)
+            .put("convert_to_lines", PolygonMapperConvertToLines.class)
+            .put("nothing", PolygonMapperNothing.class)
+            //emitters
+            .put("distance", PolygonMapperDistance.class)
+            .put("fill", PolygonMapperFill.class)
             .build();
 
     /**
