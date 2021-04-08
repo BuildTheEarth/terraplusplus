@@ -8,8 +8,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -28,9 +26,11 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.With;
-import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
+import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettings;
+import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettingsAll;
+import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettingsDefault;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.transform.FlipHorizontalProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.FlipVerticalProjectionTransform;
@@ -38,9 +38,9 @@ import net.buildtheearth.terraplusplus.projection.transform.OffsetProjectionTran
 import net.buildtheearth.terraplusplus.projection.transform.ProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ScaleProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.SwapAxesProjectionTransform;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.ref.Ref;
-import net.minecraft.world.biome.BiomeProvider;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 
@@ -58,9 +58,9 @@ import static java.nio.file.StandardOpenOption.*;
 import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @With
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class EarthGeneratorSettings {
     public static final int CONFIG_VERSION = 2;
     public static final String DEFAULT_SETTINGS;
@@ -119,7 +119,7 @@ public class EarthGeneratorSettings {
                 projection = new ScaleProjectionTransform(projection, legacy.scaleX, legacy.scaleY);
             }
 
-            return new EarthGeneratorSettings(projection, legacy.customcubic, true, null, true, null, Collections.emptyList(), Collections.emptyList(), CONFIG_VERSION);
+            return new EarthGeneratorSettings(projection, legacy.customcubic, true, null, true, null, null, Collections.emptyList(), Collections.emptyList(), CONFIG_VERSION);
         }
 
         return TerraConstants.JSON_MAPPER.readValue(generatorSettings, EarthGeneratorSettings.class);
@@ -158,6 +158,9 @@ public class EarthGeneratorSettings {
     @Getter(onMethod_ = { @JsonGetter })
     protected final String[][] customTreeCover;
 
+    @Getter(onMethod_ = { @JsonGetter })
+    protected final GeneratorOSMSettings osmSettings;
+
     protected transient final Ref<EarthBiomeProvider> biomeProvider = Ref.soft(() -> new EarthBiomeProvider(this));
     protected transient final Ref<CustomGeneratorSettings> customCubic = Ref.soft(() -> {
         CustomGeneratorSettings cfg;
@@ -180,10 +183,10 @@ public class EarthGeneratorSettings {
     });
     protected transient final Ref<GeneratorDatasets> datasets = Ref.soft(() -> new GeneratorDatasets(this));
 
-    @Getter
-    protected transient final Set<PopulateChunkEvent.Populate.EventType> skipChunkPopulation;
-    @Getter
-    protected transient final Set<DecorateBiomeEvent.Decorate.EventType> skipBiomeDecoration;
+    @Getter(onMethod_ = { @JsonGetter })
+    protected final Set<PopulateChunkEvent.Populate.EventType> skipChunkPopulation;
+    @Getter(onMethod_ = { @JsonGetter })
+    protected final Set<DecorateBiomeEvent.Decorate.EventType> skipBiomeDecoration;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public EarthGeneratorSettings(
@@ -193,6 +196,7 @@ public class EarthGeneratorSettings {
             @JsonProperty(value = "customHeights") String[][] customHeights,
             @JsonProperty(value = "useDefaultTreeCover") @JsonAlias("useDefaultTrees") Boolean useDefaultTreeCover,
             @JsonProperty(value = "customTreeCover") String[][] customTreeCover,
+            @JsonProperty(value = "osmSettings") GeneratorOSMSettings osmSettings,
             @JsonProperty(value = "skipChunkPopulation") List<PopulateChunkEvent.Populate.EventType> skipChunkPopulation,
             @JsonProperty(value = "skipBiomeDecoration") List<DecorateBiomeEvent.Decorate.EventType> skipBiomeDecoration,
             @JsonProperty(value = "version", required = true) int version) {
@@ -204,6 +208,8 @@ public class EarthGeneratorSettings {
         this.customHeights = customHeights != null ? customHeights : new String[0][];
         this.useDefaultTreeCover = useDefaultTreeCover != null ? useDefaultTreeCover : true;
         this.customTreeCover = customTreeCover != null ? customTreeCover : new String[0][];
+
+        this.osmSettings = osmSettings != null ? osmSettings : new GeneratorOSMSettingsDefault();
 
         this.skipChunkPopulation = skipChunkPopulation != null ? Sets.immutableEnumSet(skipChunkPopulation) : Sets.immutableEnumSet(PopulateChunkEvent.Populate.EventType.ICE);
         this.skipBiomeDecoration = skipBiomeDecoration != null ? Sets.immutableEnumSet(skipBiomeDecoration) : Sets.immutableEnumSet(DecorateBiomeEvent.Decorate.EventType.TREE);
@@ -221,16 +227,6 @@ public class EarthGeneratorSettings {
     @JsonGetter("version")
     private int version() {
         return CONFIG_VERSION;
-    }
-
-    @JsonGetter("skipChunkPopulation")
-    private PopulateChunkEvent.Populate.EventType[] getSkipChunkPopulation() {
-        return this.skipChunkPopulation.toArray(new PopulateChunkEvent.Populate.EventType[0]);
-    }
-
-    @JsonGetter("skipBiomeDecoration")
-    private DecorateBiomeEvent.Decorate.EventType[] getSkipBiomeDecoration() {
-        return this.skipBiomeDecoration.toArray(new DecorateBiomeEvent.Decorate.EventType[0]);
     }
 
     public EarthBiomeProvider biomeProvider() {
@@ -252,6 +248,7 @@ public class EarthGeneratorSettings {
      * @author SmylerMC
      */
     @JsonIgnore
+    @Deprecated
     public String getLegacyGeneratorString() {
         LegacyConfig legacy = new LegacyConfig();
         legacy.scaleX = 1;
@@ -310,8 +307,6 @@ public class EarthGeneratorSettings {
         }
     }
 
-    @JsonDeserialize
-    @JsonSerialize
     private static class LegacyConfig {
         private static GeographicProjection orientProjectionLegacy(GeographicProjection base, Orientation orientation) {
             if (base.upright()) {

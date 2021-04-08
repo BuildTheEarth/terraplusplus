@@ -3,9 +3,11 @@ package net.buildtheearth.terraplusplus.generator;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import net.buildtheearth.terraplusplus.TerraConfig;
+import net.buildtheearth.terraplusplus.dataset.IElementDataset;
 import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
 import net.buildtheearth.terraplusplus.dataset.builtin.Climate;
 import net.buildtheearth.terraplusplus.dataset.builtin.Soil;
+import net.buildtheearth.terraplusplus.dataset.geojson.Geometry;
 import net.buildtheearth.terraplusplus.dataset.geojson.dataset.ParsingGeoJsonDataset;
 import net.buildtheearth.terraplusplus.dataset.geojson.dataset.ReferenceResolvingGeoJsonDataset;
 import net.buildtheearth.terraplusplus.dataset.geojson.dataset.TiledGeoJsonDataset;
@@ -13,6 +15,7 @@ import net.buildtheearth.terraplusplus.dataset.osm.OSMMapper;
 import net.buildtheearth.terraplusplus.dataset.scalar.ScalarDatasetConfigurationParser;
 import net.buildtheearth.terraplusplus.dataset.vector.GeoJsonToVectorDataset;
 import net.buildtheearth.terraplusplus.dataset.vector.VectorTiledDataset;
+import net.buildtheearth.terraplusplus.dataset.vector.geometry.VectorGeometry;
 import net.buildtheearth.terraplusplus.event.InitDatasetsEvent;
 import net.buildtheearth.terraplusplus.event.InitEarthRegistryEvent;
 import net.buildtheearth.terraplusplus.generator.biome.IEarthBiomeFilter;
@@ -30,6 +33,7 @@ import net.buildtheearth.terraplusplus.generator.populate.IEarthPopulator;
 import net.buildtheearth.terraplusplus.generator.populate.SnowPopulator;
 import net.buildtheearth.terraplusplus.generator.populate.TreePopulator;
 import net.buildtheearth.terraplusplus.util.OrderedRegistry;
+import net.buildtheearth.terraplusplus.util.bvh.BVH;
 import net.minecraftforge.common.MinecraftForge;
 
 import java.lang.reflect.Array;
@@ -76,7 +80,10 @@ public class EarthGeneratorPipelines {
 
         ParsingGeoJsonDataset rawOsm = new ParsingGeoJsonDataset(TerraConfig.openstreetmap.servers);
         event.register(KEY_DATASET_OSM_RAW, new TiledGeoJsonDataset(new ReferenceResolvingGeoJsonDataset(rawOsm)));
-        event.register(KEY_DATASET_OSM_PARSED, new VectorTiledDataset(new GeoJsonToVectorDataset(rawOsm, OSMMapper.load(), settings.projection())));
+        OSMMapper<Geometry> osmMapper = settings.osmSettings().mapper();
+        event.register(KEY_DATASET_OSM_PARSED, osmMapper != null
+                ? new VectorTiledDataset(new GeoJsonToVectorDataset(rawOsm, osmMapper, settings.projection()))
+                : IElementDataset.empty(BVH.class));
 
         event.register(KEY_DATASET_TERRA121_PRECIPITATION, new Climate.Precipitation());
         event.register(KEY_DATASET_TERRA121_SOIL, new Soil());

@@ -52,6 +52,12 @@ import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWeightAdd
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWeightClamp;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWeightGreaterThan;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWeightLessThan;
+import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettings;
+import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettingsAll;
+import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettingsCustom;
+import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettingsDefault;
+import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettingsDisable;
+import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettingsToggle;
 import net.buildtheearth.terraplusplus.projection.EqualEarthProjection;
 import net.buildtheearth.terraplusplus.projection.EquirectangularProjection;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
@@ -177,6 +183,14 @@ public class GlobalParseRegistries {
             .put("water", DrawFunctionWater.class)
             .build();
 
+    public final BiMap<String, Class<? extends GeneratorOSMSettings>> GENERATOR_SETTINGS_OSM = new BiMapBuilder<String, Class<? extends GeneratorOSMSettings>>()
+            .put("all", GeneratorOSMSettingsAll.class)
+            .put("custom", GeneratorOSMSettingsCustom.class)
+            .put("default", GeneratorOSMSettingsDefault.class)
+            .put("disable", GeneratorOSMSettingsDisable.class)
+            .put("toggle", GeneratorOSMSettingsToggle.class)
+            .build();
+
     /**
      * Stupid builder class so that I can populate the initial values cleanly using chained method calls.
      *
@@ -201,6 +215,11 @@ public class GlobalParseRegistries {
         }
     }
 
+    /**
+     * Base implementation of a {@link com.fasterxml.jackson.databind.jsontype.TypeIdResolver} which uses a {@link BiMap}.
+     *
+     * @author DaPorkchop_
+     */
     @RequiredArgsConstructor
     public static abstract class TypeIdResolver<T> extends TypeIdResolverBase {
         @NonNull
