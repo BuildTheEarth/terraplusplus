@@ -21,7 +21,7 @@ public final class GeneratorBiomeSettingsOverrides implements GeneratorBiomeSett
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public GeneratorBiomeSettingsOverrides(
-            @JsonProperty(value = "areas", required = true) @NonNull UserOverrideBiomeFilter.BiomeOverrideArea[] areas) {
+            @JsonProperty(value = "areas", required = true) @NonNull UserOverrideBiomeFilter.BiomeOverrideArea... areas) {
         this.areas = areas;
     }
 

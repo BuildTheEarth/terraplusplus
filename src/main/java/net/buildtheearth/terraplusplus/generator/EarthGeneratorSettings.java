@@ -28,7 +28,9 @@ import lombok.SneakyThrows;
 import lombok.With;
 import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
+import net.buildtheearth.terraplusplus.generator.settings.GeneratorTerrainSettings;
 import net.buildtheearth.terraplusplus.generator.settings.biome.GeneratorBiomeSettings;
+import net.buildtheearth.terraplusplus.generator.settings.biome.GeneratorBiomeSettingsOverrides;
 import net.buildtheearth.terraplusplus.generator.settings.biome.GeneratorBiomeSettingsTerra121;
 import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettings;
 import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettingsDefault;
@@ -121,7 +123,7 @@ public class EarthGeneratorSettings {
                 projection = new ScaleProjectionTransform(projection, legacy.scaleX, legacy.scaleY);
             }
 
-            return new EarthGeneratorSettings(projection, legacy.customcubic, true, null, true, null, null, null, Collections.emptyList(), Collections.emptyList(), CONFIG_VERSION);
+            return new EarthGeneratorSettings(projection, legacy.customcubic, true, null, true, null, null, null, null, Collections.emptyList(), Collections.emptyList(), CONFIG_VERSION);
         }
 
         return TerraConstants.JSON_MAPPER.readValue(generatorSettings, EarthGeneratorSettings.class);
@@ -164,6 +166,8 @@ public class EarthGeneratorSettings {
     protected final List<GeneratorBiomeSettings> biomeSettings;
     @Getter(onMethod_ = { @JsonGetter })
     protected final GeneratorOSMSettings osmSettings;
+    @Getter(onMethod_ = { @JsonGetter })
+    protected final GeneratorTerrainSettings terrainSettings;
 
     protected transient final Ref<EarthBiomeProvider> biomeProvider = Ref.soft(() -> new EarthBiomeProvider(this));
     protected transient final Ref<CustomGeneratorSettings> customCubic = Ref.soft(() -> {
@@ -202,6 +206,7 @@ public class EarthGeneratorSettings {
             @JsonProperty(value = "customTreeCover") String[][] customTreeCover,
             @JsonProperty(value = "biomeSettings") List<GeneratorBiomeSettings> biomeSettings,
             @JsonProperty(value = "osmSettings") GeneratorOSMSettings osmSettings,
+            @JsonProperty(value = "terrainSettings") GeneratorTerrainSettings terrainSettings,
             @JsonProperty(value = "skipChunkPopulation") List<PopulateChunkEvent.Populate.EventType> skipChunkPopulation,
             @JsonProperty(value = "skipBiomeDecoration") List<DecorateBiomeEvent.Decorate.EventType> skipBiomeDecoration,
             @JsonProperty(value = "version", required = true) int version) {
@@ -214,8 +219,9 @@ public class EarthGeneratorSettings {
         this.useDefaultTreeCover = useDefaultTreeCover != null ? useDefaultTreeCover : true;
         this.customTreeCover = customTreeCover != null ? customTreeCover : new String[0][];
 
-        this.biomeSettings = biomeSettings != null ? biomeSettings : Arrays.asList(new GeneratorBiomeSettingsTerra121());
+        this.biomeSettings = biomeSettings != null ? biomeSettings : Arrays.asList(new GeneratorBiomeSettingsTerra121(), new GeneratorBiomeSettingsOverrides());
         this.osmSettings = osmSettings != null ? osmSettings : new GeneratorOSMSettingsDefault();
+        this.terrainSettings = terrainSettings != null ? terrainSettings : GeneratorTerrainSettings.DEFAULT;
 
         this.skipChunkPopulation = skipChunkPopulation != null ? Sets.immutableEnumSet(skipChunkPopulation) : Sets.immutableEnumSet(PopulateChunkEvent.Populate.EventType.ICE);
         this.skipBiomeDecoration = skipBiomeDecoration != null ? Sets.immutableEnumSet(skipBiomeDecoration) : Sets.immutableEnumSet(DecorateBiomeEvent.Decorate.EventType.TREE);

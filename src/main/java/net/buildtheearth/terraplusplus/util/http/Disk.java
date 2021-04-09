@@ -138,16 +138,6 @@ public class Disk {
         }
     }
 
-    /**
-     * Gets the path to an additional configuration file with the given name.
-     *
-     * @param name the configuration file's name
-     * @return the path to the configuration file
-     */
-    public Path configFile(@NonNull String name) {
-        return CACHE_ROOT.resolveSibling("config").resolve(name);
-    }
-
     private void pruneCache() throws IOException {
         if (!TerraConfig.reducedConsoleMessages) {
             TerraMod.LOGGER.info("running cache cleanup...");

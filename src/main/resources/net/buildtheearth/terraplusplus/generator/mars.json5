@@ -28,6 +28,24 @@
     "osmSettings": {
         "type": "disable"
     },
+    "terrainSettings": {
+        "water": {
+            "id": "minecraft:air"
+        },
+        "surface": {
+            "id": "minecraft:sand",
+            "properties": {
+                "variant": "red_sand"
+            }
+        },
+        "top": {
+            "id": "minecraft:sand",
+            "properties": {
+                "variant": "red_sand"
+            }
+        },
+        "useCwgReplacers": false
+    },
     "skipChunkPopulation": [
         "DUNGEON",
         "FIRE",

@@ -86,7 +86,6 @@ public class PresetEarthGui extends GuiScreen {
         this.presetTextField = new GuiTextField(0, this.fontRenderer, this.width / 2 - 100, 40, 200, 20);
         this.presetTextField.setMaxStringLength(Integer.MAX_VALUE);
         this.setSettingsJson(this.settings);
-
     }
 
     @Override
@@ -117,6 +116,7 @@ public class PresetEarthGui extends GuiScreen {
                 EarthGeneratorSettings.parseUncached(newText);
                 this.presetTextField.setTextColor(0xFFFFFFFF);
                 this.doneButton.enabled = true;
+                this.setSettingsJson(newText);
             } catch (Exception e) {
                 this.presetTextField.setTextColor(0xFFFF6060);
                 this.doneButton.enabled = false;

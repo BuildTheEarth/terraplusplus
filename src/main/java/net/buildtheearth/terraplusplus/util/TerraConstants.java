@@ -3,7 +3,7 @@ package net.buildtheearth.terraplusplus.util;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.experimental.UtilityClass;
-import net.buildtheearth.terraplusplus.util.jackson.mixin.BiomeDeserializeMixin;
+import net.buildtheearth.terraplusplus.util.jackson.mixin.BiomeMixin;
 import net.buildtheearth.terraplusplus.util.jackson.mixin.BlockStateMixin;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.biome.Biome;
@@ -25,7 +25,7 @@ public class TerraConstants {
             .configure(JsonReadFeature.ALLOW_LEADING_DECIMAL_POINT_FOR_NUMBERS, true)
             .configure(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS, true)
             .configure(JsonReadFeature.ALLOW_TRAILING_COMMA, true)
-            .addMixIn(Biome.class, BiomeDeserializeMixin.class)
+            .addMixIn(Biome.class, BiomeMixin.class)
             .addMixIn(IBlockState.class, BlockStateMixin.class)
             .build();
 

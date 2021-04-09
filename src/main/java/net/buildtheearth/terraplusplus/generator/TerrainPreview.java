@@ -204,7 +204,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
             }
         }
 
-        State state = new State(EarthGeneratorSettings.parseUncached(new String(StreamUtil.toByteArray(EarthGeneratorSettings.class.getResourceAsStream("mars.json5")))));
+        State state = new State(EarthGeneratorSettings.parseUncached(new String(StreamUtil.toByteArray(EarthGeneratorSettings.class.getResourceAsStream("bte_generator_settings.json5")))));
         state.initSettings();
 
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d); //switzerland

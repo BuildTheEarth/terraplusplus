@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableSet;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -68,6 +69,7 @@ public class UserOverrideBiomeFilter implements IEarthBiomeFilter<UserOverrideBi
      * @author DaPorkchop_
      */
     @Getter(onMethod_ = { @JsonGetter })
+    @JsonDeserialize
     public static class BiomeOverrideArea implements Bounds2d, Comparable<BiomeOverrideArea> {
         protected final GeographicProjection projection;
         protected final Geometry geometry;
@@ -92,7 +94,7 @@ public class UserOverrideBiomeFilter implements IEarthBiomeFilter<UserOverrideBi
             this.geometry = geometry;
             this.bounds = geometry.project(projection::toGeo).bounds();
 
-            this.replace = replace != null ? ImmutableSet.copyOf(replace) : Collections.emptySet();
+            this.replace = replace != null ? ImmutableSet.copyOf(replace) : null;
             this.biome = biome;
 
             this.priority = priority;

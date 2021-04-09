@@ -27,14 +27,13 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.Cubi
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicRavineGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.feature.CubicStrongholdGenerator;
 import lombok.NonNull;
-import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.generator.data.IEarthDataBaker;
 import net.buildtheearth.terraplusplus.generator.populate.IEarthPopulator;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TextComponentString;
@@ -222,7 +221,7 @@ public class EarthGenerator extends BasicCubeGenerator {
     }
 
     @Deprecated
-	@Override
+    @Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) { //legacy compat method
         CubePrimer primer = new CubePrimer();
         CachedChunkData data = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ)).join();
@@ -275,23 +274,23 @@ public class EarthGenerator extends BasicCubeGenerator {
     }
 
     protected void generateSurface(int cubeX, int cubeY, int cubeZ, CubePrimer primer, CachedChunkData data) {
-        IBlockState stone = Blocks.STONE.getDefaultState();
-        IBlockState water = Blocks.WATER.getDefaultState();
+        IBlockState fill = this.settings.terrainSettings().fill();
+        IBlockState water = this.settings.terrainSettings().water();
+        IBlockState surface = this.settings.terrainSettings().surface();
+        IBlockState top = this.settings.terrainSettings().top();
+
         if (data.belowSurface(cubeY + 2)) { //below surface -> solid stone (padding of 2 cubes because some replacers might need it)
             //technically, i could reflectively get access to the primer's underlying char[] and use Arrays.fill(), because this
             // implementation causes 4096 calls to ObjectIntIdentityMap#get() when only 1 would be necessary...
             for (int x = 0; x < 16; x++) {
                 for (int y = 0; y < 16; y++) {
                     for (int z = 0; z < 16; z++) {
-                        primer.setBlockState(x, y, z, stone);
+                        primer.setBlockState(x, y, z, fill);
                     }
                 }
             }
         } else if (data.aboveSurface(cubeY)) { //above surface -> air (no padding here, replacers don't normally affect anything above the surface)
         } else {
-            IBlockState grass = Blocks.GRASS.getDefaultState();
-            IBlockState dirt = Blocks.DIRT.getDefaultState();
-
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
                     int groundHeight = data.groundHeight(x, z);
@@ -306,26 +305,41 @@ public class EarthGenerator extends BasicCubeGenerator {
                     int groundTopInCube = min(groundTop, 15);
                     int waterTop = min(waterHeight - Coords.cubeToMinBlock(cubeY), 15);
 
-                    int blockX = Coords.cubeToMinBlock(cubeX) + x;
-                    int blockZ = Coords.cubeToMinBlock(cubeZ) + z;
-                    IBiomeBlockReplacer[] replacers = this.biomeBlockReplacers[data.biome(x, z) & 0xFF];
-                    for (int y = 0; y <= groundTopInCube; y++) {
-                        int blockY = Coords.cubeToMinBlock(cubeY) + y;
-                        double density = groundTop - y;
-                        IBlockState state = stone;
-                        for (IBiomeBlockReplacer replacer : replacers) {
-                            state = replacer.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
+                    if (this.settings.terrainSettings().useCwgReplacers()) {
+                        int blockX = Coords.cubeToMinBlock(cubeX) + x;
+                        int blockZ = Coords.cubeToMinBlock(cubeZ) + z;
+                        IBiomeBlockReplacer[] replacers = this.biomeBlockReplacers[data.biome(x, z) & 0xFF];
+                        for (int y = 0; y <= groundTopInCube; y++) {
+                            int blockY = Coords.cubeToMinBlock(cubeY) + y;
+                            double density = groundTop - y;
+                            IBlockState state = fill;
+                            for (IBiomeBlockReplacer replacer : replacers) {
+                                state = replacer.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
+                            }
+
+                            //calling this explicitly increases the likelihood of JIT inlining it
+                            //(for reference: previously, CliffReplacer was manually added to each biome as the last replacer)
+                            state = CliffReplacer.INSTANCE.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
+
+                            if (groundHeight < waterHeight && state == top) { //hacky workaround for underwater grass
+                                state = surface;
+                            }
+
+                            primer.setBlockState(x, y, z, state);
                         }
+                    } else {
+                        for (int y = 0; y <= groundTopInCube; y++) {
+                            IBlockState state;
+                            if (y == groundTop) {
+                                state = top;
+                            } else if (y + 5 >= groundTop) {
+                                state = surface;
+                            } else {
+                                state = fill;
+                            }
 
-                        //calling this explicitly increases the likelihood of JIT inlining it
-                        //(for reference: previously, CliffReplacer was manually added to each biome as the last replacer)
-                        state = CliffReplacer.INSTANCE.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
-
-                        if (groundHeight < waterHeight && state == grass) { //hacky workaround for underwater grass
-                            state = dirt;
+                            primer.setBlockState(x, y, z, state);
                         }
-
-                        primer.setBlockState(x, y, z, state);
                     }
 
                     //fill water
