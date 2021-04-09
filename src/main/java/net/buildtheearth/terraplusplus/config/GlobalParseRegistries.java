@@ -38,6 +38,7 @@ import net.buildtheearth.terraplusplus.dataset.osm.match.MatchConditionNot;
 import net.buildtheearth.terraplusplus.dataset.osm.match.MatchConditionOr;
 import net.buildtheearth.terraplusplus.dataset.osm.match.MatchConditionTag;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.format.TileFormat;
+import net.buildtheearth.terraplusplus.dataset.scalar.tile.format.TileFormatTerrariumPng;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.format.TileFormatTiff;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.mode.TileMode;
 import net.buildtheearth.terraplusplus.dataset.scalar.tile.mode.TileModeSimple;
@@ -121,6 +122,7 @@ public class GlobalParseRegistries {
             .build();
 
     public final BiMap<String, Class<? extends TileFormat>> TILE_FORMATS = new BiMapBuilder<String, Class<? extends TileFormat>>()
+            .put("terrarium_png", TileFormatTerrariumPng.class)
             .put("tiff", TileFormatTiff.class)
             .build();
 

@@ -34,7 +34,7 @@ public final class MatchConditionTag implements MatchCondition {
         for (Map.Entry<String, Set<String>> entry : this.tags.entrySet()) {
             String value = tags.get(entry.getKey());
             if (value == null //the tag isn't set
-                || (entry.getValue() != null && entry.getValue().contains(value))) { //the tag's value isn't whitelisted
+                || (entry.getValue() != null && !entry.getValue().contains(value))) { //the tag's value isn't whitelisted
                 return false;
             }
         }

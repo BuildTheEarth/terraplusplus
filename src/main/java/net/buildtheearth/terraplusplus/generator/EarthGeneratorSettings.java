@@ -151,6 +151,7 @@ public class EarthGeneratorSettings {
     public static void writeSettings(@NonNull Path settingsFile, @NonNull String settings) {
         Files.createDirectories(settingsFile.getParent());
         Path tmpFile = settingsFile.resolveSibling(settingsFile.getFileName().toString() + ".tmp");
+        settings = JSON_MAPPER.readTree(settings).toPrettyString();
         Files.write(tmpFile, settings.getBytes(StandardCharsets.UTF_8), CREATE, TRUNCATE_EXISTING, WRITE, SYNC);
         Files.move(tmpFile, settingsFile, REPLACE_EXISTING, ATOMIC_MOVE);
     }

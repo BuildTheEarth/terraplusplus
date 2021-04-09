@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 
 import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
+import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 /**
  * Helper class for parsing scalar datasets using the new format introduced in Terra++ 2.0.
@@ -116,23 +117,33 @@ public class ScalarDatasetConfigurationParser {
         protected final Tiles tiles;
         protected final Bounds bounds;
 
+        protected final String[] forceUrls;
+        protected final Double priority;
+
         @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
         public Dataset(
                 @JsonProperty(value = "version", required = true) @NonNull Version version, //validation is done in Version constructor during deserialization
                 @JsonProperty(value = "zoom", required = true) @JsonDeserialize(using = IntListDeserializer.class) @NonNull int[] zoom,
                 @JsonProperty(value = "tiles", required = true) @NonNull Tiles tiles,
-                @JsonProperty(value = "bounds", required = true) @NonNull Bounds bounds) {
+                @JsonProperty(value = "bounds", required = true) @NonNull Bounds bounds,
+                @JsonProperty(value = "force_urls", required = false) String[] forceUrls,
+                @JsonProperty(value = "priority", required = false) Double priority) {
             checkArg(zoom.length >= 1, "at least one zoom level must be set!");
 
             this.zoom = zoom;
             this.tiles = tiles;
             this.bounds = bounds;
+
+            this.forceUrls = forceUrls;
+            this.priority = priority;
         }
 
-        public BoundedPriorityScalarDataset toScalar(@NonNull String[] urls, double priority) {
+        public BoundedPriorityScalarDataset toScalar(@NonNull String[] urlsIn, double priority) {
+            String[] urls = fallbackIfNull(this.forceUrls, urlsIn);
+
             return new BoundedPriorityScalarDataset(
                     new MultiresScalarDataset(IntStream.of(this.zoom).mapToObj(zoom -> this.tiles.toScalar(urls, zoom)).toArray(IScalarDataset[]::new)),
-                    this.bounds.build(), priority);
+                    this.bounds.build(), fallbackIfNull(this.priority, priority));
         }
 
         @JsonDeserialize

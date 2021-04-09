@@ -208,9 +208,9 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         state.initSettings();
 
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d); //switzerland
-        proj = state.projection.fromGeo(12.58589, 55.68841); //copenhagen
+        //proj = state.projection.fromGeo(12.58589, 55.68841); //copenhagen
         //proj = state.projection.fromGeo(24.7535, 59.4435); //tallinn
-        proj = state.projection.fromGeo(14.50513, 46.05108); //ljubljana
+        //proj = state.projection.fromGeo(14.50513, 46.05108); //ljubljana
         state.setView(floorI(proj[0]) >> 4, floorI(proj[1]) >> 4, 0);
 
         state.update();
@@ -271,7 +271,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                 for (int tz = 0; tz < CHUNKS_PER_TILE; tz++) {
                     CachedChunkData data = dataFutures[ti++].join();
 
-                    byte[] treeCoverArr = data.getCustom(EarthGeneratorPipelines.KEY_DATA_TREE_COVER, DataBakerTreeCover.FALLBACK_TREE_DENSITY);
+                    byte[] treeCoverArr = data.getCustom(EarthGeneratorPipelines.KEY_DATA_TREE_COVER, DataBakerTreeCover.FALLBACK_TREE_DENSITY_ZERO);
 
                     int baseX = tx << 4;
                     int baseZ = tz << 4;
