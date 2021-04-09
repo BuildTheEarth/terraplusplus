@@ -1,15 +1,15 @@
 package net.buildtheearth.terraplusplus.generator.biome;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableSet;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import net.buildtheearth.terraplusplus.util.TerraConstants;
+import net.buildtheearth.terraplusplus.dataset.geojson.Geometry;
 import net.buildtheearth.terraplusplus.generator.ChunkBiomesBuilder;
 import net.buildtheearth.terraplusplus.generator.GeneratorDatasets;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
@@ -17,58 +17,34 @@ import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraplusplus.util.bvh.BVH;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
-import net.buildtheearth.terraplusplus.util.http.Disk;
-import net.daporkchop.lib.common.function.io.IOFunction;
-import net.daporkchop.lib.common.function.throwing.EFunction;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.biome.Biome;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 /**
  * @author DaPorkchop_
  */
-public class UserOverrideBiomeFilter implements IEarthBiomeFilter<UserOverrideBiomeFilter.BiomeBoundingBox> {
-    protected final BVH<BiomeBoundingBox> bvh;
+public class UserOverrideBiomeFilter implements IEarthBiomeFilter<UserOverrideBiomeFilter.BiomeOverrideArea> {
+    protected final BVH<BiomeOverrideArea> bvh;
 
-    @SneakyThrows(IOException.class)
-    public UserOverrideBiomeFilter(@NonNull GeographicProjection projection) {
-        List<URL> configSources = new ArrayList<>();
-        configSources.add(UserOverrideBiomeFilter.class.getResource("biome_overrides.json5"));
-
-        try (Stream<Path> stream = Files.list(Files.createDirectories(Disk.configFile("biome_overrides")))) {
-            stream.filter(Files::isRegularFile)
-                    .filter(p -> p.getFileName().toString().matches(".*\\.json5?$"))
-                    .map(Path::toUri).map((EFunction<URI, URL>) URI::toURL)
-                    .forEach(configSources::add);
-        }
-
-        this.bvh = BVH.of(configSources.stream()
-                .map((IOFunction<URL, BiomeBoundingBox[]>) url -> TerraConstants.JSON_MAPPER.readValue(url, BiomeBoundingBox[].class))
-                .flatMap(Arrays::stream)
-                .toArray(BiomeBoundingBox[]::new));
+    public UserOverrideBiomeFilter(@NonNull BiomeOverrideArea... areas) {
+        this.bvh = BVH.of(areas);
     }
 
     @Override
-    public CompletableFuture<BiomeBoundingBox> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
+    public CompletableFuture<BiomeOverrideArea> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
         return CompletableFuture.supplyAsync(() -> this.bvh.getAllIntersecting(boundsGeo).stream()
                 .max(Comparator.naturalOrder())
                 .orElse(null));
     }
 
     @Override
-    public void bake(ChunkPos pos, ChunkBiomesBuilder builder, BiomeBoundingBox bbox) {
+    public void bake(ChunkPos pos, ChunkBiomesBuilder builder, BiomeOverrideArea bbox) {
         if (bbox == null) { //out of bounds, or no override at this position
             return;
         }
@@ -91,45 +67,60 @@ public class UserOverrideBiomeFilter implements IEarthBiomeFilter<UserOverrideBi
      *
      * @author DaPorkchop_
      */
-    @JsonDeserialize
-    @JsonSerialize
-    @Getter
-    public static class BiomeBoundingBox implements Bounds2d, Comparable<BiomeBoundingBox> {
+    @Getter(onMethod_ = { @JsonGetter })
+    public static class BiomeOverrideArea implements Bounds2d, Comparable<BiomeOverrideArea> {
+        protected final GeographicProjection projection;
+        protected final Geometry geometry;
+
         protected final Set<Biome> replace;
         protected final Biome biome;
 
-        protected final double minX;
-        protected final double maxX;
-        protected final double minZ;
-        protected final double maxZ;
-
-        @Getter(onMethod_ = { @JsonGetter })
         protected final double priority;
 
-        @JsonCreator
-        public BiomeBoundingBox(
-                @JsonProperty(value = "replace", required = false) Biome[] replace,
-                @JsonProperty(value = "biome", required = true) @NonNull Biome biome,
-                @JsonProperty(value = "bounds", required = true) @NonNull Bounds2d bounds,
-                @JsonProperty(value = "priority", defaultValue = "0.0") double priority) {
-            this.replace = replace != null ? ImmutableSet.copyOf(replace) : null;
-            this.biome = biome;
-            this.priority = priority;
+        @Getter(AccessLevel.NONE)
+        protected final Bounds2d bounds;
 
-            this.minX = bounds.minX();
-            this.maxX = bounds.maxX();
-            this.minZ = bounds.minZ();
-            this.maxZ = bounds.maxZ();
+        @JsonCreator
+        @SneakyThrows(OutOfProjectionBoundsException.class)
+        public BiomeOverrideArea(
+                @JsonProperty(value = "projection", required = true) @NonNull GeographicProjection projection,
+                @JsonProperty(value = "geometry", required = true) @NonNull Geometry geometry,
+                @JsonProperty(value = "replace", required = false) Set<Biome> replace,
+                @JsonProperty(value = "biome", required = true) @JsonAlias({ "with" }) @NonNull Biome biome,
+                @JsonProperty(value = "priority", required = false) double priority) {
+            this.projection = projection;
+            this.geometry = geometry;
+            this.bounds = geometry.project(projection::toGeo).bounds();
+
+            this.replace = replace != null ? ImmutableSet.copyOf(replace) : Collections.emptySet();
+            this.biome = biome;
+
+            this.priority = priority;
         }
 
         @Override
-        public int compareTo(BiomeBoundingBox o) {
+        public int compareTo(BiomeOverrideArea o) {
             return -Double.compare(this.priority, o.priority);
         }
 
-        @JsonGetter("bounds")
-        public Bounds2d bounds() {
-            return Bounds2d.of(this.minX, this.maxX, this.minZ, this.maxZ);
+        @Override
+        public double minX() {
+            return this.bounds.minX();
+        }
+
+        @Override
+        public double maxX() {
+            return this.bounds.maxX();
+        }
+
+        @Override
+        public double minZ() {
+            return this.bounds.minZ();
+        }
+
+        @Override
+        public double maxZ() {
+            return this.bounds.maxZ();
         }
     }
 }

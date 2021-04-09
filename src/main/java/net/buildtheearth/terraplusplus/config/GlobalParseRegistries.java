@@ -52,6 +52,10 @@ import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWeightAdd
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWeightClamp;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWeightGreaterThan;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWeightLessThan;
+import net.buildtheearth.terraplusplus.generator.settings.biome.GeneratorBiomeSettings;
+import net.buildtheearth.terraplusplus.generator.settings.biome.GeneratorBiomeSettingsConstant;
+import net.buildtheearth.terraplusplus.generator.settings.biome.GeneratorBiomeSettingsOverrides;
+import net.buildtheearth.terraplusplus.generator.settings.biome.GeneratorBiomeSettingsTerra121;
 import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettings;
 import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettingsAll;
 import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettingsCustom;
@@ -181,6 +185,12 @@ public class GlobalParseRegistries {
             .put("no_trees", DrawFunctionNoTrees.class)
             .put("ocean", DrawFunctionOcean.class)
             .put("water", DrawFunctionWater.class)
+            .build();
+
+    public final BiMap<String, Class<? extends GeneratorBiomeSettings>> GENERATOR_SETTINGS_BIOME = new BiMapBuilder<String, Class<? extends GeneratorBiomeSettings>>()
+            .put("constant", GeneratorBiomeSettingsConstant.class)
+            .put("legacy_terra121", GeneratorBiomeSettingsTerra121.class)
+            .put("user_overrides", GeneratorBiomeSettingsOverrides.class)
             .build();
 
     public final BiMap<String, Class<? extends GeneratorOSMSettings>> GENERATOR_SETTINGS_OSM = new BiMapBuilder<String, Class<? extends GeneratorOSMSettings>>()

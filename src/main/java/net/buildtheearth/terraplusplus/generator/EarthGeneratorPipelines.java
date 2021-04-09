@@ -15,12 +15,9 @@ import net.buildtheearth.terraplusplus.dataset.osm.OSMMapper;
 import net.buildtheearth.terraplusplus.dataset.scalar.ScalarDatasetConfigurationParser;
 import net.buildtheearth.terraplusplus.dataset.vector.GeoJsonToVectorDataset;
 import net.buildtheearth.terraplusplus.dataset.vector.VectorTiledDataset;
-import net.buildtheearth.terraplusplus.dataset.vector.geometry.VectorGeometry;
 import net.buildtheearth.terraplusplus.event.InitDatasetsEvent;
 import net.buildtheearth.terraplusplus.event.InitEarthRegistryEvent;
 import net.buildtheearth.terraplusplus.generator.biome.IEarthBiomeFilter;
-import net.buildtheearth.terraplusplus.generator.biome.Terra121BiomeFilter;
-import net.buildtheearth.terraplusplus.generator.biome.UserOverrideBiomeFilter;
 import net.buildtheearth.terraplusplus.generator.data.HeightsBaker;
 import net.buildtheearth.terraplusplus.generator.data.IEarthDataBaker;
 import net.buildtheearth.terraplusplus.generator.data.InitialBiomesBaker;
@@ -94,10 +91,10 @@ public class EarthGeneratorPipelines {
     }
 
     public IEarthBiomeFilter<?>[] biomeFilters(@NonNull EarthGeneratorSettings settings) {
-        return fire(new InitEarthRegistryEvent<IEarthBiomeFilter>(settings,
-                uncheckedCast(new OrderedRegistry<IEarthBiomeFilter<?>>()
-                        .addLast("legacy_terra121", new Terra121BiomeFilter())
-                        .addLast("biome_overrides", new UserOverrideBiomeFilter(settings.projection())))) {});
+        OrderedRegistry<IEarthBiomeFilter<?>> registry = new OrderedRegistry<>();
+        settings.biomeSettings().forEach(b -> registry.addLast(b.typeId(), b.filter()));
+
+        return fire(new InitEarthRegistryEvent<IEarthBiomeFilter>(settings, uncheckedCast(registry)) {});
     }
 
     public IEarthDataBaker<?>[] dataBakers(@NonNull EarthGeneratorSettings settings) {

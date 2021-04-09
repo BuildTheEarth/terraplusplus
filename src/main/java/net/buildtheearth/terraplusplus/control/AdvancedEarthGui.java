@@ -28,6 +28,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -785,8 +786,6 @@ public class AdvancedEarthGui extends GuiScreen {
         public void actuallyDrawButton(Minecraft mc, int mouseX, int mouseY) {
             super.drawButton(mc, mouseX, mouseY, 0);
         }
-
-
     }
 
     /**
@@ -807,8 +806,6 @@ public class AdvancedEarthGui extends GuiScreen {
         public void actuallyDrawTextBox() {
             super.drawTextBox();
         }
-
-
     }
 
     public static class EnumSelectionListEntry<T extends Enum<T>> implements Entry {
@@ -823,7 +820,8 @@ public class AdvancedEarthGui extends GuiScreen {
             this.values = EnumSet.copyOf(values);
 
             for (T value : allValues) {
-                gui.addButton(new GuiButton(0, x + 2, y + this.height, width - 2, 20, value + ": " + I18n.format("options." + (this.values.contains(value) ? "off" : "on"))) {
+                boolean contains = this.values.contains(value);
+                gui.addButton(new GuiButton(0, x + 2, y + this.height, width - 2, 20, value + ": " + (contains ? TextFormatting.RED : TextFormatting.GREEN) + I18n.format("options." + (contains ? "off" : "on"))) {
                     @Override
                     public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
                         if (super.mousePressed(mc, mouseX, mouseY)) {

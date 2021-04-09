@@ -4,12 +4,14 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import net.buildtheearth.terraplusplus.generator.data.TreeCoverBaker;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.EmptyWorld;
 import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.http.Http;
+import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.util.math.BlockPos;
@@ -27,6 +29,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
@@ -58,7 +61,8 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         }
     }
 
-    private static void doThing() throws OutOfProjectionBoundsException { //allows hot-swapping
+    @SneakyThrows({ IOException.class, OutOfProjectionBoundsException.class})
+    private static void doThing() { //allows hot-swapping
         final int COUNT = 5;
         final int SHIFT = 1;
         final int CANVAS_SIZE = SIZE * COUNT;
@@ -200,7 +204,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
             }
         }
 
-        State state = new State(EarthGeneratorSettings.parseUncached(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS));
+        State state = new State(EarthGeneratorSettings.parseUncached(new String(StreamUtil.toByteArray(EarthGeneratorSettings.class.getResourceAsStream("mars.json5")))));
         state.initSettings();
 
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d); //switzerland

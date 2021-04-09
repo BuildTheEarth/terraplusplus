@@ -1,0 +1,67 @@
+{
+    "projection": {
+        "flip_vertical": {
+            "delegate": {
+                "scale": {
+                    "delegate": {
+                        "equal_earth": {}
+                    },
+                    "x": 4268600,
+                    "y": 4268600
+                }
+            }
+        }
+    },
+    "useDefaultHeights": false,
+    "customHeights": [
+        [
+            "https://cloud.daporkchop.net/gis/dem/mars/"
+        ]
+    ],
+    "useDefaultTreeCover": false,
+    "biomeSettings": [
+        {
+            "type": "constant",
+            "biome": "minecraft:mesa"
+        }
+    ],
+    "osmSettings": {
+        "type": "disable"
+    },
+    "skipChunkPopulation": [
+        "DUNGEON",
+        "FIRE",
+        "GLOWSTONE",
+        "ICE",
+        "LAKE",
+        "LAVA",
+        "NETHER_LAVA",
+        "NETHER_LAVA2",
+        "NETHER_MAGMA",
+        "ANIMALS",
+        "CUSTOM"
+    ],
+    "skipBiomeDecoration": [
+        "BIG_SHROOM",
+        "CACTUS",
+        "CLAY",
+        "DEAD_BUSH",
+        "DESERT_WELL",
+        "LILYPAD",
+        "FLOWERS",
+        "FOSSIL",
+        "GRASS",
+        "ICE",
+        "LAKE_WATER",
+        "LAKE_LAVA",
+        "PUMPKIN",
+        "REED",
+        "ROCK",
+        "SAND",
+        "SAND_PASS2",
+        "SHROOM",
+        "TREE",
+        "CUSTOM"
+    ],
+    "version": 2
+}
