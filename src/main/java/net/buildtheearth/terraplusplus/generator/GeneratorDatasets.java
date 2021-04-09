@@ -12,11 +12,13 @@ import net.buildtheearth.terraplusplus.util.CustomAttributeContainer;
  */
 @Getter
 public class GeneratorDatasets extends CustomAttributeContainer {
+    protected final EarthGeneratorSettings settings;
     protected final GeographicProjection projection;
 
     public GeneratorDatasets(@NonNull EarthGeneratorSettings settings) {
         super(EarthGeneratorPipelines.datasets(settings));
 
+        this.settings = settings;
         this.projection = settings.projection();
     }
 }

@@ -1,5 +1,6 @@
 package net.buildtheearth.terraplusplus.generator.data;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorPipelines;
@@ -17,7 +18,8 @@ import static net.daporkchop.lib.common.math.PMath.*;
 /**
  * @author DaPorkchop_
  */
-public class HeightsBaker implements IEarthDataBaker<double[]> {
+@JsonDeserialize
+public final class DataBakerHeights implements IEarthDataBaker<double[]> {
     @Override
     public CompletableFuture<double[]> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
         return datasets.<IScalarDataset>getCustom(EarthGeneratorPipelines.KEY_DATASET_HEIGHTS).getAsync(boundsGeo, 16, 16);

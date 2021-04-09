@@ -388,7 +388,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         this.cubiccfg.expectedBaseHeight = (float) datas[0].groundHeight(15, 15);
 
         for (IEarthPopulator populator : this.populators) {
-            populator.populate(this.world, random, cube.getCoords(), biome, datas);
+            populator.populate(this.world, random, cube.getCoords(), biome, datas, this.settings);
         }
     }
 

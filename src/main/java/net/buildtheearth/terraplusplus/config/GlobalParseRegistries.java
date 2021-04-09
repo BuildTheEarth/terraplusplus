@@ -52,10 +52,20 @@ import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWeightAdd
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWeightClamp;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWeightGreaterThan;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWeightLessThan;
-import net.buildtheearth.terraplusplus.generator.settings.biome.GeneratorBiomeSettings;
-import net.buildtheearth.terraplusplus.generator.settings.biome.GeneratorBiomeSettingsConstant;
-import net.buildtheearth.terraplusplus.generator.settings.biome.GeneratorBiomeSettingsOverrides;
-import net.buildtheearth.terraplusplus.generator.settings.biome.GeneratorBiomeSettingsTerra121;
+import net.buildtheearth.terraplusplus.generator.biome.BiomeFilterConstant;
+import net.buildtheearth.terraplusplus.generator.biome.BiomeFilterTerra121;
+import net.buildtheearth.terraplusplus.generator.biome.BiomeFilterUserOverride;
+import net.buildtheearth.terraplusplus.generator.biome.IEarthBiomeFilter;
+import net.buildtheearth.terraplusplus.generator.data.DataBakerOSM;
+import net.buildtheearth.terraplusplus.generator.data.DataBakerHeights;
+import net.buildtheearth.terraplusplus.generator.data.IEarthDataBaker;
+import net.buildtheearth.terraplusplus.generator.data.DataBakerInitialBiomes;
+import net.buildtheearth.terraplusplus.generator.data.DataBakerNullIsland;
+import net.buildtheearth.terraplusplus.generator.data.DataBakerTreeCover;
+import net.buildtheearth.terraplusplus.generator.populate.PopulatorBiomeDecoration;
+import net.buildtheearth.terraplusplus.generator.populate.IEarthPopulator;
+import net.buildtheearth.terraplusplus.generator.populate.PopulatorSnow;
+import net.buildtheearth.terraplusplus.generator.populate.PopulatorTrees;
 import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettings;
 import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettingsAll;
 import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettingsCustom;
@@ -187,18 +197,32 @@ public class GlobalParseRegistries {
             .put("water", DrawFunctionWater.class)
             .build();
 
-    public final BiMap<String, Class<? extends GeneratorBiomeSettings>> GENERATOR_SETTINGS_BIOME = new BiMapBuilder<String, Class<? extends GeneratorBiomeSettings>>()
-            .put("constant", GeneratorBiomeSettingsConstant.class)
-            .put("legacy_terra121", GeneratorBiomeSettingsTerra121.class)
-            .put("user_overrides", GeneratorBiomeSettingsOverrides.class)
-            .build();
-
     public final BiMap<String, Class<? extends GeneratorOSMSettings>> GENERATOR_SETTINGS_OSM = new BiMapBuilder<String, Class<? extends GeneratorOSMSettings>>()
             .put("all", GeneratorOSMSettingsAll.class)
             .put("custom", GeneratorOSMSettingsCustom.class)
             .put("default", GeneratorOSMSettingsDefault.class)
             .put("disable", GeneratorOSMSettingsDisable.class)
             .put("toggle", GeneratorOSMSettingsToggle.class)
+            .build();
+
+    public final BiMap<String, Class<? extends IEarthBiomeFilter>> GENERATOR_SETTINGS_BIOME_FILTER = new BiMapBuilder<String, Class<? extends IEarthBiomeFilter>>()
+            .put("constant", BiomeFilterConstant.class)
+            .put("legacy_terra121", BiomeFilterTerra121.class)
+            .put("user_overrides", BiomeFilterUserOverride.class)
+            .build();
+
+    public final BiMap<String, Class<? extends IEarthDataBaker>> GENERATOR_SETTINGS_DATA_BAKER = new BiMapBuilder<String, Class<? extends IEarthDataBaker>>()
+            .put("heights", DataBakerHeights.class)
+            .put("initial_biomes", DataBakerInitialBiomes.class)
+            .put("null_island", DataBakerNullIsland.class)
+            .put("osm", DataBakerOSM.class)
+            .put("tree_cover", DataBakerTreeCover.class)
+            .build();
+
+    public final BiMap<String, Class<? extends IEarthPopulator>> GENERATOR_SETTINGS_POPULATOR = new BiMapBuilder<String, Class<? extends IEarthPopulator>>()
+            .put("biome_decorate", PopulatorBiomeDecoration.class)
+            .put("snow", PopulatorSnow.class)
+            .put("trees", PopulatorTrees.class)
             .build();
 
     /**

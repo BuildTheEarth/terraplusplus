@@ -19,7 +19,7 @@
         ]
     ],
     "useDefaultTreeCover": false,
-    "biomeSettings": [
+    "biomeFilters": [
         {
             "type": "constant",
             "biome": "minecraft:mesa"
@@ -28,6 +28,16 @@
     "osmSettings": {
         "type": "disable"
     },
+    "dataBakers": [
+        {
+            "type": "initial_biomes"
+        },
+        {
+            "type": "heights"
+        }
+    ],
+    "populators": [
+    ],
     "terrainSettings": {
         "water": {
             "id": "minecraft:air"

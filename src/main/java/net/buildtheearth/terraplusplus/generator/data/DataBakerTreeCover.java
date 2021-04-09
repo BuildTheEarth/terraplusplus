@@ -1,5 +1,6 @@
 package net.buildtheearth.terraplusplus.generator.data;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorPipelines;
@@ -17,7 +18,8 @@ import static net.daporkchop.lib.common.math.PMath.*;
 /**
  * @author DaPorkchop_
  */
-public class TreeCoverBaker implements IEarthDataBaker<double[]> {
+@JsonDeserialize
+public final class DataBakerTreeCover implements IEarthDataBaker<double[]> {
     public static final double TREE_AREA = 2.0d * 2.0d; //the surface area covered by an average tree
 
     public static final byte[] FALLBACK_TREE_DENSITY = new byte[16 * 16];

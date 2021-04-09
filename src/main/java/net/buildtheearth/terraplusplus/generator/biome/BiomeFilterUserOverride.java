@@ -22,7 +22,6 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.biome.Biome;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -30,10 +29,16 @@ import java.util.concurrent.CompletableFuture;
 /**
  * @author DaPorkchop_
  */
-public class UserOverrideBiomeFilter implements IEarthBiomeFilter<UserOverrideBiomeFilter.BiomeOverrideArea> {
+@JsonDeserialize
+public class BiomeFilterUserOverride implements IEarthBiomeFilter<BiomeFilterUserOverride.BiomeOverrideArea> {
+    @Getter(onMethod_ = { @JsonGetter })
+    protected final BiomeOverrideArea[] areas;
     protected final BVH<BiomeOverrideArea> bvh;
 
-    public UserOverrideBiomeFilter(@NonNull BiomeOverrideArea... areas) {
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    public BiomeFilterUserOverride(
+            @JsonProperty(value = "areas", required = true) @NonNull BiomeOverrideArea... areas) {
+        this.areas = areas;
         this.bvh = BVH.of(areas);
     }
 

@@ -1,6 +1,11 @@
 package net.buildtheearth.terraplusplus.generator.data;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
+import lombok.Getter;
 import net.buildtheearth.terraplusplus.dataset.IElementDataset;
 import net.buildtheearth.terraplusplus.dataset.vector.geometry.VectorGeometry;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
@@ -17,14 +22,26 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 
+import static net.daporkchop.lib.common.util.PorkUtil.*;
+
 /**
  * @author DaPorkchop_
  */
-public class OSMBaker implements IEarthDataBaker<BVH<VectorGeometry>[]> {
+@Getter(onMethod_ = { @JsonGetter })
+@JsonDeserialize
+public final class DataBakerOSM implements IEarthDataBaker<BVH<VectorGeometry>[]> {
+    protected final double paddingRadius;
+
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    public DataBakerOSM(
+            @JsonProperty(value = "paddingRadius", required = false) Double paddingRadius) {
+        this.paddingRadius = fallbackIfNull(paddingRadius, 16.0d);
+    }
+
     @Override
     public CompletableFuture<BVH<VectorGeometry>[]> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
         return datasets.<IElementDataset<BVH<VectorGeometry>>>getCustom(EarthGeneratorPipelines.KEY_DATASET_OSM_PARSED)
-                .getAsync(bounds.expand(16.0d).toCornerBB(datasets.projection(), false).toGeo());
+                .getAsync(bounds.expand(this.paddingRadius).toCornerBB(datasets.projection(), false).toGeo());
     }
 
     @Override

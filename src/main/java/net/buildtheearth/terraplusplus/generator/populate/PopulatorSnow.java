@@ -1,9 +1,11 @@
 package net.buildtheearth.terraplusplus.generator.populate;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
+import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -11,7 +13,8 @@ import net.minecraft.world.biome.Biome;
 
 import java.util.Random;
 
-public class SnowPopulator implements IEarthPopulator {
+@JsonDeserialize
+public final class PopulatorSnow implements IEarthPopulator {
     public static boolean canSnow(BlockPos pos, World world, boolean air) {
         if (!air && !world.isAirBlock(pos) || !world.canSnowAt(pos, false)) {
             return false;
@@ -21,7 +24,7 @@ public class SnowPopulator implements IEarthPopulator {
     }
 
     @Override
-    public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData[] datas) {
+    public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData[] datas, EarthGeneratorSettings settings) {
         if (canSnow(pos.getMaxBlockPos(), world, true)) {
             for (int i = 0, cx = 0; cx < 2; cx++) {
                 for (int cz = 0; cz < 2; cz++) {

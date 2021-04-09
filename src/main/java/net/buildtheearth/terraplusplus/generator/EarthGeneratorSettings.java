@@ -28,10 +28,20 @@ import lombok.SneakyThrows;
 import lombok.With;
 import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
+import net.buildtheearth.terraplusplus.generator.biome.BiomeFilterTerra121;
+import net.buildtheearth.terraplusplus.generator.biome.BiomeFilterUserOverride;
+import net.buildtheearth.terraplusplus.generator.biome.IEarthBiomeFilter;
+import net.buildtheearth.terraplusplus.generator.data.DataBakerHeights;
+import net.buildtheearth.terraplusplus.generator.data.DataBakerInitialBiomes;
+import net.buildtheearth.terraplusplus.generator.data.DataBakerNullIsland;
+import net.buildtheearth.terraplusplus.generator.data.DataBakerOSM;
+import net.buildtheearth.terraplusplus.generator.data.DataBakerTreeCover;
+import net.buildtheearth.terraplusplus.generator.data.IEarthDataBaker;
+import net.buildtheearth.terraplusplus.generator.populate.PopulatorBiomeDecoration;
+import net.buildtheearth.terraplusplus.generator.populate.IEarthPopulator;
+import net.buildtheearth.terraplusplus.generator.populate.PopulatorSnow;
+import net.buildtheearth.terraplusplus.generator.populate.PopulatorTrees;
 import net.buildtheearth.terraplusplus.generator.settings.GeneratorTerrainSettings;
-import net.buildtheearth.terraplusplus.generator.settings.biome.GeneratorBiomeSettings;
-import net.buildtheearth.terraplusplus.generator.settings.biome.GeneratorBiomeSettingsOverrides;
-import net.buildtheearth.terraplusplus.generator.settings.biome.GeneratorBiomeSettingsTerra121;
 import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettings;
 import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettingsDefault;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
@@ -53,7 +63,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -123,7 +132,7 @@ public class EarthGeneratorSettings {
                 projection = new ScaleProjectionTransform(projection, legacy.scaleX, legacy.scaleY);
             }
 
-            return new EarthGeneratorSettings(projection, legacy.customcubic, true, null, true, null, null, null, null, Collections.emptyList(), Collections.emptyList(), CONFIG_VERSION);
+            return new EarthGeneratorSettings(projection, legacy.customcubic, true, null, true, null, null, null, null, null, null, null, null, CONFIG_VERSION);
         }
 
         return TerraConstants.JSON_MAPPER.readValue(generatorSettings, EarthGeneratorSettings.class);
@@ -163,7 +172,12 @@ public class EarthGeneratorSettings {
     protected final String[][] customTreeCover;
 
     @Getter(onMethod_ = { @JsonGetter })
-    protected final List<GeneratorBiomeSettings> biomeSettings;
+    protected final List<IEarthBiomeFilter> biomeFilters;
+    @Getter(onMethod_ = { @JsonGetter })
+    protected final List<IEarthDataBaker> dataBakers;
+    @Getter(onMethod_ = { @JsonGetter })
+    protected final List<IEarthPopulator> populators;
+
     @Getter(onMethod_ = { @JsonGetter })
     protected final GeneratorOSMSettings osmSettings;
     @Getter(onMethod_ = { @JsonGetter })
@@ -204,7 +218,9 @@ public class EarthGeneratorSettings {
             @JsonProperty(value = "customHeights") String[][] customHeights,
             @JsonProperty(value = "useDefaultTreeCover") @JsonAlias("useDefaultTrees") Boolean useDefaultTreeCover,
             @JsonProperty(value = "customTreeCover") String[][] customTreeCover,
-            @JsonProperty(value = "biomeSettings") List<GeneratorBiomeSettings> biomeSettings,
+            @JsonProperty(value = "biomeFilters") List<IEarthBiomeFilter> biomeFilters,
+            @JsonProperty(value = "dataBakers") List<IEarthDataBaker> dataBakers,
+            @JsonProperty(value = "populators") List<IEarthPopulator> populators,
             @JsonProperty(value = "osmSettings") GeneratorOSMSettings osmSettings,
             @JsonProperty(value = "terrainSettings") GeneratorTerrainSettings terrainSettings,
             @JsonProperty(value = "skipChunkPopulation") List<PopulateChunkEvent.Populate.EventType> skipChunkPopulation,
@@ -219,7 +235,20 @@ public class EarthGeneratorSettings {
         this.useDefaultTreeCover = useDefaultTreeCover != null ? useDefaultTreeCover : true;
         this.customTreeCover = customTreeCover != null ? customTreeCover : new String[0][];
 
-        this.biomeSettings = biomeSettings != null ? biomeSettings : Arrays.asList(new GeneratorBiomeSettingsTerra121(), new GeneratorBiomeSettingsOverrides());
+        this.biomeFilters = biomeFilters != null ? biomeFilters : Arrays.asList(
+                new BiomeFilterTerra121(),
+                new BiomeFilterUserOverride());
+        this.dataBakers = dataBakers != null ? dataBakers : Arrays.asList(
+                new DataBakerInitialBiomes(),
+                new DataBakerTreeCover(),
+                new DataBakerHeights(),
+                new DataBakerOSM(null),
+                new DataBakerNullIsland());
+        this.populators = populators != null ? populators : Arrays.asList(
+                new PopulatorTrees(),
+                new PopulatorBiomeDecoration(),
+                new PopulatorSnow());
+
         this.osmSettings = osmSettings != null ? osmSettings : new GeneratorOSMSettingsDefault();
         this.terrainSettings = terrainSettings != null ? terrainSettings : GeneratorTerrainSettings.DEFAULT;
 

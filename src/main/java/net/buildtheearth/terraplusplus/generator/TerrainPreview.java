@@ -5,7 +5,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import net.buildtheearth.terraplusplus.generator.data.TreeCoverBaker;
+import net.buildtheearth.terraplusplus.generator.data.DataBakerTreeCover;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.EmptyWorld;
@@ -271,7 +271,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                 for (int tz = 0; tz < CHUNKS_PER_TILE; tz++) {
                     CachedChunkData data = dataFutures[ti++].join();
 
-                    byte[] treeCoverArr = data.getCustom(EarthGeneratorPipelines.KEY_DATA_TREE_COVER, TreeCoverBaker.FALLBACK_TREE_DENSITY);
+                    byte[] treeCoverArr = data.getCustom(EarthGeneratorPipelines.KEY_DATA_TREE_COVER, DataBakerTreeCover.FALLBACK_TREE_DENSITY);
 
                     int baseX = tx << 4;
                     int baseZ = tz << 4;
@@ -300,7 +300,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                                     b = lerpI(255, 64, clamp(waterHeight - groundHeight + 1, 0, 8) / 8.0f);
                                 }
 
-                                g = max(g, lerpI(0, 80, (treeCoverArr[cx * 16 + cz] & 0xFF) * TreeCoverBaker.TREE_AREA * (1.0d / 255.0d)));
+                                g = max(g, lerpI(0, 80, (treeCoverArr[cx * 16 + cz] & 0xFF) * DataBakerTreeCover.TREE_AREA * (1.0d / 255.0d)));
                                 c = r << 16 | g << 8 | b;
                             }
 

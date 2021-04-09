@@ -1,12 +1,14 @@
 package net.buildtheearth.terraplusplus.generator.populate;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableSet;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
 import io.github.opencubicchunks.cubicchunks.api.world.ICubicWorld;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorPipelines;
-import net.buildtheearth.terraplusplus.generator.data.TreeCoverBaker;
+import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
+import net.buildtheearth.terraplusplus.generator.data.DataBakerTreeCover;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.ref.ThreadRef;
 import net.minecraft.block.Block;
@@ -20,7 +22,8 @@ import net.minecraft.world.gen.feature.WorldGenAbstractTree;
 import java.util.Random;
 import java.util.Set;
 
-public class TreePopulator implements IEarthPopulator {
+@JsonDeserialize
+public final class PopulatorTrees implements IEarthPopulator {
     protected static final Set<Block> EXTRA_SURFACE = ImmutableSet.of(
             Blocks.SAND,
             Blocks.SANDSTONE,
@@ -34,7 +37,7 @@ public class TreePopulator implements IEarthPopulator {
     protected static final Ref<byte[]> RNG_CACHE = ThreadRef.soft(() -> new byte[(ICube.SIZE >> 1) * (ICube.SIZE >> 1)]);
 
     @Override
-    public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData[] datas) {
+    public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData[] datas, EarthGeneratorSettings settings) {
         byte[] rng = RNG_CACHE.get();
 
         for (int i = 0, cx = 0; cx < 2; cx++) {
@@ -49,7 +52,7 @@ public class TreePopulator implements IEarthPopulator {
             return;
         }
 
-        byte[] treeCover = data.getCustom(EarthGeneratorPipelines.KEY_DATA_TREE_COVER, TreeCoverBaker.FALLBACK_TREE_DENSITY);
+        byte[] treeCover = data.getCustom(EarthGeneratorPipelines.KEY_DATA_TREE_COVER, DataBakerTreeCover.FALLBACK_TREE_DENSITY);
         random.nextBytes(rng);
 
         for (int i = 0, dx = 0; dx < ICube.SIZE >> 1; dx++) {

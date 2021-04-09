@@ -1,5 +1,6 @@
 package net.buildtheearth.terraplusplus.generator.data;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
@@ -18,14 +19,11 @@ import java.util.concurrent.CompletableFuture;
 /**
  * @author DaPorkchop_
  */
-@RequiredArgsConstructor
-public class InitialBiomesBaker implements IEarthDataBaker<ImmutableCompactArray<Biome>> {
-    @NonNull
-    protected final EarthBiomeProvider biomeProvider;
-
+@JsonDeserialize
+public final class DataBakerInitialBiomes implements IEarthDataBaker<ImmutableCompactArray<Biome>> {
     @Override
     public CompletableFuture<ImmutableCompactArray<Biome>> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
-        return this.biomeProvider.getBiomesForChunkAsync(pos);
+        return datasets.settings().biomeProvider().getBiomesForChunkAsync(pos);
     }
 
     @Override

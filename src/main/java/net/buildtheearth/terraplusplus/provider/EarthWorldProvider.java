@@ -1,7 +1,7 @@
 package net.buildtheearth.terraplusplus.provider;
 
 import net.buildtheearth.terraplusplus.EarthWorldType;
-import net.buildtheearth.terraplusplus.generator.populate.SnowPopulator;
+import net.buildtheearth.terraplusplus.generator.populate.PopulatorSnow;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldProviderSurface;
 
@@ -20,6 +20,6 @@ public class EarthWorldProvider extends WorldProviderSurface {
             return super.canSnowAt(pos, checkLight);
         }
 
-        return SnowPopulator.canSnow(pos, this.world, false);
+        return PopulatorSnow.canSnow(pos, this.world, false);
     }
 }

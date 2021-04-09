@@ -1,5 +1,6 @@
 package net.buildtheearth.terraplusplus.generator.biome;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
@@ -22,9 +23,10 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author DaPorkchop_
  */
-public class Terra121BiomeFilter implements IEarthBiomeFilter<Terra121BiomeFilter.Data> {
+@JsonDeserialize
+public final class BiomeFilterTerra121 implements IEarthBiomeFilter<BiomeFilterTerra121.Data> {
     @Override
-    public CompletableFuture<Terra121BiomeFilter.Data> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
+    public CompletableFuture<BiomeFilterTerra121.Data> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
         CompletableFuture<double[]> precipitationFuture = datasets.<IScalarDataset>getCustom(EarthGeneratorPipelines.KEY_DATASET_TERRA121_PRECIPITATION).getAsync(boundsGeo, 16, 16);
         CompletableFuture<double[]> soilFuture = datasets.<IScalarDataset>getCustom(EarthGeneratorPipelines.KEY_DATASET_TERRA121_SOIL).getAsync(boundsGeo, 16, 16);
         CompletableFuture<double[]> temperatureFuture = datasets.<IScalarDataset>getCustom(EarthGeneratorPipelines.KEY_DATASET_TERRA121_TEMPERATURE).getAsync(boundsGeo, 16, 16);
@@ -34,7 +36,7 @@ public class Terra121BiomeFilter implements IEarthBiomeFilter<Terra121BiomeFilte
     }
 
     @Override
-    public void bake(ChunkPos pos, ChunkBiomesBuilder builder, Terra121BiomeFilter.Data data) {
+    public void bake(ChunkPos pos, ChunkBiomesBuilder builder, BiomeFilterTerra121.Data data) {
         Biome[] biomes = builder.state();
 
         if (data == null) {

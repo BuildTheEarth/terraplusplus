@@ -1,5 +1,6 @@
 package net.buildtheearth.terraplusplus.generator.data;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorPipelines;
@@ -18,7 +19,8 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author DaPorkchop_
  */
-public class NullIslandBaker implements IEarthDataBaker<Void> {
+@JsonDeserialize
+public final class DataBakerNullIsland implements IEarthDataBaker<Void> {
     @Override
     public CompletableFuture<Void> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
         return null;

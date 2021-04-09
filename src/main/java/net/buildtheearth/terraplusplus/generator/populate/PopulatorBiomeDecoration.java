@@ -1,10 +1,10 @@
 package net.buildtheearth.terraplusplus.generator.populate;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.populator.ICubicPopulator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.CubicBiome;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
-import lombok.NonNull;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
 import net.minecraft.world.World;
@@ -19,17 +19,28 @@ import java.util.Random;
  *
  * @author DaPorkchop_
  */
-public class BiomeDecorationPopulator implements IEarthPopulator {
-    protected final Map<Biome, ICubicPopulator> populators = new Reference2ObjectOpenHashMap<>(ForgeRegistries.BIOMES.getKeys().size());
+@JsonDeserialize
+public final class PopulatorBiomeDecoration implements IEarthPopulator {
+    protected transient final Map<Biome, ICubicPopulator> populators = new Reference2ObjectOpenHashMap<>(ForgeRegistries.BIOMES.getKeys().size());
+    protected transient volatile boolean initialized = false;
 
-    public BiomeDecorationPopulator(@NonNull EarthGeneratorSettings settings) {
+    @Override
+    public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData[] datas, EarthGeneratorSettings settings) {
+        if (!this.initialized) {
+            this.init(settings);
+        }
+
+        this.populators.get(biome).generate(world, random, pos, biome);
+    }
+
+    private synchronized void init(EarthGeneratorSettings settings) {
+        if (this.initialized) {
+            return;
+        }
+        this.initialized = true;
+
         for (Biome biome : ForgeRegistries.BIOMES) {
             this.populators.put(biome, CubicBiome.getCubic(biome).getDecorator(settings.customCubic()));
         }
-    }
-
-    @Override
-    public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData[] datas) {
-        this.populators.get(biome).generate(world, random, pos, biome);
     }
 }
