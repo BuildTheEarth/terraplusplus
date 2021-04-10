@@ -28,7 +28,8 @@ public abstract class MixinSaveHandler {
     private File worldDirectory;
 
     @Inject(method = "Lnet/minecraft/world/storage/SaveHandler;loadWorldInfo()Lnet/minecraft/world/storage/WorldInfo;",
-            at = @At("RETURN"))
+            at = @At("RETURN"),
+            require = 1)
     private void terraplusplus_loadWorldInfo_loadSettingsFromFile(CallbackInfoReturnable<WorldInfo> ci) {
         if (ci.getReturnValue() == null || !(ci.getReturnValue().getTerrainType() instanceof EarthWorldType)) {
             return;
@@ -43,7 +44,8 @@ public abstract class MixinSaveHandler {
     }
 
     @Inject(method = "Lnet/minecraft/world/storage/SaveHandler;saveWorldInfoWithPlayer(Lnet/minecraft/world/storage/WorldInfo;Lnet/minecraft/nbt/NBTTagCompound;)V",
-            at = @At("RETURN"))
+            at = @At("RETURN"),
+            require = 1)
     private void terraplusplus_saveWorldInfoWithPlayer_writeSettingsToFile(WorldInfo worldInfo, NBTTagCompound nbt, CallbackInfo ci) {
         if (!(worldInfo.getTerrainType() instanceof EarthWorldType)) {
             return;

@@ -22,7 +22,7 @@
     "biomeFilters": [
         {
             "type": "constant",
-            "biome": "minecraft:mesa"
+            "biome": "minecraft:void"
         }
     ],
     "osmSettings": {

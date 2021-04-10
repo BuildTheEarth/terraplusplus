@@ -111,7 +111,7 @@ processResources {
 
 mixin {
     defaultObfuscationEnv searge
-    add sourceSets.main, "mixins.fp2.refmap.json"
+    add sourceSets.main, "terraplusplus.refmap.json"
 }
 
 shadowJar {

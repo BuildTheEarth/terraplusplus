@@ -21,7 +21,8 @@ public abstract class MixinWorldInfo {
 
     @Redirect(method = "Lnet/minecraft/world/storage/WorldInfo;updateTagCompound(Lnet/minecraft/nbt/NBTTagCompound;Lnet/minecraft/nbt/NBTTagCompound;)V",
             at = @At(value = "FIELD",
-                    target = "Lnet/minecraft/world/storage/WorldInfo;generatorOptions:Ljava/lang/String;"))
+                    target = "Lnet/minecraft/world/storage/WorldInfo;generatorOptions:Ljava/lang/String;"),
+            require = 1, allow = 1)
     private String terraplusplus_updateTagCompound_dontStoreGeneratorOptionsToLevelDat(WorldInfo _this) {
         if (this.terrainType instanceof EarthWorldType) {
             return "";

@@ -62,6 +62,11 @@ public class EarthWorldType extends WorldType implements ICubicWorldType {
     }
 
     @Override
+    public double getHorizon(World world) {
+        return Integer.MIN_VALUE;
+    }
+
+    @Override
     @SideOnly(Side.CLIENT)
     public void onCustomizeButton(Minecraft mc, GuiCreateWorld guiCreateWorld) {
         String sanitized = EarthGeneratorSettings.parse(guiCreateWorld.chunkProviderSettingsJson).toString();
