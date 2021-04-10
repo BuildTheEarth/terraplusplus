@@ -54,6 +54,7 @@ import net.buildtheearth.terraplusplus.projection.transform.SwapAxesProjectionTr
 import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.ref.Ref;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 
@@ -73,7 +74,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @With
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonInclude(JsonInclude.Include.NON_ABSENT)
 public class EarthGeneratorSettings {
     public static final int CONFIG_VERSION = 2;
     public static final String DEFAULT_SETTINGS;
@@ -93,6 +94,14 @@ public class EarthGeneratorSettings {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static EarthGeneratorSettings forWorld(@NonNull WorldServer world) {
+        Path settingFile = settingsFile(world.getSaveHandler().getWorldDirectory().toPath());
+        if (!Files.exists(settingFile)) {
+            writeSettings(settingFile, world.getWorldInfo().getGeneratorOptions());
+        }
+        return parse(readSettings(settingFile));
     }
 
     /**
@@ -251,7 +260,7 @@ public class EarthGeneratorSettings {
                 new PopulatorSnow());
 
         this.osmSettings = osmSettings != null ? osmSettings : new GeneratorOSMSettingsDefault();
-        this.terrainSettings = terrainSettings != null ? terrainSettings : GeneratorTerrainSettings.DEFAULT;
+        this.terrainSettings = terrainSettings != null ? terrainSettings : new GeneratorTerrainSettings();
 
         this.skipChunkPopulation = skipChunkPopulation != null ? Sets.immutableEnumSet(skipChunkPopulation) : Sets.immutableEnumSet(PopulateChunkEvent.Populate.EventType.ICE);
         this.skipBiomeDecoration = skipBiomeDecoration != null ? Sets.immutableEnumSet(skipBiomeDecoration) : Sets.immutableEnumSet(DecorateBiomeEvent.Decorate.EventType.TREE);

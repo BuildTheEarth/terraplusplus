@@ -33,11 +33,15 @@ import net.buildtheearth.terraplusplus.generator.populate.IEarthPopulator;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockStone;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.chunk.Chunk;
@@ -57,7 +61,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import static java.lang.Math.*;
 
@@ -126,7 +132,7 @@ public class EarthGenerator extends BasicCubeGenerator {
     public EarthGenerator(World world) {
         super(world);
 
-        this.settings = EarthGeneratorSettings.parse(world.getWorldInfo().getGeneratorOptions());
+        this.settings = EarthGeneratorSettings.forWorld((WorldServer) world);
         this.cubiccfg = this.settings.customCubic();
         this.projection = this.settings.projection();
 
@@ -274,18 +280,16 @@ public class EarthGenerator extends BasicCubeGenerator {
     }
 
     protected void generateSurface(int cubeX, int cubeY, int cubeZ, CubePrimer primer, CachedChunkData data) {
-        IBlockState fill = this.settings.terrainSettings().fill();
-        IBlockState water = this.settings.terrainSettings().water();
-        IBlockState surface = this.settings.terrainSettings().surface();
-        IBlockState top = this.settings.terrainSettings().top();
+        Supplier<IBlockState> fill = this.settings.terrainSettings().fill();
+        Supplier<IBlockState> water = this.settings.terrainSettings().water();
+        Supplier<IBlockState> surface = this.settings.terrainSettings().surface();
+        Supplier<IBlockState> top = this.settings.terrainSettings().top();
 
         if (data.belowSurface(cubeY + 2)) { //below surface -> solid stone (padding of 2 cubes because some replacers might need it)
-            //technically, i could reflectively get access to the primer's underlying char[] and use Arrays.fill(), because this
-            // implementation causes 4096 calls to ObjectIntIdentityMap#get() when only 1 would be necessary...
             for (int x = 0; x < 16; x++) {
                 for (int y = 0; y < 16; y++) {
                     for (int z = 0; z < 16; z++) {
-                        primer.setBlockState(x, y, z, fill);
+                        primer.setBlockState(x, y, z, fill.get());
                     }
                 }
             }
@@ -312,7 +316,7 @@ public class EarthGenerator extends BasicCubeGenerator {
                         for (int y = 0; y <= groundTopInCube; y++) {
                             int blockY = Coords.cubeToMinBlock(cubeY) + y;
                             double density = groundTop - y;
-                            IBlockState state = fill;
+                            IBlockState state = fill.get();
                             for (IBiomeBlockReplacer replacer : replacers) {
                                 state = replacer.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
                             }
@@ -321,8 +325,8 @@ public class EarthGenerator extends BasicCubeGenerator {
                             //(for reference: previously, CliffReplacer was manually added to each biome as the last replacer)
                             state = CliffReplacer.INSTANCE.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
 
-                            if (groundHeight < waterHeight && state == top) { //hacky workaround for underwater grass
-                                state = surface;
+                            if (groundHeight < waterHeight && state == top.get()) { //hacky workaround for underwater grass
+                                state = surface.get();
                             }
 
                             primer.setBlockState(x, y, z, state);
@@ -331,11 +335,11 @@ public class EarthGenerator extends BasicCubeGenerator {
                         for (int y = 0; y <= groundTopInCube; y++) {
                             IBlockState state;
                             if (y == groundTop) {
-                                state = top;
+                                state = top.get();
                             } else if (y + 5 >= groundTop) {
-                                state = surface;
+                                state = surface.get();
                             } else {
-                                state = fill;
+                                state = fill.get();
                             }
 
                             primer.setBlockState(x, y, z, state);
@@ -344,7 +348,7 @@ public class EarthGenerator extends BasicCubeGenerator {
 
                     //fill water
                     for (int y = max(groundTopInCube + 1, 0); y <= waterTop; y++) {
-                        primer.setBlockState(x, y, z, water);
+                        primer.setBlockState(x, y, z, water.get());
                     }
                 }
             }

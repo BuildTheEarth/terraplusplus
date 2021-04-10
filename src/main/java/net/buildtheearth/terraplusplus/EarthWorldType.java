@@ -9,6 +9,8 @@ import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldProviderEnd;
+import net.minecraft.world.WorldProviderHell;
 import net.minecraft.world.WorldProviderSurface;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldType;
@@ -33,7 +35,7 @@ public class EarthWorldType extends WorldType implements ICubicWorldType {
 
     @Override
     public BiomeProvider getBiomeProvider(World world) {
-        return EarthGeneratorSettings.parse(world.getWorldInfo().getGeneratorOptions()).biomeProvider();
+        return EarthGeneratorSettings.forWorld((WorldServer) world).biomeProvider();
     }
 
     @Override
@@ -43,7 +45,9 @@ public class EarthWorldType extends WorldType implements ICubicWorldType {
 
     @Override
     public boolean hasCubicGeneratorForWorld(World w) {
-        return w.provider instanceof WorldProviderSurface; // an even more general way to check if it's overworld (need custom providers)
+        return w.provider instanceof WorldProviderSurface
+               || (TerraConfig.dimension.overrideNetherGeneration && w.provider instanceof WorldProviderHell)
+               || (TerraConfig.dimension.overrideEndGeneration && w.provider instanceof WorldProviderEnd);
     }
 
     @Override

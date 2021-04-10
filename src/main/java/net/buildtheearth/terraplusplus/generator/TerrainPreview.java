@@ -35,7 +35,9 @@ import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Math.*;
+import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 import static net.daporkchop.lib.common.math.PMath.*;
+import static net.daporkchop.lib.common.util.PValidation.*;
 import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 /**
@@ -204,7 +206,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
             }
         }
 
-        State state = new State(EarthGeneratorSettings.parseUncached(new String(StreamUtil.toByteArray(EarthGeneratorSettings.class.getResourceAsStream("mars.json5")))));
+        State state = new State(EarthGeneratorSettings.parseUncached(new String(StreamUtil.toByteArray(EarthGeneratorSettings.class.getResourceAsStream("moon.json5")))));
         state.initSettings();
 
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d); //switzerland

@@ -45,6 +45,8 @@ public class TerraConfig {
     })
     public static HttpOpts http = new HttpOpts();
 
+    public static DimensionOpts dimension = new DimensionOpts();
+
     @SubscribeEvent
     public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
         if (TerraConstants.MODID.equals(event.getModID())) {
@@ -99,5 +101,17 @@ public class TerraConfig {
                 "Default: 1440 minutes (1 day)"
         })
         public int cacheTTL = 1440;
+    }
+
+    public static class DimensionOpts {
+        @Comment({
+                "Forces Terra++ generation in The End."
+        })
+        public boolean overrideEndGeneration = false;
+
+        @Comment({
+                "Forces Terra++ generation in the Nether."
+        })
+        public boolean overrideNetherGeneration = false;
     }
 }

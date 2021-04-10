@@ -43,11 +43,22 @@
             "id": "minecraft:air"
         },
         "surface": {
-            "id": "minecraft:clay"
+            "id": "minecraft:stone"
         },
-        "top": {
-            "id": "minecraft:clay"
-        },
+        "top": [
+            {
+                "id": "minecraft:gravel"
+            },
+            {
+                "id": "minecraft:stone"
+            },
+            {
+                "id": "minecraft:stone",
+                "properties": {
+                    "variant": "andesite"
+                }
+            }
+        ],
         "useCwgReplacers": false
     },
     "skipChunkPopulation": [
