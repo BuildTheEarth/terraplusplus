@@ -204,13 +204,14 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
             }
         }
 
-        State state = new State(EarthGeneratorSettings.parseUncached(new String(StreamUtil.toByteArray(EarthGeneratorSettings.class.getResourceAsStream("bte_generator_settings.json5")))));
+        State state = new State(EarthGeneratorSettings.parseUncached(new String(StreamUtil.toByteArray(EarthGeneratorSettings.class.getResourceAsStream("mars.json5")))));
         state.initSettings();
 
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d); //switzerland
         //proj = state.projection.fromGeo(12.58589, 55.68841); //copenhagen
         //proj = state.projection.fromGeo(24.7535, 59.4435); //tallinn
         //proj = state.projection.fromGeo(14.50513, 46.05108); //ljubljana
+        proj = new double[2];
         state.setView(floorI(proj[0]) >> 4, floorI(proj[1]) >> 4, 0);
 
         state.update();
@@ -286,15 +287,27 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                                 int groundHeight = data.groundHeight(cx, cz);
                                 int waterHeight = data.waterHeight(cx, cz);
 
-                                int r;
-                                int g;
-                                int b;
+                                int r = 0;
+                                int g = 0;
+                                int b = 0;
 
                                 if (groundHeight > waterHeight) {
                                     float dx = cx == 15 ? groundHeight - data.groundHeight(cx - 1, cz) : data.groundHeight(cx + 1, cz) - groundHeight;
                                     float dz = cz == 15 ? groundHeight - data.groundHeight(cx, cz - 1) : data.groundHeight(cx, cz + 1) - groundHeight;
-                                    int diffuse = floorI(LightUtil.diffuseLight(clamp(dx, -1.0f, 1.0f), 0.0f, clamp(dz, -1.0f, 1.0f)) * 255.0f);
-                                    r = g = b = diffuse;
+                                    if (dx != 0.0f) {
+                                        if (dx < 0.0f) {
+                                            r = 0xFF;
+                                        } else {
+                                            g = 0xFF;
+                                        }
+                                    }
+                                    if (dz != 0.0f) {
+                                        if (dz < 0.0f) {
+                                            r = 0xFF;
+                                        } else {
+                                            g = 0xFF;
+                                        }
+                                    }
                                 } else {
                                     r = g = 0;
                                     b = lerpI(255, 64, clamp(waterHeight - groundHeight + 1, 0, 8) / 8.0f);

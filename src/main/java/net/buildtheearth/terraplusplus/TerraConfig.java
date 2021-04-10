@@ -84,7 +84,8 @@ public class TerraConfig {
         })
         public String[] maxConcurrentRequests = {
                 "8: https://cloud.daporkchop.net/",
-                "8: https://s3.amazonaws.com/"
+                "8: https://s3.amazonaws.com/",
+                "16: http://10.0.0.20/"
         };
 
         @Comment({

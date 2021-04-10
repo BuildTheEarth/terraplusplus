@@ -29,7 +29,7 @@ public final class TileFormatTerrariumPng implements TileFormat {
             }
         }
 
-        TileFormatUtils.flipZ(out, resolution);
+        TileTransform.FLIP_Y.process(out, resolution);
 
         return out;
     }
