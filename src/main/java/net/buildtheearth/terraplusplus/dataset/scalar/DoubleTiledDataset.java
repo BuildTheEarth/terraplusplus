@@ -49,8 +49,8 @@ public abstract class DoubleTiledDataset extends TiledHttpDataset<double[]> impl
 
         double[] bounds = this.projection().bounds();
         this.degreesPerSample = new double[]{
-                360.0d / abs(bounds[2] - bounds[0]),
-                180.0d / abs(bounds[3] - bounds[1])
+                360.0d / abs(bounds[2] - bounds[0]) * this.tileSize(),
+                180.0d / abs(bounds[3] - bounds[1]) * this.tileSize()
         };
     }
 
