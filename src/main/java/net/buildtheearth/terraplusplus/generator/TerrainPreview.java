@@ -206,7 +206,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         state.initSettings();
 
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d); //switzerland
-        //proj = state.projection.fromGeo(12.58589, 55.68841); //copenhagen
+        proj = state.projection.fromGeo(12.58589, 55.68841); //copenhagen
         //proj = state.projection.fromGeo(24.7535, 59.4435); //tallinn
         //proj = state.projection.fromGeo(14.50513, 46.05108); //ljubljana
         //proj = new double[2];
@@ -273,7 +273,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                     int g = 0;
                     int b = 0;
 
-                    if (false) {
+                    {
                         float dx = cx == 15 ? groundHeight - data.groundHeight(cx - 1, cz) : data.groundHeight(cx + 1, cz) - groundHeight;
                         float dz = cz == 15 ? groundHeight - data.groundHeight(cx, cz - 1) : data.groundHeight(cx, cz + 1) - groundHeight;
                         if (dx != 0.0f) {
