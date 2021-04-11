@@ -7,6 +7,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraplusplus.generator.biome.IEarthBiomeFilter;
 import net.buildtheearth.terraplusplus.util.ImmutableCompactArray;
+import net.buildtheearth.terraplusplus.util.TilePos;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.biome.Biome;
@@ -19,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 
 @RequiredArgsConstructor
 public class EarthBiomeProvider extends BiomeProvider {
-    protected final LoadingCache<ChunkPos, CompletableFuture<ImmutableCompactArray<Biome>>> cache;
+    protected final LoadingCache<TilePos, CompletableFuture<ImmutableCompactArray<Biome>>> cache;
 
     public EarthBiomeProvider(@NonNull EarthGeneratorSettings settings) {
         this.cache = CacheBuilder.newBuilder()
@@ -36,12 +37,28 @@ public class EarthBiomeProvider extends BiomeProvider {
     }
 
     /**
-     * Gets the biomes in the given chunk.
-     *
-     * @param pos the position of the chunk
-     * @return a {@link CompletableFuture} which will be completed with the biomes in the chunk
+     * @deprecated use {@link #getBiomesForTileAsync(TilePos)}
      */
+    @Deprecated
     public CompletableFuture<ImmutableCompactArray<Biome>> getBiomesForChunkAsync(ChunkPos pos) {
+        return this.getBiomesForTileAsync(new TilePos(pos.x, pos.z, 0));
+    }
+
+    /**
+     * @deprecated this method is blocking, use {@link #getBiomesForTileAsync(TilePos)}
+     */
+    @Deprecated
+    public ImmutableCompactArray<Biome> getBiomesForTile(TilePos pos) {
+        return this.getBiomesForTileAsync(pos).join();
+    }
+
+    /**
+     * Gets the biomes in the given tile.
+     *
+     * @param pos the position of the tile
+     * @return a {@link CompletableFuture} which will be completed with the biomes in the tile
+     */
+    public CompletableFuture<ImmutableCompactArray<Biome>> getBiomesForTileAsync(TilePos pos) {
         return this.cache.getUnchecked(pos);
     }
 
@@ -131,7 +148,7 @@ public class EarthBiomeProvider extends BiomeProvider {
      *
      * @author DaPorkchop_
      */
-    public static class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<ImmutableCompactArray<Biome>>> {
+    public static class ChunkDataLoader extends CacheLoader<TilePos, CompletableFuture<ImmutableCompactArray<Biome>>> {
         protected final GeneratorDatasets datasets;
         protected final IEarthBiomeFilter<?>[] filters;
 
@@ -141,7 +158,7 @@ public class EarthBiomeProvider extends BiomeProvider {
         }
 
         @Override
-        public CompletableFuture<ImmutableCompactArray<Biome>> load(@NonNull ChunkPos pos) {
+        public CompletableFuture<ImmutableCompactArray<Biome>> load(@NonNull TilePos pos) {
             return IEarthAsyncPipelineStep.getFuture(pos, this.datasets, this.filters, ChunkBiomesBuilder::get);
         }
     }

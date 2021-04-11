@@ -10,8 +10,8 @@ import net.buildtheearth.terraplusplus.generator.ChunkBiomesBuilder;
 import net.buildtheearth.terraplusplus.generator.GeneratorDatasets;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
+import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.biome.Biome;
 
 import java.util.Arrays;
@@ -34,12 +34,12 @@ public final class BiomeFilterConstant implements IEarthBiomeFilter<Void> {
     }
 
     @Override
-    public CompletableFuture<Void> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
+    public CompletableFuture<Void> requestData(TilePos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
         return null;
     }
 
     @Override
-    public void bake(ChunkPos pos, ChunkBiomesBuilder builder, Void data) {
+    public void bake(TilePos pos, ChunkBiomesBuilder builder, Void data) {
         Arrays.fill(builder.state(), this.biome);
     }
 }

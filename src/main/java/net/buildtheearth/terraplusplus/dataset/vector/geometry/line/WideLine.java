@@ -25,24 +25,28 @@ public final class WideLine extends AbstractLine {
     }
 
     @Override
-    public void apply(@NonNull CachedChunkData.Builder builder, int chunkX, int chunkZ, @NonNull Bounds2d bounds) {
+    public void apply(@NonNull CachedChunkData.Builder builder, int tileX, int tileZ, int zoom, @NonNull Bounds2d bounds) {
+        int baseX = Coords.cubeToMinBlock(tileX << zoom);
+        int baseZ = Coords.cubeToMinBlock(tileZ << zoom);
+        int step = 1 << zoom;
+
         this.segments.forEachIntersecting(bounds.expand(this.radius), s -> {
             double radius = this.radius;
             double radiusSq = radius * radius;
 
-            double lon0 = s.x0() - Coords.cubeToMinBlock(chunkX);
-            double lon1 = s.x1() - Coords.cubeToMinBlock(chunkX);
-            double lat0 = s.z0() - Coords.cubeToMinBlock(chunkZ);
-            double lat1 = s.z1() - Coords.cubeToMinBlock(chunkZ);
+            double lon0 = s.x0() - baseX;
+            double lon1 = s.x1() - baseX;
+            double lat0 = s.z0() - baseZ;
+            double lat1 = s.z1() - baseZ;
 
             int minX = max((int) floor(min(lon0, lon1) - radius), 0);
-            int maxX = min((int) ceil(max(lon0, lon1) + radius), 16);
+            int maxX = min((int) ceil(max(lon0, lon1) + radius), 16 << zoom);
             int minZ = max((int) floor(min(lat0, lat1) - radius), 0);
-            int maxZ = min((int) ceil(max(lat0, lat1) + radius), 16);
+            int maxZ = min((int) ceil(max(lat0, lat1) + radius), 16 << zoom);
 
             double segmentLengthSq = (lon1 - lon0) * (lon1 - lon0) + (lat1 - lat0) * (lat1 - lat0);
-            for (int x = minX; x < maxX; x++) {
-                for (int z = minZ; z < maxZ; z++) {
+            for (int x = minX; x < maxX; x += step) {
+                for (int z = minZ; z < maxZ; z += step) {
                     double r = ((x - lon0) * (lon1 - lon0) + (z - lat0) * (lat1 - lat0)) / segmentLengthSq;
                     r = MathHelper.clamp(r, 0.0d, 1.0d);
 
@@ -50,7 +54,7 @@ public final class WideLine extends AbstractLine {
                     double dz = MathUtil.lerp(r, lat0, lat1) - z;
                     double dSq = dx * dx + dz * dz;
                     if (dSq < radiusSq) {
-                        this.draw.drawOnto(builder, x, z, floorI(radius - sqrt(dSq)));
+                        this.draw.drawOnto(builder, x >> zoom, z >> zoom, floorI(radius - sqrt(dSq)));
                     }
                 }
             }

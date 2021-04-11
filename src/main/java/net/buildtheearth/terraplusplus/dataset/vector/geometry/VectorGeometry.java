@@ -11,14 +11,15 @@ import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
  */
 public interface VectorGeometry extends Comparable<VectorGeometry>, Bounds2d {
     /**
-     * Modifies the given {@link CachedChunkData.Builder} for the given chunk
+     * Modifies the given {@link CachedChunkData.Builder} for the given tile.
      *
      * @param builder the {@link CachedChunkData.Builder}
-     * @param chunkX  the chunk's X coordinate
-     * @param chunkZ  the chunk's Z coordinate
-     * @param bounds  the chunk's bounding box
+     * @param tileX   the tile's X coordinate
+     * @param tileZ   the tile's Z coordinate
+     * @param zoom    the tile's zoom level
+     * @param bounds  the tile's bounding box
      */
-    void apply(@NonNull CachedChunkData.Builder builder, int chunkX, int chunkZ, @NonNull Bounds2d bounds);
+    void apply(@NonNull CachedChunkData.Builder builder, int tileX, int tileZ, int zoom, @NonNull Bounds2d bounds);
 
     /**
      * @return this element's id

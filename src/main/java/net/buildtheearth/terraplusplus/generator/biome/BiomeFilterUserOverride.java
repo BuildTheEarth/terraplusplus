@@ -16,9 +16,9 @@ import net.buildtheearth.terraplusplus.generator.GeneratorDatasets;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
+import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.bvh.BVH;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.biome.Biome;
 
 import java.util.Arrays;
@@ -43,14 +43,14 @@ public class BiomeFilterUserOverride implements IEarthBiomeFilter<BiomeFilterUse
     }
 
     @Override
-    public CompletableFuture<BiomeOverrideArea> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
+    public CompletableFuture<BiomeOverrideArea> requestData(TilePos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
         return CompletableFuture.supplyAsync(() -> this.bvh.getAllIntersecting(boundsGeo).stream()
                 .max(Comparator.naturalOrder())
                 .orElse(null));
     }
 
     @Override
-    public void bake(ChunkPos pos, ChunkBiomesBuilder builder, BiomeOverrideArea bbox) {
+    public void bake(TilePos pos, ChunkBiomesBuilder builder, BiomeOverrideArea bbox) {
         if (bbox == null) { //out of bounds, or no override at this position
             return;
         }

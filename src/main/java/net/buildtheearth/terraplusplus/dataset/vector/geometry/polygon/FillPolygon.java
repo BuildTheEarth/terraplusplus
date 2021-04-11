@@ -18,16 +18,16 @@ public final class FillPolygon extends AbstractPolygon {
     }
 
     @Override
-    public void apply(@NonNull CachedChunkData.Builder builder, int chunkX, int chunkZ, @NonNull Bounds2d bounds) {
-        int baseX = Coords.cubeToMinBlock(chunkX);
-        int baseZ = Coords.cubeToMinBlock(chunkZ);
+    public void apply(@NonNull CachedChunkData.Builder builder, int tileX, int tileZ, int zoom, @NonNull Bounds2d bounds) {
+        int baseX = Coords.cubeToMinBlock(tileX << zoom);
+        int baseZ = Coords.cubeToMinBlock(tileZ << zoom);
 
         for (int x = 0; x < 16; x++) {
-            double[] intersectionPoints = this.getIntersectionPoints(x + baseX);
+            double[] intersectionPoints = this.getIntersectionPoints((x << zoom) + baseX);
 
             for (int i = 0; i < intersectionPoints.length; ) {
-                int min = clamp(floorI(intersectionPoints[i++]) - baseZ, 0, 16);
-                int max = clamp(floorI(intersectionPoints[i++]) - baseZ, 0, 16);
+                int min = clamp((floorI(intersectionPoints[i++]) - baseZ) >> zoom, 0, 16);
+                int max = clamp((floorI(intersectionPoints[i++]) - baseZ) >> zoom, 0, 16);
                 for (int z = min; z < max; z++) {
                     this.draw.drawOnto(builder, x, z, 1);
                 }

@@ -33,12 +33,9 @@ import net.buildtheearth.terraplusplus.generator.populate.IEarthPopulator;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockStone;
+import net.buildtheearth.terraplusplus.util.TilePos;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -61,7 +58,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -75,8 +71,8 @@ public class EarthGenerator extends BasicCubeGenerator {
         String asyncVersion = "1.12.2-0.0.1175.0"; //the version at which async terrain gen was added
         if (cubicchunks != null && asyncVersion.compareTo(TerraConstants.CC_VERSION) <= 0) {
             //async terrain is supported on this version! register async generation callbacks
-            CubeGeneratorsRegistry.registerColumnAsyncLoadingCallback((world, data) -> asyncCallback(world, data.getPos()));
-            CubeGeneratorsRegistry.registerCubeAsyncLoadingCallback((world, data) -> asyncCallback(world, data.getPos().chunkPos()));
+            CubeGeneratorsRegistry.registerColumnAsyncLoadingCallback((world, data) -> asyncCallback(world, new TilePos(data.getPos())));
+            CubeGeneratorsRegistry.registerCubeAsyncLoadingCallback((world, data) -> asyncCallback(world, new TilePos(data.getPos())));
         } else {
             //we're on an older version of CC that doesn't support async terrain
             TerraMod.LOGGER.error("Async terrain not available!");
@@ -99,7 +95,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         }
     }
 
-    private static void asyncCallback(World world, ChunkPos pos) {
+    private static void asyncCallback(World world, TilePos pos) {
         ICubicWorldServer cubicWorld;
         if (world instanceof ICubicWorld && (cubicWorld = (ICubicWorldServer) world).isCubicWorld()) { //ignore vanilla worlds
             ICubeGenerator cubeGenerator = cubicWorld.getCubeGenerator();
@@ -108,10 +104,6 @@ public class EarthGenerator extends BasicCubeGenerator {
                 ((EarthGenerator) cubeGenerator).cache.getUnchecked(pos);
             }
         }
-    }
-
-    public static boolean isNullIsland(int chunkX, int chunkZ) {
-        return max(chunkX ^ (chunkX >> 31), chunkZ ^ (chunkZ >> 31)) < 3;
     }
 
     public final EarthGeneratorSettings settings;
@@ -127,7 +119,7 @@ public class EarthGenerator extends BasicCubeGenerator {
 
     public final GeneratorDatasets datasets;
 
-    public final LoadingCache<ChunkPos, CompletableFuture<CachedChunkData>> cache;
+    public final LoadingCache<TilePos, CompletableFuture<CachedChunkData>> cache;
 
     public EarthGenerator(World world) {
         super(world);
@@ -189,7 +181,7 @@ public class EarthGenerator extends BasicCubeGenerator {
 
     @Override
     public GeneratorReadyState pollAsyncColumnGenerator(int chunkX, int chunkZ) {
-        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(chunkX, chunkZ));
+        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new TilePos(chunkX, chunkZ, 0));
         if (!future.isDone()) {
             return GeneratorReadyState.WAITING;
         } else if (future.isCompletedExceptionally()) {
@@ -201,13 +193,13 @@ public class EarthGenerator extends BasicCubeGenerator {
 
     @Override
     public void generateColumn(Chunk column) { //legacy compat method
-        CachedChunkData data = this.cache.getUnchecked(column.getPos()).join();
+        CachedChunkData data = this.cache.getUnchecked(new TilePos(column.x, column.z, 0)).join();
         this.generateColumn(column, data);
     }
 
     @Override
     public Optional<Chunk> tryGenerateColumn(World world, int columnX, int columnZ, ChunkPrimer primer, boolean forceGenerate) {
-        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(columnX, columnZ));
+        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new TilePos(columnX, columnZ, 0));
         if (!forceGenerate && (!future.isDone() || future.isCompletedExceptionally())) {
             return Optional.empty();
         }
@@ -230,14 +222,14 @@ public class EarthGenerator extends BasicCubeGenerator {
     @Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) { //legacy compat method
         CubePrimer primer = new CubePrimer();
-        CachedChunkData data = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ)).join();
+        CachedChunkData data = this.cache.getUnchecked(new TilePos(cubeX, cubeZ, 0)).join();
         this.generateCube(cubeX, cubeY, cubeZ, primer, data);
         return primer;
     }
 
     @Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer) { //legacy compat method
-        CachedChunkData data = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ)).join();
+        CachedChunkData data = this.cache.getUnchecked(new TilePos(cubeX, cubeZ, 0)).join();
         this.generateCube(cubeX, cubeY, cubeZ, primer, data);
         return primer;
     }
@@ -249,7 +241,7 @@ public class EarthGenerator extends BasicCubeGenerator {
 
     @Override
     public Optional<CubePrimer> tryGenerateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer, boolean forceGenerate) {
-        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ));
+        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new TilePos(cubeX, cubeZ, 0));
         if (!forceGenerate && (!future.isDone() || future.isCompletedExceptionally())) {
             return Optional.empty();
         }
@@ -361,7 +353,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         // checking all neighbors here improves performance when checking if a cube can be generated
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
-                CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(cubeX + dx, cubeZ + dz));
+                CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new TilePos(cubeX + dx, cubeZ + dz, 0));
                 if (!future.isDone()) {
                     return GeneratorReadyState.WAITING;
                 } else if (future.isCompletedExceptionally()) {
@@ -382,7 +374,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         CachedChunkData[] datas = new CachedChunkData[2 * 2];
         for (int i = 0, dx = 0; dx < 2; dx++) {
             for (int dz = 0; dz < 2; dz++) {
-                datas[i++] = this.cache.getUnchecked(new ChunkPos(cube.getX() + dx, cube.getZ() + dz)).join();
+                datas[i++] = this.cache.getUnchecked(new TilePos(cube.getX() + dx, cube.getZ() + dz, 0)).join();
             }
         }
 
@@ -424,7 +416,7 @@ public class EarthGenerator extends BasicCubeGenerator {
      *
      * @author DaPorkchop_
      */
-    public static class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<CachedChunkData>> {
+    public static class ChunkDataLoader extends CacheLoader<TilePos, CompletableFuture<CachedChunkData>> {
         protected final GeneratorDatasets datasets;
         protected final IEarthDataBaker<?>[] bakers;
 
@@ -434,7 +426,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         }
 
         @Override
-        public CompletableFuture<CachedChunkData> load(@NonNull ChunkPos pos) {
+        public CompletableFuture<CachedChunkData> load(@NonNull TilePos pos) {
             return IEarthAsyncPipelineStep.getFuture(pos, this.datasets, this.bakers, CachedChunkData::builder);
         }
     }

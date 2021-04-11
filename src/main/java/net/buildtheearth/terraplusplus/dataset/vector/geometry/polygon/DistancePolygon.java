@@ -26,9 +26,9 @@ public final class DistancePolygon extends AbstractPolygon {
     }
 
     @Override
-    public void apply(@NonNull CachedChunkData.Builder builder, int chunkX, int chunkZ, @NonNull Bounds2d bounds) {
-        int baseX = Coords.cubeToMinBlock(chunkX);
-        int baseZ = Coords.cubeToMinBlock(chunkZ);
+    public void apply(@NonNull CachedChunkData.Builder builder, int tileX, int tileZ, int zoom, @NonNull Bounds2d bounds) {
+        int baseX = Coords.cubeToMinBlock(tileX << zoom); //TODO: the rest of this will NOT work at high zoom levels
+        int baseZ = Coords.cubeToMinBlock(tileZ << zoom);
 
         int maxDist = this.maxDist;
         int[][] distances2d = new int[(maxDist << 1) + 1][16];

@@ -13,6 +13,11 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 @Mod.EventBusSubscriber(modid = TerraConstants.MODID)
 @Config(modid = TerraConstants.MODID)
 public class TerraConfig {
+    public static int[] lastVersion = { //this field might be used at some point
+            1, 12, 2, //mc version
+            2, 0, 0 //t++ version
+    };
+
     @Name("reduced_console_messages")
     @Comment({ "Removes all of TerraPlusPlus' messages which contain various links in the server console",
             "This is just if it seems to spam the console, it is purely for appearance" })
@@ -68,8 +73,13 @@ public class TerraConfig {
     }
 
     public static class OSMOpts {
+        @Deprecated
         public String[] servers = {
                 "https://cloud.daporkchop.net/gis/osm/0/"
+        };
+
+        public String[] servers_v2 = { //different field name to avoid breaking old config files
+                "https://cloud.daporkchop.net/gis/osm/"
         };
     }
 

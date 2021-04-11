@@ -7,10 +7,9 @@ import net.buildtheearth.terraplusplus.generator.EarthGeneratorPipelines;
 import net.buildtheearth.terraplusplus.generator.GeneratorDatasets;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
+import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
-import net.minecraft.util.math.ChunkPos;
 
-import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
 import static net.daporkchop.lib.common.math.PMath.*;
@@ -22,11 +21,11 @@ import static net.daporkchop.lib.common.math.PMath.*;
 public final class DataBakerTreeCover implements IEarthDataBaker<double[]> {
     public static final double TREE_AREA = 2.0d * 2.0d; //the surface area covered by an average tree
 
-    public static final byte[] FALLBACK_TREE_DENSITY_ZERO = new byte[16 * 16];
     public static final byte[] FALLBACK_TREE_DENSITY = new byte[16 * 16];
 
     static {
-        Arrays.fill(FALLBACK_TREE_DENSITY, treeChance(50.0d));
+        //TODO: figure out why i did this:
+        // Arrays.fill(FALLBACK_TREE_DENSITY, treeChance(50.0d));
     }
 
     static byte treeChance(double value) {
@@ -47,12 +46,12 @@ public final class DataBakerTreeCover implements IEarthDataBaker<double[]> {
     }
 
     @Override
-    public CompletableFuture<double[]> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
+    public CompletableFuture<double[]> requestData(TilePos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
         return datasets.<IScalarDataset>getCustom(EarthGeneratorPipelines.KEY_DATASET_TREE_COVER).getAsync(boundsGeo, 16, 16);
     }
 
     @Override
-    public void bake(ChunkPos pos, CachedChunkData.Builder builder, double[] treeCover) {
+    public void bake(TilePos pos, CachedChunkData.Builder builder, double[] treeCover) {
         byte[] arr = new byte[16 * 16];
         if (treeCover != null) {
             for (int i = 0; i < 16 * 16; i++) {
