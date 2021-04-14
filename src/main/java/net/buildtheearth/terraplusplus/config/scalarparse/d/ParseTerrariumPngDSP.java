@@ -33,7 +33,7 @@ public class ParseTerrariumPngDSP implements DoubleScalarParser {
             if ((c >>> 24) != 0xFF) { //nodata
                 out[i] = Double.NaN;
             } else {
-                out[i] = ((c & ~0xFF000000) + 0x00800000) * (1.0d / 256.0d);
+                out[i] = ((c & ~0xFF000000) - 0x00800000) * (1.0d / 256.0d);
             }
         }
 
