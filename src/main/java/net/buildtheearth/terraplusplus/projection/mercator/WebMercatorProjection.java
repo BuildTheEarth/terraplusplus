@@ -47,6 +47,11 @@ public class WebMercatorProjection implements GeographicProjection {
     }
 
     @Override
+    public double[] boundsGeo() {
+        return new double[]{ -180.0d, -LIMIT_LATITUDE, 180.0d, LIMIT_LATITUDE };
+    }
+
+    @Override
     public boolean upright() {
         return true;
     }

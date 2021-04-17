@@ -1,16 +1,15 @@
 package net.buildtheearth.terraplusplus.dataset.scalar;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
+import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.DoubleStream;
 
 /**
  * @author DaPorkchop_
@@ -21,7 +20,10 @@ public class BoundedPriorityScalarDataset implements Bounds2d, IScalarDataset, C
     protected final IScalarDataset delegate;
     @NonNull
     protected final Bounds2d bounds;
-    protected final double priority;
+    @NonNull
+    protected final double[] priorities;
+
+    // IScalarDataset
 
     @Override
     public CompletableFuture<Double> getAsync(@NonNull double[] point) throws OutOfProjectionBoundsException {
@@ -39,9 +41,24 @@ public class BoundedPriorityScalarDataset implements Bounds2d, IScalarDataset, C
     }
 
     @Override
-    public int compareTo(BoundedPriorityScalarDataset o) {
-        return -Double.compare(this.priority, o.priority);
+    public double[] degreesPerSample() {
+        return this.delegate.degreesPerSample();
     }
+
+    // Comparable<BoundedPriorityScalarDataset>
+
+    @Override
+    public int compareTo(BoundedPriorityScalarDataset o) {
+        int d = -TerraUtils.compareDoubleArrays(this.priorities, o.priorities);
+        if (d == 0) { //priorities are equal, compare by resolution
+            double dps0 = DoubleStream.of(this.degreesPerSample()).min().getAsDouble();
+            double dps1 = DoubleStream.of(o.degreesPerSample()).min().getAsDouble();
+            d = Double.compare(dps0, dps1);
+        }
+        return d;
+    }
+
+    // Bounds2d
 
     @Override
     public double minX() {
@@ -61,22 +78,5 @@ public class BoundedPriorityScalarDataset implements Bounds2d, IScalarDataset, C
     @Override
     public double maxZ() {
         return this.bounds.maxZ();
-    }
-
-    /**
-     * A {@link BoundedPriorityScalarDataset} which may be serialized as an arbitrary Jackson-serializable value.
-     *
-     * @author DaPorkchop_
-     */
-    @JsonSerialize
-    @Getter(onMethod_ = { @JsonValue })
-    public static class Serializable extends BoundedPriorityScalarDataset {
-        protected final Object toSerializeAs;
-
-        public Serializable(@NonNull IScalarDataset delegate, @NonNull Bounds2d bounds, double priority, Object toSerializeAs) {
-            super(delegate, bounds, priority);
-
-            this.toSerializeAs = toSerializeAs;
-        }
     }
 }

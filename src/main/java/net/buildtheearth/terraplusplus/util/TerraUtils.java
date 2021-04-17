@@ -11,11 +11,13 @@ import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.lang.Math.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 import static net.daporkchop.lib.common.util.PorkUtil.*;
 
@@ -262,5 +264,26 @@ public class TerraUtils {
     public <T> CompletableFuture<List<T>> mergeFuturesAsync(@NonNull Stream<CompletableFuture<T>> futures) {
         CompletableFuture<T>[] arr = uncheckedCast(futures.toArray(CompletableFuture[]::new));
         return CompletableFuture.allOf(arr).thenApply(unused -> Arrays.stream(arr).map(CompletableFuture::join).collect(Collectors.toList()));
+    }
+
+    /**
+     * Compares two {@code double[]}s.
+     *
+     * @param v0 the first {@code double[]}
+     * @param v1 the second {@code double[]}
+     * @see Comparator#compare(Object, Object)
+     */
+    public int compareDoubleArrays(@NonNull double[] v0, @NonNull double[] v1) {
+        int len0 = v0.length;
+        int len1 = v1.length;
+
+        for (int i = 0, lim = min(len0, len1); i < lim; i++) {
+            int d = Double.compare(v0[i], v1[i]);
+            if (d != 0) {
+                return d;
+            }
+        }
+
+        return len0 - len1;
     }
 }

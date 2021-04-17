@@ -27,6 +27,16 @@ public class EPSG3785 extends EPSGProjection {
     }
 
     @Override
+    public double[] bounds() {
+        return WEB_MERCATOR_PROJECTION.bounds();
+    }
+
+    @Override
+    public double[] boundsGeo() {
+        return WEB_MERCATOR_PROJECTION.boundsGeo();
+    }
+
+    @Override
     public double metersPerUnit() {
         return WEB_MERCATOR_PROJECTION.metersPerUnit();
     }

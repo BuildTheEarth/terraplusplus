@@ -24,8 +24,11 @@ public abstract class ProjectionTransform implements GeographicProjection {
     }
 
     @Override
-    public double[] bounds() {
-        return this.delegate.bounds();
+    public abstract double[] bounds();
+
+    @Override
+    public double[] boundsGeo() {
+        return this.delegate.boundsGeo();
     }
 
     @Override

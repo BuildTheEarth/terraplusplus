@@ -143,7 +143,8 @@ public class ScalarDatasetConfigurationParser {
 
             return new BoundedPriorityScalarDataset(
                     new MultiresScalarDataset(IntStream.of(this.zoom).mapToObj(zoom -> this.tiles.toScalar(urls, zoom)).toArray(IScalarDataset[]::new)),
-                    this.bounds.build(), fallbackIfNull(this.priority, priority));
+                    this.bounds.build(),
+                    new double[]{ priority, fallbackIfNull(this.priority, 0.0d) });
         }
 
         @JsonDeserialize

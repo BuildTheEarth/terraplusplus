@@ -48,9 +48,10 @@ public abstract class DoubleTiledDataset extends TiledHttpDataset<double[]> impl
         this.blend = blend;
 
         double[] bounds = this.projection().bounds();
+        double[] boundsGeo = this.projection().boundsGeo();
         this.degreesPerSample = new double[]{
-                360.0d / abs(bounds[2] - bounds[0]) * this.tileSize(),
-                180.0d / abs(bounds[3] - bounds[1]) * this.tileSize()
+                abs(boundsGeo[2] - boundsGeo[0]) / abs(bounds[2] - bounds[0]),
+                abs(boundsGeo[3] - boundsGeo[1]) / abs(bounds[3] - bounds[1])
         };
     }
 

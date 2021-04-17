@@ -73,13 +73,13 @@ public interface GeographicProjection {
      */
     default double[] bounds() {
         try {
+            double[] boundsGeo = this.boundsGeo();
+
             //get max in by using extreme coordinates
-            double[] bounds = {
-                    this.fromGeo(-180, 0)[0],
-                    this.fromGeo(0, -90)[1],
-                    this.fromGeo(180, 0)[0],
-                    this.fromGeo(0, 90)[1]
-            };
+            double[] bounds = new double[4];
+
+            System.arraycopy(this.fromGeo(boundsGeo[0], boundsGeo[1]), 0, bounds, 0, 2);
+            System.arraycopy(this.fromGeo(boundsGeo[2], boundsGeo[3]), 0, bounds, 2, 2);
 
             if (bounds[0] > bounds[2]) {
                 double t = bounds[0];
@@ -95,8 +95,14 @@ public interface GeographicProjection {
 
             return bounds;
         } catch (OutOfProjectionBoundsException e) {
-            return new double[]{ 0, 0, 1, 1 };
+            throw new IllegalStateException(this.toString());
         }
+    }
+
+    default double[] boundsGeo() {
+        return new double[] {
+                -180, -90, 180, 90
+        };
     }
 
     /**

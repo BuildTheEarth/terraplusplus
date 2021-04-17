@@ -4,7 +4,6 @@ import lombok.NonNull;
 import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
-import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 
 import java.util.Map;
 import java.util.NavigableMap;
@@ -45,11 +44,11 @@ public class MultiresScalarDataset implements IScalarDataset {
 
     @Override
     public CompletableFuture<double[]> getAsync(@NonNull CornerBoundingBox2d bounds, int sizeX, int sizeZ) throws OutOfProjectionBoundsException {
-        Bounds2d aabb = bounds.axisAlign(); //calculate the degrees/sample of the query bounds
-        double degreesPerSample = min((aabb.maxX() - aabb.minX()) / sizeX, (aabb.maxZ() - aabb.minZ()) / sizeZ);
+        //calculate the degrees/sample of the query bounds
+        double dps = bounds.avgDegreesPerSample(sizeX, sizeZ);
 
         //find the dataset whose resolution is closest (rounding up)
-        Map.Entry<Double, IScalarDataset> entry = this.datasetsByDegreesPerSample.floorEntry(degreesPerSample);
+        Map.Entry<Double, IScalarDataset> entry = this.datasetsByDegreesPerSample.floorEntry(dps);
         //fall back to max resolution dataset if none match (the query BB is higher-res than the best dataset)
         IScalarDataset dataset = entry != null ? entry.getValue() : this.maxResDataset;
         return dataset.getAsync(bounds, sizeX, sizeZ);
