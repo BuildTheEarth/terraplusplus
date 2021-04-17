@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
+import static java.lang.Math.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
@@ -37,11 +38,21 @@ public abstract class DoubleTiledDataset extends TiledHttpDataset<double[]> impl
     protected final BlendMode blend;
     protected final int resolution;
 
+    protected final double[] degreesPerSample;
+
     public DoubleTiledDataset(@NonNull GeographicProjection projection, int resolution, @NonNull BlendMode blend) {
         super(projection, 1.0d / resolution);
+        checkArg(resolution == 256, "unsupported resolution: %d (expected: 256)", resolution);
 
         this.resolution = resolution;
         this.blend = blend;
+
+        double[] bounds = this.projection().bounds();
+        double[] boundsGeo = this.projection().boundsGeo();
+        this.degreesPerSample = new double[]{
+                abs(boundsGeo[2] - boundsGeo[0]) / abs(bounds[2] - bounds[0]),
+                abs(boundsGeo[3] - boundsGeo[1]) / abs(bounds[3] - bounds[1])
+        };
     }
 
     @Override

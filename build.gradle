@@ -5,17 +5,23 @@ buildscript {
             name = "Minecraft Forge"
             url = "https://files.minecraftforge.net/maven"
         }
+        maven {
+            name = "SpongePowered"
+            url = "https://repo.spongepowered.org/maven"
+        }
     }
     dependencies {
         classpath "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
+        classpath "org.spongepowered:mixingradle:0.6-SNAPSHOT"
         classpath "com.github.jengelman.gradle.plugins:shadow:4.0.0"
     }
 }
 apply plugin: "net.minecraftforge.gradle.forge"
+apply plugin: "org.spongepowered.mixin"
 apply plugin: "com.github.johnrengelman.shadow"
 apply plugin: "maven-publish"
 
-version = "1.1.0." + ('git rev-list --count HEAD'.execute().text.trim()) + "-1.12.2"
+version = "2.0.0." + ('git rev-list --count HEAD'.execute().text.trim()) + "-1.12.2"
 group = "net.buildtheearth"
 archivesBaseName = "terraplusplus"
 
@@ -29,6 +35,8 @@ minecraft {
 
     mappings = "stable_39"
     makeObfSourceJar = false
+
+    coreMod = "net.buildtheearth.terraplusplus.asm.TerraPlusPlusMixinLoader"
 }
 
 configurations {
@@ -52,25 +60,34 @@ repositories {
 }
 
 dependencies {
-    deobfProvided ("com.github.OpenCubicChunks.CubicChunks:cubicchunks:f71aafb9854466ac5ffa0ccd2796921684f1d8b1") {
+    deobfProvided("com.github.OpenCubicChunks.CubicChunks:cubicchunks:f71aafb9854466ac5ffa0ccd2796921684f1d8b1") {
         transitive = false
     }
-    deobfProvided ("com.github.OpenCubicChunks:CubicWorldGen:27de56d2f792513873584b2f8fd9f3082fb259ec") {
+    deobfProvided("com.github.OpenCubicChunks:CubicWorldGen:27de56d2f792513873584b2f8fd9f3082fb259ec") {
         transitive = false
     }
 
-    shade "org.apache.commons:commons-imaging:1.0-alpha2"
+    shade "com.github.DaMatrix:commons-imaging:4c6c5dfe6401a884cb4cf53fb838c99e1dfb104c"
 
     shade "com.fasterxml.jackson.core:jackson-databind:2.11.2"
 
-    shade("net.daporkchop.lib:binary:0.5.5-SNAPSHOT")  {
+    shade("net.daporkchop.lib:binary:0.5.5-SNAPSHOT") {
         exclude group: "io.netty"
     }
+    shade "net.daporkchop.lib:math:0.5.5-SNAPSHOT"
 
-    testCompile "junit:junit:4.12"
+    annotationProcessor "com.google.code.gson:gson:2.8.0"
+    annotationProcessor "com.google.guava:guava:21.0"
+    annotationProcessor "org.apache.logging.log4j:log4j-core:2.8.1"
+    annotationProcessor "org.ow2.asm:asm-debug-all:5.2"
+    annotationProcessor "org.spongepowered:mixin:0.8.1"
 
     compileOnly "org.projectlombok:lombok:1.18.16"
     annotationProcessor "org.projectlombok:lombok:1.18.16"
+
+    testCompile "junit:junit:4.12"
+    testCompileOnly "org.projectlombok:lombok:1.18.16"
+    testAnnotationProcessor "org.projectlombok:lombok:1.18.16"
 }
 
 processResources {
@@ -92,11 +109,27 @@ processResources {
     }
 }
 
+mixin {
+    defaultObfuscationEnv searge
+    add sourceSets.main, "terraplusplus.refmap.json"
+}
+
 shadowJar {
     classifier = null
     configurations = [project.configurations.shade]
 
     exclude 'module-info.class'
+
+    manifest {
+        attributes(
+                "MixinConfigs": "terraplusplus.mixins.json",
+                "tweakClass": "org.spongepowered.asm.launch.MixinTweaker",
+                "TweakOrder": 0,
+                "FMLCorePluginContainsFMLMod": "true",
+                "FMLCorePlugin": "net.buildtheearth.terraplusplus.asm.TerraPlusPlusMixinLoader",
+                "ForceLoadAsMod": "true"
+        )
+    }
 }
 build.dependsOn shadowJar
 

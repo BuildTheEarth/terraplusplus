@@ -35,7 +35,7 @@ public class VectorTiledDataset extends TiledDataset<BVH<VectorGeometry>> implem
     }
 
     @Override
-    public CompletableFuture<BVH<VectorGeometry>[]> getAsync(@NonNull CornerBoundingBox2d bounds) throws OutOfProjectionBoundsException {
+    public CompletableFuture<BVH<VectorGeometry>[]> getAsync(@NonNull CornerBoundingBox2d bounds, int zoom) throws OutOfProjectionBoundsException {
         Bounds2d localBounds = bounds.fromGeo(this.projection).axisAlign();
         CompletableFuture<BVH<VectorGeometry>>[] futures = uncheckedCast(Arrays.stream(localBounds.toTiles(this.tileSize))
                 .map(this::getAsync)

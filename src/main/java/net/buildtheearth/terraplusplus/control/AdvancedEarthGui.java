@@ -4,7 +4,7 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomCubicWor
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
@@ -28,6 +28,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.WorldType;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -630,8 +631,6 @@ public class AdvancedEarthGui extends GuiScreen {
             protected int index;
 
             protected final String fieldName;
-            protected final Map<String, Object> properties;
-            protected final EntryTextField[] textFields;
             protected final EntryButton button;
             protected final Minecraft mc = Minecraft.getMinecraft();
 
@@ -649,67 +648,23 @@ public class AdvancedEarthGui extends GuiScreen {
                         return false;
                     }
                 });
-
-                this.properties = projection.properties();
-
-                int maxLen = this.properties.keySet().stream()
-                                     .map(s -> this.fieldName + '.' + s)
-                                     .map(I18n::format)
-                                     .mapToInt(gui.fontRenderer::getStringWidth)
-                                     .max().orElse(0) + 5;
-
-                this.textFields = new EntryTextField[this.properties.size()];
-                int i = 0;
-                for (Map.Entry<String, Object> entry : this.properties.entrySet()) {
-                    this.textFields[i] = gui.addEntryTextField(x + maxLen, y + 20 + 2 + i * 24, width - maxLen - 2, 20);
-                    this.textFields[i].setText(Objects.toString(entry.getValue()));
-                    i++;
-                }
             }
 
             @Override
             public int height() {
-                return 20 + 2 + this.textFields.length * 24;
+                return 20 + 2;
             }
 
             @Override
             public void render(AdvancedEarthGui gui, int x, int y, int mouseX, int mouseY, int width) {
-                int i = 0;
-                for (String s : this.properties.keySet()) {
-                    gui.fontRenderer.drawString(I18n.format(this.fieldName + '.' + s), x, y + 20 + 2 + i * 24 + (20 - 8) / 2, -1, true);
-                    i++;
-                }
                 this.button.y = y;
-                for (int j = 0; j < this.textFields.length; j++) {
-                    this.textFields[j].y = y + 20 + 2 + j * 24;
-                    this.textFields[j].actuallyDrawTextBox();
-                }
                 this.button.actuallyDrawButton(this.mc, mouseX, mouseY);
             }
 
             @Override
             public void toJson(StringBuilder out) {
                 checkArg(out.length() == 0, "must be first element in json output!");
-                out.append("{\"").append(PROJECTION_NAMES[this.index]).append("\":{");
-                if (this.initialIndex == this.index) {
-                    int i = 0;
-                    for (Map.Entry<String, Object> entry : this.properties.entrySet()) {
-                        if (i != 0) {
-                            out.append(',');
-                        }
-                        out.append('"').append(entry.getKey()).append("\":");
-                        boolean num = entry.getValue() instanceof Number;
-                        if (!num) {
-                            out.append('"');
-                        }
-                        out.append(this.textFields[i].getText());
-                        if (!num) {
-                            out.append('"');
-                        }
-                        i++;
-                    }
-                }
-                out.append("}}");
+                out.append("{\"").append(PROJECTION_NAMES[this.index]).append("\":{}}");
             }
         }
     }
@@ -831,8 +786,6 @@ public class AdvancedEarthGui extends GuiScreen {
         public void actuallyDrawButton(Minecraft mc, int mouseX, int mouseY) {
             super.drawButton(mc, mouseX, mouseY, 0);
         }
-
-
     }
 
     /**
@@ -853,8 +806,6 @@ public class AdvancedEarthGui extends GuiScreen {
         public void actuallyDrawTextBox() {
             super.drawTextBox();
         }
-
-
     }
 
     public static class EnumSelectionListEntry<T extends Enum<T>> implements Entry {
@@ -869,7 +820,8 @@ public class AdvancedEarthGui extends GuiScreen {
             this.values = EnumSet.copyOf(values);
 
             for (T value : allValues) {
-                gui.addButton(new GuiButton(0, x + 2, y + this.height, width - 2, 20, value + ": " + I18n.format("options." + (this.values.contains(value) ? "off" : "on"))) {
+                boolean contains = this.values.contains(value);
+                gui.addButton(new GuiButton(0, x + 2, y + this.height, width - 2, 20, value + ": " + (contains ? TextFormatting.RED : TextFormatting.GREEN) + I18n.format("options." + (contains ? "off" : "on"))) {
                     @Override
                     public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
                         if (super.mousePressed(mc, mouseX, mouseY)) {

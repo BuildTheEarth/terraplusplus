@@ -3,7 +3,7 @@ package net.buildtheearth.terraplusplus.control.fragments;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import net.buildtheearth.terraplusplus.control.Command;
-import net.buildtheearth.terraplusplus.util.ChatUtil;
+import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
@@ -46,12 +46,12 @@ public abstract class FragmentManager extends Command {
 
     private void displayCommands(ICommandSender sender) {
         for (int i = 0; i < 2; i++) {
-            sender.sendMessage(ChatUtil.combine(""));
+            sender.sendMessage(TerraUtils.combine(""));
         }
 
-        sender.sendMessage(ChatUtil.combine(TextFormatting.DARK_GRAY + "" + TextFormatting.STRIKETHROUGH, "================",
+        sender.sendMessage(TerraUtils.combine(TextFormatting.DARK_GRAY + "" + TextFormatting.STRIKETHROUGH, "================",
                 TextFormatting.DARK_GREEN + "" + TextFormatting.BOLD, " Terra++ ", TextFormatting.DARK_GRAY + "" + TextFormatting.STRIKETHROUGH, "================"));
-        sender.sendMessage(ChatUtil.combine(""));
+        sender.sendMessage(TerraUtils.combine(""));
 
         for (CommandFragment f : this.singleFragments) {
             ITextComponent message = new TextComponentString(this.commandBase).setStyle(new Style().setColor(TextFormatting.YELLOW));
@@ -70,8 +70,8 @@ public abstract class FragmentManager extends Command {
             message.appendSibling(new TextComponentString(f.getPurpose()).setStyle(new Style().setColor(TextFormatting.BLUE)));
             sender.sendMessage(message);
         }
-        sender.sendMessage(ChatUtil.combine(""));
-        sender.sendMessage(ChatUtil.combine(TextFormatting.DARK_GRAY + "" + TextFormatting.STRIKETHROUGH, "=========================================="));
+        sender.sendMessage(TerraUtils.combine(""));
+        sender.sendMessage(TerraUtils.combine(TextFormatting.DARK_GRAY + "" + TextFormatting.STRIKETHROUGH, "=========================================="));
     }
 
     @Override

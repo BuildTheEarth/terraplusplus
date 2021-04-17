@@ -19,16 +19,20 @@ public final class NarrowLine extends AbstractLine {
     }
 
     @Override
-    public void apply(@NonNull CachedChunkData.Builder builder, int chunkX, int chunkZ, @NonNull Bounds2d bounds) {
-        this.segments.forEachIntersecting(bounds, s -> {
-            double x0 = s.x0();
-            double x1 = s.x1();
-            double z0 = s.z0();
-            double z1 = s.z1();
+    public void apply(@NonNull CachedChunkData.Builder builder, int tileX, int tileZ, int zoom, @NonNull Bounds2d bounds) {
+        int baseX = Coords.cubeToMinBlock(tileX);
+        int baseZ = Coords.cubeToMinBlock(tileZ);
+        double scale = 1.0d / (1 << zoom);
 
-            //slope must not be infinity, slight inaccuracy shouldn't even be noticible unless you go looking for it
+        this.segments.forEachIntersecting(bounds, s -> {
+            double x0 = s.x0() * scale;
+            double x1 = s.x1() * scale;
+            double z0 = s.z0() * scale;
+            double z1 = s.z1() * scale;
+
+            //slope must not be infinity, slight inaccuracy shouldn't even be noticeable unless you go looking for it
             double dif = x1 - x0;
-            double slope = (z1 - z0) / ((abs(dif) < 0.01d ? x1 + copySign(0.01d, dif) : x1) - x0);
+            double slope = (z1 - z0) / ((abs(dif) < 0.01d * scale ? x1 + copySign(0.01d * scale, dif) : x1) - x0);
             double offset = z0 - slope * x0;
 
             if (x0 > x1) {
@@ -37,15 +41,15 @@ public final class NarrowLine extends AbstractLine {
                 x1 = tmp;
             }
 
-            int sx = max(floorI(x0) - Coords.cubeToMinBlock(chunkX), 0);
-            int ex = min(floorI(x1) - Coords.cubeToMinBlock(chunkX), 15);
+            int sx = max(floorI(x0) - baseX, 0);
+            int ex = min(floorI(x1) - baseX, 15);
 
             for (int x = max(sx, 0); x <= ex; x++) {
-                double realx = max(x + Coords.cubeToMinBlock(chunkX), x0);
+                double realx = max(x + baseX, x0);
                 double nextx = min(realx + 1.0d, x1);
 
-                int from = floorI((slope * realx + offset)) - Coords.cubeToMinBlock(chunkZ);
-                int to = floorI((slope * nextx + offset)) - Coords.cubeToMinBlock(chunkZ);
+                int from = floorI((slope * realx + offset)) - baseZ;
+                int to = floorI((slope * nextx + offset)) - baseZ;
 
                 if (from > to) {
                     int tmp = from;

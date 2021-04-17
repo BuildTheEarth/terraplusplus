@@ -2,13 +2,12 @@ package net.buildtheearth.terraplusplus.control;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorPipelines;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraplusplus.util.ChatUtil;
-import net.buildtheearth.terraplusplus.util.TranslateUtil;
+import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.buildtheearth.terraplusplus.util.geo.CoordinateParseUtils;
 import net.buildtheearth.terraplusplus.util.geo.LatLng;
 import net.minecraft.command.CommandException;
@@ -126,7 +125,7 @@ public class TerraTeleport extends Command {
         try {
             proj = terrain.projection.fromGeo(defaultCoords.getLng(), defaultCoords.getLat());
         } catch (Exception e) {
-            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".error.numbers")));
+            sender.sendMessage(TerraUtils.combine(TextFormatting.RED, TerraUtils.translate(TerraConstants.MODID + ".error.numbers")));
             return;
         }
 
@@ -138,7 +137,7 @@ public class TerraTeleport extends Command {
                         .getAsync(defaultCoords.getLng(), defaultCoords.getLat())
                         .thenApply(a -> a + 1.0d);
             } catch (OutOfProjectionBoundsException e) { //out of bounds, notify user
-                sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".error.numbers")));
+                sender.sendMessage(TerraUtils.titleAndCombine(TextFormatting.RED, TerraUtils.translate(TerraConstants.MODID + ".error.numbers")));
                 return;
             }
         } else {
@@ -153,13 +152,13 @@ public class TerraTeleport extends Command {
         altFuture.thenAccept(s -> FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
             for (EntityPlayerMP p : finalReceivers) {
                 if (p.getName().equalsIgnoreCase(sender.getName())) {
-                    p.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Teleporting to ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLat()),
+                    p.sendMessage(TerraUtils.titleAndCombine(TextFormatting.GRAY, "Teleporting to ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLat()),
                             TextFormatting.GRAY, ", ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLng())));
                 } else if (!sender.getName().equalsIgnoreCase("@")) {
-                    p.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Summoned to ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLat()),
+                    p.sendMessage(TerraUtils.titleAndCombine(TextFormatting.GRAY, "Summoned to ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLat()),
                             TextFormatting.GRAY, ", ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLng()), TextFormatting.GRAY, " by ", TextFormatting.RED, sender.getDisplayName()));
                 } else {
-                    p.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Summoned to ", TextFormatting.BLUE, TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLat()),
+                    p.sendMessage(TerraUtils.titleAndCombine(TextFormatting.GRAY, "Summoned to ", TextFormatting.BLUE, TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLat()),
                             TextFormatting.GRAY, ", ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLng()), TextFormatting.GRAY));
                 }
                 p.setPositionAndUpdate(proj[0], s, proj[1]);
@@ -222,9 +221,9 @@ public class TerraTeleport extends Command {
 
     private void usage(ICommandSender sender) {
         if (this.hasPermission(sender, TerraConstants.othersCommandNode)) {
-            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.defaultCommandNode + "tpll.others.usage")));
+            sender.sendMessage(TerraUtils.combine(TextFormatting.RED, TerraUtils.translate(TerraConstants.defaultCommandNode + "tpll.others.usage")));
         } else {
-            sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.defaultCommandNode + "tpll.usage")));
+            sender.sendMessage(TerraUtils.combine(TextFormatting.RED, TerraUtils.translate(TerraConstants.defaultCommandNode + "tpll.usage")));
         }
     }
 

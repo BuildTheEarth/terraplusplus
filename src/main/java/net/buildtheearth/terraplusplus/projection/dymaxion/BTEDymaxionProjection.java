@@ -2,7 +2,7 @@ package net.buildtheearth.terraplusplus.projection.dymaxion;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraplusplus.util.MathUtils;
+import net.buildtheearth.terraplusplus.util.TerraUtils;
 
 /**
  * Implementation of the BTE modified Dynmaxion projection.
@@ -19,7 +19,7 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
     protected static final double BERING_X = -0.3420420960118339;//-0.3282152608138795;
     protected static final double BERING_Y = -0.322211064085279;//-0.3281491467713469;
     protected static final double ARCTIC_Y = -0.2;//-0.3281491467713469;
-    protected static final double ARCTIC_M = (ARCTIC_Y - MathUtils.ROOT3 * ARC / 4) / (BERING_X - -0.5 * ARC);
+    protected static final double ARCTIC_M = (ARCTIC_Y - TerraUtils.ROOT3 * ARC / 4) / (BERING_X - -0.5 * ARC);
     protected static final double ARCTIC_B = ARCTIC_Y - ARCTIC_M * BERING_X;
     protected static final double ALEUTIAN_Y = -0.5000446805492526;//-0.5127463765943157;
     protected static final double ALEUTIAN_XL = -0.5149231279757507;//-0.4957832938238718;
@@ -35,7 +35,7 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
 
         boolean easia = this.isEurasianPart(x, y);
 
-        y -= 0.75 * ARC * MathUtils.ROOT3;
+        y -= 0.75 * ARC * TerraUtils.ROOT3;
 
         if (easia) {
             x += ARC;
@@ -59,9 +59,9 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
         if (y < 0) {
             easia = x > 0;
         } else if (y > ARC / 2) {
-            easia = x > -MathUtils.ROOT3 * ARC / 2;
+            easia = x > -TerraUtils.ROOT3 * ARC / 2;
         } else {
-            easia = y * -MathUtils.ROOT3 < x;
+            easia = y * -TerraUtils.ROOT3 < x;
         }
 
         double t = x;
@@ -78,7 +78,7 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
             x += ARC;
         }
 
-        y += 0.75 * ARC * MathUtils.ROOT3;
+        y += 0.75 * ARC * TerraUtils.ROOT3;
 
         //check to make sure still in right part
         if (easia != this.isEurasianPart(x, y)) {
@@ -98,7 +98,7 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
             return true;
         }
 
-        if (y > MathUtils.ROOT3 * ARC / 4) //above arctic ocean
+        if (y > TerraUtils.ROOT3 * ARC / 4) //above arctic ocean
         {
             return x < 0;
         }
@@ -122,7 +122,7 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
 
     @Override
     public double[] bounds() {
-        return new double[]{ -1.5 * ARC * MathUtils.ROOT3, -1.5 * ARC, 3 * ARC, MathUtils.ROOT3 * ARC }; //TODO: 3*ARC is prly to high
+        return new double[]{ -1.5 * ARC * TerraUtils.ROOT3, -1.5 * ARC, 3 * ARC, TerraUtils.ROOT3 * ARC }; //TODO: 3*ARC is prly to high
     }
 
     @Override

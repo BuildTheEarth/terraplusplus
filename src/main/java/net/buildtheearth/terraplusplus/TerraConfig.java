@@ -1,5 +1,6 @@
 package net.buildtheearth.terraplusplus;
 
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.util.http.Http;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.Config.Comment;
@@ -12,6 +13,11 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 @Mod.EventBusSubscriber(modid = TerraConstants.MODID)
 @Config(modid = TerraConstants.MODID)
 public class TerraConfig {
+    public static int[] lastVersion = { //this field might be used at some point
+            1, 12, 2, //mc version
+            2, 0, 0 //t++ version
+    };
+
     @Name("reduced_console_messages")
     @Comment({ "Removes all of TerraPlusPlus' messages which contain various links in the server console",
             "This is just if it seems to spam the console, it is purely for appearance" })
@@ -25,7 +31,17 @@ public class TerraConfig {
     public static boolean threeWater;
 
     @Comment({
-            "Configure how terraplusplus' will retrieve OpenStreetMap data."
+            "Configure how terraplusplus will retrieve surface elevation data."
+    })
+    public static ElevationOpts elevation = new ElevationOpts();
+
+    @Comment({
+            "Configure how terraplusplus will retrieve tree cover data."
+    })
+    public static TreeCoverOpts treeCover = new TreeCoverOpts();
+
+    @Comment({
+            "Configure how terraplusplus will retrieve OpenStreetMap data."
     })
     public static OSMOpts openstreetmap = new OSMOpts();
 
@@ -33,6 +49,8 @@ public class TerraConfig {
             "Configure the terraplusplus HTTP client."
     })
     public static HttpOpts http = new HttpOpts();
+
+    public static DimensionOpts dimension = new DimensionOpts();
 
     @SubscribeEvent
     public static void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event) {
@@ -42,9 +60,26 @@ public class TerraConfig {
         }
     }
 
+    public static class ElevationOpts {
+        public String[] servers = {
+                "https://cloud.daporkchop.net/gis/dem/earth/"
+        };
+    }
+
+    public static class TreeCoverOpts {
+        public String[] servers = {
+                "https://cloud.daporkchop.net/gis/treecover2000/"
+        };
+    }
+
     public static class OSMOpts {
+        @Deprecated
         public String[] servers = {
                 "https://cloud.daporkchop.net/gis/osm/0/"
+        };
+
+        public String[] servers_v2 = { //different field name to avoid breaking old config files
+                "https://cloud.daporkchop.net/gis/osm/"
         };
     }
 
@@ -62,9 +97,7 @@ public class TerraConfig {
         public String[] maxConcurrentRequests = {
                 "8: https://cloud.daporkchop.net/",
                 "8: https://s3.amazonaws.com/",
-                "1: http://gis-treecover.wri.org/",
-                "1: https://overpass.kumi.systems/",
-                "1: https://lz4.overpass-api.de/"
+                "16: http://10.0.0.20/"
         };
 
         @Comment({
@@ -78,5 +111,17 @@ public class TerraConfig {
                 "Default: 1440 minutes (1 day)"
         })
         public int cacheTTL = 1440;
+    }
+
+    public static class DimensionOpts {
+        @Comment({
+                "Forces Terra++ generation in The End."
+        })
+        public boolean overrideEndGeneration = false;
+
+        @Comment({
+                "Forces Terra++ generation in the Nether."
+        })
+        public boolean overrideNetherGeneration = false;
     }
 }

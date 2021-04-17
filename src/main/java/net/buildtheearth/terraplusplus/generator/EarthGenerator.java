@@ -27,18 +27,18 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.Cubi
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicRavineGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.feature.CubicStrongholdGenerator;
 import lombok.NonNull;
-import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.generator.data.IEarthDataBaker;
 import net.buildtheearth.terraplusplus.generator.populate.IEarthPopulator;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TilePos;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.biome.BiomeProvider;
 import net.minecraft.world.chunk.Chunk;
@@ -59,6 +59,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import static java.lang.Math.*;
 
@@ -70,8 +71,8 @@ public class EarthGenerator extends BasicCubeGenerator {
         String asyncVersion = "1.12.2-0.0.1175.0"; //the version at which async terrain gen was added
         if (cubicchunks != null && asyncVersion.compareTo(TerraConstants.CC_VERSION) <= 0) {
             //async terrain is supported on this version! register async generation callbacks
-            CubeGeneratorsRegistry.registerColumnAsyncLoadingCallback((world, data) -> asyncCallback(world, data.getPos()));
-            CubeGeneratorsRegistry.registerCubeAsyncLoadingCallback((world, data) -> asyncCallback(world, data.getPos().chunkPos()));
+            CubeGeneratorsRegistry.registerColumnAsyncLoadingCallback((world, data) -> asyncCallback(world, new TilePos(data.getPos())));
+            CubeGeneratorsRegistry.registerCubeAsyncLoadingCallback((world, data) -> asyncCallback(world, new TilePos(data.getPos())));
         } else {
             //we're on an older version of CC that doesn't support async terrain
             TerraMod.LOGGER.error("Async terrain not available!");
@@ -94,7 +95,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         }
     }
 
-    private static void asyncCallback(World world, ChunkPos pos) {
+    private static void asyncCallback(World world, TilePos pos) {
         ICubicWorldServer cubicWorld;
         if (world instanceof ICubicWorld && (cubicWorld = (ICubicWorldServer) world).isCubicWorld()) { //ignore vanilla worlds
             ICubeGenerator cubeGenerator = cubicWorld.getCubeGenerator();
@@ -103,10 +104,6 @@ public class EarthGenerator extends BasicCubeGenerator {
                 ((EarthGenerator) cubeGenerator).cache.getUnchecked(pos);
             }
         }
-    }
-
-    public static boolean isNullIsland(int chunkX, int chunkZ) {
-        return max(chunkX ^ (chunkX >> 31), chunkZ ^ (chunkZ >> 31)) < 3;
     }
 
     public final EarthGeneratorSettings settings;
@@ -122,12 +119,12 @@ public class EarthGenerator extends BasicCubeGenerator {
 
     public final GeneratorDatasets datasets;
 
-    public final LoadingCache<ChunkPos, CompletableFuture<CachedChunkData>> cache;
+    public final LoadingCache<TilePos, CompletableFuture<CachedChunkData>> cache;
 
     public EarthGenerator(World world) {
         super(world);
 
-        this.settings = EarthGeneratorSettings.parse(world.getWorldInfo().getGeneratorOptions());
+        this.settings = EarthGeneratorSettings.forWorld((WorldServer) world);
         this.cubiccfg = this.settings.customCubic();
         this.projection = this.settings.projection();
 
@@ -184,7 +181,7 @@ public class EarthGenerator extends BasicCubeGenerator {
 
     @Override
     public GeneratorReadyState pollAsyncColumnGenerator(int chunkX, int chunkZ) {
-        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(chunkX, chunkZ));
+        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new TilePos(chunkX, chunkZ, 0));
         if (!future.isDone()) {
             return GeneratorReadyState.WAITING;
         } else if (future.isCompletedExceptionally()) {
@@ -196,13 +193,13 @@ public class EarthGenerator extends BasicCubeGenerator {
 
     @Override
     public void generateColumn(Chunk column) { //legacy compat method
-        CachedChunkData data = this.cache.getUnchecked(column.getPos()).join();
+        CachedChunkData data = this.cache.getUnchecked(new TilePos(column.x, column.z, 0)).join();
         this.generateColumn(column, data);
     }
 
     @Override
     public Optional<Chunk> tryGenerateColumn(World world, int columnX, int columnZ, ChunkPrimer primer, boolean forceGenerate) {
-        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(columnX, columnZ));
+        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new TilePos(columnX, columnZ, 0));
         if (!forceGenerate && (!future.isDone() || future.isCompletedExceptionally())) {
             return Optional.empty();
         }
@@ -222,17 +219,17 @@ public class EarthGenerator extends BasicCubeGenerator {
     }
 
     @Deprecated
-	@Override
+    @Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) { //legacy compat method
         CubePrimer primer = new CubePrimer();
-        CachedChunkData data = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ)).join();
+        CachedChunkData data = this.cache.getUnchecked(new TilePos(cubeX, cubeZ, 0)).join();
         this.generateCube(cubeX, cubeY, cubeZ, primer, data);
         return primer;
     }
 
     @Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer) { //legacy compat method
-        CachedChunkData data = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ)).join();
+        CachedChunkData data = this.cache.getUnchecked(new TilePos(cubeX, cubeZ, 0)).join();
         this.generateCube(cubeX, cubeY, cubeZ, primer, data);
         return primer;
     }
@@ -244,7 +241,7 @@ public class EarthGenerator extends BasicCubeGenerator {
 
     @Override
     public Optional<CubePrimer> tryGenerateCube(int cubeX, int cubeY, int cubeZ, CubePrimer primer, boolean forceGenerate) {
-        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ));
+        CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new TilePos(cubeX, cubeZ, 0));
         if (!forceGenerate && (!future.isDone() || future.isCompletedExceptionally())) {
             return Optional.empty();
         }
@@ -275,23 +272,21 @@ public class EarthGenerator extends BasicCubeGenerator {
     }
 
     protected void generateSurface(int cubeX, int cubeY, int cubeZ, CubePrimer primer, CachedChunkData data) {
-        IBlockState stone = Blocks.STONE.getDefaultState();
-        IBlockState water = Blocks.WATER.getDefaultState();
+        Supplier<IBlockState> fill = this.settings.terrainSettings().fill();
+        Supplier<IBlockState> water = this.settings.terrainSettings().water();
+        Supplier<IBlockState> surface = this.settings.terrainSettings().surface();
+        Supplier<IBlockState> top = this.settings.terrainSettings().top();
+
         if (data.belowSurface(cubeY + 2)) { //below surface -> solid stone (padding of 2 cubes because some replacers might need it)
-            //technically, i could reflectively get access to the primer's underlying char[] and use Arrays.fill(), because this
-            // implementation causes 4096 calls to ObjectIntIdentityMap#get() when only 1 would be necessary...
             for (int x = 0; x < 16; x++) {
                 for (int y = 0; y < 16; y++) {
                     for (int z = 0; z < 16; z++) {
-                        primer.setBlockState(x, y, z, stone);
+                        primer.setBlockState(x, y, z, fill.get());
                     }
                 }
             }
         } else if (data.aboveSurface(cubeY)) { //above surface -> air (no padding here, replacers don't normally affect anything above the surface)
         } else {
-            IBlockState grass = Blocks.GRASS.getDefaultState();
-            IBlockState dirt = Blocks.DIRT.getDefaultState();
-
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
                     int groundHeight = data.groundHeight(x, z);
@@ -306,31 +301,46 @@ public class EarthGenerator extends BasicCubeGenerator {
                     int groundTopInCube = min(groundTop, 15);
                     int waterTop = min(waterHeight - Coords.cubeToMinBlock(cubeY), 15);
 
-                    int blockX = Coords.cubeToMinBlock(cubeX) + x;
-                    int blockZ = Coords.cubeToMinBlock(cubeZ) + z;
-                    IBiomeBlockReplacer[] replacers = this.biomeBlockReplacers[data.biome(x, z) & 0xFF];
-                    for (int y = 0; y <= groundTopInCube; y++) {
-                        int blockY = Coords.cubeToMinBlock(cubeY) + y;
-                        double density = groundTop - y;
-                        IBlockState state = stone;
-                        for (IBiomeBlockReplacer replacer : replacers) {
-                            state = replacer.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
+                    if (this.settings.terrainSettings().useCwgReplacers()) {
+                        int blockX = Coords.cubeToMinBlock(cubeX) + x;
+                        int blockZ = Coords.cubeToMinBlock(cubeZ) + z;
+                        IBiomeBlockReplacer[] replacers = this.biomeBlockReplacers[data.biome(x, z) & 0xFF];
+                        for (int y = 0; y <= groundTopInCube; y++) {
+                            int blockY = Coords.cubeToMinBlock(cubeY) + y;
+                            double density = groundTop - y;
+                            IBlockState state = fill.get();
+                            for (IBiomeBlockReplacer replacer : replacers) {
+                                state = replacer.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
+                            }
+
+                            //calling this explicitly increases the likelihood of JIT inlining it
+                            //(for reference: previously, CliffReplacer was manually added to each biome as the last replacer)
+                            state = CliffReplacer.INSTANCE.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
+
+                            if (groundHeight < waterHeight && state == top.get()) { //hacky workaround for underwater grass
+                                state = surface.get();
+                            }
+
+                            primer.setBlockState(x, y, z, state);
                         }
+                    } else {
+                        for (int y = 0; y <= groundTopInCube; y++) {
+                            IBlockState state;
+                            if (y == groundTop) {
+                                state = top.get();
+                            } else if (y + 5 >= groundTop) {
+                                state = surface.get();
+                            } else {
+                                state = fill.get();
+                            }
 
-                        //calling this explicitly increases the likelihood of JIT inlining it
-                        //(for reference: previously, CliffReplacer was manually added to each biome as the last replacer)
-                        state = CliffReplacer.INSTANCE.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
-
-                        if (groundHeight < waterHeight && state == grass) { //hacky workaround for underwater grass
-                            state = dirt;
+                            primer.setBlockState(x, y, z, state);
                         }
-
-                        primer.setBlockState(x, y, z, state);
                     }
 
                     //fill water
                     for (int y = max(groundTopInCube + 1, 0); y <= waterTop; y++) {
-                        primer.setBlockState(x, y, z, water);
+                        primer.setBlockState(x, y, z, water.get());
                     }
                 }
             }
@@ -343,7 +353,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         // checking all neighbors here improves performance when checking if a cube can be generated
         for (int dx = -1; dx <= 1; dx++) {
             for (int dz = -1; dz <= 1; dz++) {
-                CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new ChunkPos(cubeX + dx, cubeZ + dz));
+                CompletableFuture<CachedChunkData> future = this.cache.getUnchecked(new TilePos(cubeX + dx, cubeZ + dz, 0));
                 if (!future.isDone()) {
                     return GeneratorReadyState.WAITING;
                 } else if (future.isCompletedExceptionally()) {
@@ -364,7 +374,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         CachedChunkData[] datas = new CachedChunkData[2 * 2];
         for (int i = 0, dx = 0; dx < 2; dx++) {
             for (int dz = 0; dz < 2; dz++) {
-                datas[i++] = this.cache.getUnchecked(new ChunkPos(cube.getX() + dx, cube.getZ() + dz)).join();
+                datas[i++] = this.cache.getUnchecked(new TilePos(cube.getX() + dx, cube.getZ() + dz, 0)).join();
             }
         }
 
@@ -374,7 +384,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         this.cubiccfg.expectedBaseHeight = (float) datas[0].groundHeight(15, 15);
 
         for (IEarthPopulator populator : this.populators) {
-            populator.populate(this.world, random, cube.getCoords(), biome, datas);
+            populator.populate(this.world, random, cube.getCoords(), biome, datas, this.settings);
         }
     }
 
@@ -406,7 +416,7 @@ public class EarthGenerator extends BasicCubeGenerator {
      *
      * @author DaPorkchop_
      */
-    public static class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<CachedChunkData>> {
+    public static class ChunkDataLoader extends CacheLoader<TilePos, CompletableFuture<CachedChunkData>> {
         protected final GeneratorDatasets datasets;
         protected final IEarthDataBaker<?>[] bakers;
 
@@ -416,7 +426,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         }
 
         @Override
-        public CompletableFuture<CachedChunkData> load(@NonNull ChunkPos pos) {
+        public CompletableFuture<CachedChunkData> load(@NonNull TilePos pos) {
             return IEarthAsyncPipelineStep.getFuture(pos, this.datasets, this.bakers, CachedChunkData::builder);
         }
     }

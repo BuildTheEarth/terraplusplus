@@ -1,17 +1,21 @@
 package net.buildtheearth.terraplusplus.projection;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.config.TypedDeserializer;
 import net.buildtheearth.terraplusplus.config.TypedSerializer;
-import net.buildtheearth.terraplusplus.util.MathUtils;
+import net.buildtheearth.terraplusplus.projection.epsg.EPSG3785;
+import net.buildtheearth.terraplusplus.projection.epsg.EPSG4326;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraUtils;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -23,7 +27,6 @@ import java.util.Map;
  * A projection as defined here is something that projects a point in the geographic space to a point of the projected space (and vice versa).
  * <p>
  * All geographic coordinates are in degrees.
- *
  */
 @JsonDeserialize(using = GeographicProjection.Deserializer.class)
 @JsonSerialize(using = GeographicProjection.Serializer.class)
@@ -60,6 +63,7 @@ public interface GeographicProjection {
      *
      * @return an estimation of the scale of this projection
      */
+    //TODO: compute this individually at each point rather than globally
     double metersPerUnit();
 
     /**
@@ -69,13 +73,13 @@ public interface GeographicProjection {
      */
     default double[] bounds() {
         try {
+            double[] boundsGeo = this.boundsGeo();
+
             //get max in by using extreme coordinates
-            double[] bounds = {
-                    this.fromGeo(-180, 0)[0],
-                    this.fromGeo(0, -90)[1],
-                    this.fromGeo(180, 0)[0],
-                    this.fromGeo(0, 90)[1]
-            };
+            double[] bounds = new double[4];
+
+            System.arraycopy(this.fromGeo(boundsGeo[0], boundsGeo[1]), 0, bounds, 0, 2);
+            System.arraycopy(this.fromGeo(boundsGeo[2], boundsGeo[3]), 0, bounds, 2, 2);
 
             if (bounds[0] > bounds[2]) {
                 double t = bounds[0];
@@ -91,8 +95,14 @@ public interface GeographicProjection {
 
             return bounds;
         } catch (OutOfProjectionBoundsException e) {
-            return new double[]{ 0, 0, 1, 1 };
+            throw new IllegalStateException(this.toString());
         }
+    }
+
+    default double[] boundsGeo() {
+        return new double[] {
+                -180, -90, 180, 90
+        };
     }
 
     /**
@@ -202,11 +212,11 @@ public interface GeographicProjection {
         double y2 = y + d * Math.cos(Math.toRadians(angle));
         double[] geo1 = this.toGeo(x, y);
         double[] geo2 = this.toGeo(x2, y2);
-        MathUtils.toRadians(geo1);
-        MathUtils.toRadians(geo2);
+        TerraUtils.toRadians(geo1);
+        TerraUtils.toRadians(geo2);
         double dlon = geo2[0] - geo1[0];
         double dlat = geo2[1] - geo1[1];
-        double a = Math.toDegrees(Math.atan2(dlat, dlon*Math.cos(geo1[1])));
+        double a = Math.toDegrees(Math.atan2(dlat, dlon * Math.cos(geo1[1])));
         a = 90 - a;
         if (a < 0) {
             a += 360;
@@ -230,17 +240,30 @@ public interface GeographicProjection {
         return this.azimuth(x, y, angle, 1E-5);
     }
 
-    /**
-     * @return any additional configuration properties used by this projection
-     */
-    default Map<String, Object> properties() {
-        return Collections.emptyMap();
-    }
-
     class Deserializer extends TypedDeserializer<GeographicProjection> {
         @Override
         protected Map<String, Class<? extends GeographicProjection>> registry() {
             return GlobalParseRegistries.PROJECTIONS;
+        }
+
+        @Override
+        public GeographicProjection deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            if (p.currentToken() == JsonToken.VALUE_STRING) {
+                return this.parseFromString(p.getValueAsString());
+            } else {
+                return super.deserialize(p, ctxt);
+            }
+        }
+
+        private GeographicProjection parseFromString(@NonNull String s) {
+            switch (s) {
+                case "EPSG:3785":
+                case "EPSG:3857": //TODO: EPSG:3857 actually uses the WGS84 ellipsoid rather than a sphere
+                    return new EPSG3785();
+                case "EPSG:4326":
+                    return new EPSG4326();
+            }
+            throw new IllegalArgumentException("unsupported projection: " + s);
         }
     }
 

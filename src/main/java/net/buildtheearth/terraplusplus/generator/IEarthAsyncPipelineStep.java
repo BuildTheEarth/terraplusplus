@@ -1,11 +1,10 @@
 package net.buildtheearth.terraplusplus.generator;
 
-import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
+import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
-import net.minecraft.util.math.ChunkPos;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -18,13 +17,14 @@ import static net.daporkchop.lib.common.util.PorkUtil.*;
  * @author DaPorkchop_
  */
 public interface IEarthAsyncPipelineStep<D, V, B extends IEarthAsyncDataBuilder<V>> {
-    static <V, B extends IEarthAsyncDataBuilder<V>> CompletableFuture<V> getFuture(ChunkPos pos, GeneratorDatasets datasets, IEarthAsyncPipelineStep<?, V, B>[] steps, Supplier<B> builderFactory) {
-        int baseX = Coords.cubeToMinBlock(pos.x);
-        int baseZ = Coords.cubeToMinBlock(pos.z);
+    static <V, B extends IEarthAsyncDataBuilder<V>> CompletableFuture<V> getFuture(TilePos pos, GeneratorDatasets datasets, IEarthAsyncPipelineStep<?, V, B>[] steps, Supplier<B> builderFactory) {
+        int baseX = pos.blockX();
+        int baseZ = pos.blockZ();
+        int sizeBlocks = pos.sizeBlocks();
 
         CompletableFuture<?>[] futures = new CompletableFuture[steps.length];
         try {
-            Bounds2d chunkBounds = Bounds2d.of(baseX, baseX + 16, baseZ, baseZ + 16);
+            Bounds2d chunkBounds = Bounds2d.of(baseX, baseX + sizeBlocks, baseZ, baseZ + sizeBlocks);
             CornerBoundingBox2d chunkBoundsGeo = chunkBounds.toCornerBB(datasets.projection(), false).toGeo();
 
             for (int i = 0; i < steps.length; i++) {
@@ -61,22 +61,22 @@ public interface IEarthAsyncPipelineStep<D, V, B extends IEarthAsyncDataBuilder<
     }
 
     /**
-     * Asynchronously fetches the data required to bake the data for the given column.
+     * Asynchronously fetches the data required to bake the data for the given tile.
      *
-     * @param pos       the position of the column
+     * @param pos       the position of the tile
      * @param datasets  the datasets to be used
      * @param bounds    the bounding box of the chunk (in blocks)
      * @param boundsGeo the bounding box of the chunk (in world coordinates)
      * @return a {@link CompletableFuture} which will be completed with the required data
      */
-    CompletableFuture<D> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException;
+    CompletableFuture<D> requestData(TilePos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException;
 
     /**
-     * Bakes the retrieved data into the chunk data for the given column.
+     * Bakes the retrieved data into the chunk data for the given tile.
      *
-     * @param pos     the position of the column
+     * @param pos     the position of the tile
      * @param builder the builder for the cached chunk data
      * @param data    the data to bake
      */
-    void bake(ChunkPos pos, B builder, D data);
+    void bake(TilePos pos, B builder, D data);
 }

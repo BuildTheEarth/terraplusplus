@@ -20,8 +20,17 @@
 
 package net.buildtheearth.terraplusplus.dataset.geojson;
 
-import com.google.gson.annotations.JsonAdapter;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.NonNull;
+import net.buildtheearth.terraplusplus.dataset.geojson.geometry.GeometryCollection;
+import net.buildtheearth.terraplusplus.dataset.geojson.geometry.LineString;
+import net.buildtheearth.terraplusplus.dataset.geojson.geometry.MultiLineString;
+import net.buildtheearth.terraplusplus.dataset.geojson.geometry.MultiPoint;
+import net.buildtheearth.terraplusplus.dataset.geojson.geometry.MultiPolygon;
+import net.buildtheearth.terraplusplus.dataset.geojson.geometry.Point;
+import net.buildtheearth.terraplusplus.dataset.geojson.geometry.Polygon;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.projection.ProjectionFunction;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
@@ -29,7 +38,17 @@ import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 /**
  * @author DaPorkchop_
  */
-@JsonAdapter(GeometryDeserializer.class)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(GeometryCollection.class),
+        @JsonSubTypes.Type(LineString.class),
+        @JsonSubTypes.Type(MultiLineString.class),
+        @JsonSubTypes.Type(Point.class),
+        @JsonSubTypes.Type(MultiPoint.class),
+        @JsonSubTypes.Type(Polygon.class),
+        @JsonSubTypes.Type(MultiPolygon.class)
+})
+@JsonDeserialize
 public interface Geometry extends GeoJsonObject {
     Geometry project(@NonNull ProjectionFunction projection) throws OutOfProjectionBoundsException;
 

@@ -7,6 +7,7 @@ import net.buildtheearth.terraplusplus.control.TerraCommand;
 import net.buildtheearth.terraplusplus.control.TerraTeleport;
 import net.buildtheearth.terraplusplus.provider.GenerationEventDenier;
 import net.buildtheearth.terraplusplus.provider.WaterDenier;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;

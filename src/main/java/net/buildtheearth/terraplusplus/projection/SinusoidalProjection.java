@@ -1,7 +1,7 @@
 package net.buildtheearth.terraplusplus.projection;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 
 /**
  * Implementation of the Sinusoidal projection.

@@ -1,0 +1,95 @@
+{
+    "projection": {
+        "flip_vertical": {
+            "delegate": {
+                "scale": {
+                    "delegate": {
+                        "equal_earth": {}
+                    },
+                    "x": 4268600,
+                    "y": 4268600
+                }
+            }
+        }
+    },
+    "useDefaultHeights": false,
+    "customHeights": [
+        [
+            "https://cloud.daporkchop.net/gis/dem/mars/"
+        ]
+    ],
+    "useDefaultTreeCover": false,
+    "biomeFilters": [
+        {
+            "type": "constant",
+            "biome": "minecraft:void"
+        }
+    ],
+    "osmSettings": {
+        "type": "disable"
+    },
+    "dataBakers": [
+        {
+            "type": "initial_biomes"
+        },
+        {
+            "type": "heights"
+        }
+    ],
+    "populators": [
+    ],
+    "terrainSettings": {
+        "water": {
+            "id": "minecraft:air"
+        },
+        "surface": {
+            "id": "minecraft:sand",
+            "properties": {
+                "variant": "red_sand"
+            }
+        },
+        "top": {
+            "id": "minecraft:sand",
+            "properties": {
+                "variant": "red_sand"
+            }
+        },
+        "useCwgReplacers": false
+    },
+    "skipChunkPopulation": [
+        "DUNGEON",
+        "FIRE",
+        "GLOWSTONE",
+        "ICE",
+        "LAKE",
+        "LAVA",
+        "NETHER_LAVA",
+        "NETHER_LAVA2",
+        "NETHER_MAGMA",
+        "ANIMALS",
+        "CUSTOM"
+    ],
+    "skipBiomeDecoration": [
+        "BIG_SHROOM",
+        "CACTUS",
+        "CLAY",
+        "DEAD_BUSH",
+        "DESERT_WELL",
+        "LILYPAD",
+        "FLOWERS",
+        "FOSSIL",
+        "GRASS",
+        "ICE",
+        "LAKE_WATER",
+        "LAKE_LAVA",
+        "PUMPKIN",
+        "REED",
+        "ROCK",
+        "SAND",
+        "SAND_PASS2",
+        "SHROOM",
+        "TREE",
+        "CUSTOM"
+    ],
+    "version": 2
+}

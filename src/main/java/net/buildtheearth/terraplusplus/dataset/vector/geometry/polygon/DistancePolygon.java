@@ -14,6 +14,9 @@ import static net.daporkchop.lib.common.math.PMath.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
+ * A custom polygon rasterizer which not only fills the polygon area, but computes the distance from the edge of the polygon - both inside and out - up to a given maximum
+ * distance.
+ *
  * @author DaPorkchop_
  */
 public final class DistancePolygon extends AbstractPolygon {
@@ -26,9 +29,9 @@ public final class DistancePolygon extends AbstractPolygon {
     }
 
     @Override
-    public void apply(@NonNull CachedChunkData.Builder builder, int chunkX, int chunkZ, @NonNull Bounds2d bounds) {
-        int baseX = Coords.cubeToMinBlock(chunkX);
-        int baseZ = Coords.cubeToMinBlock(chunkZ);
+    public void apply(@NonNull CachedChunkData.Builder builder, int tileX, int tileZ, int zoom, @NonNull Bounds2d bounds) {
+        int baseX = Coords.cubeToMinBlock(tileX << zoom);
+        int baseZ = Coords.cubeToMinBlock(tileZ << zoom);
 
         int maxDist = this.maxDist;
         int[][] distances2d = new int[(maxDist << 1) + 1][16];
@@ -39,7 +42,7 @@ public final class DistancePolygon extends AbstractPolygon {
                 int[] distances = distances2d[0];
                 System.arraycopy(distances2d, 1, distances2d, 0, maxDist << 1); //shift distances down by one
                 distances2d[maxDist << 1] = distances;
-                double[] intersectionPoints = this.getIntersectionPoints(x + baseX);
+                double[] intersectionPoints = this.getIntersectionPoints((x << zoom) + baseX);
 
                 if (intersectionPoints.length == 0) { //no intersections along this line
                     Arrays.fill(distances, Integer.MIN_VALUE);
@@ -54,7 +57,8 @@ public final class DistancePolygon extends AbstractPolygon {
 
                 if (i < intersectionPoints.length) { //index is valid
                     int mask = 0;
-                    int min = floorI(intersectionPoints[i++]) - baseZ;
+                    int min = (floorI(intersectionPoints[i++]) - baseZ) >> zoom;
+                    int limit = baseX + (16 << zoom);
 
                     //fill everything up to this point with blanks
                     for (int z = 0, itrMax = clamp(min, 0, 16); z < itrMax; z++) {
@@ -62,7 +66,7 @@ public final class DistancePolygon extends AbstractPolygon {
                     }
 
                     do {
-                        max = floorI(intersectionPoints[i++]) - baseZ;
+                        max = (floorI(intersectionPoints[i++]) - baseZ) >> zoom;
 
                         for (int z = clamp(min, 0, 16), itrMax = clamp(max, 0, 16); z < itrMax; z++) {
                             distances[z] = min(z - min, max - z - 1) ^ mask;
@@ -70,9 +74,9 @@ public final class DistancePolygon extends AbstractPolygon {
 
                         min = max;
                         mask = ~mask;
-                    } while (i < intersectionPoints.length && max <= baseX + 16);
+                    } while (i < intersectionPoints.length && max <= limit);
                 } else { //index is too high, simply fill from the end
-                    max = floorI(intersectionPoints[intersectionPoints.length - 1]) - baseZ;
+                    max = (floorI(intersectionPoints[intersectionPoints.length - 1]) - baseZ) >> zoom;
                 }
 
                 //fill everything to the edge with blanks
@@ -115,5 +119,25 @@ public final class DistancePolygon extends AbstractPolygon {
                 }
             }
         }
+    }
+
+    @Override
+    public double minX() {
+        return super.minX() - this.maxDist;
+    }
+
+    @Override
+    public double maxX() {
+        return super.maxX() + this.maxDist;
+    }
+
+    @Override
+    public double minZ() {
+        return super.minZ() - this.maxDist;
+    }
+
+    @Override
+    public double maxZ() {
+        return super.maxZ() + this.maxDist;
     }
 }

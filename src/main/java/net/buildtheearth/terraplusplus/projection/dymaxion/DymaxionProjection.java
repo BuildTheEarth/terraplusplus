@@ -3,7 +3,7 @@ package net.buildtheearth.terraplusplus.projection.dymaxion;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraplusplus.util.MathUtils;
+import net.buildtheearth.terraplusplus.util.TerraUtils;
 
 /**
  * Implementation of the Dynmaxion projection.
@@ -141,7 +141,7 @@ public class DymaxionProjection implements GeographicProjection {
 
         for (int i = 0; i < 22; i++) {
             CENTER_MAP[i][0] *= 0.5 * ARC;
-            CENTER_MAP[i][1] *= ARC * MathUtils.ROOT3 / 12;
+            CENTER_MAP[i][1] *= ARC * TerraUtils.ROOT3 / 12;
         }
 
         // Will contain the list of vertices in Cartesian coordinates
@@ -149,8 +149,8 @@ public class DymaxionProjection implements GeographicProjection {
 
         // Convert the geographic vertices to spherical in radians
         for (int i = 0; i < VERTICES.length; i++) {
-            double[] vertexSpherical = MathUtils.geo2Spherical(VERTICES[i]);
-            double[] vertex = MathUtils.spherical2Cartesian(vertexSpherical);
+            double[] vertexSpherical = TerraUtils.geo2Spherical(VERTICES[i]);
+            double[] vertex = TerraUtils.spherical2Cartesian(vertexSpherical);
             verticesCartesian[i] = vertex;
             VERTICES[i] = vertexSpherical;
         }
@@ -169,7 +169,7 @@ public class DymaxionProjection implements GeographicProjection {
             double mag = Math.sqrt(xsum * xsum + ysum * ysum + zsum * zsum);
             CENTROIDS[i] = new double[]{ xsum / mag, ysum / mag, zsum / mag };
 
-            double[] centroidSpherical = MathUtils.cartesian2Spherical(CENTROIDS[i]);
+            double[] centroidSpherical = TerraUtils.cartesian2Spherical(CENTROIDS[i]);
             double centroidLambda = centroidSpherical[0];
             double centroidPhi = centroidSpherical[1];
 
@@ -177,8 +177,8 @@ public class DymaxionProjection implements GeographicProjection {
             double[] v = { vertex[0] - centroidLambda, vertex[1] };
             v = yRot(v, -centroidPhi);
 
-            ROTATION_MATRICES[i] = MathUtils.produceZYZRotationMatrix(-centroidLambda, -centroidPhi, (Math.PI / 2) - v[0]);
-            INVERSE_ROTATION_MATRICES[i] = MathUtils.produceZYZRotationMatrix(v[0] - (Math.PI / 2), centroidPhi, centroidLambda);
+            ROTATION_MATRICES[i] = TerraUtils.produceZYZRotationMatrix(-centroidLambda, -centroidPhi, (Math.PI / 2) - v[0]);
+            INVERSE_ROTATION_MATRICES[i] = TerraUtils.produceZYZRotationMatrix(v[0] - (Math.PI / 2), centroidPhi, centroidLambda);
 
         }
     }
@@ -187,7 +187,7 @@ public class DymaxionProjection implements GeographicProjection {
 
         //cast equilateral triangles to 45 degrees right triangles (side length of root2)
         double xp = x / ARC;
-        double yp = y / (ARC * MathUtils.ROOT3);
+        double yp = y / (ARC * TerraUtils.ROOT3);
 
         int row;
         if (yp > -0.25) {
@@ -227,7 +227,7 @@ public class DymaxionProjection implements GeographicProjection {
     }
 
     protected static double[] yRot(double[] spherical, double rot) {
-        double[] c = MathUtils.spherical2Cartesian(spherical);
+        double[] c = TerraUtils.spherical2Cartesian(spherical);
 
         double x = c[0];
         c[0] = c[2] * Math.sin(rot) + x * Math.cos(rot);
@@ -284,17 +284,17 @@ public class DymaxionProjection implements GeographicProjection {
         double xp = S * vec[0];
         double yp = S * vec[1];
 
-        double a = Math.atan((2 * yp / MathUtils.ROOT3 - EL6) / DVE); //ARC/2 terms cancel
-        double b = Math.atan((xp - yp / MathUtils.ROOT3 - EL6) / DVE);
-        double c = Math.atan((-xp - yp / MathUtils.ROOT3 - EL6) / DVE);
+        double a = Math.atan((2 * yp / TerraUtils.ROOT3 - EL6) / DVE); //ARC/2 terms cancel
+        double b = Math.atan((xp - yp / TerraUtils.ROOT3 - EL6) / DVE);
+        double c = Math.atan((-xp - yp / TerraUtils.ROOT3 - EL6) / DVE);
 
-        return new double[]{ 0.5 * (b - c), (2 * a - b - c) / (2 * MathUtils.ROOT3) };
+        return new double[]{ 0.5 * (b - c), (2 * a - b - c) / (2 * TerraUtils.ROOT3) };
     }
 
     protected double[] inverseTriangleTransformNewton(double xpp, double ypp) {
 
         //a & b are linearly related to c, so using the tan of sum formula we know: tan(c+off) = (tanc + tanoff)/(1-tanc*tanoff)
-        double tanaoff = Math.tan(MathUtils.ROOT3 * ypp + xpp); // a = c + root3*y'' + x''
+        double tanaoff = Math.tan(TerraUtils.ROOT3 * ypp + xpp); // a = c + root3*y'' + x''
         double tanboff = Math.tan(2 * xpp); // b = c + 2x''
 
         double anumer = tanaoff * tanaoff + 1;
@@ -327,8 +327,8 @@ public class DymaxionProjection implements GeographicProjection {
         }
 
         //simple reversal algebra based on tan values
-        double yp = MathUtils.ROOT3 * (DVE * tana + EL6) / 2;
-        double xp = DVE * tanb + yp / MathUtils.ROOT3 + EL6;
+        double yp = TerraUtils.ROOT3 * (DVE * tana + EL6) / 2;
+        double xp = DVE * tanb + yp / TerraUtils.ROOT3 + EL6;
 
         //x = z*xp/Z, y = z*yp/Z, x^2 + y^2 + z^2 = 1
         double xpoZ = xp / Z;
@@ -348,12 +348,12 @@ public class DymaxionProjection implements GeographicProjection {
     	
     	OutOfProjectionBoundsException.checkLongitudeLatitudeInRange(longitude, latitude);
 
-        double[] vector = MathUtils.spherical2Cartesian(MathUtils.geo2Spherical(new double[]{ longitude, latitude }));
+        double[] vector = TerraUtils.spherical2Cartesian(TerraUtils.geo2Spherical(new double[]{ longitude, latitude }));
 
         int face = this.findTriangle(vector);
 
         //apply rotation matrix (move triangle onto template triangle)
-        double[] pvec = MathUtils.matVecProdD(ROTATION_MATRICES[face], vector);
+        double[] pvec = TerraUtils.matVecProdD(ROTATION_MATRICES[face], vector);
         double[] projectedVec = this.triangleTransform(pvec);
 
         //flip triangle to correct orientation
@@ -364,9 +364,9 @@ public class DymaxionProjection implements GeographicProjection {
 
         vector[0] = projectedVec[0];
         //deal with special snowflakes (child faces 20, 21)
-        if (((face == 15 && vector[0] > projectedVec[1] * MathUtils.ROOT3) || face == 14) && vector[0] > 0) {
-            projectedVec[0] = 0.5 * vector[0] - 0.5 * MathUtils.ROOT3 * projectedVec[1];
-            projectedVec[1] = 0.5 * MathUtils.ROOT3 * vector[0] + 0.5 * projectedVec[1];
+        if (((face == 15 && vector[0] > projectedVec[1] * TerraUtils.ROOT3) || face == 14) && vector[0] > 0) {
+            projectedVec[0] = 0.5 * vector[0] - 0.5 * TerraUtils.ROOT3 * projectedVec[1];
+            projectedVec[1] = 0.5 * TerraUtils.ROOT3 * vector[0] + 0.5 * projectedVec[1];
             face += 6; //shift 14->20 & 15->21
         }
 
@@ -395,17 +395,17 @@ public class DymaxionProjection implements GeographicProjection {
                 }
                 break;
             case 20:
-                if (-y * MathUtils.ROOT3 > x) {
+                if (-y * TerraUtils.ROOT3 > x) {
                     throw OutOfProjectionBoundsException.get();
                 }
                 break;
             case 15:
-                if (x > 0 && x > y * MathUtils.ROOT3) {
+                if (x > 0 && x > y * TerraUtils.ROOT3) {
                     throw OutOfProjectionBoundsException.get();
                 }
                 break;
             case 21:
-                if (x < 0 || -y * MathUtils.ROOT3 > x) {
+                if (x < 0 || -y * TerraUtils.ROOT3 > x) {
                     throw OutOfProjectionBoundsException.get();
                 }
                 break;
@@ -425,15 +425,15 @@ public class DymaxionProjection implements GeographicProjection {
 
         double[] vec = { x, y, z };
         //apply inverse rotation matrix (move triangle from template triangle to correct position on globe)
-        double[] vecp = MathUtils.matVecProdD(INVERSE_ROTATION_MATRICES[face], vec);
+        double[] vecp = TerraUtils.matVecProdD(INVERSE_ROTATION_MATRICES[face], vec);
 
         //convert back to geo coordinates
-        return MathUtils.spherical2Geo(MathUtils.cartesian2Spherical(vecp));
+        return TerraUtils.spherical2Geo(TerraUtils.cartesian2Spherical(vecp));
     }
 
     @Override
     public double[] bounds() {
-        return new double[]{ -3 * ARC, -0.75 * ARC * MathUtils.ROOT3, 2.5 * ARC, 0.75 * ARC * MathUtils.ROOT3 };
+        return new double[]{ -3 * ARC, -0.75 * ARC * TerraUtils.ROOT3, 2.5 * ARC, 0.75 * ARC * TerraUtils.ROOT3 };
     }
 
     @Override
@@ -443,7 +443,7 @@ public class DymaxionProjection implements GeographicProjection {
 
     @Override
     public double metersPerUnit() {
-        return Math.sqrt(510100000000000.0 / (20 * MathUtils.ROOT3 * ARC * ARC / 4));
+        return Math.sqrt(510100000000000.0 / (20 * TerraUtils.ROOT3 * ARC * ARC / 4));
     }
 
     @Override

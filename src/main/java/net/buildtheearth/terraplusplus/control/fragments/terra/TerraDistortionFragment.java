@@ -2,13 +2,12 @@ package net.buildtheearth.terraplusplus.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.control.fragments.CommandFragment;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraplusplus.util.ChatUtil;
-import net.buildtheearth.terraplusplus.util.TranslateUtil;
+import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextFormatting;
@@ -22,14 +21,14 @@ public class TerraDistortionFragment extends CommandFragment {
         IChunkProvider cp = world.getChunkProvider();
 
         if (!(cp instanceof CubeProviderServer)) {
-            sender.sendMessage(ChatUtil.getNotCC());
+            sender.sendMessage(TerraUtils.getNotCC());
             return;
         }
 
         ICubeGenerator gen = ((CubeProviderServer) cp).getCubeGenerator();
 
         if (!(gen instanceof EarthGenerator)) {
-            sender.sendMessage(ChatUtil.getNotTerra());
+            sender.sendMessage(TerraUtils.getNotTerra());
             return;
         }
 
@@ -45,11 +44,11 @@ public class TerraDistortionFragment extends CommandFragment {
         }
 
         if (c == null || Double.isNaN(c[0])) {
-            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.where.notproj")));
+            sender.sendMessage(TerraUtils.titleAndCombine(TextFormatting.RED, TerraUtils.translate(TerraConstants.MODID + ".fragment.terra.where.notproj")));
             return;
         }
-        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Distortion:"));
-        sender.sendMessage(ChatUtil.combine(TextFormatting.RED, TranslateUtil.format(TerraConstants.MODID + ".command.terra.tissot", Math.sqrt(Math.abs(c[0])), c[1] * 180.0 / Math.PI)));
+        sender.sendMessage(TerraUtils.titleAndCombine(TextFormatting.GRAY, "Distortion:"));
+        sender.sendMessage(TerraUtils.combine(TextFormatting.RED, TerraUtils.format(TerraConstants.MODID + ".command.terra.tissot", Math.sqrt(Math.abs(c[0])), c[1] * 180.0 / Math.PI)));
     }
 
     @Override
@@ -59,7 +58,7 @@ public class TerraDistortionFragment extends CommandFragment {
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.distortion.purpose").getUnformattedComponentText();
+        return TerraUtils.translate(TerraConstants.MODID + ".fragment.terra.distortion.purpose").getUnformattedComponentText();
     }
 
     @Override

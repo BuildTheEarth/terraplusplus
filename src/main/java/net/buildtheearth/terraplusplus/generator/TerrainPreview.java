@@ -4,17 +4,17 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import lombok.NonNull;
-import net.buildtheearth.terraplusplus.generator.data.TreeCoverBaker;
+import lombok.SneakyThrows;
+import net.buildtheearth.terraplusplus.generator.data.DataBakerTreeCover;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.EmptyWorld;
 import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.http.Http;
+import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Bootstrap;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraftforge.client.model.pipeline.LightUtil;
 
 import javax.swing.JFrame;
 import java.awt.Canvas;
@@ -27,6 +27,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
@@ -58,7 +59,8 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         }
     }
 
-    private static void doThing() throws OutOfProjectionBoundsException { //allows hot-swapping
+    @SneakyThrows({ IOException.class, OutOfProjectionBoundsException.class })
+    private static void doThing() { //allows hot-swapping
         final int COUNT = 5;
         final int SHIFT = 1;
         final int CANVAS_SIZE = SIZE * COUNT;
@@ -200,13 +202,14 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
             }
         }
 
-        State state = new State(EarthGeneratorSettings.parseUncached(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS));
+        State state = new State(EarthGeneratorSettings.parseUncached(new String(StreamUtil.toByteArray(EarthGeneratorSettings.class.getResourceAsStream("bte_generator_settings.json5")))));
         state.initSettings();
 
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d); //switzerland
-        proj = state.projection.fromGeo(12.58589, 55.68841); //copenhagen
+        //proj = state.projection.fromGeo(12.58589, 55.68841); //copenhagen
         //proj = state.projection.fromGeo(24.7535, 59.4435); //tallinn
         proj = state.projection.fromGeo(14.50513, 46.05108); //ljubljana
+        //proj = new double[2];
         state.setView(floorI(proj[0]) >> 4, floorI(proj[1]) >> 4, 0);
 
         state.update();
@@ -252,11 +255,61 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         }
     }
 
+    protected void writeTileToImg(BufferedImage dst, CachedChunkData data, int baseX, int baseZ) {
+        byte[] treeCoverArr = data.getCustom(EarthGeneratorPipelines.KEY_DATA_TREE_COVER, DataBakerTreeCover.FALLBACK_TREE_DENSITY);
+
+        for (int cx = 0; cx < 16; cx++) {
+            for (int cz = 0; cz < 16; cz++) {
+                int c;
+
+                IBlockState state = data.surfaceBlock(cx, cz);
+                if (state != null) {
+                    c = state.getMapColor(EmptyWorld.INSTANCE, BlockPos.ORIGIN).colorValue;
+                } else {
+                    int groundHeight = data.groundHeight(cx, cz);
+                    int waterHeight = data.waterHeight(cx, cz);
+
+                    int r = 0;
+                    int g = 0;
+                    int b = 0;
+
+                    {
+                        float dx = cx == 15 ? groundHeight - data.groundHeight(cx - 1, cz) : data.groundHeight(cx + 1, cz) - groundHeight;
+                        float dz = cz == 15 ? groundHeight - data.groundHeight(cx, cz - 1) : data.groundHeight(cx, cz + 1) - groundHeight;
+                        if (dx != 0.0f) {
+                            if (dx < 0.0f) {
+                                r = 0xFF;
+                            } else {
+                                g = b = 0xFF;
+                            }
+                        }
+                        if (dz != 0.0f) {
+                            if (dz < 0.0f) {
+                                r = 0xFF;
+                            } else {
+                                g = b = 0xFF;
+                            }
+                        }
+                    }
+
+                    if (groundHeight < waterHeight) {
+                        b = lerpI(255, 64, clamp(waterHeight - groundHeight + 1, 0, 8) / 8.0f);
+                    }
+
+                    g = max(g, lerpI(0, 80, (treeCoverArr[cx * 16 + cz] & 0xFF) * DataBakerTreeCover.TREE_AREA * (1.0d / 255.0d)));
+                    c = r << 16 | g << 8 | b;
+                }
+
+                dst.setRGB(baseX + cx, baseZ + cz, 0xFF000000 | c);
+            }
+        }
+    }
+
     protected CompletableFuture<BufferedImage> baseZoomTile(int x, int z) {
         CompletableFuture<CachedChunkData>[] dataFutures = uncheckedCast(new CompletableFuture[CHUNKS_PER_TILE * CHUNKS_PER_TILE]);
         for (int i = 0, dx = 0; dx < CHUNKS_PER_TILE; dx++) {
             for (int dz = 0; dz < CHUNKS_PER_TILE; dz++) {
-                dataFutures[i++] = this.loader.load(new ChunkPos((x << CHUNKS_PER_TILE_SHIFT) + dx, (z << CHUNKS_PER_TILE_SHIFT) + dz));
+                dataFutures[i++] = this.loader.load(new TilePos((x << CHUNKS_PER_TILE_SHIFT) + dx, (z << CHUNKS_PER_TILE_SHIFT) + dz, 0));
             }
         }
 
@@ -265,44 +318,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
 
             for (int ti = 0, tx = 0; tx < CHUNKS_PER_TILE; tx++) {
                 for (int tz = 0; tz < CHUNKS_PER_TILE; tz++) {
-                    CachedChunkData data = dataFutures[ti++].join();
-
-                    byte[] treeCoverArr = data.getCustom(EarthGeneratorPipelines.KEY_DATA_TREE_COVER, TreeCoverBaker.FALLBACK_TREE_DENSITY);
-
-                    int baseX = tx << 4;
-                    int baseZ = tz << 4;
-                    for (int cx = 0; cx < 16; cx++) {
-                        for (int cz = 0; cz < 16; cz++) {
-                            int c;
-
-                            IBlockState state = data.surfaceBlock(cx, cz);
-                            if (state != null) {
-                                c = state.getMapColor(EmptyWorld.INSTANCE, BlockPos.ORIGIN).colorValue;
-                            } else {
-                                int groundHeight = data.groundHeight(cx, cz);
-                                int waterHeight = data.waterHeight(cx, cz);
-
-                                int r;
-                                int g;
-                                int b;
-
-                                if (groundHeight > waterHeight) {
-                                    float dx = cx == 15 ? groundHeight - data.groundHeight(cx - 1, cz) : data.groundHeight(cx + 1, cz) - groundHeight;
-                                    float dz = cz == 15 ? groundHeight - data.groundHeight(cx, cz - 1) : data.groundHeight(cx, cz + 1) - groundHeight;
-                                    int diffuse = floorI(LightUtil.diffuseLight(clamp(dx, -1.0f, 1.0f), 0.0f, clamp(dz, -1.0f, 1.0f)) * 255.0f);
-                                    r = g = b = diffuse;
-                                } else {
-                                    r = g = 0;
-                                    b = lerpI(255, 64, clamp(waterHeight - groundHeight + 1, 0, 8) / 8.0f);
-                                }
-
-                                g = max(g, lerpI(0, 80, (treeCoverArr[cx * 16 + cz] & 0xFF) * TreeCoverBaker.TREE_AREA * (1.0d / 255.0d)));
-                                c = r << 16 | g << 8 | b;
-                            }
-
-                            dst.setRGB(baseX + cx, baseZ + cz, 0xFF000000 | c);
-                        }
-                    }
+                    this.writeTileToImg(dst, dataFutures[ti++].join(), tx << 4, tz << 4);
                 }
             }
 
@@ -311,7 +327,26 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
     }
 
     protected CompletableFuture<BufferedImage> zoomedOutTile(int x, int z, int zoom) {
-        CompletableFuture<BufferedImage>[] children = uncheckedCast(new CompletableFuture[4]);
+        CompletableFuture<CachedChunkData>[] dataFutures = uncheckedCast(new CompletableFuture[CHUNKS_PER_TILE * CHUNKS_PER_TILE]);
+        for (int i = 0, dx = 0; dx < CHUNKS_PER_TILE; dx++) {
+            for (int dz = 0; dz < CHUNKS_PER_TILE; dz++) {
+                dataFutures[i++] = this.loader.load(new TilePos((x << CHUNKS_PER_TILE_SHIFT) + dx, (z << CHUNKS_PER_TILE_SHIFT) + dz, zoom));
+            }
+        }
+
+        return CompletableFuture.allOf(dataFutures).thenApplyAsync(unused -> {
+            BufferedImage dst = createBlankTile();
+
+            for (int ti = 0, tx = 0; tx < CHUNKS_PER_TILE; tx++) {
+                for (int tz = 0; tz < CHUNKS_PER_TILE; tz++) {
+                    this.writeTileToImg(dst, dataFutures[ti++].join(), tx << 4, tz << 4);
+                }
+            }
+
+            return dst;
+        });
+
+        /*CompletableFuture<BufferedImage>[] children = uncheckedCast(new CompletableFuture[4]);
         for (int i = 0, dx = 0; dx < 2; dx++) {
             for (int dz = 0; dz < 2; dz++) {
                 children[i++] = this.tile((x << 1) | dx, (z << 1) | dz, zoom - 1);
@@ -349,7 +384,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
             }
 
             return dst;
-        });
+        });*/
     }
 
     protected CompletableFuture<BufferedImage> zoomedInTile(int x, int z, int zoom) {

@@ -1,7 +1,10 @@
 package net.buildtheearth.terraplusplus.dataset.osm.match;
 
-import com.google.gson.annotations.JsonAdapter;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
 import lombok.NonNull;
+import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.dataset.geojson.Geometry;
 
 import java.util.Map;
@@ -9,7 +12,9 @@ import java.util.Map;
 /**
  * @author DaPorkchop_
  */
-@JsonAdapter(MatchParser.class)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CUSTOM, property = "type")
+@JsonTypeIdResolver(MatchCondition.TypeIdResolver.class)
+@JsonDeserialize
 @FunctionalInterface
 public interface MatchCondition {
     /**
@@ -18,4 +23,10 @@ public interface MatchCondition {
     MatchCondition FALSE = (id, tags, originalGeometry, projectedGeometry) -> false;
 
     boolean test(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull Geometry projectedGeometry);
+
+    final class TypeIdResolver extends GlobalParseRegistries.TypeIdResolver<MatchCondition> {
+        public TypeIdResolver() {
+            super(GlobalParseRegistries.OSM_MATCH_CONDITIONS);
+        }
+    }
 }

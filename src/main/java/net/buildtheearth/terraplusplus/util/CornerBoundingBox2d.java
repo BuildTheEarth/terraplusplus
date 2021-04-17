@@ -178,4 +178,14 @@ public class CornerBoundingBox2d implements Bounds2d {
     public double maxZ() {
         return max(max(this.lat00, this.lat01), max(this.lat10, this.lat11));
     }
+
+    public double avgDegreesPerSample(int sizeX, int sizeZ) {
+        double x00_01 = abs(this.lon00 - this.lon01) / sizeX;
+        double x10_11 = abs(this.lon10 - this.lon11) / sizeX;
+
+        double z00_01 = abs(this.lat00 - this.lat01) / sizeZ;
+        double z10_11 = abs(this.lat10 - this.lat11) / sizeZ;
+
+        return (x00_01 + x10_11 + z00_01 + z10_11) * 0.25d;
+    }
 }

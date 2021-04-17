@@ -2,12 +2,11 @@ package net.buildtheearth.terraplusplus.control.fragments.terra;
 
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
-import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.control.fragments.CommandFragment;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
-import net.buildtheearth.terraplusplus.util.ChatUtil;
-import net.buildtheearth.terraplusplus.util.TranslateUtil;
+import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.ITextComponent;
@@ -19,7 +18,7 @@ import net.minecraft.world.chunk.IChunkProvider;
 public class TerraWorldFragment extends CommandFragment {
     @Override
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
-        sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.world.header")));
+        sender.sendMessage(TerraUtils.titleAndCombine(TextFormatting.RED, TerraUtils.translate(TerraConstants.MODID + ".fragment.terra.world.header")));
 
         World world = sender.getEntityWorld();
         IChunkProvider cp = world.getChunkProvider();
@@ -38,10 +37,10 @@ public class TerraWorldFragment extends CommandFragment {
 
         EarthGeneratorSettings settings = ((EarthGenerator) gen).settings;
 
-        sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "World Type: ", TextFormatting.GREEN, "Earth World"));
-        sender.sendMessage(ChatUtil.combine(TextFormatting.RESET));
+        sender.sendMessage(TerraUtils.combine(TextFormatting.BLUE, "World Type: ", TextFormatting.GREEN, "Earth World"));
+        sender.sendMessage(TerraUtils.combine(TextFormatting.RESET));
 
-        sender.sendMessage(ChatUtil.combine(TextFormatting.BLUE, "Projection: ", TextFormatting.GREEN, settings.projection().toString()));
+        sender.sendMessage(TerraUtils.combine(TextFormatting.BLUE, "Projection: ", TextFormatting.GREEN, settings.projection().toString()));
         sender.sendMessage(this.boolComponent("Default Heights", settings.useDefaultHeights()));
         sender.sendMessage(this.boolComponent("Default Trees", settings.useDefaultTreeCover()));
     }
@@ -53,7 +52,7 @@ public class TerraWorldFragment extends CommandFragment {
 
     @Override
     public String getPurpose() {
-        return TranslateUtil.translate(TerraConstants.MODID + ".fragment.terra.world.purpose").getUnformattedComponentText();
+        return TerraUtils.translate(TerraConstants.MODID + ".fragment.terra.world.purpose").getUnformattedComponentText();
     }
 
     @Override
@@ -67,6 +66,6 @@ public class TerraWorldFragment extends CommandFragment {
     }
 
     private ITextComponent boolComponent(String name, boolean value) {
-        return ChatUtil.combine(TextFormatting.BLUE, name, ": ", (value ? TextFormatting.GREEN + "Yes" : TextFormatting.RED + "No"));
+        return TerraUtils.combine(TextFormatting.BLUE, name, ": ", (value ? TextFormatting.GREEN + "Yes" : TextFormatting.RED + "No"));
     }
 }

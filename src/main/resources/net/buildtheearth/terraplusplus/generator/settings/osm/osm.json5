@@ -1,0 +1,648 @@
+/*
+ * DEFAULT TERRA++ OpenStreetMap DATA INTERPRETATION CONFIG
+ *
+ * @author DaPorkchop_
+ */
+
+{
+    "line": {
+        "type": "first",
+        "children": [
+            //tunnels shouldn't be generated, ever
+            {
+                "type": "condition",
+                "if": {
+                    "type": "and",
+                    "children": [
+                        {
+                            "type": "tag",
+                            //tunnel=*
+                            "tunnel": null
+                        },
+                        {
+                            "type": "not",
+                            "child": {
+                                "type": "tag",
+                                "tunnel": "no"
+                            }
+                        }
+                    ]
+                },
+                "emit": {
+                    //return something in order to break out of the initial "first" block
+                    "type": "nothing"
+                },
+            },
+            //functionally equivalent to old FREEWAY/LIMITEDACCESS behavior
+            {
+                "type": "condition",
+                "if": {
+                    "type": "tag",
+                    "highway": [
+                        "motorway",
+                        "trunk"
+                    ]
+                },
+                "emit": {
+                    "type": "wide",
+                    "draw": {
+                        "type": "all",
+                        "children": [
+                            {
+                                "type": "no_trees",
+                            },
+                            {
+                                "type": "weight_greater_than",
+                                "value": 3,
+                                "child": {
+                                    "type": "block",
+                                    "state": {
+                                        "id": "minecraft:concrete",
+                                        "properties": {
+                                            "color": "gray"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "radius": {
+                        "type": "+",
+                        "first": {
+                            "type": "floor_div",
+                            "first": {
+                                "type": "*",
+                                "first": {
+                                    "type": "tag",
+                                    "key": "lanes",
+                                    "fallback": 2
+                                },
+                                "second": {
+                                    "type": "constant",
+                                    "value": 3
+                                }
+                            },
+                            "second": {
+                                "type": "constant",
+                                "value": 2
+                            }
+                        },
+                        "second": {
+                            "type": "constant",
+                            // 2 (original) + 4 (trees)
+                            "value": 6
+                        }
+                    },
+                    "layer": {
+                        "type": "tag",
+                        "key": "layer",
+                        "fallback": 0
+                    }
+                }
+            },
+            //functionally equivalent to old INTERCHANGE behavior
+            {
+                "type": "condition",
+                "if": {
+                    "type": "tag",
+                    "highway": [
+                        "motorway_link",
+                        "trunk_link"
+                    ]
+                },
+                "emit": {
+                    "type": "wide",
+                    "draw": {
+                        "type": "all",
+                        "children": [
+                            {
+                                "type": "no_trees",
+                            },
+                            {
+                                "type": "weight_greater_than",
+                                "value": 3,
+                                "child": {
+                                    "type": "block",
+                                    "state": {
+                                        "id": "minecraft:concrete",
+                                        "properties": {
+                                            "color": "gray"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "radius": {
+                        "type": "+",
+                        "first": {
+                            "type": "floor_div",
+                            "first": {
+                                "type": "*",
+                                "first": {
+                                    "type": "max",
+                                    "first": {
+                                        "type": "tag",
+                                        "key": "lanes",
+                                        "fallback": 2
+                                    },
+                                    "second": {
+                                        "type": "constant",
+                                        "value": 2
+                                    }
+                                },
+                                "second": {
+                                    "type": "constant",
+                                    "value": 3
+                                }
+                            },
+                            "second": {
+                                "type": "constant",
+                                "value": 2
+                            }
+                        },
+                        "second": {
+                            "type": "constant",
+                            // 0 (original) + 4 (trees)
+                            "value": 4
+                        }
+                    },
+                    "layer": {
+                        "type": "tag",
+                        "key": "layer",
+                        "fallback": 0
+                    }
+                }
+            },
+            //functionally equivalent to old MAIN behavior
+            {
+                "type": "condition",
+                "if": {
+                    "type": "tag",
+                    "highway": [
+                        "primary",
+                        "raceway"
+                    ]
+                },
+                "emit": {
+                    "type": "wide",
+                    "draw": {
+                        "type": "all",
+                        "children": [
+                            {
+                                "type": "no_trees",
+                            },
+                            {
+                                "type": "weight_greater_than",
+                                "value": 3,
+                                "child": {
+                                    "type": "block",
+                                    "state": {
+                                        "id": "minecraft:concrete",
+                                        "properties": {
+                                            "color": "gray"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "radius": {
+                        "type": "+",
+                        "first": {
+                            "type": "*",
+                            "first": {
+                                "type": "tag",
+                                "key": "lanes",
+                                "fallback": 2
+                            },
+                            "second": {
+                                "type": "constant",
+                                "value": 4
+                            }
+                        },
+                        "second": {
+                            "type": "constant",
+                            // 0 (original) + 4 (trees)
+                            "value": 4
+                        }
+                    },
+                    "layer": {
+                        "type": "tag",
+                        "key": "layer",
+                        "fallback": 0
+                    }
+                }
+            },
+            //functionally equivalent to old MINOR behavior
+            {
+                "type": "condition",
+                "if": {
+                    "type": "tag",
+                    "highway": [
+                        "tertiary",
+                        "residential"
+                    ]
+                },
+                "emit": {
+                    "type": "wide",
+                    "draw": {
+                        "type": "all",
+                        "children": [
+                            {
+                                "type": "no_trees",
+                            },
+                            {
+                                "type": "weight_greater_than",
+                                "value": 3,
+                                "child": {
+                                    "type": "block",
+                                    "state": {
+                                        "id": "minecraft:concrete",
+                                        "properties": {
+                                            "color": "gray"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "radius": {
+                        "type": "+",
+                        "first": {
+                            "type": "tag",
+                            "key": "lanes",
+                            "fallback": 2
+                        },
+                        "second": {
+                            "type": "constant",
+                            // 0 (original) + 4 (trees)
+                            "value": 4
+                        }
+                    },
+                    "layer": {
+                        "type": "tag",
+                        "key": "layer",
+                        "fallback": 0
+                    }
+                }
+            },
+            //functionally equivalent to old SIDE behavior
+            {
+                "type": "condition",
+                "if": {
+                    "type": "tag",
+                    "highway": [
+                        "secondary",
+                        "primary_link",
+                        "secondary_link",
+                        "living_street",
+                        "bus_guideway",
+                        "service",
+                        "unclassified"
+                    ]
+                },
+                "emit": {
+                    "type": "wide",
+                    "draw": {
+                        "type": "all",
+                        "children": [
+                            {
+                                "type": "no_trees",
+                            },
+                            {
+                                "type": "weight_greater_than",
+                                "value": 3,
+                                "child": {
+                                    "type": "block",
+                                    "state": {
+                                        "id": "minecraft:concrete",
+                                        "properties": {
+                                            "color": "gray"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "radius": {
+                        "type": "+",
+                        "first": {
+                            "type": "floor_div",
+                            "first": {
+                                "type": "+",
+                                "first": {
+                                    "type": "*",
+                                    "first": {
+                                        "type": "tag",
+                                        "key": "lanes",
+                                        "fallback": 2
+                                    },
+                                    "second": {
+                                        "type": "constant",
+                                        "value": 3
+                                    }
+                                },
+                                "second": {
+                                    "type": "constant",
+                                    "value": 1
+                                }
+                            },
+                            "second": {
+                                "type": "constant",
+                                "value": 2
+                            }
+                        },
+                        "second": {
+                            "type": "constant",
+                            // 0 (original) + 4 (trees)
+                            "value": 4
+                        }
+                    },
+                    "layer": {
+                        "type": "tag",
+                        "key": "layer",
+                        "fallback": 0
+                    }
+                }
+            },
+            //functionally equivalent to old ROAD behavior
+            {
+                "type": "condition",
+                "if": {
+                    "type": "tag",
+                    //matches anything tagged as "highway=*" that didn't match any previous filters
+                    "highway": null
+                },
+                "emit": {
+                    "type": "narrow",
+                    "draw": {
+                        "type": "block",
+                        "state": {
+                            "id": "minecraft:grass_path"
+                        }
+                    },
+                    "layer": {
+                        "type": "tag",
+                        "key": "layer",
+                        "fallback": 0
+                    }
+                }
+            },
+            //functionally equivalent to old BUILDING behavior
+            {
+                "type": "condition",
+                "if": {
+                    "type": "tag",
+                    //matches anything tagged as "building=*"
+                    "building": null
+                },
+                "emit": {
+                    "type": "narrow",
+                    "draw": {
+                        "type": "block",
+                        "state": {
+                            "id": "minecraft:brick_block"
+                        }
+                    },
+                    "layer": {
+                        "type": "tag",
+                        "key": "layer",
+                        "fallback": 0
+                    }
+                }
+            },
+            //functionally equivalent to old STREAM behavior
+            {
+                "type": "condition",
+                "if": {
+                    "type": "tag",
+                    "waterway": "stream"
+                },
+                "emit": {
+                    "type": "wide",
+                    "draw": {
+                        "type": "water"
+                    },
+                    "radius": {
+                        "type": "constant",
+                        "value": 1.5
+                    },
+                    "layer": {
+                        "type": "tag",
+                        "key": "layer",
+                        "fallback": 0
+                    }
+                }
+            },
+            //functionally equivalent to old RIVER behavior
+            {
+                "type": "condition",
+                "if": {
+                    "type": "tag",
+                    "waterway": [
+                        "river",
+                        "canal"
+                    ]
+                },
+                "emit": {
+                    "type": "wide",
+                    "draw": {
+                        "type": "all",
+                        "children": [
+                            {
+                                "type": "no_trees"
+                            },
+                            {
+                                "type": "weight_greater_than",
+                                "value": 3,
+                                "child": {
+                                    //offset weight by -4, because "water" actually uses the weight value and it'll be too high otherwise
+                                    "type": "weight_add",
+                                    "value": -4,
+                                    "child": {
+                                        "type": "water"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "radius": {
+                        "type": "constant",
+                        // 5 (original) + 4 (trees)
+                        "value": 9
+                    },
+                    "layer": {
+                        "type": "tag",
+                        "key": "layer",
+                        "fallback": 0
+                    }
+                }
+            }
+        ]
+    },
+    "polygon": {
+        "type": "first",
+        "children": [
+            //functionally equivalent to old BUILDING behavior
+            {
+                "type": "condition",
+                "if": {
+                    "type": "tag",
+                    //matches anything tagged as "building=*"
+                    "building": null
+                },
+                "emit": {
+                    "type": "all",
+                    "children": [
+                        //buildings shouldn't have trees inside of or right next to them
+                        {
+                            "type": "rasterize_distance",
+                            "maxDist": 4,
+                            "draw": {
+                                "type": "no_trees"
+                            },
+                            "layer": {
+                                "type": "tag",
+                                "key": "layer",
+                                "fallback": 0
+                            }
+                        },
+                        //draw building outline normally (as lines)
+                        {
+                            "type": "convert_to_lines",
+                            "next": {
+                                "type": "narrow",
+                                "draw": {
+                                    "type": "block",
+                                    "state": {
+                                        "id": "minecraft:brick_block"
+                                    }
+                                },
+                                "layer": {
+                                    "type": "tag",
+                                    "key": "layer",
+                                    "fallback": 0
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            //rasterize river polygons
+            {
+                "type": "condition",
+                "if": {
+                    "type": "or",
+                    "children": [
+                        {
+                            "type": "tag",
+                            //matches anything tagged as "water=*"
+                            "water": null
+                        },
+                        {
+                            "type": "tag",
+                            //matches anything tagged as "natural=water"
+                            "natural": "water"
+                        },
+                        {
+                            "type": "tag",
+                            //matches anything tagged as "waterway=riverbank"
+                            "waterway": "riverbank"
+                        }
+                    ]
+                },
+                "emit": {
+                    "type": "rasterize_distance",
+                    "maxDist": 6,
+                    "draw": {
+                        "type": "water"
+                    },
+                    "layer": {
+                        "type": "tag",
+                        "key": "layer",
+                        "fallback": 0
+                    }
+                }
+            },
+            //special handling for the caspian sea: it's tagged as natural=coastline, but isn't actually at sea level...
+            {
+                "type": "condition",
+                "if": {
+                    "type": "and",
+                    "children": [
+                        {
+                            "type": "tag",
+                            //matches anything tagged as "natural=coastline"
+                            "natural": "coastline"
+                        },
+                        {
+                            "type": "intersects",
+                            "projection": "EPSG:4326",
+                            "geometry": {
+                                "type": "Polygon",
+                                "coordinates": [
+                                    [
+                                        [
+                                            45.637,
+                                            34.597
+                                        ],
+                                        [
+                                            45.637,
+                                            47.695
+                                        ],
+                                        [
+                                            56.536,
+                                            47.695
+                                        ],
+                                        [
+                                            56.536,
+                                            34.597
+                                        ],
+                                        [
+                                            45.637,
+                                            34.597
+                                        ]
+                                    ]
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "emit": {
+                    "type": "rasterize_distance",
+                    "maxDist": 6,
+                    "draw": {
+                        "type": "water"
+                    },
+                    "layer": {
+                        "type": "tag",
+                        "key": "layer",
+                        "fallback": 0
+                    }
+                }
+            },
+            //all remaining coastline polygons are treated as ocean
+            {
+                "type": "condition",
+                "if": {
+                    "type": "tag",
+                    //matches anything tagged as "natural=coastline"
+                    "natural": "coastline"
+                },
+                "emit": {
+                    "type": "rasterize_distance",
+                    "maxDist": 7,
+                    "draw": {
+                        "type": "ocean"
+                    },
+                    "layer": {
+                        "type": "tag",
+                        "key": "layer",
+                        "fallback": 0
+                    }
+                }
+            }
+        ]
+    }
+}

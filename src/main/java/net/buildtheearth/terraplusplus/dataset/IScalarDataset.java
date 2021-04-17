@@ -1,8 +1,6 @@
 package net.buildtheearth.terraplusplus.dataset;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.NonNull;
-import net.buildtheearth.terraplusplus.dataset.scalar.ConfigurableDoubleTiledDataset;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 
@@ -13,7 +11,6 @@ import java.util.concurrent.CompletableFuture;
  *
  * @author DaPorkchop_
  */
-@JsonDeserialize(as = ConfigurableDoubleTiledDataset.class)
 public interface IScalarDataset {
     /**
      * @param point the point
@@ -40,4 +37,11 @@ public interface IScalarDataset {
      * @return a {@link CompletableFuture} which will be completed with the values
      */
     CompletableFuture<double[]> getAsync(@NonNull CornerBoundingBox2d bounds, int sizeX, int sizeZ) throws OutOfProjectionBoundsException;
+
+    /**
+     * @return the number of meters between sample points (in geographic/unprojected coordinate space)
+     */
+    default double[] degreesPerSample() {
+        throw new UnsupportedOperationException();
+    }
 }

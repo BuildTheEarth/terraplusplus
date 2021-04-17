@@ -1,7 +1,10 @@
 package net.buildtheearth.terraplusplus.dataset.vector.draw;
 
-import com.google.gson.annotations.JsonAdapter;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
 import lombok.NonNull;
+import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 
 /**
@@ -9,7 +12,9 @@ import net.buildtheearth.terraplusplus.generator.CachedChunkData;
  *
  * @author DaPorkchop_
  */
-@JsonAdapter(DrawFunctionParser.class)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CUSTOM, property = "type")
+@JsonTypeIdResolver(DrawFunction.TypeIdResolver.class)
+@JsonDeserialize
 @FunctionalInterface
 public interface DrawFunction {
     /**
@@ -21,4 +26,10 @@ public interface DrawFunction {
      * @param weight the pixel weight
      */
     void drawOnto(@NonNull CachedChunkData.Builder data, int x, int z, int weight);
+
+    final class TypeIdResolver extends GlobalParseRegistries.TypeIdResolver<DrawFunction> {
+        public TypeIdResolver() {
+            super(GlobalParseRegistries.VECTOR_DRAW_FUNCTIONS);
+        }
+    }
 }
