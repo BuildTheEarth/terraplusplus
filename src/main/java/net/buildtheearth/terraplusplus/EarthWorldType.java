@@ -35,7 +35,11 @@ public class EarthWorldType extends WorldType implements ICubicWorldType {
 
     @Override
     public BiomeProvider getBiomeProvider(World world) {
-        return EarthGeneratorSettings.forWorld((WorldServer) world).biomeProvider();
+        if (world instanceof WorldServer) {
+            return EarthGeneratorSettings.forWorld((WorldServer) world).biomeProvider();
+        } else {
+            return EarthGeneratorSettings.parse(EarthGeneratorSettings.DEFAULT_SETTINGS).biomeProvider();
+        }
     }
 
     @Override

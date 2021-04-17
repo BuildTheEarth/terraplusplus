@@ -8,6 +8,7 @@ import net.buildtheearth.terraplusplus.control.TerraTeleport;
 import net.buildtheearth.terraplusplus.provider.GenerationEventDenier;
 import net.buildtheearth.terraplusplus.provider.WaterDenier;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
+import net.buildtheearth.terraplusplus.util.compat.fp2.TerraFP2CompatManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
@@ -41,6 +42,10 @@ public class TerraMod {
         }
 
         TerraConstants.CC_VERSION = Loader.instance().getIndexedModList().get(CubicChunks.MODID).getVersion();
+
+        if (Loader.instance().getIndexedModList().containsKey("fp2")) {
+            MinecraftForge.EVENT_BUS.register(TerraFP2CompatManager.class);
+        }
     }
 
     @EventHandler

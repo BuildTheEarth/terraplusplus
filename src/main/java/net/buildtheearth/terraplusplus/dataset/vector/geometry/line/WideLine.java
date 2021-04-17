@@ -15,17 +15,22 @@ import static net.daporkchop.lib.common.math.PMath.*;
 /**
  * @author DaPorkchop_
  */
-public final class WideLine extends AbstractLine {
+public class WideLine extends NarrowLine {
     protected final double radius;
 
     public WideLine(@NonNull String id, double layer, @NonNull DrawFunction draw, @NonNull MultiLineString lines, double radius) {
-        super(id, layer, draw, lines);
+        super(id, layer, draw, lines, floorI(radius));
 
         this.radius = radius;
     }
 
     @Override
     public void apply(@NonNull CachedChunkData.Builder builder, int tileX, int tileZ, int zoom, @NonNull Bounds2d bounds) {
+        if (this.radius <= 1 << zoom) {
+            super.apply(builder, tileX, tileZ, zoom, bounds);
+            return;
+        }
+
         int baseX = Coords.cubeToMinBlock(tileX << zoom);
         int baseZ = Coords.cubeToMinBlock(tileZ << zoom);
         int step = 1 << zoom;

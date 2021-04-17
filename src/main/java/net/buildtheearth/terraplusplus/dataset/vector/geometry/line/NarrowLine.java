@@ -13,9 +13,13 @@ import static net.daporkchop.lib.common.math.PMath.*;
 /**
  * @author DaPorkchop_
  */
-public final class NarrowLine extends AbstractLine {
-    public NarrowLine(@NonNull String id, double layer, @NonNull DrawFunction draw, @NonNull MultiLineString lines) {
+public class NarrowLine extends AbstractLine {
+    protected final int weight;
+
+    public NarrowLine(@NonNull String id, double layer, @NonNull DrawFunction draw, @NonNull MultiLineString lines, int weight) {
         super(id, layer, draw, lines);
+
+        this.weight = weight;
     }
 
     @Override
@@ -60,7 +64,7 @@ public final class NarrowLine extends AbstractLine {
                 to = min(to, 15);
 
                 for (int z = max(0, from); z <= to; z++) {
-                    this.draw.drawOnto(builder, x, z, 1);
+                    this.draw.drawOnto(builder, x, z, this.weight);
                 }
             }
         });

@@ -36,6 +36,6 @@ public final class LineMapperNarrow implements LineMapper {
 
     @Override
     public Collection<VectorGeometry> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull MultiLineString projectedGeometry) {
-        return Collections.singletonList(new NarrowLine(id, this.layer.apply(tags), this.draw, projectedGeometry));
+        return Collections.singletonList(new NarrowLine(id, this.layer.apply(tags), this.draw, projectedGeometry, 1));
     }
 }

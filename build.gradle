@@ -45,13 +45,9 @@ configurations {
 }
 
 repositories {
-    maven { //used for leveldb
+    maven {
         name = "DaPorkchop_"
         url = "https://maven.daporkchop.net/"
-    }
-    maven { //used for leveldb
-        name = "OpenCollab Snapshots"
-        url = "https://repo.opencollab.dev/snapshot/"
     }
     maven {
         name = "JitPack"
@@ -64,6 +60,10 @@ dependencies {
         transitive = false
     }
     deobfProvided("com.github.OpenCubicChunks:CubicWorldGen:27de56d2f792513873584b2f8fd9f3082fb259ec") {
+        transitive = false
+    }
+
+    compileOnly("net.daporkchop:fp2:0.0.1-1.12.2-SNAPSHOT") {
         transitive = false
     }
 
