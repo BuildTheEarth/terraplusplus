@@ -7,6 +7,7 @@ import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.buildtheearth.terraplusplus.generator.CliffReplacer;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import net.buildtheearth.terraplusplus.util.TilePos;
+import net.daporkchop.fp2.compat.vanilla.FastRegistry;
 import net.daporkchop.fp2.mode.heightmap.HeightmapData;
 import net.daporkchop.fp2.mode.heightmap.HeightmapPos;
 import net.daporkchop.fp2.mode.heightmap.HeightmapTile;
@@ -17,6 +18,7 @@ import net.minecraft.world.WorldServer;
 
 import java.util.function.Supplier;
 
+import static net.daporkchop.fp2.mode.heightmap.HeightmapConstants.*;
 import static net.daporkchop.lib.common.math.PMath.*;
 
 /**
@@ -46,7 +48,13 @@ public class TerraHeightmapGeneratorRough extends AbstractRoughHeightmapGenerato
         CachedChunkData cached = this.generator.cache.getUnchecked(new TilePos(pos.x(), pos.z(), pos.level())).join();
 
         HeightmapData data = new HeightmapData();
-        data.waterLight = 15 << 4;
+
+        HeightmapData waterData = new HeightmapData();
+        waterData.light = 15 << 4;
+        waterData.height_int = this.generator.settings.customCubic().waterLevel - 1;
+        waterData.height_frac = 224; //256 * 7/8
+        waterData.secondaryConnection = 1;
+        waterData.state = water.get();
 
         int blockX = pos.blockX();
         int blockZ = pos.blockZ();
@@ -54,11 +62,12 @@ public class TerraHeightmapGeneratorRough extends AbstractRoughHeightmapGenerato
 
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
-                int biome = data.biome = data.waterBiome = cached.biome(x, z) & 0xFF;
+                int biome = cached.biome(x, z) & 0xFF;
+                data.biome = waterData.biome = FastRegistry.getBiome(biome);
 
-                int groundHeight = data.height = cached.groundHeight(x, z);
+                int groundHeight = data.height_int = cached.groundHeight(x, z);
                 int waterHeight = cached.waterHeight(x, z);
-                data.waterHeight = groundHeight <= waterHeight ? waterHeight : waterHeight - (1 << level);
+                waterData.height_int = (groundHeight <= waterHeight ? waterHeight : waterHeight - (1 << level)) - 1;
 
                 //horizontal density change is calculated using the top height rather than the ground height
                 int topHeight = cached.surfaceHeight(x, z);
@@ -67,7 +76,7 @@ public class TerraHeightmapGeneratorRough extends AbstractRoughHeightmapGenerato
 
                 IBlockState state = cached.surfaceBlock(x, z);
                 if (state != null) {
-                    data.height = topHeight;
+                    data.height_int = topHeight;
                 } else {
                     if (this.generator.settings.terrainSettings().useCwgReplacers()) {
                         state = fill.get();
@@ -86,11 +95,11 @@ public class TerraHeightmapGeneratorRough extends AbstractRoughHeightmapGenerato
                         state = top.get();
                     }
                 }
-                data.state = Block.getStateId(state);
+                data.state = state;
 
                 data.light = (15 - clamp(waterHeight - groundHeight, 0, 5) * 3) << 4;
 
-                tile.set(x, z, data);
+                tile.setLayer(x, z, DEFAULT_LAYER, data);
             }
         }
     }
