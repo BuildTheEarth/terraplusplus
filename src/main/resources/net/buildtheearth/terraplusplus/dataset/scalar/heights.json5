@@ -138,5 +138,71 @@
             "max": 1
         },
         "priority": 100.0
+    },
+
+    //
+    // Switzerland
+    // https://www.swisstopo.admin.ch/en/geodata/height/alti3d.html
+    //
+    {
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/ch/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "CUBIC",
+            "parse": {
+                "parse_tiff_fp": {}
+            }
+        },
+        "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/si.json
+            "minX": 5.9559113,
+            "maxX": 10.4922941,
+            "minZ": 45.817995,
+            "maxZ": 47.8084648
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+
+    //
+    // Czechia
+    // https://www.geoportalpraha.cz/cs/data/metadata/609AB233-4F4B-4010-A6E0-011E232E2390
+    //
+    {
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/cz/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "CUBIC",
+            "parse": {
+                "parse_tiff_fp": {}
+            }
+        },
+        "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/cz.json
+            "minX": 12.0905901,
+            "maxX": 18.859216,
+            "minZ": 48.5518144,
+            "maxZ": 51.0557036
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
     }
 ]
