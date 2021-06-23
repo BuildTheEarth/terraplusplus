@@ -160,7 +160,7 @@
                 "parse_tiff_fp": {}
             }
         },
-        "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/si.json
+        "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/ch.json
             "minX": 5.9559113,
             "maxX": 10.4922941,
             "minZ": 45.817995,
@@ -174,17 +174,17 @@
     },
 
     //
-    // Czechia
-    // https://www.geoportalpraha.cz/cs/data/metadata/609AB233-4F4B-4010-A6E0-011E232E2390
+    // Italy
+    // http://tinitaly.pi.ingv.it/Download_Area2.html
     //
     {
         "dataset": {
             "urls": [
-                "https://cloud.daporkchop.net/gis/dem/earth/cz/17/${x}/${z}.tiff"
+                "https://cloud.daporkchop.net/gis/dem/earth/it/14/${x}/${z}.tiff"
             ],
             "projection": {
                 "web_mercator": {
-                    "zoom": 17
+                    "zoom": 14
                 }
             },
             "resolution": 256,
@@ -193,11 +193,11 @@
                 "parse_tiff_fp": {}
             }
         },
-        "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/cz.json
-            "minX": 12.0905901,
-            "maxX": 18.859216,
-            "minZ": 48.5518144,
-            "maxZ": 51.0557036
+        "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/it.json
+            "minX": 6.6272658,
+            "maxX": 18.7844746,
+            "minZ": 36.4396716,
+            "maxZ": 47.0921462
         },
         "zooms": {
             "min": 0,
