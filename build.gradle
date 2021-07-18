@@ -59,7 +59,7 @@ dependencies {
         transitive = false
     }
 
-    shade "org.apache.commons:commons-imaging:1.0-alpha2"
+    shade "com.github.DaMatrix:commons-imaging:4c6c5dfe6401a884cb4cf53fb838c99e1dfb104c"
 
     shade "com.fasterxml.jackson.core:jackson-databind:2.11.2"
 

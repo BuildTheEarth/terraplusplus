@@ -25,15 +25,7 @@
             "parse": {
                 "divide": {
                     "delegate": {
-                        "from_int": {
-                            "delegate": {
-                                "grayscale_extract": {
-                                    "delegate": {
-                                        "parse_tiff": {},
-                                    }
-                                }
-                            }
-                        }
+                        "parse_tiff_int": {}
                     },
                     "value": 100.0
                 }

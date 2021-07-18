@@ -19,8 +19,10 @@ import net.buildtheearth.terraplusplus.config.scalarparse.d.FlipXDSP;
 import net.buildtheearth.terraplusplus.config.scalarparse.d.FlipZDSP;
 import net.buildtheearth.terraplusplus.config.scalarparse.d.FromIntDSP;
 import net.buildtheearth.terraplusplus.config.scalarparse.d.MultiplyDSP;
-import net.buildtheearth.terraplusplus.config.scalarparse.d.ParseFloatingPointTiffDSP;
+import net.buildtheearth.terraplusplus.config.scalarparse.d.ParseTiffAutoDSP;
+import net.buildtheearth.terraplusplus.config.scalarparse.d.ParseTiffFloatingPointDSP;
 import net.buildtheearth.terraplusplus.config.scalarparse.d.ParseTerrariumPngDSP;
+import net.buildtheearth.terraplusplus.config.scalarparse.d.ParseTiffIntDSP;
 import net.buildtheearth.terraplusplus.config.scalarparse.d.SwapAxesDSP;
 import net.buildtheearth.terraplusplus.config.scalarparse.i.AddISP;
 import net.buildtheearth.terraplusplus.config.scalarparse.i.AndISP;
@@ -101,7 +103,9 @@ public class GlobalParseRegistries {
             .put("swap_axes", SwapAxesDSP.class)
             //parse operators
             .put("parse_png_terrarium", ParseTerrariumPngDSP.class)
-            .put("parse_tiff_fp", ParseFloatingPointTiffDSP.class)
+            .put("parse_tiff_auto", ParseTiffAutoDSP.class)
+            .put("parse_tiff_fp", ParseTiffFloatingPointDSP.class)
+            .put("parse_tiff_int", ParseTiffIntDSP.class)
             .build();
 
     public final BiMap<String, Class<? extends IntScalarParser>> SCALAR_PARSERS_INT = new BiMapBuilder<String, Class<? extends IntScalarParser>>()

@@ -30,17 +30,19 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @Getter
 public abstract class DoubleTiledDataset extends TiledHttpDataset<double[]> implements IScalarDataset {
-    protected static final int TILE_SHIFT = 8;
-    protected static final int TILE_SIZE = 1 << TILE_SHIFT; //256
-    protected static final int TILE_MASK = (1 << TILE_SHIFT) - 1; //0xFF
-
     protected final BlendMode blend;
     protected final int resolution;
+    protected final int shift;
+    protected final int mask;
 
     public DoubleTiledDataset(@NonNull GeographicProjection projection, int resolution, @NonNull BlendMode blend) {
         super(projection, 1.0d / resolution);
 
+        checkArg(BinMath.isPow2(positive(resolution, "resolution")), "given resolution (%d) is not a power of 2!", resolution);
         this.resolution = resolution;
+        this.shift = Integer.numberOfTrailingZeros(resolution);
+        this.mask = resolution - 1;
+
         this.blend = blend;
     }
 
@@ -126,15 +128,18 @@ public abstract class DoubleTiledDataset extends TiledHttpDataset<double[]> impl
 
         @Override
         public double apply(int x, int z) { //gets raw sample values to be used in blending
-            double[] tile = this.loadedTiles.get(BinMath.packXY(x >> TILE_SHIFT, z >> TILE_SHIFT));
+            int shift = DoubleTiledDataset.this.shift;
+            int mask = DoubleTiledDataset.this.mask;
+
+            double[] tile = this.loadedTiles.get(BinMath.packXY(x >> shift, z >> shift));
             if (tile == null) {
                 return Double.NaN;
             }
-            return tile[(z & TILE_MASK) << TILE_SHIFT | (x & TILE_MASK)];
+            return tile[(z & mask) << shift | (x & mask)];
         }
 
         public CompletableFuture<R> future() {
-            ChunkPos[] tilePositions = this.paddedLocalBounds.toTiles(TILE_SIZE);
+            ChunkPos[] tilePositions = this.paddedLocalBounds.toTiles(DoubleTiledDataset.this.resolution);
 
             return CompletableFuture.allOf(Arrays.stream(tilePositions)
                     .map(pos -> DoubleTiledDataset.this.getAsync(pos)

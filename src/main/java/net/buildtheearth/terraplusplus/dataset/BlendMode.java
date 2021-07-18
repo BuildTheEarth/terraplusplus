@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import net.buildtheearth.terraplusplus.util.IntToDoubleBiFunction;
 
-import static java.lang.Math.*;
 import static net.daporkchop.lib.common.math.PMath.*;
 
 /**
@@ -13,12 +12,19 @@ import static net.daporkchop.lib.common.math.PMath.*;
  */
 @AllArgsConstructor
 public enum BlendMode {
+    NEAR(0.0d, 0) {
+        @Override
+        public double get(double scaledX, double scaledZ, @NonNull IntToDoubleBiFunction sampler) {
+            //very simple - just round down
+            return sampler.apply(floorI(scaledX), floorI(scaledZ));
+        }
+    },
     LINEAR(0.0d, 2) {
         @Override
         public double get(double scaledX, double scaledZ, @NonNull IntToDoubleBiFunction sampler) {
             //get the corners surrounding this block
-            int sampleX = (int) floor(scaledX);
-            int sampleZ = (int) floor(scaledZ);
+            int sampleX = floorI(scaledX);
+            int sampleZ = floorI(scaledZ);
 
             double fx = scaledX - sampleX;
             double fz = scaledZ - sampleZ;
@@ -33,6 +39,8 @@ public enum BlendMode {
     },
     @JsonAlias("SMOOTH") //old name
     CUBIC(-0.5d, 3) {
+        //TODO: this is very broken and causes tons of artifacts
+
         /**
          * Lerping produces visible square patches.
          *
@@ -86,8 +94,8 @@ public enum BlendMode {
             double z = scaledZ - 0.5d;
 
             //get the corners surrounding this block
-            int sampleX = (int) floor(x);
-            int sampleZ = (int) floor(z);
+            int sampleX = floorI(x);
+            int sampleZ = floorI(z);
 
             double fx = x - sampleX;
             double fz = z - sampleZ;

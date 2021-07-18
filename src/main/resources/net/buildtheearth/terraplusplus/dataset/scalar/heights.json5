@@ -1,5 +1,15 @@
 /*
  * DEFAULT TERRA++ ELEVATION DATASETS
+ *
+ * @author DaPorkchop_
+ */
+
+/*
+ * Pork's notes:
+ *
+ * - All datasets with a zoom level >= 17 use NEAR blending instead of CUBIC. This is to avoid interpolation artifacts
+ *   caused by the fact that the cubic interpolation implementation from terra121 is literally dogshit. This is no longer
+ *   an issue in terra++ 2.0.
  */
 
 [
@@ -122,9 +132,9 @@
                 }
             },
             "resolution": 256,
-            "blend": "CUBIC",
+            "blend": "NEAR",
             "parse": {
-                "parse_tiff_fp": {}
+                "parse_tiff_auto": {}
             }
         },
         "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/si.json
@@ -155,9 +165,9 @@
                 }
             },
             "resolution": 256,
-            "blend": "CUBIC",
+            "blend": "NEAR",
             "parse": {
-                "parse_tiff_fp": {}
+                "parse_tiff_auto": {}
             }
         },
         "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/ch.json
@@ -190,7 +200,7 @@
             "resolution": 256,
             "blend": "CUBIC",
             "parse": {
-                "parse_tiff_fp": {}
+                "parse_tiff_auto": {}
             }
         },
         "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/it.json
@@ -199,6 +209,101 @@
             "minZ": 36.4396716,
             "maxZ": 47.0921462
         },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+
+    //
+    // France
+    // https://geoservices.ign.fr/documentation/diffusion/telechargement-donnees-libres.html
+    //
+    {
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/fr/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "NEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": [
+            { //mainland
+                "minX": -5.525741271738985,
+                "maxX": 8.4457560000525,
+                "minZ": 42.084591062423684,
+                "maxZ": 51.094491264318115
+            },
+            { //corsica
+                "minX": 8.439030884289942,
+                "maxX": 9.663139671429384,
+                "minZ": 41.31562355548702,
+                "maxZ": 43.07772251306459
+            },
+            {
+                "minX": -62.952810077704854,
+                "maxX": -62.78276227923093,
+                "minZ": 17.86262353222598,
+                "maxZ": 17.98024442380475
+            },
+            {
+                "minX": -63.16071171049373,
+                "maxX": -62.962194018195795,
+                "minZ": 18.034417887415135,
+                "maxZ": 18.13390614177415
+            },
+            {
+                "minX": -54.61942424259162,
+                "maxX": -51.611498824582014,
+                "minZ": 2.1038247306026507,
+                "maxZ": 5.762617524097862
+            },
+            {
+                "minX": 44.97232980398946,
+                "maxX": 45.30431345232376,
+                "minZ": -13.007809708589537,
+                "maxZ": -12.627838529024446
+            },
+            {
+                "minX": 55.196110973497824,
+                "maxX": 55.84655968104969,
+                "minZ": -21.40125613948719,
+                "maxZ": -20.844657687804492
+            },
+            {
+                "minX": -56.5287138239549,
+                "maxX": -56.076707320132726,
+                "minZ": 46.742888961182764,
+                "maxZ": 47.15052051890195
+            },
+            {
+                "minX": -61.81409124584721,
+                "maxX": -61.09799405805051,
+                "minZ": 15.820541927239256,
+                "maxZ": 16.52152874837736
+            },
+            {
+                "minX": -61.10027282858061,
+                "maxX": -60.996642204201514,
+                "minZ": 16.280399297378494,
+                "maxZ": 16.353627538064533
+            },
+            {
+                "minX": -61.23786900488246,
+                "maxX": -60.79722443213224,
+                "minZ": 14.38106889343109,
+                "maxZ": 14.881760655885616
+            }
+        ],
         "zooms": {
             "min": 0,
             "max": 1
