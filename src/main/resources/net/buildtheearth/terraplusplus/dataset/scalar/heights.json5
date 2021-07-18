@@ -91,17 +91,17 @@
     {
         "dataset": {
             "urls": [
-                "https://cloud.daporkchop.net/gis/elevation/ee/14/${x}/${z}.png"
+                "https://cloud.daporkchop.net/gis/dem/earth/ee/17/${x}/${z}.tiff"
             ],
             "projection": {
                 "web_mercator": {
-                    "zoom": 14
+                    "zoom": 17
                 }
             },
             "resolution": 256,
-            "blend": "CUBIC",
+            "blend": "NEAR",
             "parse": {
-                "parse_png_terrarium": {}
+                "parse_tiff_auto": {}
             }
         },
         "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/ee.json

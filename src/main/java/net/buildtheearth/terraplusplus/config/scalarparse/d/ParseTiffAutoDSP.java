@@ -48,7 +48,6 @@ public class ParseTiffAutoDSP implements DoubleScalarParser {
         TiffField nodataField = directory.findField(GdalLibraryTagConstants.EXIF_TAG_GDAL_NO_DATA);
         if (nodataField != null) { //nodata value is set, replace all nodata values
             double nodata = Double.parseDouble(nodataField.getStringValue());
-            System.out.printf("nodata value: %s, %d matches\n", nodata, DoubleStream.of(dst).filter(d -> d == nodata).count());
             for (int i = 0; i < dst.length; i++) {
                 if (dst[i] == nodata) {
                     dst[i] = Double.NaN;
@@ -92,8 +91,6 @@ public class ParseTiffAutoDSP implements DoubleScalarParser {
     }
 
     protected boolean parseFloatingPoint(int resolution, @NonNull TiffDirectory directory, @NonNull double[] dst) throws ImageReadException, IOException {
-        System.out.println("floating-point");
-
         //extract floating-point raster data
         TiffRasterData data = directory.getFloatingPointRasterData(null);
         int w = data.getWidth();
@@ -135,13 +132,11 @@ public class ParseTiffAutoDSP implements DoubleScalarParser {
         long shift, mask;
         switch (sampleFormat) {
             case TiffTagConstants.SAMPLE_FORMAT_VALUE_UNSIGNED_INTEGER:
-                System.out.printf("unsigned %d-bit integer\n", bitsPerSample);
                 checkArg(positive(bitsPerSample, "bitsPerSample") < Long.SIZE - 1, "bitsPerSample (%d) must be at most %d!", bitsPerSample, Long.SIZE - 1);
                 mask = Long.MAX_VALUE;
                 shift = 0L;
                 break;
             case TiffTagConstants.SAMPLE_FORMAT_VALUE_TWOS_COMPLEMENT_SIGNED_INTEGER:
-                System.out.printf("signed %d-bit integer\n", bitsPerSample);
                 checkArg(positive(bitsPerSample, "bitsPerSample") < Long.SIZE, "bitsPerSample (%d) must be at most %d!", bitsPerSample, Long.SIZE);
                 mask = 0xFFFFFFFFFFFFFFFFL;
                 shift = Long.SIZE - bitsPerSample;

@@ -25,7 +25,7 @@
             "parse": {
                 "divide": {
                     "delegate": {
-                        "parse_tiff_int": {}
+                        "parse_tiff_auto": {}
                     },
                     "value": 100.0
                 }
