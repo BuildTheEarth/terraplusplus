@@ -104,8 +104,8 @@ public class CachedChunkData extends CustomAttributeContainer {
         int min = Integer.MAX_VALUE;
         int max = Integer.MIN_VALUE;
         for (int i = 0; i < 16 * 16; i++) {
-            min = min(min, this.surfaceHeight[i]);
-            max = max(max, this.surfaceHeight[i]);
+            min = min(min, min(this.groundHeight[i], this.surfaceHeight[i]));
+            max = max(max, max(this.groundHeight[i], this.surfaceHeight[i]));
         }
         this.surfaceMinCube = Coords.blockToCube(min) - 1;
         this.surfaceMaxCube = Coords.blockToCube(max) + 1;
