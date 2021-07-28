@@ -1,11 +1,12 @@
 package net.buildtheearth.terraplusplus.util.geo;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 
 /**
  * Utilities for assisting in the parsing of latitude and longitude strings into Decimals.
@@ -66,7 +67,7 @@ public class CoordinateParseUtils {
                 return null;
             }
 
-        } else if (coordinates.length() > 4) {
+        } else if (coordinates.length() > 2) {
             // try to split and then use lat/lon parsing
             for (final char delim : ",;/ ".toCharArray()) {
                 int cnt = StringUtils.countMatches(coordinates, String.valueOf(delim));
@@ -101,8 +102,6 @@ public class CoordinateParseUtils {
     }
 
     private static LatLng validateAndRound(double lat, double lon) {
-        final double latOrig = lat;
-        final double lngOrig = lon;
         lat = roundTo6decimals(lat);
         lon = roundTo6decimals(lon);
 
