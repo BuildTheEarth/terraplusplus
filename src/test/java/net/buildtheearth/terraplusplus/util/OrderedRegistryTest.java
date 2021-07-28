@@ -1,11 +1,12 @@
-import net.buildtheearth.terraplusplus.util.OrderedRegistry;
-import org.junit.Test;
+package net.buildtheearth.terraplusplus.util;
+
+import static net.daporkchop.lib.common.util.PValidation.checkState;
 
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static net.daporkchop.lib.common.util.PValidation.*;
+import org.junit.Test;
 
 /**
  * @author DaPorkchop_
