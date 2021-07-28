@@ -184,10 +184,11 @@
     },
 
     //
-    // Italy
+    // Italy (various datasets at different zoom levels)
     // http://tinitaly.pi.ingv.it/Download_Area2.html
     //
-    {
+
+    { //14
         "dataset": {
             "urls": [
                 "https://cloud.daporkchop.net/gis/dem/earth/it/14/${x}/${z}.tiff"
@@ -203,12 +204,122 @@
                 "parse_tiff_auto": {}
             }
         },
-        "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/it.json
-            "minX": 6.6272658,
-            "maxX": 18.7844746,
-            "minZ": 36.4396716,
-            "maxZ": 47.0921462
+        "bounds": [
+            { //mainland
+                "minX": 6.527697471769715,
+                "maxX": 19.720126223772887,
+                "minZ": 35.17762585934044,
+                "maxZ": 47.15598774449502
+            }
+        ],
+        "zooms": {
+            "min": 0,
+            "max": 1
         },
+        "priority": 100.0
+    },
+    { //15
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/it/15/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 15
+                }
+            },
+            "resolution": 256,
+            "blend": "CUBIC",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": [
+            { //calabria
+                "minX": 15.621369867451419,
+                "maxX": 17.24573576072296,
+                "minZ": 37.881214482382724,
+                "maxZ": 40.15924052007253
+            },
+            { //liguria
+                "minX": 7.473934873175498,
+                "maxX": 10.082137429322799,
+                "minZ": 43.77344771841181,
+                "maxZ": 44.676957948399625
+            },
+            { //lombardia
+                "minX": 8.485933517922222,
+                "maxX": 11.50269152074709,
+                "minZ": 44.65464303537018,
+                "maxZ": 46.64221714702641
+            }
+        ],
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+    { //16
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/it/16/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 16
+                }
+            },
+            "resolution": 256,
+            "blend": "CUBIC",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": [
+            { //aosta
+                "minX": 6.793011795491041,
+                "maxX": 7.943220576739335,
+                "minZ": 45.46174700532702,
+                "maxZ": 45.991830176621356
+            },
+            { //sicily
+                "minX": 11.916748628222964,
+                "maxX": 15.709691296696302,
+                "minZ": 35.479332301005726,
+                "maxZ": 38.849910147225074
+            }
+        ],
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+    { //17
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/it/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "NEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": [
+            { //sardinia
+                "minX": 8.119050491642463,
+                "maxX": 9.838406196248982,
+                "minZ": 38.85002672103001,
+                "maxZ": 41.227533105646714
+            }
+        ],
         "zooms": {
             "min": 0,
             "max": 1
