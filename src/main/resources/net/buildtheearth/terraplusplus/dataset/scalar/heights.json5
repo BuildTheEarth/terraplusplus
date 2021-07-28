@@ -229,7 +229,7 @@
                 }
             },
             "resolution": 256,
-            "blend": "CUBIC",
+            "blend": "LINEAR",
             "parse": {
                 "parse_tiff_auto": {}
             }
@@ -271,7 +271,7 @@
                 }
             },
             "resolution": 256,
-            "blend": "CUBIC",
+            "blend": "LINEAR",
             "parse": {
                 "parse_tiff_auto": {}
             }
@@ -307,7 +307,7 @@
                 }
             },
             "resolution": 256,
-            "blend": "NEAR",
+            "blend": "LINEAR",
             "parse": {
                 "parse_tiff_auto": {}
             }
