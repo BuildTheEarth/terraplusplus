@@ -7,13 +7,13 @@
     {
         "dataset": {
             "urls": [
-                "https://cloud.daporkchop.net/gis/treecover2000/12/${x}/${z}.tiff"
+                "https://cloud.daporkchop.net/gis/treecover2000/13/${x}/${z}.tiff"
             ],
             "projection": {
                 "scale": {
                     "delegate": {
                         "web_mercator": {
-                            "zoom": 12
+                            "zoom": 13
                         }
                     },
                     "x": 1.0,
