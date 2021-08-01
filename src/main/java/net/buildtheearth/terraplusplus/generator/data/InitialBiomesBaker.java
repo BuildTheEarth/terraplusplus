@@ -1,7 +1,5 @@
 package net.buildtheearth.terraplusplus.generator.data;
 
-import java.util.concurrent.CompletableFuture;
-
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
@@ -13,6 +11,9 @@ import net.buildtheearth.terraplusplus.util.ImmutableCompactArray;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeProvider;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author DaPorkchop_

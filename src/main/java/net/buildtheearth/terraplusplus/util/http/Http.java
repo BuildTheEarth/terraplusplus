@@ -1,9 +1,37 @@
 package net.buildtheearth.terraplusplus.util.http;
 
-import static net.daporkchop.lib.common.util.PValidation.checkArg;
-import static net.daporkchop.lib.common.util.PValidation.checkState;
-import static net.daporkchop.lib.common.util.PValidation.toInt;
+import com.google.common.base.Preconditions;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoop;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollSocketChannel;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.http.DefaultHttpHeaders;
+import io.netty.handler.codec.http.EmptyHttpHeaders;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.HttpStatusClass;
+import io.netty.handler.codec.http2.Http2SecurityUtil;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.SupportedCipherSuiteFilter;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import io.netty.util.ReferenceCountUtil;
+import lombok.NonNull;
+import lombok.experimental.UtilityClass;
+import net.buildtheearth.terraplusplus.TerraConfig;
+import net.buildtheearth.terraplusplus.TerraMod;
+import net.daporkchop.lib.common.function.throwing.EFunction;
+import net.daporkchop.lib.common.misc.threadfactory.PThreadFactories;
+import net.daporkchop.lib.common.ref.Ref;
+import net.daporkchop.lib.common.ref.ThreadRef;
 
+import javax.net.ssl.SSLException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -19,38 +47,7 @@ import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.net.ssl.SSLException;
-
-import com.google.common.base.Preconditions;
-
-import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.UnpooledByteBufAllocator;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoop;
-import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollSocketChannel;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.netty.handler.codec.http.EmptyHttpHeaders;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.codec.http2.Http2SecurityUtil;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.SupportedCipherSuiteFilter;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import io.netty.util.ReferenceCountUtil;
-import lombok.NonNull;
-import lombok.experimental.UtilityClass;
-import net.buildtheearth.terraplusplus.TerraConfig;
-import net.buildtheearth.terraplusplus.TerraMod;
-import net.daporkchop.lib.common.function.throwing.EFunction;
-import net.daporkchop.lib.common.misc.threadfactory.PThreadFactories;
-import net.daporkchop.lib.common.ref.Ref;
-import net.daporkchop.lib.common.ref.ThreadRef;
+import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * Handles sending and caching of HTTP requests.

@@ -1,28 +1,5 @@
 package net.buildtheearth.terraplusplus.control;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static net.daporkchop.lib.common.util.PValidation.checkArg;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-
-import javax.imageio.ImageIO;
-
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.GL11;
-
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomCubicWorldType;
 import lombok.Getter;
 import lombok.NonNull;
@@ -57,6 +34,26 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
+
+import javax.imageio.ImageIO;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+
+import static java.lang.Math.*;
+import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * The advanced world configuration GUI.
@@ -211,6 +208,7 @@ public class AdvancedEarthGui extends GuiScreen {
             ScaledResolution scale = new ScaledResolution(Minecraft.getMinecraft());
             int sc = scale.getScaleFactor();
             GL11.glEnable(GL11.GL_SCISSOR_TEST);
+            int height = this.entriesHeight;
             GL11.glScissor(5 * sc, VERTICAL_PADDING * sc, this.entriesWidth * sc, (this.height - VERTICAL_PADDING * 2) * sc);
 
             GL11.glPushMatrix();
@@ -1014,7 +1012,7 @@ public class AdvancedEarthGui extends GuiScreen {
             double maxY = max(bounds[1], bounds[3]);
             double dx = maxX - minX;
             double dy = maxY - minY;
-            double scale = max(dx, dy) / Math.min(width, height);
+            double scale = max(dx, dy) / (double) Math.min(width, height);
 
             // Actually set map data
             for (int yi = 0; yi < height && !this.reset; yi++) {
