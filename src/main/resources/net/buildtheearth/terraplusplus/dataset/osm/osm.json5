@@ -325,7 +325,7 @@
                     }
                 },
                 "emit": {
-                    "narrow": {
+                    "sharp": {
                         "draw": {
                             "block": {
                                 "id": "minecraft:brick_block"
@@ -435,7 +435,7 @@
                         //draw building outline normally
                         "convert": {
                             "line": {
-                                "narrow": {
+                                "sharp": {
                                     "draw": {
                                         "block": {
                                             "id": "minecraft:brick_block"
