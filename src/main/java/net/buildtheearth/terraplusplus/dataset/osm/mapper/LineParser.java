@@ -1,9 +1,9 @@
 package net.buildtheearth.terraplusplus.dataset.osm.mapper;
 
+import java.util.Map;
+
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.buildtheearth.terraplusplus.dataset.osm.JsonParser;
-
-import java.util.Map;
 
 /**
  * @author DaPorkchop_
@@ -19,6 +19,7 @@ public class LineParser extends JsonParser.Typed<LineMapper> {
         TYPES.put("nothing", Nothing.Line.class);
 
         TYPES.put("narrow", LineNarrow.class);
+        TYPES.put("sharp", LineSharp.class);
         TYPES.put("wide", LineWide.class);
     }
 
