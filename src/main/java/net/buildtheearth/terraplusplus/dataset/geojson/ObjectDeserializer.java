@@ -20,14 +20,7 @@
 
 package net.buildtheearth.terraplusplus.dataset.geojson;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
-import lombok.Getter;
-import net.buildtheearth.terraplusplus.TerraMod;
-import net.buildtheearth.terraplusplus.dataset.geojson.object.Feature;
-import net.buildtheearth.terraplusplus.dataset.geojson.object.FeatureCollection;
-import net.buildtheearth.terraplusplus.dataset.geojson.object.Reference;
+import static net.daporkchop.lib.common.util.PValidation.checkState;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,7 +28,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static net.daporkchop.lib.common.util.PValidation.*;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+
+import lombok.Getter;
+import net.buildtheearth.terraplusplus.TerraMod;
+import net.buildtheearth.terraplusplus.dataset.geojson.object.Feature;
+import net.buildtheearth.terraplusplus.dataset.geojson.object.FeatureCollection;
+import net.buildtheearth.terraplusplus.dataset.geojson.object.Reference;
 
 /**
  * @author DaPorkchop_

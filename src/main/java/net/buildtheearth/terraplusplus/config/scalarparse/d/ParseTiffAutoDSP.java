@@ -1,10 +1,12 @@
 package net.buildtheearth.terraplusplus.config.scalarparse.d;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
-import lombok.NonNull;
-import lombok.SneakyThrows;
+import static net.daporkchop.lib.common.util.PValidation.checkArg;
+import static net.daporkchop.lib.common.util.PValidation.positive;
+
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.Collections;
+
 import org.apache.commons.imaging.FormatCompliance;
 import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.common.ImageBuilder;
@@ -18,14 +20,14 @@ import org.apache.commons.imaging.formats.tiff.constants.GdalLibraryTagConstants
 import org.apache.commons.imaging.formats.tiff.constants.TiffConstants;
 import org.apache.commons.imaging.formats.tiff.constants.TiffTagConstants;
 import org.apache.commons.imaging.formats.tiff.photometricinterpreters.PhotometricInterpreter;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import lombok.NonNull;
+import lombok.SneakyThrows;
 import sun.awt.image.IntegerComponentRaster;
-
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.stream.DoubleStream;
-
-import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * @author DaPorkchop_

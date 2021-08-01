@@ -1,16 +1,17 @@
 package net.buildtheearth.terraplusplus.config.scalarparse.d;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
-import lombok.NonNull;
-import net.buildtheearth.terraplusplus.config.scalarparse.i.IntScalarParser;
+import static net.daporkchop.lib.common.util.PValidation.checkArg;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-import static net.daporkchop.lib.common.util.PValidation.*;
+import javax.imageio.ImageIO;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import lombok.NonNull;
 
 /**
  * @author DaPorkchop_
