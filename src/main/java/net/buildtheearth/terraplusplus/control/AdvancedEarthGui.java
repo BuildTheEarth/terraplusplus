@@ -10,8 +10,10 @@ import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
+import net.buildtheearth.terraplusplus.projection.transform.ClampProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.OffsetProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ProjectionTransform;
+import net.buildtheearth.terraplusplus.projection.transform.RotateProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ScaleProjectionTransform;
 import net.daporkchop.lib.common.function.io.IOSupplier;
 import net.daporkchop.lib.common.ref.Ref;
@@ -246,7 +248,7 @@ public class AdvancedEarthGui extends GuiScreen {
         this.drawString(this.fontRenderer, I18n.format("terraplusplus.gui.world_size_header"), this.width - this.imgSize + 15, this.height - VERTICAL_PADDING - 30, 0xFFFFFFFF);
         this.drawString(this.fontRenderer, I18n.format("terraplusplus.gui.world_size_numbers", this.worldSizeX, this.worldSizeY), this.width - this.imgSize + 15, this.height - VERTICAL_PADDING - 15, 0xFFFFFFFF);
 
-        for(GuiButton button : this.nonTranslatedButtons) {
+        for (GuiButton button : this.nonTranslatedButtons) {
             button.drawButton(this.mc, mouseX, mouseY, partialTicks);
         }
     }
@@ -444,6 +446,54 @@ public class AdvancedEarthGui extends GuiScreen {
                             } else {
                                 this.textFields[0].setText("1.0");
                                 this.textFields[1].setText("1.0");
+                            }
+                        }
+
+                        @Override
+                        protected void appendValue(StringBuilder out, int i) {
+                            out.append(Double.parseDouble(this.textFields[i].getText()));
+                        }
+                    };
+                }
+            },
+            rotate {
+                @Override
+                protected TransformEntry newSubEntry(ProjectionEntry entry, AdvancedEarthGui gui, int x, int y, int width) {
+                    return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraConstants.MODID + ".gui.transformation.rotate", "by") {
+                        @Override
+                        public void initFrom(ProjectionTransform in) {
+                            if (in instanceof RotateProjectionTransform) {
+                                RotateProjectionTransform transform = (RotateProjectionTransform) in;
+                                this.textFields[0].setText(String.valueOf(transform.by()));
+                            } else {
+                                this.textFields[0].setText("1.0");
+                            }
+                        }
+
+                        @Override
+                        protected void appendValue(StringBuilder out, int i) {
+                            out.append(Double.parseDouble(this.textFields[i].getText()));
+                        }
+                    };
+                }
+            },
+            clamp {
+                @Override
+                protected TransformEntry newSubEntry(ProjectionEntry entry, AdvancedEarthGui gui, int x, int y, int width) {
+                    return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraConstants.MODID + ".gui.transformation.clamp", "minX", "maxX", "minY", "maxY") {
+                        @Override
+                        public void initFrom(ProjectionTransform in) {
+                            if (in instanceof ClampProjectionTransform) {
+                                ClampProjectionTransform transform = (ClampProjectionTransform) in;
+                                this.textFields[0].setText(String.valueOf(transform.minX()));
+                                this.textFields[1].setText(String.valueOf(transform.maxX()));
+                                this.textFields[2].setText(String.valueOf(transform.minY()));
+                                this.textFields[3].setText(String.valueOf(transform.maxY()));
+                            } else {
+                                this.textFields[0].setText("0.0");
+                                this.textFields[1].setText("1.0");
+                                this.textFields[2].setText("0.0");
+                                this.textFields[3].setText("1.0");
                             }
                         }
 

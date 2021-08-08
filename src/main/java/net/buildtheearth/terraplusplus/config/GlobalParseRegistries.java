@@ -36,6 +36,8 @@ import net.buildtheearth.terraplusplus.config.scalarparse.i.ParseTiffISP;
 import net.buildtheearth.terraplusplus.config.scalarparse.i.RGBExtractISP;
 import net.buildtheearth.terraplusplus.config.scalarparse.i.RequireOpaqueISP;
 import net.buildtheearth.terraplusplus.config.scalarparse.i.SwapAxesISP;
+import net.buildtheearth.terraplusplus.projection.AzimuthalEquidistantProjection;
+import net.buildtheearth.terraplusplus.projection.LambertAzimuthalProjection;
 import net.buildtheearth.terraplusplus.projection.EqualEarthProjection;
 import net.buildtheearth.terraplusplus.projection.EquirectangularProjection;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
@@ -46,9 +48,11 @@ import net.buildtheearth.terraplusplus.projection.dymaxion.DymaxionProjection;
 import net.buildtheearth.terraplusplus.projection.mercator.CenteredMercatorProjection;
 import net.buildtheearth.terraplusplus.projection.mercator.TransverseMercatorProjection;
 import net.buildtheearth.terraplusplus.projection.mercator.WebMercatorProjection;
+import net.buildtheearth.terraplusplus.projection.transform.ClampProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.FlipHorizontalProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.FlipVerticalProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.OffsetProjectionTransform;
+import net.buildtheearth.terraplusplus.projection.transform.RotateProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ScaleProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.SwapAxesProjectionTransform;
 
@@ -72,10 +76,14 @@ public class GlobalParseRegistries {
             .put("bte_conformal_dymaxion", BTEDymaxionProjection.class)
             .put("dymaxion", DymaxionProjection.class)
             .put("conformal_dymaxion", ConformalDynmaxionProjection.class)
+            .put("lambert_azimuthal", LambertAzimuthalProjection.class)
+            .put("azimuthal_equidistant", AzimuthalEquidistantProjection.class)
             //transformations
+            .put("clamp", ClampProjectionTransform.class)
             .put("flip_horizontal", FlipHorizontalProjectionTransform.class)
             .put("flip_vertical", FlipVerticalProjectionTransform.class)
             .put("offset", OffsetProjectionTransform.class)
+            .put("rotate", RotateProjectionTransform.class)
             .put("scale", ScaleProjectionTransform.class)
             .put("swap_axes", SwapAxesProjectionTransform.class)
             .build();

@@ -21,11 +21,18 @@ terraplusplus.preset.advanced=Customize
 
 ## Transformations
 terraplusplus.gui.transformation.add=Add Transform
+terraplusplus.gui.transformation.clamp=Clamp
+terraplusplus.gui.transformation.clamp.minX=Minimum X
+terraplusplus.gui.transformation.clamp.maxX=Maximum X
+terraplusplus.gui.transformation.clamp.minY=Minimum Y
+terraplusplus.gui.transformation.clamp.maxY=Maximum Y
 terraplusplus.gui.transformation.flip_horizontal=Horizontal Flip
 terraplusplus.gui.transformation.flip_vertical=Vertical Flip
 terraplusplus.gui.transformation.offset=Offset
 terraplusplus.gui.transformation.offset.dx=X
 terraplusplus.gui.transformation.offset.dy=Y
+terraplusplus.gui.transformation.rotate=Rotate
+terraplusplus.gui.transformation.rotate.by=Degrees
 terraplusplus.gui.transformation.scale=Scale
 terraplusplus.gui.transformation.scale.x=X
 terraplusplus.gui.transformation.scale.y=Y
@@ -42,6 +49,12 @@ terraplusplus.gui.projection.equal_earth=Equal Earth
 terraplusplus.gui.projection.bte_conformal_dymaxion=BuildTheEarth Conformal Dymaxion
 terraplusplus.gui.projection.dymaxion=Dymaxion (not BTE!)
 terraplusplus.gui.projection.conformal_dymaxion=Conformal Dymaxion
+terraplusplus.gui.projection.azimuthal_equidistant=Azimuthal Equidistant
+terraplusplus.gui.projection.azimuthal_equidistant.centerX=Origin Longitude
+terraplusplus.gui.projection.azimuthal_equidistant.centerY=Origin Latitude
+terraplusplus.gui.projection.lambert_azimuthal=Lambert Azimuthal
+terraplusplus.gui.projection.lambert_azimuthal.centerX=Origin Longitude
+terraplusplus.gui.projection.lambert_azimuthal.centerY=Origin Latitude
 
 ## command messages
 terraplusplus.command.tpll.usage=Usage: /tpll <latitude> <longitude> [altitude]
