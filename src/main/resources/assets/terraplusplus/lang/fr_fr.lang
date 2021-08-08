@@ -7,6 +7,8 @@ terraplusplus.gui.projection=Projection
 terraplusplus.gui.cwg=Paramètres CubicWorldGen
 terraplusplus.gui.use_default_heights=Données altimétrique par défaut
 terraplusplus.gui.use_default_trees=Données forrestières par défaut
+terraplusplus.gui.skip_chunk_population=Population vanilla des chunks
+terraplusplus.gui.skip_biome_decoration=Décoration vanilla des biomes
 terraplusplus.gui.world_size_header=Taille approximative du monde: 
 terraplusplus.gui.world_size_numbers=%s x %s blocs
 terraplusplus.gui.world_info=Les directions sont celles de Minecraft, le point rose est en 0,0.
@@ -19,11 +21,18 @@ terraplusplus.preset.advanced=Customize
 
 ## Transformations
 terraplusplus.gui.transformation.add=Ajouter une transformation
+terraplusplus.gui.transformation.clamp=Troncature
+terraplusplus.gui.transformation.clamp.minX=X minimum
+terraplusplus.gui.transformation.clamp.maxX=X maximum
+terraplusplus.gui.transformation.clamp.minY=Y minimum
+terraplusplus.gui.transformation.clamp.maxY=Y maximum
 terraplusplus.gui.transformation.flip_horizontal=Réflexion horizontale
 terraplusplus.gui.transformation.flip_vertical=Réflexion verticale
 terraplusplus.gui.transformation.offset=Décalage
 terraplusplus.gui.transformation.offset.dx=X
 terraplusplus.gui.transformation.offset.dy=Y
+terraplusplus.gui.transformation.rotate=Rotation
+terraplusplus.gui.transformation.rotate.by=Degrés
 terraplusplus.gui.transformation.scale=Échelle
 terraplusplus.gui.transformation.scale.x=X
 terraplusplus.gui.transformation.scale.y=Y
@@ -40,6 +49,12 @@ terraplusplus.gui.projection.equal_earth=Equal Earth
 terraplusplus.gui.projection.bteairocean=Fuller de BuildTheEarth
 terraplusplus.gui.projection.airocean=Fuller
 terraplusplus.gui.projection.conformal=Approximation conforme de Fuller
+terraplusplus.gui.projection.azimuthal_equidistant=Postel
+terraplusplus.gui.projection.azimuthal_equidistant.centerX=Longitude de l'origine
+terraplusplus.gui.projection.azimuthal_equidistant.centerY=Latitude de l'origine
+terraplusplus.gui.projection.lambert_azimuthal=Azimutale équivalente de Lambert
+terraplusplus.gui.projection.lambert_azimuthal.centerX=Longitude de l'origine
+terraplusplus.gui.projection.lambert_azimuthal.centerY=Latitude de l'origine
 
 ## command messages
 terraplusplus.command.tpll.usage=/tpll <latitude> <longitude> [altitude] [joueur]
