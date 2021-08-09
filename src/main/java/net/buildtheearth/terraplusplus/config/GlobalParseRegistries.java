@@ -42,6 +42,7 @@ import net.buildtheearth.terraplusplus.projection.EqualEarthProjection;
 import net.buildtheearth.terraplusplus.projection.EquirectangularProjection;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.SinusoidalProjection;
+import net.buildtheearth.terraplusplus.projection.StereographicProjection;
 import net.buildtheearth.terraplusplus.projection.dymaxion.BTEDymaxionProjection;
 import net.buildtheearth.terraplusplus.projection.dymaxion.ConformalDynmaxionProjection;
 import net.buildtheearth.terraplusplus.projection.dymaxion.DymaxionProjection;
@@ -78,6 +79,7 @@ public class GlobalParseRegistries {
             .put("conformal_dymaxion", ConformalDynmaxionProjection.class)
             .put("lambert_azimuthal", LambertAzimuthalProjection.class)
             .put("azimuthal_equidistant", AzimuthalEquidistantProjection.class)
+            .put("stereographic", StereographicProjection.class)
             //transformations
             .put("clamp", ClampProjectionTransform.class)
             .put("flip_horizontal", FlipHorizontalProjectionTransform.class)

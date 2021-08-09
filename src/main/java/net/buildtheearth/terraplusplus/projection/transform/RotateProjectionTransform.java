@@ -21,8 +21,8 @@ public class RotateProjectionTransform extends ProjectionTransform {
 
     private transient final double sin;
     private transient final double cos;
-    private transient final double unsin;
-    private transient final double uncos;
+    private transient final double sinBackwards;
+    private transient final double cosBackwards;
 
     /**
      * @param delegate - Input projection
@@ -36,10 +36,10 @@ public class RotateProjectionTransform extends ProjectionTransform {
         Preconditions.checkArgument(Double.isFinite(by), "Projection rotation must be a finite double");
         this.by = by;
 
-        this.sin = Math.sin(toRadians(-by));
-        this.cos = Math.cos(toRadians(-by));
-        this.unsin = Math.sin(toRadians(by));
-        this.uncos = Math.cos(toRadians(by));
+        this.sin = Math.sin(toRadians(by));
+        this.cos = Math.cos(toRadians(by));
+        this.sinBackwards = Math.sin(toRadians(-by));
+        this.cosBackwards = Math.cos(toRadians(-by));
     }
 
     @Override
@@ -67,8 +67,8 @@ public class RotateProjectionTransform extends ProjectionTransform {
     @Override
     public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
         return super.delegate.toGeo(
-                x * this.uncos - y * this.unsin,
-                x * this.unsin + y * this.uncos
+                x * this.cos - y * this.sin,
+                x * this.sin + y * this.cos
         );
     }
 
@@ -76,8 +76,8 @@ public class RotateProjectionTransform extends ProjectionTransform {
     public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
         double[] pos = super.delegate.fromGeo(longitude, latitude);
         return new double[] {
-                pos[0] * this.cos - pos[1] * this.sin,
-                pos[0] * this.sin + pos[1] * this.cos,
+                pos[0] * this.cosBackwards - pos[1] * this.sinBackwards,
+                pos[0] * this.sinBackwards + pos[1] * this.cosBackwards,
         };
     }
 

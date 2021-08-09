@@ -7,14 +7,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableMap;
 import lombok.Getter;
 import net.buildtheearth.terraplusplus.TerraConstants;
-import net.buildtheearth.terraplusplus.projection.mercator.WebMercatorProjection;
-import net.buildtheearth.terraplusplus.projection.transform.RotateProjectionTransform;
-import net.daporkchop.lib.common.util.PValidation;
 
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.DoubleStream;
-import java.util.stream.Stream;
 
 import static java.lang.Math.*;
 
@@ -25,6 +19,10 @@ import static java.lang.Math.*;
 @Getter(onMethod_ = { @JsonGetter })
 public class AzimuthalEquidistantProjection implements GeographicProjection {
     private static double modDegrees(double val, double bound) {
+        if (val == bound * 0.5d) {
+            return val;
+        }
+
         val += bound * 0.5d;
         if (val < 0.0d) {
             val = val % bound + bound;
@@ -40,8 +38,8 @@ public class AzimuthalEquidistantProjection implements GeographicProjection {
     public AzimuthalEquidistantProjection(
             @JsonProperty("centerX") Double centerX,
             @JsonProperty("centerY") Double centerY) {
-        this.centerX = centerX != null ? centerX : 0.0d;
-        this.centerY = centerY != null ? centerY : 0.0d;
+        this.centerX = modDegrees(centerX != null ? centerX : 0.0d, 360.0d);
+        this.centerY = modDegrees(centerY != null ? centerY : 0.0d, 180.0d);
     }
 
     @Override
@@ -80,7 +78,7 @@ public class AzimuthalEquidistantProjection implements GeographicProjection {
         double lambda = -toRadians(longitude);
 
         double p = acos(sin(phi1) * sin(phi) + cos(phi1) * cos(phi) * cos(lambda - lambda0));
-        double t = atan2(cos(phi) * sin(lambda -lambda0), cos(phi1) * sin(phi) - sin(phi1) * cos(phi) * cos(lambda - lambda0));
+        double t = atan2(cos(phi) * sin(lambda - lambda0), cos(phi1) * sin(phi) - sin(phi1) * cos(phi) * cos(lambda - lambda0));
 
         double x = p * sin(t);
         double y = p * cos(t);

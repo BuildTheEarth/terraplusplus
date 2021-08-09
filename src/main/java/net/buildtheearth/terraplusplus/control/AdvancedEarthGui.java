@@ -483,18 +483,11 @@ public class AdvancedEarthGui extends GuiScreen {
                     return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraConstants.MODID + ".gui.transformation.clamp", "minX", "maxX", "minY", "maxY") {
                         @Override
                         public void initFrom(ProjectionTransform in) {
-                            if (in instanceof ClampProjectionTransform) {
-                                ClampProjectionTransform transform = (ClampProjectionTransform) in;
-                                this.textFields[0].setText(String.valueOf(transform.minX()));
-                                this.textFields[1].setText(String.valueOf(transform.maxX()));
-                                this.textFields[2].setText(String.valueOf(transform.minY()));
-                                this.textFields[3].setText(String.valueOf(transform.maxY()));
-                            } else {
-                                this.textFields[0].setText("0.0");
-                                this.textFields[1].setText("1.0");
-                                this.textFields[2].setText("0.0");
-                                this.textFields[3].setText("1.0");
-                            }
+                            double[] bounds = in instanceof ClampProjectionTransform ? in.bounds() : new double[]{ 0.0d, 0.0d, 1.0d, 1.0d };
+                            this.textFields[0].setText(String.valueOf(bounds[0]));
+                            this.textFields[1].setText(String.valueOf(bounds[2]));
+                            this.textFields[2].setText(String.valueOf(bounds[1]));
+                            this.textFields[3].setText(String.valueOf(bounds[3]));
                         }
 
                         @Override
@@ -667,7 +660,6 @@ public class AdvancedEarthGui extends GuiScreen {
             }
 
             protected abstract void appendValue(StringBuilder out, int i);
-
         }
 
         protected static class RootEntry implements SubEntry {

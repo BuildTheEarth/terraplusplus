@@ -6,18 +6,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableMap;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import net.buildtheearth.terraplusplus.TerraConstants;
 
 import java.util.Map;
 
 import static java.lang.Math.*;
+import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
- * https://mathworld.wolfram.com/LambertAzimuthalEqual-AreaProjection.html
+ * https://mathworld.wolfram.com/StereographicProjection.html
  */
 @JsonDeserialize
 @Getter(onMethod_ = { @JsonGetter })
-public class LambertAzimuthalProjection implements GeographicProjection {
+public class StereographicProjection implements GeographicProjection {
     private static double modDegrees(double val, double bound) {
         if (val == bound * 0.5d) {
             return val;
@@ -33,13 +35,19 @@ public class LambertAzimuthalProjection implements GeographicProjection {
 
     private final double centerX;
     private final double centerY;
+    private final double radius;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public LambertAzimuthalProjection(
+    public StereographicProjection(
             @JsonProperty("centerX") Double centerX,
-            @JsonProperty("centerY") Double centerY) {
+            @JsonProperty("centerY") Double centerY,
+            @JsonProperty("radius") Double radius) {
         this.centerX = modDegrees(centerX != null ? centerX : 0.0d, 360.0d);
         this.centerY = modDegrees(centerY != null ? centerY : 0.0d, 180.0d);
+        this.radius = radius != null ? radius : 90.0d;
+
+        checkArg(this.radius > 0.0d, "radius must be positive!");
+        checkArg(this.radius < 180.0d, "radius must be less than 180!");
     }
 
     @Override
@@ -48,7 +56,7 @@ public class LambertAzimuthalProjection implements GeographicProjection {
         double lambda0 = toRadians(this.centerX);
 
         double p = sqrt(x * x + y * y);
-        double c = 2.0d * asin((1.0d / 2.0d) * p);
+        double c = 2.0d * atan2(p, 2.0d);
 
         if (Double.isNaN(c)) {
             throw OutOfProjectionBoundsException.get();
@@ -67,22 +75,24 @@ public class LambertAzimuthalProjection implements GeographicProjection {
     public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
         OutOfProjectionBoundsException.checkLongitudeLatitudeInRange(longitude, latitude);
 
-        double phi1 = toRadians(this.centerY);
-        double lambda0 = toRadians(this.centerX);
-        double phi = toRadians(latitude);
-        double lambda = -toRadians(longitude);
+        double phi = toRadians(latitude - this.centerY);
+        double lambda = -toRadians(longitude + this.centerX);
 
-        double k = sqrt(2.0d / (1.0d + sin(phi1) * sin(phi) + cos(phi1) * cos(phi) * cos(lambda - lambda0)));
+        double k = 2.0d / (1.0d + cos(phi) * cos(lambda));
 
-        double x = k * cos(phi) * sin(lambda - lambda0);
-        double y = k * (cos(phi1) * sin(phi) - sin(phi1) * cos(phi) * cos(lambda - lambda0));
+        double x = k * cos(phi) * sin(lambda);
+        double y = k * sin(phi);
 
         return new double[]{ x, y };
     }
 
     @Override
     public double[] bounds() {
-        return new double[]{ -2.0d, -2.0d, 2.0d, 2.0d };
+        double lambda = toRadians(this.radius);
+        double k = 2.0d / (1.0d + cos(lambda));
+        double r = abs(k * sin(lambda));
+
+        return new double[]{ -r, -r, r, r };
     }
 
     @Override
@@ -100,6 +110,7 @@ public class LambertAzimuthalProjection implements GeographicProjection {
         return ImmutableMap.<String, Object>builder()
                 .put("centerX", this.centerX)
                 .put("centerY", this.centerY)
+                .put("radius", this.radius)
                 .build();
     }
 }

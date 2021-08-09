@@ -32,7 +32,7 @@ terraplusplus.gui.transformation.offset=Offset
 terraplusplus.gui.transformation.offset.dx=X
 terraplusplus.gui.transformation.offset.dy=Y
 terraplusplus.gui.transformation.rotate=Rotate
-terraplusplus.gui.transformation.rotate.by=Degrees
+terraplusplus.gui.transformation.rotate.by=Angle
 terraplusplus.gui.transformation.scale=Scale
 terraplusplus.gui.transformation.scale.x=X
 terraplusplus.gui.transformation.scale.y=Y
@@ -55,6 +55,10 @@ terraplusplus.gui.projection.azimuthal_equidistant.centerY=Origin Latitude
 terraplusplus.gui.projection.lambert_azimuthal=Lambert Azimuthal
 terraplusplus.gui.projection.lambert_azimuthal.centerX=Origin Longitude
 terraplusplus.gui.projection.lambert_azimuthal.centerY=Origin Latitude
+terraplusplus.gui.projection.stereographic=Stereographic
+terraplusplus.gui.projection.stereographic.centerX=Origin Longitude
+terraplusplus.gui.projection.stereographic.centerY=Origin Latitude
+terraplusplus.gui.projection.stereographic.radius=Radius
 
 ## command messages
 terraplusplus.command.tpll.usage=Usage: /tpll <latitude> <longitude> [altitude]
