@@ -1,0 +1,100 @@
+## 월드 타입 이름
+generator.EarthCubic=Planet Earth
+
+## GUI 설정
+terraplusplus.gui.header=Terra++ 세계 설정
+terraplusplus.gui.projection=투영법
+terraplusplus.gui.cwg=CubicWorldGen 프리셋
+terraplusplus.gui.use_default_heights=기본 지형 데이터셋
+terraplusplus.gui.use_default_trees=기본 나무 커버 데이터셋
+terraplusplus.gui.skip_chunk_population=바닐라 청크 분포 설정
+terraplusplus.gui.skip_biome_decoration=바닐라 생물 군계 설정
+terraplusplus.gui.world_size_header=대략적인 세계 크기:
+terraplusplus.gui.world_size_numbers=%s x %s 블록
+terraplusplus.gui.world_info=방향은 보이는 것 그대로 마인크래프트에 적용되며, 분홍색 점은 (0, 0) 좌표를 가리킵니다.
+
+## 프리셋
+terraplusplus.presetscreen.title=세계 프리셋을 선택하세요. 또는 사용자 지정을 고르시면 더 많은 옵션이 제공됩니다.
+terraplusplus.preset.default=기본
+terraplusplus.preset.bte=Build the Earth
+terraplusplus.preset.advanced=사용자 지정
+
+## 변환
+terraplusplus.gui.transformation.add=변환 추가하기
+terraplusplus.gui.transformation.clamp=클램프
+terraplusplus.gui.transformation.clamp.minX=X 최솟값
+terraplusplus.gui.transformation.clamp.maxX=X 최댓값
+terraplusplus.gui.transformation.clamp.minY=Y 최솟값
+terraplusplus.gui.transformation.clamp.maxY=Y 최댓값
+terraplusplus.gui.transformation.flip_horizontal=좌우 반전
+terraplusplus.gui.transformation.flip_vertical=상하 반전
+terraplusplus.gui.transformation.offset=오프셋
+terraplusplus.gui.transformation.offset.dx=X
+terraplusplus.gui.transformation.offset.dy=Y
+terraplusplus.gui.transformation.rotate=회전
+terraplusplus.gui.transformation.rotate.by=각도
+terraplusplus.gui.transformation.scale=스케일
+terraplusplus.gui.transformation.scale.x=X
+terraplusplus.gui.transformation.scale.y=Y
+terraplusplus.gui.transformation.swap_axes=XY축 변환
+
+## 투영법 유형 목록
+terraplusplus.gui.projection.centered_mercator=메르카토르 도법
+terraplusplus.gui.projection.web_mercator=웹 메르카토르 도법
+terraplusplus.gui.projection.web_mercator.zoom=확대/축소 값
+terraplusplus.gui.projection.transverse_mercator=횡축 메르카토르 도법
+terraplusplus.gui.projection.equirectangular=등장방형도법
+terraplusplus.gui.projection.sinusoidal=시뉴소이드 도법
+terraplusplus.gui.projection.equal_earth=Equal Earth 도법
+terraplusplus.gui.projection.bte_conformal_dymaxion=BuildTheEarth 정각 다이맥시온 도법
+terraplusplus.gui.projection.dymaxion=다이맥시온 도법 (BTE 도법이 아닙니다!)
+terraplusplus.gui.projection.conformal_dymaxion=정각 다이맥시온 도법
+terraplusplus.gui.projection.azimuthal_equidistant=방위정거도법
+terraplusplus.gui.projection.azimuthal_equidistant.centerX=원점 경도
+terraplusplus.gui.projection.azimuthal_equidistant.centerY=원점 위도
+terraplusplus.gui.projection.lambert_azimuthal=람베르트 방위도법
+terraplusplus.gui.projection.lambert_azimuthal.centerX=원점 경도
+terraplusplus.gui.projection.lambert_azimuthal.centerY=원점 위도
+terraplusplus.gui.projection.stereographic=평사도법
+terraplusplus.gui.projection.stereographic.centerX=원점 경도
+terraplusplus.gui.projection.stereographic.centerY=원점 위도
+terraplusplus.gui.projection.stereographic.radius=반지름
+
+## command messages
+terraplusplus.command.tpll.usage=사용법: /tpll <위도> <경도> [고도]
+terraplusplus.command.tpll.others.usage=사용법: /tpll [대상 플레이어] <위도> <경도> [고도]
+
+terraplusplus.command.terra.usage=/terra
+
+terraplusplus.command.terra.gensettings=생성기 설정:
+terraplusplus.command.terra.latlon=위도 경도: %.7f %.7f
+terraplusplus.command.terra.xy=x y: %.7f %.7f
+terraplusplus.command.terra.environment=%.1f °C; %.1f mm/yr; 토양 ID: %d
+terraplusplus.command.terra.tissot= ~%.5f 블록/m ± %.5f°
+
+terraplusplus.command.terra.title=Terra++ 명령어
+
+## fragment messages
+terraplusplus.fragment.help.purpose=명령어 목록을 보여줍니다
+
+terraplusplus.fragment.terra.where.purpose=플레이어의 위치를 보여줍니다.
+terraplusplus.fragment.terra.where.notproj=위치가 투영법에 존재하지 않습니다!
+terraplusplus.fragment.terra.world.purpose=세계의 투영법 설정을 보여줍니다.
+terraplusplus.fragment.terra.osm.purpose=현재 위치를 지도로 보여줍니다.
+terraplusplus.fragment.terra.info.purpose=Terra++의 정보를 보여줍니다.
+terraplusplus.fragment.terra.convert.purpose=[x,z] 좌표를 [위도,경도]로, [위도,경도] 좌표를 [x,z]로 변환해줍니다.
+terraplusplus.fragment.terra.environment.purpose=세계 환경에 대한 데이터를 보여줍니다.
+terraplusplus.fragment.terra.distortion.purpose=현재 세계의 왜곡된 정도를 보여줍니다.
+
+terraplusplus.fragment.terra.world.header=세계 투영법 설정:
+
+## command errors
+terraplusplus.error.notcc=Cubic Chunks 세계에 있으셔야 합니다!
+terraplusplus.error.notterra=Terra 1 to 1 세계에 있으셔야 합니다!
+terraplusplus.error.playeronly=플레이어를 지정하거나 플레이어로 명령어를 실행해주세요!
+terraplusplus.error.numbers=모든 인수는 숫자여야 합니다!
+terraplusplus.error.getcoords=좌표를 가져오는 데 실패했습니다!
+terraplusplus.error.notplayer=당신은 플레이어가 아닙니다. 누구 한 명을 지정해주세요!
+terraplusplus.error.unknownplayer=서버에서 해당 플레이어를 찾을 수 없습니다!
+terraplusplus.error.notopothers=다른 플레이어에 대한 정보를 보려면 OP 권한이 있어야 합니다!
+terraplusplus.error.notop=이 명령어를 실행하려면 권한이나 OP가 있어야 합니다!
