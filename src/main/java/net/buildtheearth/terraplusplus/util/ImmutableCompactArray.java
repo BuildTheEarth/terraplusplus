@@ -1,20 +1,19 @@
 package net.buildtheearth.terraplusplus.util;
 
-import it.unimi.dsi.fastutil.objects.Reference2IntMap;
-import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
-import lombok.NonNull;
-import net.daporkchop.lib.binary.bit.BitArray;
-import net.daporkchop.lib.binary.bit.padded.PaddedBitArray;
-import net.minecraft.block.state.IBlockState;
+import static java.lang.Math.max;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.lang.Math.*;
+import it.unimi.dsi.fastutil.objects.Reference2IntMap;
+import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
+import lombok.NonNull;
+import net.daporkchop.lib.binary.bit.BitArray;
+import net.daporkchop.lib.binary.bit.padded.PaddedBitArray;
 
 /**
- * A compact, immutable array of {@link IBlockState}s.
+ * A compact, immutable array.
  *
  * @author DaPorkchop_
  */

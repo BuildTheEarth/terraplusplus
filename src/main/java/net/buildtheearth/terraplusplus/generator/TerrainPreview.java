@@ -1,22 +1,11 @@
 package net.buildtheearth.terraplusplus.generator;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import lombok.NonNull;
-import net.buildtheearth.terraplusplus.generator.data.TreeCoverBaker;
-import net.buildtheearth.terraplusplus.projection.GeographicProjection;
-import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraplusplus.util.EmptyWorld;
-import net.buildtheearth.terraplusplus.util.TilePos;
-import net.buildtheearth.terraplusplus.util.http.Http;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Bootstrap;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraftforge.client.model.pipeline.LightUtil;
+import static java.lang.Math.max;
+import static net.daporkchop.lib.common.math.PMath.clamp;
+import static net.daporkchop.lib.common.math.PMath.floorI;
+import static net.daporkchop.lib.common.math.PMath.lerpI;
+import static net.daporkchop.lib.common.util.PorkUtil.uncheckedCast;
 
-import javax.swing.JFrame;
 import java.awt.Canvas;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -31,9 +20,26 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
-import static java.lang.Math.*;
-import static net.daporkchop.lib.common.math.PMath.*;
-import static net.daporkchop.lib.common.util.PorkUtil.*;
+import javax.swing.JFrame;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+
+import lombok.NonNull;
+import net.buildtheearth.terraplusplus.generator.data.TreeCoverBaker;
+import net.buildtheearth.terraplusplus.generator.surface.BakedSurfacePattern;
+import net.buildtheearth.terraplusplus.projection.GeographicProjection;
+import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
+import net.buildtheearth.terraplusplus.util.EmptyWorld;
+import net.buildtheearth.terraplusplus.util.TilePos;
+import net.buildtheearth.terraplusplus.util.http.Http;
+import net.minecraft.block.material.MapColor;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Bootstrap;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraftforge.client.model.pipeline.LightUtil;
 
 /**
  * @author DaPorkchop_
@@ -214,7 +220,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         //proj = state.projection.fromGeo(12.610463237424899, 37.673937184583636); //somewhere in sicily
         //proj = state.projection.fromGeo(9.6726, 45.6699); //lombardia, italy
         //proj = state.projection.fromGeo(8.93058, 44.40804); //genova, italy
-        //proj = state.projection.fromGeo(16.5922, 38.9069); //catanzaro, italy
+        proj = state.projection.fromGeo(16.5922, 38.9069); //catanzaro, italy
         state.setView(floorI(proj[0]) >> 4, floorI(proj[1]) >> 4, 0);
 
         state.update();
@@ -283,7 +289,17 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                         for (int cz = 0; cz < 16; cz++) {
                             int c;
 
-                            IBlockState state = data.surfaceBlock(cx, cz);
+                            IBlockState state = null;
+                            BakedSurfacePattern pattern = data.surfacePattern(cx, cz);
+                            if(pattern != null) {
+                                IBlockState[] states = pattern.pattern();
+                                for(int i = states.length - 1; i >= 0; i--) {
+                                    if(states[i] != null && states[i].getMapColor(EmptyWorld.INSTANCE, BlockPos.ORIGIN) != MapColor.AIR) {
+                                        state = states[i];
+                                        break;
+                                    }
+                                }
+                            }
                             if (state != null) {
                                 c = state.getMapColor(EmptyWorld.INSTANCE, BlockPos.ORIGIN).colorValue;
                             } else {
