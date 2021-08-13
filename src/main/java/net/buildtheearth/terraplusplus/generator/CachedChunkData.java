@@ -124,9 +124,17 @@ public class CachedChunkData extends CustomAttributeContainer {
         int max = Integer.MIN_VALUE;
         for (int i = 0; i < 16 * 16; i++) {
             BakedSurfacePattern pattern = this.surfacePatterns.get(i);
-            if(pattern == null) continue;
-            min = min(min, min(this.groundHeight[i], this.surfaceHeight[i]) - pattern.offset());
-            max = max(max, max(this.groundHeight[i], this.surfaceHeight[i]) + pattern.pattern().length - pattern.offset() - 1);
+            int patternSize;
+            int patternOffset;
+            if(pattern != null) {
+                patternSize = pattern.pattern().length;
+                patternOffset = pattern.offset();
+            } else {
+                patternSize = 1;
+                patternOffset = 0;
+            }
+            min = min(min, min(this.groundHeight[i] - patternOffset, this.surfaceHeight[i]));
+            max = max(max, max(this.groundHeight[i] + patternSize - patternOffset - 1, this.surfaceHeight[i]));
         }
         this.surfaceMinCube = Coords.blockToCube(min) - 1;
         this.surfaceMaxCube = Coords.blockToCube(max) + 1;
