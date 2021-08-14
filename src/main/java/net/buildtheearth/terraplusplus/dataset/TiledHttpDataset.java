@@ -4,9 +4,9 @@ import com.google.common.collect.ImmutableMap;
 import io.netty.buffer.ByteBuf;
 import lombok.NonNull;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
+import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.http.Http;
 import net.daporkchop.lib.common.misc.string.PStrings;
-import net.minecraft.util.math.ChunkPos;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -20,7 +20,7 @@ public abstract class TiledHttpDataset<T> extends TiledDataset<T> {
         super(projection, tileSize);
     }
 
-    protected abstract String[] urls(int tileX, int tileZ);
+    protected abstract String[] urls(int tileX, int tileZ, int zoom);
 
     protected void addProperties(int tileX, int tileZ, @NonNull ImmutableMap.Builder<String, String> builder) {
         builder.put("x", String.valueOf(tileX))
@@ -34,19 +34,19 @@ public abstract class TiledHttpDataset<T> extends TiledDataset<T> {
     protected abstract T decode(int tileX, int tileZ, @NonNull ByteBuf data) throws Exception;
 
     @Override
-    public CompletableFuture<T> load(@NonNull ChunkPos pos) throws Exception {
-        String[] urls = this.urls(pos.x, pos.z);
+    public CompletableFuture<T> load(@NonNull TilePos pos) throws Exception {
+        String[] urls = this.urls(pos.x(), pos.z(), pos.zoom());
 
         if (urls == null || urls.length == 0) { //no urls for tile
             return CompletableFuture.completedFuture(null);
         }
 
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-        this.addProperties(pos.x, pos.z, builder);
+        this.addProperties(pos.x(), pos.z(), builder);
         Map<String, String> properties = builder.build();
 
         return Http.getFirst(
                 Arrays.stream(urls).map(url -> Http.formatUrl(properties, url)).toArray(String[]::new),
-                data -> this.decode(pos.x, pos.z, data));
+                data -> this.decode(pos.x(), pos.z(), data));
     }
 }

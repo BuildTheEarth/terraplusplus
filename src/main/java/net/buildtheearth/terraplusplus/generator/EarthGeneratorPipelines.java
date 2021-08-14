@@ -67,7 +67,7 @@ public class EarthGeneratorPipelines {
         event.register(KEY_DATASET_HEIGHTS, elevationFuture.join());
         event.register(KEY_DATASET_TREE_COVER, treeCoverFuture.join());
 
-        ParsingGeoJsonDataset rawOsm = new ParsingGeoJsonDataset(TerraConfig.openstreetmap.servers);
+        ParsingGeoJsonDataset rawOsm = new ParsingGeoJsonDataset(TerraConfig.openstreetmap.servers_v2);
         event.register(KEY_DATASET_OSM_RAW, new TiledGeoJsonDataset(new ReferenceResolvingGeoJsonDataset(rawOsm)));
         OSMMapper<Geometry> osmMapper = settings.osmSettings().mapper();
         event.register(KEY_DATASET_OSM_PARSED, osmMapper != null

@@ -40,8 +40,8 @@ public class ZoomedTiledScalarDataset extends DoubleTiledDataset {
     }
 
     @Override
-    protected String[] urls(int tileX, int tileZ) {
-        return Http.suffixAll(this.urls, this.mode.path(tileX, tileZ, this.zoom));
+    protected String[] urls(int tileX, int tileZ, int zoom) {
+        return Http.suffixAll(this.urls, this.mode.path(tileX, tileZ, this.zoom)); //TODO: use proper zoom parameter
     }
 
     @Override

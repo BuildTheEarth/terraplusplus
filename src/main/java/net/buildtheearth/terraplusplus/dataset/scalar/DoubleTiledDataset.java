@@ -13,6 +13,7 @@ import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraplusplus.util.IntToDoubleBiFunction;
+import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 import net.daporkchop.lib.common.math.BinMath;
 import net.minecraft.util.math.ChunkPos;
@@ -145,14 +146,14 @@ public abstract class DoubleTiledDataset extends TiledHttpDataset<double[]> impl
         }
 
         public CompletableFuture<R> future() {
-            ChunkPos[] tilePositions = this.paddedLocalBounds.toTiles(TILE_SIZE);
+            TilePos[] tilePositions = this.paddedLocalBounds.toTiles(TILE_SIZE, 0); //TODO: actually use the correct level
 
             return CompletableFuture.allOf(Arrays.stream(tilePositions)
                     .map(pos -> DoubleTiledDataset.this.getAsync(pos)
                             .thenApply(tile -> { //put tile directly into map when it's loaded
                                 //synchronize because we can't be certain that all of the futures will be completed by the same thread
                                 synchronized (this.loadedTiles) {
-                                    this.loadedTiles.put(BinMath.packXY(pos.x, pos.z), tile);
+                                    this.loadedTiles.put(BinMath.packXY(pos.x(), pos.z()), tile);
                                 }
                                 return tile;
                             }))

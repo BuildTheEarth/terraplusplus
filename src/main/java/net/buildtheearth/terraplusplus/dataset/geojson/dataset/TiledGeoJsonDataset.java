@@ -8,6 +8,7 @@ import net.buildtheearth.terraplusplus.dataset.geojson.GeoJsonObject;
 import net.buildtheearth.terraplusplus.projection.EquirectangularProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
+import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 import net.minecraft.util.math.ChunkPos;
 
@@ -29,14 +30,14 @@ public class TiledGeoJsonDataset extends TiledDataset<GeoJsonObject[]> implement
     }
 
     @Override
-    public CompletableFuture<GeoJsonObject[]> load(@NonNull ChunkPos key) throws Exception {
-        return this.delegate.getAsync(String.format("tile/%d/%d.json", key.x, key.z));
+    public CompletableFuture<GeoJsonObject[]> load(@NonNull TilePos key) throws Exception {
+        return this.delegate.getAsync(String.format("%d/tile/%d/%d.json", key.zoom(), key.x(), key.z()));
     }
 
     @Override
     public CompletableFuture<GeoJsonObject[][]> getAsync(@NonNull CornerBoundingBox2d bounds, int zoom) throws OutOfProjectionBoundsException {
         Bounds2d localBounds = bounds.fromGeo(this.projection).axisAlign();
-        CompletableFuture<GeoJsonObject[]>[] futures = uncheckedCast(Arrays.stream(localBounds.toTiles(this.tileSize))
+        CompletableFuture<GeoJsonObject[]>[] futures = uncheckedCast(Arrays.stream(localBounds.toTiles(this.tileSize, zoom))
                 .map(this::getAsync)
                 .toArray(CompletableFuture[]::new));
 

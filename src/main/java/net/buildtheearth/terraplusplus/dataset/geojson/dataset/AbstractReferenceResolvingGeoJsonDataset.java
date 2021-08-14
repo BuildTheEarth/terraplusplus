@@ -46,6 +46,10 @@ public abstract class AbstractReferenceResolvingGeoJsonDataset<V> extends Datase
     @Override
     public CompletableFuture<V> load(@NonNull String key) throws Exception {
         return this.delegate.getAsync(key).thenCompose(objects -> {
+            if (objects == null) { //404 not found
+                return CompletableFuture.completedFuture(this.translate(Stream.empty()));
+            }
+
             if (!areAnyObjectsReferences(objects)) { //none of the objects are references, so there's nothing to be resolved!
                 return CompletableFuture.completedFuture(this.translate(Arrays.stream(objects)));
             }
@@ -55,7 +59,9 @@ public abstract class AbstractReferenceResolvingGeoJsonDataset<V> extends Datase
             List<CompletableFuture<V>> referenceFutures = new ArrayList<>();
             for (GeoJsonObject object : objects) {
                 if (object instanceof Reference) {
-                    referenceFutures.add(this.getAsync(((Reference) object).location()));
+                    String location = ((Reference) object).location();
+                    String prefix = key.substring(0, key.indexOf('/') + 1); //TODO: this is gross
+                    referenceFutures.add(this.getAsync(prefix + location));
                 } else {
                     nonReferenceObjects.add(object);
                 }

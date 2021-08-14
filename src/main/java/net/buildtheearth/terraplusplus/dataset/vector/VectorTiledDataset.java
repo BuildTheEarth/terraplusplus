@@ -8,6 +8,7 @@ import net.buildtheearth.terraplusplus.dataset.vector.geometry.VectorGeometry;
 import net.buildtheearth.terraplusplus.projection.EquirectangularProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
+import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.bvh.BVH;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 import net.minecraft.util.math.ChunkPos;
@@ -30,14 +31,14 @@ public class VectorTiledDataset extends TiledDataset<BVH<VectorGeometry>> implem
     }
 
     @Override
-    public CompletableFuture<BVH<VectorGeometry>> load(@NonNull ChunkPos key) throws Exception {
-        return this.delegate.getAsync(String.format("tile/%d/%d.json", key.x, key.z)).thenApply(BVH::of);
+    public CompletableFuture<BVH<VectorGeometry>> load(@NonNull TilePos key) throws Exception {
+        return this.delegate.getAsync(String.format("%d/tile/%d/%d.json", key.zoom(), key.x(), key.z())).thenApply(BVH::of);
     }
 
     @Override
     public CompletableFuture<BVH<VectorGeometry>[]> getAsync(@NonNull CornerBoundingBox2d bounds, int zoom) throws OutOfProjectionBoundsException {
         Bounds2d localBounds = bounds.fromGeo(this.projection).axisAlign();
-        CompletableFuture<BVH<VectorGeometry>>[] futures = uncheckedCast(Arrays.stream(localBounds.toTiles(this.tileSize))
+        CompletableFuture<BVH<VectorGeometry>>[] futures = uncheckedCast(Arrays.stream(localBounds.toTiles(this.tileSize, zoom))
                 .map(this::getAsync)
                 .toArray(CompletableFuture[]::new));
 

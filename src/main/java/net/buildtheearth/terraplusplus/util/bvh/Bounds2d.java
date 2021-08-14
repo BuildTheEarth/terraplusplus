@@ -5,6 +5,7 @@ import lombok.NonNull;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
+import net.buildtheearth.terraplusplus.util.TilePos;
 import net.minecraft.util.math.ChunkPos;
 
 import static java.lang.Math.*;
@@ -66,7 +67,9 @@ public interface Bounds2d {
      *
      * @param size the side length of a tile
      * @return the positions of every tile that intersects this bounding box
+     * @deprecated use {@link #toTiles(double, int)}
      */
+    @Deprecated
     default ChunkPos[] toTiles(double size) {
         double invSize = 1.0d / size;
         int minXi = floorI(this.minX() * invSize);
@@ -78,6 +81,29 @@ public interface Bounds2d {
         for (int i = 0, x = minXi; x <= maxXi; x++) {
             for (int z = minZi; z <= maxZi; z++) {
                 out[i++] = new ChunkPos(x, z);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Assuming this bounding box is located on a grid of square tiles, gets the positions of every tile that intersects this bounding box.
+     *
+     * @param size the side length of a tile
+     * @param zoom the current zoom level
+     * @return the positions of every tile that intersects this bounding box
+     */
+    default TilePos[] toTiles(double size, int zoom) {
+        double invSize = 1.0d / (size * (1 << zoom));
+        int minXi = floorI(this.minX() * invSize);
+        int maxXi = ceilI(this.maxX() * invSize);
+        int minZi = floorI(this.minZ() * invSize);
+        int maxZi = ceilI(this.maxZ() * invSize);
+
+        TilePos[] out = new TilePos[(maxXi - minXi + 1) * (maxZi - minZi + 1)];
+        for (int i = 0, x = minXi; x <= maxXi; x++) {
+            for (int z = minZi; z <= maxZi; z++) {
+                out[i++] = new TilePos(x, z, zoom);
             }
         }
         return out;

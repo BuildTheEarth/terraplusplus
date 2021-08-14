@@ -208,7 +208,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         double[] proj = state.projection.fromGeo(8.57696d, 47.21763d); //switzerland
         //proj = state.projection.fromGeo(12.58589, 55.68841); //copenhagen
         //proj = state.projection.fromGeo(24.7535, 59.4435); //tallinn
-        proj = state.projection.fromGeo(14.50513, 46.05108); //ljubljana
+        //proj = state.projection.fromGeo(14.50513, 46.05108); //ljubljana
         //proj = new double[2];
         state.setView(floorI(proj[0]) >> 4, floorI(proj[1]) >> 4, 0);
 
@@ -306,24 +306,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
     }
 
     protected CompletableFuture<BufferedImage> baseZoomTile(int x, int z) {
-        CompletableFuture<CachedChunkData>[] dataFutures = uncheckedCast(new CompletableFuture[CHUNKS_PER_TILE * CHUNKS_PER_TILE]);
-        for (int i = 0, dx = 0; dx < CHUNKS_PER_TILE; dx++) {
-            for (int dz = 0; dz < CHUNKS_PER_TILE; dz++) {
-                dataFutures[i++] = this.loader.load(new TilePos((x << CHUNKS_PER_TILE_SHIFT) + dx, (z << CHUNKS_PER_TILE_SHIFT) + dz, 0));
-            }
-        }
-
-        return CompletableFuture.allOf(dataFutures).thenApplyAsync(unused -> {
-            BufferedImage dst = createBlankTile();
-
-            for (int ti = 0, tx = 0; tx < CHUNKS_PER_TILE; tx++) {
-                for (int tz = 0; tz < CHUNKS_PER_TILE; tz++) {
-                    this.writeTileToImg(dst, dataFutures[ti++].join(), tx << 4, tz << 4);
-                }
-            }
-
-            return dst;
-        });
+        return this.zoomedOutTile(x, z, 0);
     }
 
     protected CompletableFuture<BufferedImage> zoomedOutTile(int x, int z, int zoom) {
