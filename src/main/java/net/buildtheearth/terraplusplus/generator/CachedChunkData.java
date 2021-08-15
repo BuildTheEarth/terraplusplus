@@ -8,7 +8,6 @@ import static net.daporkchop.lib.common.math.PMath.lerp;
 
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Random;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -17,15 +16,13 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import net.buildtheearth.terraplusplus.generator.surface.BakedSurfacePattern;
-import net.buildtheearth.terraplusplus.generator.surface.ISurfacePattern;
 import net.buildtheearth.terraplusplus.util.CustomAttributeContainer;
 import net.buildtheearth.terraplusplus.util.ImmutableCompactArray;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.ref.ThreadRef;
 import net.daporkchop.lib.common.util.PorkUtil;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Biomes;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.biome.Biome;
 
 /**
@@ -45,8 +42,8 @@ public class CachedChunkData extends CustomAttributeContainer {
 
     private static final Ref<Builder> BUILDER_CACHE = ThreadRef.soft(Builder::new);
 
-    public static Builder builder(ChunkPos pos) {
-        return BUILDER_CACHE.get().reset(pos);
+    public static Builder builder() {
+        return BUILDER_CACHE.get().reset();
     }
 
     private static int extractActualDepth(int waterDepth) {
@@ -60,7 +57,7 @@ public class CachedChunkData extends CustomAttributeContainer {
     @Getter
     private final byte[] biomes;
 
-    private final ImmutableCompactArray<BakedSurfacePattern> surfacePatterns;
+    private final ImmutableCompactArray<IBlockState> surfaceBlocks;
 
     private final int surfaceMinCube;
     private final int surfaceMaxCube;
@@ -106,35 +103,13 @@ public class CachedChunkData extends CustomAttributeContainer {
             this.biomes[i] = (byte) Biome.getIdForBiome(PorkUtil.fallbackIfNull(builder.biomes[i], Biomes.DEEP_OCEAN));
         }
 
-        Random random = new Random(ChunkPos.asLong(builder.pos.x, builder.pos.z));
-        BakedSurfacePattern[] patterns = new BakedSurfacePattern[16 * 16];
-        for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
-                int i = x*16 + z;
-                int wx = builder.pos.x * 16 + x;
-                int wy = this.groundHeight[i];
-                int wz = builder.pos.z * 16 + z;
-                ISurfacePattern pattern = builder.surfacePatterns()[i];
-                patterns[i] = pattern != null ? pattern.bake(wx, wy, wz, random): null;
-            }
-        }
-        this.surfacePatterns = new ImmutableCompactArray<>(patterns); //TODO Not so efficient anymore as it is reference based
+        this.surfaceBlocks = new ImmutableCompactArray<>(builder.surfaceBlocks);
 
         int min = Integer.MAX_VALUE;
         int max = Integer.MIN_VALUE;
         for (int i = 0; i < 16 * 16; i++) {
-            BakedSurfacePattern pattern = this.surfacePatterns.get(i);
-            int patternSize;
-            int patternOffset;
-            if(pattern != null) {
-                patternSize = pattern.pattern().length;
-                patternOffset = pattern.offset();
-            } else {
-                patternSize = 1;
-                patternOffset = 0;
-            }
-            min = min(min, min(this.groundHeight[i] - patternOffset, this.surfaceHeight[i]));
-            max = max(max, max(this.groundHeight[i] + patternSize - patternOffset - 1, this.surfaceHeight[i]));
+            min = min(min, min(this.groundHeight[i], this.surfaceHeight[i]));
+            max = max(max, max(this.groundHeight[i], this.surfaceHeight[i]));
         }
         this.surfaceMinCube = Coords.blockToCube(min) - 1;
         this.surfaceMaxCube = Coords.blockToCube(max) + 1;
@@ -168,8 +143,8 @@ public class CachedChunkData extends CustomAttributeContainer {
         return this.surfaceHeight(x, z) - 1;
     }
 
-    public BakedSurfacePattern surfacePattern(int x, int z) {
-        return this.surfacePatterns.get(x * 16 + z);
+    public IBlockState surfaceBlock(int x, int z) {
+        return this.surfaceBlocks.get(x * 16 + z);
     }
 
     public int biome(int x, int z) {
@@ -184,22 +159,20 @@ public class CachedChunkData extends CustomAttributeContainer {
     @Getter
     @Setter
     public static final class Builder extends CustomAttributeContainer implements IEarthAsyncDataBuilder<CachedChunkData> {
-        private ChunkPos pos;
-        
         private final int[] surfaceHeight = new int[16 * 16];
         private final byte[] waterDepth = new byte[16 * 16];
 
         private final Biome[] biomes = new Biome[16 * 16];
 
-        protected final ISurfacePattern[] surfacePatterns = new ISurfacePattern[16 * 16];
+        protected final IBlockState[] surfaceBlocks = new IBlockState[16 * 16];
 
         /**
-         * @deprecated use {@link #builder(ChunkPos)} unless you have a specific reason to invoke this constructor directly
+         * @deprecated use {@link #builder()} unless you have a specific reason to invoke this constructor directly
          */
         @Deprecated
         public Builder() {
             super(new Object2ObjectOpenHashMap<>());
-            this.reset(new ChunkPos(0, 0));
+            this.reset();
         }
 
         public Builder surfaceHeight(int x, int z, int value) {
@@ -231,11 +204,10 @@ public class CachedChunkData extends CustomAttributeContainer {
             this.custom.put(key, value);
         }
 
-        public Builder reset(ChunkPos pos) {
+        public Builder reset() {
             Arrays.fill(this.surfaceHeight, BLANK_HEIGHT);
             Arrays.fill(this.waterDepth, (byte) WATERDEPTH_DEFAULT);
-            Arrays.fill(this.surfacePatterns, null);
-            this.pos = pos;
+            Arrays.fill(this.surfaceBlocks, null);
             this.custom.clear();
             return this;
         }

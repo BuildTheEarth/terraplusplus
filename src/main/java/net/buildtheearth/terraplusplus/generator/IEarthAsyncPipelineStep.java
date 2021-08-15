@@ -1,12 +1,5 @@
 package net.buildtheearth.terraplusplus.generator;
 
-import static net.daporkchop.lib.common.util.PorkUtil.uncheckedCast;
-
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
@@ -14,11 +7,18 @@ import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 import net.minecraft.util.math.ChunkPos;
 
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
+
+import static net.daporkchop.lib.common.util.PorkUtil.*;
+
 /**
  * @author DaPorkchop_
  */
 public interface IEarthAsyncPipelineStep<D, V, B extends IEarthAsyncDataBuilder<V>> {
-    static <V, B extends IEarthAsyncDataBuilder<V>> CompletableFuture<V> getFuture(ChunkPos pos, GeneratorDatasets datasets, IEarthAsyncPipelineStep<?, V, B>[] steps, Function<ChunkPos, B> builderFactory) {
+    static <V, B extends IEarthAsyncDataBuilder<V>> CompletableFuture<V> getFuture(ChunkPos pos, GeneratorDatasets datasets, IEarthAsyncPipelineStep<?, V, B>[] steps, Supplier<B> builderFactory) {
         int baseX = Coords.cubeToMinBlock(pos.x);
         int baseZ = Coords.cubeToMinBlock(pos.z);
 
@@ -43,7 +43,7 @@ public interface IEarthAsyncPipelineStep<D, V, B extends IEarthAsyncDataBuilder<
 
         CompletableFuture<V> future = (nonNullFutures.length != 0 ? CompletableFuture.allOf(nonNullFutures) : CompletableFuture.completedFuture(null))
                 .thenApply(unused -> {
-                    B builder = builderFactory.apply(pos);
+                    B builder = builderFactory.get();
 
                     for (int i = 0; i < steps.length; i++) {
                         CompletableFuture<?> stepFuture = futures[i];

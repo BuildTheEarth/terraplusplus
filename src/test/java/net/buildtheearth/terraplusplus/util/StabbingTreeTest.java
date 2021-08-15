@@ -220,13 +220,11 @@ public class StabbingTreeTest {
     private void testForEach(int start, int end, StabbingTree<Integer, Integer> tree, Integer... values) {
         List<Integer> list = new ArrayList<>();
         tree.forEachSection(start, end, (startNode, endNode) -> {
-            System.out.println(startNode.start() + " " + endNode.start());
             list.add(startNode.start());
             list.add(startNode.value());
             list.add(endNode.start());
             list.add(endNode.value());
         });
-        System.out.println();
         assertEquals(values.length, list.size());
         for (int i = 0; i < values.length; i++) {
             assertEquals(values[i], list.get(i));
