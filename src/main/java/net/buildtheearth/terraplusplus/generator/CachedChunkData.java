@@ -17,7 +17,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import net.buildtheearth.terraplusplus.util.CustomAttributeContainer;
-import net.buildtheearth.terraplusplus.util.ImmutableCompactArray;
+import net.buildtheearth.terraplusplus.util.StabbingTree;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.ref.ThreadRef;
 import net.daporkchop.lib.common.util.PorkUtil;
@@ -57,7 +57,7 @@ public class CachedChunkData extends CustomAttributeContainer {
     @Getter
     private final byte[] biomes;
 
-    private final ImmutableCompactArray<IBlockState> surfaceBlocks;
+    private final SurfaceColumn[] surfaceBlocks;
 
     private final int surfaceMinCube;
     private final int surfaceMaxCube;
@@ -103,13 +103,16 @@ public class CachedChunkData extends CustomAttributeContainer {
             this.biomes[i] = (byte) Biome.getIdForBiome(PorkUtil.fallbackIfNull(builder.biomes[i], Biomes.DEEP_OCEAN));
         }
 
-        this.surfaceBlocks = new ImmutableCompactArray<>(builder.surfaceBlocks);
+        this.surfaceBlocks = new SurfaceColumn[16 * 16];
+        for (int i = 0; i < 16 * 16; i++) {
+            this.surfaceBlocks[i] = builder.surfaceBlocks[i].copy();
+        }
 
         int min = Integer.MAX_VALUE;
         int max = Integer.MIN_VALUE;
         for (int i = 0; i < 16 * 16; i++) {
-            min = min(min, min(this.groundHeight[i], this.surfaceHeight[i]));
-            max = max(max, max(this.groundHeight[i], this.surfaceHeight[i]));
+            min = min(min, min(this.groundHeight[i], this.surfaceHeight[i]) - this.surfaceBlocks[i].lowestBlock());
+            max = max(max, max(this.groundHeight[i], this.surfaceHeight[i]) + this.surfaceBlocks[i].highestBlock());
         }
         this.surfaceMinCube = Coords.blockToCube(min) - 1;
         this.surfaceMaxCube = Coords.blockToCube(max) + 1;
@@ -143,8 +146,8 @@ public class CachedChunkData extends CustomAttributeContainer {
         return this.surfaceHeight(x, z) - 1;
     }
 
-    public IBlockState surfaceBlock(int x, int z) {
-        return this.surfaceBlocks.get(x * 16 + z);
+    public SurfaceColumn surfaceBlock(int x, int z) {
+        return this.surfaceBlocks[x * 16 + z];
     }
 
     public int biome(int x, int z) {
@@ -164,7 +167,7 @@ public class CachedChunkData extends CustomAttributeContainer {
 
         private final Biome[] biomes = new Biome[16 * 16];
 
-        protected final IBlockState[] surfaceBlocks = new IBlockState[16 * 16];
+        protected final SurfaceColumn[] surfaceBlocks = new SurfaceColumn[16 * 16];
 
         /**
          * @deprecated use {@link #builder()} unless you have a specific reason to invoke this constructor directly
@@ -172,6 +175,9 @@ public class CachedChunkData extends CustomAttributeContainer {
         @Deprecated
         public Builder() {
             super(new Object2ObjectOpenHashMap<>());
+            for (int i = 0; i< this.surfaceBlocks.length; i++) {
+                this.surfaceBlocks[i] = new SurfaceColumn();
+            }
             this.reset();
         }
 
@@ -207,7 +213,7 @@ public class CachedChunkData extends CustomAttributeContainer {
         public Builder reset() {
             Arrays.fill(this.surfaceHeight, BLANK_HEIGHT);
             Arrays.fill(this.waterDepth, (byte) WATERDEPTH_DEFAULT);
-            Arrays.fill(this.surfaceBlocks, null);
+            Arrays.stream(this.surfaceBlocks).forEach(SurfaceColumn::clear);
             this.custom.clear();
             return this;
         }
@@ -219,4 +225,29 @@ public class CachedChunkData extends CustomAttributeContainer {
             return new CachedChunkData(this, custom);
         }
     }
+    
+    /**
+     * This is mostly to avoid generic type shenanigans
+     */
+    public static class SurfaceColumn extends StabbingTree<Integer, IBlockState> {
+        
+        public SurfaceColumn copy() {
+            SurfaceColumn other = new SurfaceColumn();
+            for (Node node: this.nodes) {
+                other.nodes.add(node);
+            }
+            return other;
+        }
+        
+        public int highestBlock() {
+            int size = this.nodes.size();
+            return size > 0 ? this.nodes.get(size - 1).start() - 1 : 0;
+        }
+        
+        public int lowestBlock() {
+            int size = this.nodes.size();
+            return size > 0 ? this.nodes.get(0).start() : 0;
+        }
+    }
+    
 }

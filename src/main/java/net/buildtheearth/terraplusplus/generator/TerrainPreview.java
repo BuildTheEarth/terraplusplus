@@ -1,22 +1,11 @@
 package net.buildtheearth.terraplusplus.generator;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import lombok.NonNull;
-import net.buildtheearth.terraplusplus.generator.data.TreeCoverBaker;
-import net.buildtheearth.terraplusplus.projection.GeographicProjection;
-import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraplusplus.util.EmptyWorld;
-import net.buildtheearth.terraplusplus.util.TilePos;
-import net.buildtheearth.terraplusplus.util.http.Http;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Bootstrap;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraftforge.client.model.pipeline.LightUtil;
+import static java.lang.Math.max;
+import static net.daporkchop.lib.common.math.PMath.clamp;
+import static net.daporkchop.lib.common.math.PMath.floorI;
+import static net.daporkchop.lib.common.math.PMath.lerpI;
+import static net.daporkchop.lib.common.util.PorkUtil.uncheckedCast;
 
-import javax.swing.JFrame;
 import java.awt.Canvas;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -31,9 +20,25 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
-import static java.lang.Math.*;
-import static net.daporkchop.lib.common.math.PMath.*;
-import static net.daporkchop.lib.common.util.PorkUtil.*;
+import javax.swing.JFrame;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+
+import lombok.NonNull;
+import net.buildtheearth.terraplusplus.generator.CachedChunkData.SurfaceColumn;
+import net.buildtheearth.terraplusplus.generator.data.TreeCoverBaker;
+import net.buildtheearth.terraplusplus.projection.GeographicProjection;
+import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
+import net.buildtheearth.terraplusplus.util.EmptyWorld;
+import net.buildtheearth.terraplusplus.util.TilePos;
+import net.buildtheearth.terraplusplus.util.http.Http;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Bootstrap;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraftforge.client.model.pipeline.LightUtil;
 
 /**
  * @author DaPorkchop_
@@ -283,7 +288,8 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                         for (int cz = 0; cz < 16; cz++) {
                             int c;
 
-                            IBlockState state = data.surfaceBlock(cx, cz);
+                            SurfaceColumn column = data.surfaceBlock(cx, cz);
+                            IBlockState state = column.get(column.highestBlock());
                             if (state != null) {
                                 c = state.getMapColor(EmptyWorld.INSTANCE, BlockPos.ORIGIN).colorValue;
                             } else {

@@ -13,7 +13,7 @@ import lombok.NonNull;
 import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.dataset.osm.JsonParser;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
-import net.buildtheearth.terraplusplus.generator.surface.MultiBlockSurfacePattern;
+import net.buildtheearth.terraplusplus.generator.CachedChunkData.SurfaceColumn;
 import net.daporkchop.lib.common.util.PValidation;
 import net.minecraft.block.state.IBlockState;
 
@@ -25,16 +25,20 @@ import net.minecraft.block.state.IBlockState;
 @JsonAdapter(MultiBlock.Parser.class)
 public class MultiBlock implements DrawFunction {
     
-    @NonNull
-    protected final MultiBlockSurfacePattern pattern;
+    private int offset;
+    private IBlockState[] states;
     
     public MultiBlock(int offset, IBlockState... states) {
-        this.pattern = new MultiBlockSurfacePattern(offset, states);
+        this.offset = offset;
+        this.states = states;
     }
 
     @Override
     public void drawOnto(@NonNull CachedChunkData.Builder data, int x, int z, int weight) {
-        data.surfacePatterns()[x * 16 + z] = this.pattern;
+        SurfaceColumn column = data.surfaceBlocks()[x * 16 + z];
+        for (int i = 0; i < states.length; i++) {
+            column.setBetween(i + this.offset, i + this.offset + 1, this.states[i]);
+        }
     }
     
     static class Parser extends JsonParser<MultiBlock> {

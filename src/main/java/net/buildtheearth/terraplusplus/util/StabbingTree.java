@@ -22,8 +22,8 @@ import net.daporkchop.lib.common.util.PValidation;
  */
 public class StabbingTree<K extends Comparable<K>, V> {
     
-    private List<Node> nodes = new ArrayList<>();
-    private final V defaultValue;
+    protected List<Node> nodes = new ArrayList<>();
+    @Getter private final V defaultValue;
     
     /**
      * Creates a new {@link StabbingTree}.
