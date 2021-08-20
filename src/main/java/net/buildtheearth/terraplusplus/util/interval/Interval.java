@@ -21,6 +21,13 @@ public interface Interval {
     double max();
 
     /**
+     * @return the length of this interval
+     */
+    default double length() {
+        return this.max() - this.min();
+    }
+
+    /**
      * Checks whether or not this interval contains the given point.
      *
      * @param point the point

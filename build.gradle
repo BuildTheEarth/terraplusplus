@@ -37,6 +37,10 @@ configurations {
 }
 
 repositories {
+    maven {
+        name = "JitPack"
+        url = "https://jitpack.io/"
+    }
     maven { //used for leveldb
         name = "DaPorkchop_"
         url = "https://maven.daporkchop.net/"
@@ -44,10 +48,6 @@ repositories {
     maven { //used for leveldb
         name = "OpenCollab Snapshots"
         url = "https://repo.opencollab.dev/snapshot/"
-    }
-    maven {
-        name = "JitPack"
-        url = "https://jitpack.io/"
     }
 }
 
