@@ -455,5 +455,67 @@
             "max": 1
         },
         "priority": 100.0
+    },
+
+    //
+    // Spain (MDT02 and MDT05)
+    // http://centrodedescargas.cnig.es/CentroDescargas/index.jsp
+    //
+
+    { //15 (MDT05)
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/es/15/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 15
+                }
+            },
+            "resolution": 256,
+            "blend": "LINEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": {
+            "minX": -18.166270531442596,
+            "maxX": 4.498121069634237,
+            "minZ": 27.632614140421087,
+            "maxZ": 43.847530656640664
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+    { //16 (MDT02)
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/es/16/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 16
+                }
+            },
+            "resolution": 256,
+            "blend": "LINEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": {
+            "minX": -18.211312242927647,
+            "maxX": 3.3135744775048472,
+            "minZ": 27.604251218142423,
+            "maxZ": 43.835844258215864
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 101.0 //slightly higher priority than MDT05, because this is higher resolution
     }
 ]

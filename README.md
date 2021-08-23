@@ -29,8 +29,8 @@ The latest version can always be compiled from [our Github](https://github.com/B
 
 ## APIs:
 
-- Tree cover data: [ARCGIS REST TreeCover2000 Image Server hosted by the World Resources Institute](https://gis-treecover.wri.org/arcgis/rest/services/TreeCover2000/ImageServer) hosted by [@daPorkchop_](https://github.com/DaMatrix)
-- Road data: [OpenStreetMap](https://www.openstreetmap.org/) under the [Open Database License](https://www.openstreetmap.org/copyright). It is downloaded in real-time using [TerraPlusPlusOSMTileGen](https://github.com/DaMatrix/TerraPlusPlusOSMTileGen) hosted by [@daPorkchop_](https://github.com/DaMatrix). (© OpenStreetMap contributors)
+- Tree cover data: [treecover2000 v1.7](https://earthenginepartners.appspot.com/science-2013-global-forest/download_v1.7.html) hosted by [@DaPorkchop_](https://github.com/DaMatrix)
+- Building+Road+Water data: [OpenStreetMap](https://www.openstreetmap.org/) under the [Open Database License](https://www.openstreetmap.org/copyright). It is downloaded in real-time using [TerraPlusPlusOSMTileGen](https://github.com/DaMatrix/TerraPlusPlusOSMTileGen) hosted by [@DaPorkchop_](https://github.com/DaMatrix). (© OpenStreetMap contributors)
 
 ## Prerequisites
 
@@ -40,6 +40,6 @@ The latest version can always be compiled from [our Github](https://github.com/B
 
 ## Obtaining
 Stable releases of TerraPlusPlus are uploaded on [our curseforge page.](https://www.curseforge.com/minecraft/mc-mods/terraplusplus/files)
-Builds for every commit can be found on our [Jenkins Page](https://jenkins.daporkchop.net/job/BuildTheEarth) kindly hosted by [@daPorkchop_](https://github.com/DaMatrix)
+Builds for every commit can be found on our [Jenkins Page](https://jenkins.daporkchop.net/job/BuildTheEarth) kindly hosted by [@DaPorkchop_](https://github.com/DaMatrix)
 
 If you want to build it yourself manually, even though Jenkins does it for you, here are the [building instructions](https://github.com/BuildTheEarth/terraplusplus/wiki/Build-Instructions).
