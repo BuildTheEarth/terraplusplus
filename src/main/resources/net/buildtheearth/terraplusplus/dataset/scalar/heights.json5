@@ -517,5 +517,107 @@
             "max": 1
         },
         "priority": 101.0 //slightly higher priority than MDT05, because this is higher resolution
+    },
+
+    //
+    // Germany
+    // http://centrodedescargas.cnig.es/CentroDescargas/index.jsp
+    //
+
+    { //16
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/de/16/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 16
+                }
+            },
+            "resolution": 256,
+            "blend": "LINEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": [
+            {
+                "minX": 10.525255041325188,
+                "maxX": 13.310429754146584,
+                "minZ": 50.9091198742458,
+                "maxZ": 53.06052302329755
+            }
+        ],
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+    { //17
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/de/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "LINEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": [
+            {
+                "minX": 11.19902347551831,
+                "maxX": 14.798928603443494,
+                "minZ": 51.305427157369834,
+                "maxZ": 53.572681636905045
+            },
+            {
+                "minX": 13.077138441185417,
+                "maxX": 13.767406339704708,
+                "minZ": 52.316907174824735,
+                "maxZ": 52.68540140003556
+            },
+            {
+                "minX": 9.601304107640429,
+                "maxX": 9.919761948953914,
+                "minZ": 52.301781973310355,
+                "maxZ": 52.45663850426369
+            },
+            {
+                "minX": 9.72741863665456,
+                "maxX": 10.334327105837927,
+                "minZ": 53.39408296655607,
+                "maxZ": 53.74285234318942
+            },
+            {
+                "minX": 5.758409091662498,
+                "maxX": 9.471898388367805,
+                "minZ": 50.29503826672359,
+                "maxZ": 52.54807427032703
+            },
+            {
+                "minX": 5.793340949699734,
+                "maxX": 9.043750848812603,
+                "minZ": 50.159559733895634,
+                "maxZ": 51.70554973984604
+            },
+            {
+                "minX": 9.865521709160998,
+                "maxX": 12.71295982911628,
+                "minZ": 50.15887264778791,
+                "maxZ": 51.66216251877724
+            }
+        ],
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 101.0 //slightly higher priority than germany at 16, because this is higher resolution
     }
 ]
