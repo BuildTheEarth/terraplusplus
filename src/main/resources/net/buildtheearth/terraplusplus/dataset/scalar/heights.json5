@@ -619,5 +619,39 @@
             "max": 1
         },
         "priority": 101.0 //slightly higher priority than germany at 16, because this is higher resolution
+    },
+
+    //
+    // Ireland
+    // https://dcenr.maps.arcgis.com/apps/webappviewer/index.html?id=b7c4b0e763964070ad69bf8c1572c9f5
+    //
+
+    { //17
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/ie/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "LINEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": {
+            "minX": -10.766299227447396,
+            "maxX": -5.8574660590485275,
+            "minZ": 51.45938335411776,
+            "maxZ": 55.33300342238876
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
     }
 ]

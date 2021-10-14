@@ -203,7 +203,8 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         State state = new State(EarthGeneratorSettings.parseUncached(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS));
         state.initSettings();
 
-        double[] proj = state.projection.fromGeo(8.57696d, 47.21763d); //steinhausen, switzerland
+        double[] proj = new double[2]; //null island
+        //proj = state.projection.fromGeo(8.57696d, 47.21763d); //steinhausen, switzerland
         //proj = state.projection.fromGeo(12.58589, 55.68841); //copenhagen, denmark
         //proj = state.projection.fromGeo(24.7535, 59.4435); //tallinn, estonia
         //proj = state.projection.fromGeo(14.50513, 46.05108); //ljubljana, slovenia
@@ -219,6 +220,8 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         //proj = state.projection.fromGeo(-5.57589, 37.47938); //middle of nowhere, spain
         //proj = state.projection.fromGeo(13.37156, 52.52360); //berlin, germany
         //proj = state.projection.fromGeo(11.63779, 52.11903); //magdeburg, germany
+        //proj = state.projection.fromGeo(7.206603551122279, 50.66019804133367); //somewhere in northrhine-westphalia, germany
+        proj = state.projection.fromGeo(-6.25900, 53.34702); //dublin, ireland
         state.setView(floorI(proj[0]) >> 4, floorI(proj[1]) >> 4, 0);
 
         state.update();
