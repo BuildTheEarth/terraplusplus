@@ -157,11 +157,11 @@
     {
         "dataset": {
             "urls": [
-                "https://cloud.daporkchop.net/gis/dem/earth/ch/17/${x}/${z}.tiff"
+                "https://cloud.daporkchop.net/gis/dem/earth/ch/18/${x}/${z}.tiff"
             ],
             "projection": {
                 "web_mercator": {
-                    "zoom": 17
+                    "zoom": 18
                 }
             },
             "resolution": 256,
@@ -170,11 +170,11 @@
                 "parse_tiff_auto": {}
             }
         },
-        "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/ch.json
-            "minX": 5.9559113,
-            "maxX": 10.4922941,
-            "minZ": 45.817995,
-            "maxZ": 47.8084648
+        "bounds": {
+            "minX": 5.902941635955243,
+            "maxX": 10.562121058816631,
+            "minZ": 45.68739531212505,
+            "maxZ": 47.83250695081715
         },
         "zooms": {
             "min": 0,
