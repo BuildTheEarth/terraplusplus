@@ -183,8 +183,6 @@
         "priority": 100.0
     },
 
-
-
     //
     // Czechia (technically only prague for now)
     // https://www.geoportalpraha.cz/cs/data/metadata/609AB233-4F4B-4010-A6E0-011E232E2390
@@ -577,6 +575,40 @@
             "maxX": -5.8574660590485275,
             "minZ": 51.45938335411776,
             "maxZ": 55.33300342238876
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+
+    //
+    // Belgium
+    //
+    //
+
+    { //17
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/be/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "LINEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": {
+            "minX": 2.8362315216769836,
+            "maxX": 6.440252767430284,
+            "minZ": 49.47403919378999,
+            "maxZ": 50.82243110753968
         },
         "zooms": {
             "min": 0,
