@@ -10,7 +10,7 @@ import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import lombok.NonNull;
 import net.buildtheearth.terraminusminus.config.scalarparse.d.DoubleScalarParser;
-import net.buildtheearth.terraminusminus.dataset.BlendMode;
+import net.buildtheearth.terraplusplus.dataset.BlendMode;
 import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 
 /**
@@ -35,6 +35,7 @@ public class ConfigurableDoubleTiledDataset extends DoubleTiledDataset {
         super(projection, resolution, blend);
 
         this.urls = urls;
+
         this.parse = parse;
     }
 

@@ -17,6 +17,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpStatusClass;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.timeout.ReadTimeoutHandler;
@@ -149,9 +150,10 @@ final class HostManager extends Host {
                 // so that it can be issued again on a new channel
 
                 this.pendingRequests.addFirst(request); //add to front of queue so that it doesn't have to wait through the entire queue again
-
-                this.tryWorkOffQueue();
             }
+
+            //working off the queue may open a new channel to replace this one if there are more pending requests
+            this.tryWorkOffQueue();
         }
     }
 
@@ -162,6 +164,9 @@ final class HostManager extends Host {
                 throw new IllegalArgumentException(PorkUtil.className(msg));
             }
             FullHttpResponse response = (FullHttpResponse) msg;
+            if (response.status().codeClass() == HttpStatusClass.INFORMATIONAL) { //do nothing
+                return;
+            }
 
             request = channel.attr(ATTR_REQUEST).getAndSet(null);
             checkState(request != null, "received response on inactive channel?!?");
@@ -274,14 +279,13 @@ final class HostManager extends Host {
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-            ctx.close();
-
             Request request = ctx.channel().attr(ATTR_REQUEST).getAndSet(null);
             if (request != null) { //inform request that it failed
                 request.callback.handle(null, cause);
                 HostManager.this.activeRequests--;
             }
-            super.exceptionCaught(ctx, cause);
+
+            ctx.close();
         }
     }
 }

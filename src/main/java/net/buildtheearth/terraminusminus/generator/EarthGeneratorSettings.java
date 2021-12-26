@@ -19,7 +19,7 @@ import com.google.common.base.Strings;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-
+import com.google.common.collect.Sets;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
@@ -109,7 +109,7 @@ public class EarthGeneratorSettings {
     @NonNull
     @Getter(onMethod_ = { @JsonGetter })
     protected final GeographicProjection projection;
-    
+
     @Getter(onMethod_ = { @JsonGetter })
     protected final boolean useDefaultHeights;
     @Getter(onMethod_ = { @JsonGetter })

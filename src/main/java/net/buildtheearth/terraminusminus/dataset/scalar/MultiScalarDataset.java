@@ -1,7 +1,5 @@
 package net.buildtheearth.terraminusminus.dataset.scalar;
 
-import static net.daporkchop.lib.common.util.PValidation.notNegative;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -35,19 +33,21 @@ import net.buildtheearth.terraminusminus.util.http.Disk;
 import net.daporkchop.lib.common.function.io.IOFunction;
 import net.daporkchop.lib.common.function.throwing.EFunction;
 
+import static net.daporkchop.lib.common.util.PValidation.*;
+
 /**
- * Implementation of {@link IScalarDataset} which can sample from multiple {@link IScalarDataset}s at different resolutions and combine the results.
+ * Implementation of {@link IScalarDataset} which can sample from multiple {@link IScalarDataset}s and combine the results.
  *
  * @author DaPorkchop_
  */
-public class MultiresScalarDataset implements IScalarDataset {
+public class MultiScalarDataset implements IScalarDataset {
     protected final BVH<WrappedDataset> bvh;
 
     @SneakyThrows(IOException.class)
-    public MultiresScalarDataset(@NonNull String name, boolean useDefault) {
+    public MultiScalarDataset(@NonNull String name, boolean useDefault) {
         List<URL> configSources = new ArrayList<>();
         if (useDefault) { //add default configuration
-            configSources.add(MultiresScalarDataset.class.getResource(name + ".json5"));
+            configSources.add(MultiScalarDataset.class.getResource(name + ".json5"));
         }
 
         try (Stream<Path> stream = Files.list(Files.createDirectories(Disk.configFile(name)))) {
@@ -60,6 +60,7 @@ public class MultiresScalarDataset implements IScalarDataset {
         this.bvh = BVH.of(configSources.stream()
                 .map((IOFunction<URL, WrappedDataset[]>) url -> TerraConstants.JSON_MAPPER.readValue(url, WrappedDataset[].class))
                 .flatMap(Arrays::stream)
+                .flatMap(WrappedDataset::flatten)
                 .toArray(WrappedDataset[]::new));
     }
 
@@ -184,13 +185,15 @@ public class MultiresScalarDataset implements IScalarDataset {
     @JsonDeserialize
     @JsonSerialize
     @Getter
-    public static class WrappedDataset implements Bounds2d, Comparable<WrappedDataset>, DoubleCondition {
+    private static class WrappedDataset implements Bounds2d, Comparable<WrappedDataset>, DoubleCondition {
         @Getter(onMethod_ = { @JsonGetter })
         protected final IScalarDataset dataset;
         @Getter(onMethod_ = { @JsonGetter })
         protected final DoubleCondition condition;
         @Getter(onMethod_ = { @JsonGetter })
         protected final IntRange zooms; //TODO: use this
+
+        protected final Bounds2d[] bounds;
 
         protected final double minX;
         protected final double maxX;
@@ -203,7 +206,7 @@ public class MultiresScalarDataset implements IScalarDataset {
         @JsonCreator
         public WrappedDataset(
                 @JsonProperty(value = "dataset", required = true) @NonNull IScalarDataset dataset,
-                @JsonProperty(value = "bounds", required = true) @NonNull Bounds2d bounds,
+                @JsonProperty(value = "bounds", required = true) @NonNull Bounds2d[] bounds,
                 @JsonProperty(value = "zooms", required = true) @NonNull IntRange zooms,
                 @JsonProperty(value = "priority", defaultValue = "0.0") double priority,
                 @JsonProperty("condition") DoubleCondition condition) {
@@ -212,10 +215,18 @@ public class MultiresScalarDataset implements IScalarDataset {
             this.zooms = zooms;
             this.priority = priority;
 
-            this.minX = bounds.minX();
-            this.maxX = bounds.maxX();
-            this.minZ = bounds.minZ();
-            this.maxZ = bounds.maxZ();
+            checkArg(bounds.length > 0, "bounds may not be empty!");
+            this.bounds = bounds.length > 1 ? bounds : null;
+            this.minX = bounds[0].minX();
+            this.maxX = bounds[0].maxX();
+            this.minZ = bounds[0].minZ();
+            this.maxZ = bounds[0].maxZ();
+        }
+
+        protected Stream<WrappedDataset> flatten() {
+            return this.bounds == null
+                    ? Stream.of(this)
+                    : Stream.of(this.bounds).map(bounds -> new WrappedDataset(this.dataset, new Bounds2d[]{bounds}, this.zooms, this.priority, this.condition));
         }
 
         @Override

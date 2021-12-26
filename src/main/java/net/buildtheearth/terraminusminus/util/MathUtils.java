@@ -120,6 +120,24 @@ public class MathUtils {
         }
         return result;
     }
+    
+    /**
+     * Converts all values in a double array from degrees to radians
+     * 
+     * @param arr - array to work on
+     */
+    public static void toRadians(double[] arr) {
+    	for(int i=0; i<arr.length; i++) arr[i] = Math.toRadians(arr[i]);
+    }
+    
+    /**
+     * Converts all values in a double array from radians to degrees
+     * 
+     * @param arr - array to work on
+     */
+    public static void toDegrees(double[] arr) {
+    	for(int i=0; i<arr.length; i++) arr[i] = Math.toDegrees(arr[i]);
+    }
 
     /**
      * Right-shifts the given value by the given number of bits, safely handling negative shifts and checking for overflow.

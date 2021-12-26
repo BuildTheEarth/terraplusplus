@@ -5,12 +5,14 @@ import io.netty.util.internal.InternalThreadLocalMap;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
+import net.buildtheearth.terraminusminus.TerraMinusMinus;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.StreamSupport;
 
 import static java.lang.Math.*;
 import static net.daporkchop.lib.common.util.PorkUtil.*;
@@ -27,7 +29,7 @@ public class IntervalTree<V extends Interval> {
     /**
      * The number of values that must be present in a node in order for it to become eligible for splitting.
      */
-    protected static final int NODE_SPLIT_CAPACITY = 8;
+    protected static final int NODE_SPLIT_CAPACITY = Integer.parseUnsignedInt(System.getProperty("terraplusplus.interval_tree_split_capacity", "8"));
 
     @SuppressWarnings("unchecked")
     protected static <V extends Interval> Node<V>[] createNodeArray(int length) {
@@ -123,6 +125,12 @@ public class IntervalTree<V extends Interval> {
         }
 
         protected void insert(V value) {
+            //empty segments can occur sometimes, either because the line segment itself is actually horizontal, or due to floating-point errors in the projection code.
+            //  we'll simply discard them, as it's not like they'll ever intersect anything anyway.
+            if (value.length() == 0.0d) {
+                return;
+            }
+
             if (this.values == null) { //allocate initial value array
                 this.values = new Object[NODE_SPLIT_CAPACITY];
             } else if (this.size == NODE_SPLIT_CAPACITY && this.canSplit()) { //we're at capacity and haven't split yet, attempt to split now

@@ -1,5 +1,15 @@
 /*
  * DEFAULT TERRA++ ELEVATION DATASETS
+ *
+ * @author DaPorkchop_
+ */
+
+/*
+ * Pork's notes:
+ *
+ * - All datasets with a zoom level >= 17 use NEAR blending instead of CUBIC. This is to avoid interpolation artifacts
+ *   caused by the fact that the cubic interpolation implementation from terra121 is literally dogshit. This is no longer
+ *   an issue in terra++ 2.0.
  */
 
 [
@@ -22,25 +32,7 @@
             "resolution": 256,
             "blend": "CUBIC",
             "parse": {
-                "divide": {
-                    "delegate": {
-                        "add": {
-                            "delegate": {
-                                "from_int": {
-                                    "delegate": {
-                                        "rgb_extract": {
-                                            "delegate": {
-                                                "parse_png": {},
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            "value": -8388608
-                        }
-                    },
-                    "value": 256.0
-                }
+                "parse_png_terrarium": {}
             }
         },
         "bounds": {
@@ -73,25 +65,7 @@
             "resolution": 256,
             "blend": "CUBIC",
             "parse": {
-                "divide": {
-                    "delegate": {
-                        "add": {
-                            "delegate": {
-                                "from_int": {
-                                    "delegate": {
-                                        "rgb_extract": {
-                                            "delegate": {
-                                                "parse_png": {},
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            "value": -8388608
-                        }
-                    },
-                    "value": 256.0
-                }
+                "parse_png_terrarium": {}
             }
         },
         "bounds": {
@@ -117,7 +91,140 @@
     {
         "dataset": {
             "urls": [
-                "https://cloud.daporkchop.net/gis/elevation/ee/14/${x}/${z}.png"
+                "https://cloud.daporkchop.net/gis/dem/earth/ee/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "NEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/ee.json
+            "minX": 21.3826069,
+            "maxX": 28.2100175,
+            "minZ": 57.5093124,
+            "maxZ": 59.9383754
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+
+    //
+    // Slovenia
+    // http://www.evode.gov.si/index.php?id=69
+    //
+    {
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/si/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "NEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/si.json
+            "minX": 13.3754696,
+            "maxX": 16.6114561,
+            "minZ": 45.4214242,
+            "maxZ": 46.8766816
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+
+    //
+    // Switzerland
+    // https://www.swisstopo.admin.ch/en/geodata/height/alti3d.html
+    //
+    {
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/ch/18/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 18
+                }
+            },
+            "resolution": 256,
+            "blend": "NEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": {
+            "minX": 5.902941635955243,
+            "maxX": 10.562121058816631,
+            "minZ": 45.68739531212505,
+            "maxZ": 47.83250695081715
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+
+    //
+    // Czechia (technically only prague for now)
+    // https://www.geoportalpraha.cz/cs/data/metadata/609AB233-4F4B-4010-A6E0-011E232E2390
+    //
+    {
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/cz/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "LINEAR",
+            "parse": {
+                "parse_tiff_fp": {}
+            }
+        },
+        "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/cz.json
+            "minX": 12.0905901,
+            "maxX": 18.859216,
+            "minZ": 48.5518144,
+            "maxZ": 51.0557036
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1,
+        },
+        "priority": 100.0
+    },
+
+    //
+    // Italy (various datasets at different zoom levels)
+    // http://tinitaly.pi.ingv.it/Download_Area2.html
+    //
+
+    { //14
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/it/14/${x}/${z}.tiff"
             ],
             "projection": {
                 "web_mercator": {
@@ -127,32 +234,381 @@
             "resolution": 256,
             "blend": "CUBIC",
             "parse": {
-                "divide": {
-                    "delegate": {
-                        "add": {
-                            "delegate": {
-                                "from_int": {
-                                    "delegate": {
-                                        "rgb_extract": {
-                                            "delegate": {
-                                                "parse_png": {},
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            "value": -8388608
-                        }
-                    },
-                    "value": 256.0
-                }
+                "parse_tiff_auto": {}
             }
         },
-        "bounds": { // https://github.com/azurro/country-bounding-boxes/blob/master/dataset/ee.json
-            "minX": 21.3826069,
-            "maxX": 28.2100175,
-            "minZ": 57.5093124,
-            "maxZ": 59.9383754
+        "bounds": [
+            { //mainland
+                "minX": 6.527697471769715,
+                "maxX": 19.720126223772887,
+                "minZ": 35.17762585934044,
+                "maxZ": 47.15598774449502
+            }
+        ],
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+    { //15
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/it/15/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 15
+                }
+            },
+            "resolution": 256,
+            "blend": "LINEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": [
+            { //calabria
+                "minX": 15.621369867451419,
+                "maxX": 17.24573576072296,
+                "minZ": 37.881214482382724,
+                "maxZ": 40.15924052007253
+            },
+            { //liguria
+                "minX": 7.473934873175498,
+                "maxX": 10.082137429322799,
+                "minZ": 43.77344771841181,
+                "maxZ": 44.676957948399625
+            },
+            { //lombardia
+                "minX": 8.485933517922222,
+                "maxX": 11.50269152074709,
+                "minZ": 44.65464303537018,
+                "maxZ": 46.64221714702641
+            }
+        ],
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+    { //16
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/it/16/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 16
+                }
+            },
+            "resolution": 256,
+            "blend": "LINEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": [
+            { //aosta
+                "minX": 6.793011795491041,
+                "maxX": 7.943220576739335,
+                "minZ": 45.46174700532702,
+                "maxZ": 45.991830176621356
+            },
+            { //sicily
+                "minX": 11.916748628222964,
+                "maxX": 15.709691296696302,
+                "minZ": 35.479332301005726,
+                "maxZ": 38.849910147225074
+            }
+        ],
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+    { //17
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/it/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "LINEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": [
+            { //sardinia
+                "minX": 8.119050491642463,
+                "maxX": 9.838406196248982,
+                "minZ": 38.85002672103001,
+                "maxZ": 41.227533105646714
+            }
+        ],
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+
+    //
+    // France
+    // https://geoservices.ign.fr/documentation/diffusion/telechargement-donnees-libres.html
+    //
+    {
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/fr/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "NEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": [
+            { //mainland
+                "minX": -5.525741271738985,
+                "maxX": 8.4457560000525,
+                "minZ": 42.084591062423684,
+                "maxZ": 51.094491264318115
+            },
+            { //corsica
+                "minX": 8.439030884289942,
+                "maxX": 9.663139671429384,
+                "minZ": 41.31562355548702,
+                "maxZ": 43.07772251306459
+            },
+            {
+                "minX": -62.952810077704854,
+                "maxX": -62.78276227923093,
+                "minZ": 17.86262353222598,
+                "maxZ": 17.98024442380475
+            },
+            {
+                "minX": -63.16071171049373,
+                "maxX": -62.962194018195795,
+                "minZ": 18.034417887415135,
+                "maxZ": 18.13390614177415
+            },
+            {
+                "minX": -54.61942424259162,
+                "maxX": -51.611498824582014,
+                "minZ": 2.1038247306026507,
+                "maxZ": 5.762617524097862
+            },
+            {
+                "minX": 44.97232980398946,
+                "maxX": 45.30431345232376,
+                "minZ": -13.007809708589537,
+                "maxZ": -12.627838529024446
+            },
+            {
+                "minX": 55.196110973497824,
+                "maxX": 55.84655968104969,
+                "minZ": -21.40125613948719,
+                "maxZ": -20.844657687804492
+            },
+            {
+                "minX": -56.5287138239549,
+                "maxX": -56.076707320132726,
+                "minZ": 46.742888961182764,
+                "maxZ": 47.15052051890195
+            },
+            {
+                "minX": -61.81409124584721,
+                "maxX": -61.09799405805051,
+                "minZ": 15.820541927239256,
+                "maxZ": 16.52152874837736
+            },
+            {
+                "minX": -61.10027282858061,
+                "maxX": -60.996642204201514,
+                "minZ": 16.280399297378494,
+                "maxZ": 16.353627538064533
+            },
+            {
+                "minX": -61.23786900488246,
+                "maxX": -60.79722443213224,
+                "minZ": 14.38106889343109,
+                "maxZ": 14.881760655885616
+            }
+        ],
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+
+    //
+    // Spain (MDT02 and MDT05)
+    // http://centrodedescargas.cnig.es/CentroDescargas/index.jsp
+    //
+
+    { //15 (MDT05)
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/es/15/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 15
+                }
+            },
+            "resolution": 256,
+            "blend": "LINEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": {
+            "minX": -18.166270531442596,
+            "maxX": 4.498121069634237,
+            "minZ": 27.632614140421087,
+            "maxZ": 43.847530656640664
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+    { //16 (MDT02)
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/es/16/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 16
+                }
+            },
+            "resolution": 256,
+            "blend": "LINEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": {
+            "minX": -18.211312242927647,
+            "maxX": 3.3135744775048472,
+            "minZ": 27.604251218142423,
+            "maxZ": 43.835844258215864
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 101.0 //slightly higher priority than MDT05, because this is higher resolution
+    },
+
+    //
+    // Germany
+    //
+    {
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/de/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "LINEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": {
+            "minX": 5.758409091662498,
+            "maxX": 15.043758587023664,
+            "minZ": 50.158873644523055,
+            "maxZ": 53.74285234318942
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 101.0 //slightly higher priority than germany at 16, because this is higher resolution
+    },
+
+    //
+    // Ireland
+    // https://dcenr.maps.arcgis.com/apps/webappviewer/index.html?id=b7c4b0e763964070ad69bf8c1572c9f5
+    //
+
+    { //17
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/ie/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "LINEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": {
+            "minX": -10.766299227447396,
+            "maxX": -5.8574660590485275,
+            "minZ": 51.45938335411776,
+            "maxZ": 55.33300342238876
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+
+    //
+    // Belgium
+    //
+    //
+
+    { //17
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/be/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "LINEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": {
+            "minX": 2.8362315216769836,
+            "maxX": 6.440252767430284,
+            "minZ": 49.47403919378999,
+            "maxZ": 50.82243110753968
         },
         "zooms": {
             "min": 0,

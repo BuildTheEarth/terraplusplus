@@ -15,8 +15,15 @@ import net.buildtheearth.terraminusminus.config.condition.OrDC;
 import net.buildtheearth.terraminusminus.config.scalarparse.d.AddDSP;
 import net.buildtheearth.terraminusminus.config.scalarparse.d.DivideDSP;
 import net.buildtheearth.terraminusminus.config.scalarparse.d.DoubleScalarParser;
+import net.buildtheearth.terraminusminus.config.scalarparse.d.FlipXDSP;
+import net.buildtheearth.terraminusminus.config.scalarparse.d.FlipZDSP;
 import net.buildtheearth.terraminusminus.config.scalarparse.d.FromIntDSP;
 import net.buildtheearth.terraminusminus.config.scalarparse.d.MultiplyDSP;
+import net.buildtheearth.terraminusminus.config.scalarparse.d.ParseTiffAutoDSP;
+import net.buildtheearth.terraminusminus.config.scalarparse.d.ParseTiffFloatingPointDSP;
+import net.buildtheearth.terraminusminus.config.scalarparse.d.ParseTerrariumPngDSP;
+import net.buildtheearth.terraminusminus.config.scalarparse.d.ParseTiffIntDSP;
+import net.buildtheearth.terraminusminus.config.scalarparse.d.SwapAxesDSP;
 import net.buildtheearth.terraminusminus.config.scalarparse.i.AddISP;
 import net.buildtheearth.terraminusminus.config.scalarparse.i.AndISP;
 import net.buildtheearth.terraminusminus.config.scalarparse.i.FlipXISP;
@@ -29,19 +36,24 @@ import net.buildtheearth.terraminusminus.config.scalarparse.i.ParseTiffISP;
 import net.buildtheearth.terraminusminus.config.scalarparse.i.RGBExtractISP;
 import net.buildtheearth.terraminusminus.config.scalarparse.i.RequireOpaqueISP;
 import net.buildtheearth.terraminusminus.config.scalarparse.i.SwapAxesISP;
+import net.buildtheearth.terraminusminus.projection.AzimuthalEquidistantProjection;
+import net.buildtheearth.terraminusminus.projection.LambertAzimuthalProjection;
 import net.buildtheearth.terraminusminus.projection.EqualEarthProjection;
 import net.buildtheearth.terraminusminus.projection.EquirectangularProjection;
 import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 import net.buildtheearth.terraminusminus.projection.SinusoidalProjection;
+import net.buildtheearth.terraminusminus.projection.StereographicProjection;
 import net.buildtheearth.terraminusminus.projection.dymaxion.BTEDymaxionProjection;
 import net.buildtheearth.terraminusminus.projection.dymaxion.ConformalDynmaxionProjection;
 import net.buildtheearth.terraminusminus.projection.dymaxion.DymaxionProjection;
 import net.buildtheearth.terraminusminus.projection.mercator.CenteredMercatorProjection;
 import net.buildtheearth.terraminusminus.projection.mercator.TransverseMercatorProjection;
 import net.buildtheearth.terraminusminus.projection.mercator.WebMercatorProjection;
+import net.buildtheearth.terraminusminus.projection.transform.ClampProjectionTransform;
 import net.buildtheearth.terraminusminus.projection.transform.FlipHorizontalProjectionTransform;
 import net.buildtheearth.terraminusminus.projection.transform.FlipVerticalProjectionTransform;
 import net.buildtheearth.terraminusminus.projection.transform.OffsetProjectionTransform;
+import net.buildtheearth.terraminusminus.projection.transform.RotateProjectionTransform;
 import net.buildtheearth.terraminusminus.projection.transform.ScaleProjectionTransform;
 import net.buildtheearth.terraminusminus.projection.transform.SwapAxesProjectionTransform;
 
@@ -65,10 +77,15 @@ public class GlobalParseRegistries {
             .put("bte_conformal_dymaxion", BTEDymaxionProjection.class)
             .put("dymaxion", DymaxionProjection.class)
             .put("conformal_dymaxion", ConformalDynmaxionProjection.class)
+            .put("lambert_azimuthal", LambertAzimuthalProjection.class)
+            .put("azimuthal_equidistant", AzimuthalEquidistantProjection.class)
+            .put("stereographic", StereographicProjection.class)
             //transformations
+            .put("clamp", ClampProjectionTransform.class)
             .put("flip_horizontal", FlipHorizontalProjectionTransform.class)
             .put("flip_vertical", FlipVerticalProjectionTransform.class)
             .put("offset", OffsetProjectionTransform.class)
+            .put("rotate", RotateProjectionTransform.class)
             .put("scale", ScaleProjectionTransform.class)
             .put("swap_axes", SwapAxesProjectionTransform.class)
             .build();
@@ -90,7 +107,15 @@ public class GlobalParseRegistries {
             .put("divide", DivideDSP.class)
             .put("multiply", MultiplyDSP.class)
             //conversion operators
+            .put("flip_x", FlipXDSP.class)
+            .put("flip_z", FlipZDSP.class)
             .put("from_int", FromIntDSP.class)
+            .put("swap_axes", SwapAxesDSP.class)
+            //parse operators
+            .put("parse_png_terrarium", ParseTerrariumPngDSP.class)
+            .put("parse_tiff_auto", ParseTiffAutoDSP.class)
+            .put("parse_tiff_fp", ParseTiffFloatingPointDSP.class)
+            .put("parse_tiff_int", ParseTiffIntDSP.class)
             .build();
 
     public final BiMap<String, Class<? extends IntScalarParser>> SCALAR_PARSERS_INT = new BiMapBuilder<String, Class<? extends IntScalarParser>>()

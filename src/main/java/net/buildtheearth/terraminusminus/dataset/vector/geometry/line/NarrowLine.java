@@ -22,7 +22,9 @@ public final class NarrowLine extends AbstractLine {
     }
 
     @Override
-    public void apply(@NonNull CachedChunkData.Builder builder, int chunkX, int chunkZ, @NonNull Bounds2d bounds) {
+    public void apply(@NonNull CachedChunkData.Builder builder, final int chunkX, final int chunkZ, @NonNull Bounds2d bounds) {
+        int minChunkBlockX = ChunkPos.cubeToMinBlock(chunkX);
+        int minChunkBlockZ = ChunkPos.cubeToMinBlock(chunkZ);
         this.segments.forEachIntersecting(bounds, s -> {
             double x0 = s.x0();
             double x1 = s.x1();
@@ -40,15 +42,15 @@ public final class NarrowLine extends AbstractLine {
                 x1 = tmp;
             }
 
-            int sx = max(floorI(x0) - ChunkPos.cubeToMinBlock(chunkX), 0);
-            int ex = min(floorI(x1) - ChunkPos.cubeToMinBlock(chunkX), 15);
+            int sx = max(floorI(x0) - minChunkBlockX, 0);
+            int ex = min(floorI(x1) - minChunkBlockX, 15);
 
             for (int x = max(sx, 0); x <= ex; x++) {
-                double realx = max(x + ChunkPos.cubeToMinBlock(chunkX), x0);
+                double realx = max(x + minChunkBlockX, x0);
                 double nextx = min(realx + 1.0d, x1);
 
-                int from = floorI((slope * realx + offset)) - ChunkPos.cubeToMinBlock(chunkZ);
-                int to = floorI((slope * nextx + offset)) - ChunkPos.cubeToMinBlock(chunkZ);
+                int from = floorI((slope * realx + offset)) - minChunkBlockZ;
+                int to = floorI((slope * nextx + offset)) - minChunkBlockZ;
 
                 if (from > to) {
                     int tmp = from;

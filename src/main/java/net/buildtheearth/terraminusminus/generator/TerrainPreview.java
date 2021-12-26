@@ -1,11 +1,18 @@
 package net.buildtheearth.terraminusminus.generator;
 
-import static java.lang.Math.max;
-import static net.daporkchop.lib.common.math.PMath.clamp;
-import static net.daporkchop.lib.common.math.PMath.floorI;
-import static net.daporkchop.lib.common.math.PMath.lerpI;
-import static net.daporkchop.lib.common.util.PorkUtil.uncheckedCast;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import lombok.NonNull;
+import net.buildtheearth.terraminusminus.generator.data.TreeCoverBaker;
+import net.buildtheearth.terraminusminus.projection.GeographicProjection;
+import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
+import net.buildtheearth.terraminusminus.substitutes.net.minecraft.block.state.IBlockState;
+import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.math.ChunkPos;
+import net.buildtheearth.terraminusminus.util.TilePos;
+import net.buildtheearth.terraminusminus.util.http.Http;
 
+import javax.swing.JFrame;
 import java.awt.Canvas;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -20,21 +27,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
-import javax.swing.JFrame;
-
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-
-import lombok.NonNull;
-import net.buildtheearth.terraminusminus.generator.data.TreeCoverBaker;
-import net.buildtheearth.terraminusminus.projection.GeographicProjection;
-import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraminusminus.projection.mercator.WebMercatorProjection;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.block.state.IBlockState;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.math.ChunkPos;
-import net.buildtheearth.terraminusminus.util.TilePos;
-import net.buildtheearth.terraminusminus.util.http.Http;
+import static java.lang.Math.*;
+import static net.daporkchop.lib.common.math.PMath.*;
+import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 /**
  * @author DaPorkchop_
@@ -51,7 +46,6 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
     }
 
     public static void main(String... args) throws OutOfProjectionBoundsException {
-    	
         Http.configChanged();
 
         while (true) {
@@ -200,15 +194,32 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                 super.dispose();
             }
         }
-        
-        EarthGeneratorSettings settings = EarthGeneratorSettings.parseUncached(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS);
-        settings.withProjection(new WebMercatorProjection(18));
-        State state = new State(settings);
+
+        State state = new State(EarthGeneratorSettings.parseUncached(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS));
         state.initSettings();
 
-        double[] proj = state.projection.fromGeo(8.57696d, 47.21763d);
-        proj = state.projection.fromGeo(12.58589, 55.68841);
-        //proj = new double[] {0,0};
+        double[] proj = new double[2]; //null island
+        //proj = state.projection.fromGeo(8.57696d, 47.21763d); //steinhausen, switzerland
+        //proj = state.projection.fromGeo(12.58589, 55.68841); //copenhagen, denmark
+        //proj = state.projection.fromGeo(24.7535, 59.4435); //tallinn, estonia
+        //proj = state.projection.fromGeo(14.50513, 46.05108); //ljubljana, slovenia
+        //proj = state.projection.fromGeo(2.29118, 48.86020); //paris, france
+        //proj = state.projection.fromGeo(-9.42956, 52.97183); //cliffs of moher, ireland
+        //proj = state.projection.fromGeo(9.70089, 39.92472); //tortoli, italy
+        //proj = state.projection.fromGeo(15.085464455006724, 37.50954065726297); //somewhere in sicily
+        //proj = state.projection.fromGeo(12.610463237424899, 37.673937184583636); //somewhere in sicily
+        //proj = state.projection.fromGeo(9.6726, 45.6699); //lombardia, italy
+        //proj = state.projection.fromGeo(8.93058, 44.40804); //genova, italy
+        //proj = state.projection.fromGeo(16.5922, 38.9069); //catanzaro, italy
+        //proj = state.projection.fromGeo(-3.7070, 40.4168); //madrid, spain
+        //proj = state.projection.fromGeo(-5.57589, 37.47938); //middle of nowhere, spain
+        //proj = state.projection.fromGeo(13.37156, 52.52360); //berlin, germany
+        //proj = state.projection.fromGeo(11.63779, 52.11903); //magdeburg, germany
+        //proj = state.projection.fromGeo(7.206603551122279, 50.66019804133367); //röhndorf, germany
+        //proj = state.projection.fromGeo(12.35027, 51.33524); //leipzig, germany
+        //proj = state.projection.fromGeo(14.80963, 50.88887); //zittau, germany
+        //proj = state.projection.fromGeo(-6.25900, 53.34702); //dublin, ireland
+        proj = state.projection.fromGeo(5.33831, 50.22487); //marche-en-famenne, belgium
         state.setView(floorI(proj[0]) >> 4, floorI(proj[1]) >> 4, 0);
 
         state.update();
@@ -289,12 +300,17 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                                 int g;
                                 int b;
 
-                                if (groundHeight > waterHeight) {
+                                if (true || groundHeight > waterHeight) {
                                     float dx = cx == 15 ? groundHeight - data.groundHeight(cx - 1, cz) : data.groundHeight(cx + 1, cz) - groundHeight;
                                     float dz = cz == 15 ? groundHeight - data.groundHeight(cx, cz - 1) : data.groundHeight(cx, cz + 1) - groundHeight;
 //                                    int diffuse = floorI(LightUtil.diffuseLight(clamp(dx, -1.0f, 1.0f), 0.0f, clamp(dz, -1.0f, 1.0f)) * 255.0f);
 //                                    r = g = b = diffuse;
                                     r = g = b = 0; //TODO
+
+                                    if (groundHeight <= waterHeight) {
+                                        r >>= 1;
+                                        g >>= 1;
+                                    }
                                 } else {
                                     r = g = 0;
                                     b = lerpI(255, 64, clamp(waterHeight - groundHeight + 1, 0, 8) / 8.0f);

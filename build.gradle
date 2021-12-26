@@ -4,50 +4,57 @@ plugins {
     id "maven"
 }
 
-sourceCompatibility = 1.8
-
 version = "1.1.0." + ('git rev-list --count HEAD'.execute().text.trim()) + "-1.12.2"
 group = "net.buildtheearth"
 
 repositories {
-    maven { //used for leveldb
-        name = "DaPorkchop_"
-        url = "https://maven.daporkchop.net/"
-    }
-    maven { //used for leveldb
-        name = "OpenCollab Snapshots"
-        url = "https://repo.opencollab.dev/snapshot/"
-    }
     maven {
         name = "JitPack"
         url = "https://jitpack.io/"
     }
+    maven { // Required for leveldb
+        name = "DaPorkchop_"
+        url = "https://maven.daporkchop.net/"
+    }
+    maven { // Required for leveldb
+        name = "OpenCollab Snapshots"
+        url = "https://repo.opencollab.dev/snapshot/"
+    }
+    maven { // Required for LZMA
+        name = "Sponge"
+        url = "https://repo.spongepowered.org/maven"
+    }
 }
 
 dependencies {
-    implementation "org.apache.commons:commons-imaging:1.0-alpha2"
-    implementation "commons-codec:commons-codec:1.15"
-    implementation "org.apache.commons:commons-lang3:3.12.0"
-    implementation "it.unimi.dsi:fastutil:8.5.2"
 
+    // The origins of the dependencies listed here correspond to the project that initially import them in Terra++.
+    // If they are needed here, it's because Terra++ ultimately needs them as well.
+
+    // Terra++ dependencies
+    implementation "com.github.DaMatrix:commons-imaging:4c6c5dfe6401a884cb4cf53fb838c99e1dfb104c"
+    implementation "com.fasterxml.jackson.core:jackson-databind:2.11.2"
     implementation("net.daporkchop.lib:binary:0.5.5-SNAPSHOT")  {
         exclude group: "io.netty"
     }
-    
+
+    // Minecraft dependencies
+    implementation "commons-codec:commons-codec:1.15"
+    implementation "org.apache.commons:commons-lang3:3.12.0"
+    implementation "it.unimi.dsi:fastutil:8.5.2"
     implementation "com.google.code.gson:gson:2.8.5"
-    implementation "com.fasterxml.jackson.core:jackson-databind:2.11.2"  
-    
     implementation "com.google.guava:guava:30.1-jre"
     implementation "io.netty:netty-all:4.1.9.Final"
-    
     implementation "org.apache.logging.log4j:log4j-api:2.14.1"
     implementation "org.apache.logging.log4j:log4j-core:2.14.1"
-    
-    implementation "lzma:lzma:0.0.1"
-    
-    
+
+    // Mixin dependencies
+    implementation 'lzma:lzma:0.0.1'
+
+    // Tests
     testImplementation "junit:junit:4.12"
 
+    // Lombok
     compileOnly "org.projectlombok:lombok:1.18.16"
     annotationProcessor "org.projectlombok:lombok:1.18.16"
 }

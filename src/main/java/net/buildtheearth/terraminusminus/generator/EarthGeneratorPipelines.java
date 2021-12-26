@@ -12,14 +12,13 @@ import net.buildtheearth.terraminusminus.dataset.geojson.dataset.ParsingGeoJsonD
 import net.buildtheearth.terraminusminus.dataset.geojson.dataset.ReferenceResolvingGeoJsonDataset;
 import net.buildtheearth.terraminusminus.dataset.geojson.dataset.TiledGeoJsonDataset;
 import net.buildtheearth.terraminusminus.dataset.osm.OSMMapper;
-import net.buildtheearth.terraminusminus.dataset.scalar.MultiresScalarDataset;
+import net.buildtheearth.terraminusminus.dataset.scalar.MultiScalarDataset;
 import net.buildtheearth.terraminusminus.dataset.vector.GeoJsonToVectorDataset;
 import net.buildtheearth.terraminusminus.dataset.vector.VectorTiledDataset;
 import net.buildtheearth.terraminusminus.generator.biome.IEarthBiomeFilter;
 import net.buildtheearth.terraminusminus.generator.biome.Terra121BiomeFilter;
 import net.buildtheearth.terraminusminus.generator.data.HeightsBaker;
 import net.buildtheearth.terraminusminus.generator.data.IEarthDataBaker;
-import net.buildtheearth.terraminusminus.generator.data.InitialBiomesBaker;
 import net.buildtheearth.terraminusminus.generator.data.NullIslandBaker;
 import net.buildtheearth.terraminusminus.generator.data.OSMBaker;
 import net.buildtheearth.terraminusminus.generator.data.TreeCoverBaker;
@@ -44,7 +43,7 @@ public class EarthGeneratorPipelines {
     public Map<String, Object> datasets(@NonNull EarthGeneratorSettings settings) {
         Map<String, Object> m = new HashMap<>();
 
-        m.put(KEY_DATASET_HEIGHTS, new MultiresScalarDataset(KEY_DATASET_HEIGHTS, settings.useDefaultHeights()));
+        m.put(KEY_DATASET_HEIGHTS, new MultiScalarDataset(KEY_DATASET_HEIGHTS, settings.useDefaultHeights()));
 
         ParsingGeoJsonDataset rawOsm = new ParsingGeoJsonDataset(TerraConfig.openstreetmap.servers);
         m.put(KEY_DATASET_OSM_RAW, new TiledGeoJsonDataset(new ReferenceResolvingGeoJsonDataset(rawOsm)));
@@ -53,7 +52,7 @@ public class EarthGeneratorPipelines {
         m.put(KEY_DATASET_TERRA121_PRECIPITATION, new Climate.Precipitation());
         m.put(KEY_DATASET_TERRA121_SOIL, new Soil());
         m.put(KEY_DATASET_TERRA121_TEMPERATURE, new Climate.Temperature());
-        m.put(KEY_DATASET_TREE_COVER, new MultiresScalarDataset(KEY_DATASET_TREE_COVER, settings.useDefaultTreeCover()));
+        m.put(KEY_DATASET_TREE_COVER, new MultiScalarDataset(KEY_DATASET_TREE_COVER, settings.useDefaultTreeCover()));
 
         return m;
     }
@@ -64,7 +63,6 @@ public class EarthGeneratorPipelines {
 
     public IEarthDataBaker<?>[] dataBakers(@NonNull EarthGeneratorSettings settings) {
     	return new IEarthDataBaker<?>[] {
-    		new InitialBiomesBaker(settings.biomeProvider()),
     		new TreeCoverBaker(),
     		new HeightsBaker(),
     		new OSMBaker(),

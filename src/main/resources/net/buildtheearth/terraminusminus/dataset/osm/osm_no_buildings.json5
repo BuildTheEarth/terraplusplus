@@ -1,6 +1,8 @@
 /*
  * DEFAULT TERRA++ OpenStreetMap DATA INTERPRETATION CONFIG
  *
+ * BUILDINGS ARE DISABLED
+ *
  * @author DaPorkchop_
  */
 
@@ -316,30 +318,6 @@
                     }
                 }
             },
-            //functionally equivalent to old BUILDING behavior
-            "condition": {
-                "match": {
-                    "tag": {
-                        //matches anything tagged as "building"
-                        "building": null
-                    }
-                },
-                "emit": {
-                    "sharp": {
-                        "draw": {
-                            "block": {
-                                "id": "minecraft:brick_block"
-                            }
-                        },
-                        "layer": {
-                            "tag": {
-                                "key": "layer",
-                                "fallback": 0
-                            }
-                        }
-                    }
-                }
-            },
             //functionally equivalent to old STREAM behavior
             "condition": {
                 "match": {
@@ -409,50 +387,6 @@
     },
     "polygon": {
         "first": {
-            //functionally equivalent to old BUILDING behavior
-            "condition": {
-                "match": {
-                    "tag": {
-                        //matches anything tagged as "building"
-                        "building": null
-                    }
-                },
-                "emit": {
-                    "all": {
-                        //buildings shouldn't have trees inside of or right next to them
-                        "distance": {
-                            "draw": {
-                                "no_trees": {}
-                            },
-                            "layer": {
-                                "tag": {
-                                    "key": "layer",
-                                    "fallback": 0
-                                }
-                            },
-                            "maxDist": 4
-                        },
-                        //draw building outline normally
-                        "convert": {
-                            "line": {
-                                "sharp": {
-                                    "draw": {
-                                        "block": {
-                                            "id": "minecraft:brick_block"
-                                        }
-                                    },
-                                    "layer": {
-                                        "tag": {
-                                            "key": "layer",
-                                            "fallback": 0
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
             "condition": {
                 "match": {
                     "or": {

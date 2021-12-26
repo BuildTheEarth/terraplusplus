@@ -1,6 +1,21 @@
 package net.buildtheearth.terraminusminus.util.http;
 
-import static net.daporkchop.lib.common.util.PValidation.toInt;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.channel.DefaultEventLoop;
+import io.netty.channel.EventLoop;
+import io.netty.util.ReferenceCountUtil;
+import lombok.NonNull;
+import lombok.experimental.UtilityClass;
+import net.buildtheearth.terraminusminus.TerraConfig;
+import net.buildtheearth.terraminusminus.TerraMinusMinus;
+import net.daporkchop.lib.binary.netty.PUnpooled;
+import net.daporkchop.lib.common.function.io.IOConsumer;
+import net.daporkchop.lib.common.function.io.IOPredicate;
+import net.daporkchop.lib.common.function.io.IORunnable;
+import net.daporkchop.lib.common.misc.file.PFiles;
+import net.daporkchop.lib.common.misc.threadfactory.PThreadFactories;
+import org.apache.commons.codec.binary.Hex;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,22 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Stream;
 
-import org.apache.commons.codec.binary.Hex;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
-import io.netty.channel.DefaultEventLoop;
-import io.netty.channel.EventLoop;
-import io.netty.util.ReferenceCountUtil;
-import lombok.NonNull;
-import lombok.experimental.UtilityClass;
-import net.buildtheearth.terraminusminus.TerraMinusMinus;
-import net.daporkchop.lib.binary.netty.PUnpooled;
-import net.daporkchop.lib.common.function.io.IOConsumer;
-import net.daporkchop.lib.common.function.io.IOPredicate;
-import net.daporkchop.lib.common.function.io.IORunnable;
-import net.daporkchop.lib.common.misc.file.PFiles;
-import net.daporkchop.lib.common.misc.threadfactory.PThreadFactories;
+import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * Handles disk I/O operations for {@link Http}.
@@ -138,7 +138,9 @@ public class Disk {
     }
 
     private void pruneCache() throws IOException {
-        TerraMinusMinus.LOGGER.info("running cache cleanup...");
+        if (!TerraConfig.reducedConsoleMessages) {
+            TerraMinusMinus.LOGGER.info("running cache cleanup...");
+        }
 
         LongAdder count = new LongAdder();
         LongAdder size = new LongAdder();
@@ -177,8 +179,10 @@ public class Disk {
         } catch (Throwable e) {
             TerraMinusMinus.LOGGER.error("exception occurred during cache cleanup!", e);
         } finally {
-            double mib = Math.round(size.sum() / (1024.0d * 1024.0d) * 10.0d) / 10.0d;
-            TerraMinusMinus.LOGGER.info("cache cleanup complete. deleted {} old files, totalling {} bytes ({} MiB)", count.sum(), size.sum(), mib);
+            if (!TerraConfig.reducedConsoleMessages) {
+                double mib = Math.round(size.sum() / (1024.0d * 1024.0d) * 10.0d) / 10.0d;
+                TerraMinusMinus.LOGGER.info("cache cleanup complete. deleted {} old files, totalling {} bytes ({} MiB)", count.sum(), size.sum(), mib);
+            }
         }
     }
 }

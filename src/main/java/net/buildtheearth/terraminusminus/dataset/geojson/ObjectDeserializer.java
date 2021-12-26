@@ -23,14 +23,15 @@ package net.buildtheearth.terraminusminus.dataset.geojson;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-
 import lombok.Getter;
+import net.buildtheearth.terraminusminus.TerraMinusMinus;
 import net.buildtheearth.terraminusminus.dataset.geojson.object.Feature;
 import net.buildtheearth.terraminusminus.dataset.geojson.object.FeatureCollection;
 import net.buildtheearth.terraminusminus.dataset.geojson.object.Reference;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -74,12 +75,22 @@ final class ObjectDeserializer extends AbstractGeoJsonDeserializer<GeoJsonObject
                 case "properties":
                     if (in.peek() != JsonToken.NULL) {
                         in.beginObject();
-                        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+                        /*ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
                         while (in.peek() != JsonToken.END_OBJECT) {
                             builder.put(in.nextName(), in.nextString());
                         }
                         in.endObject();
-                        properties = builder.build();
+                        properties = builder.build();*/
+
+                        Map<String, String> map = new HashMap<>();
+                        while (in.peek() != JsonToken.END_OBJECT) {
+                            String name = in.nextName();
+                            if (map.putIfAbsent(name, in.nextString()) != null) {
+                                TerraMinusMinus.LOGGER.warn("duplicate GeoJSON property key: {}", name);
+                            }
+                        }
+                        in.endObject();
+                        properties = map;
                     } else {
                         in.nextNull();
                     }
