@@ -100,7 +100,13 @@ public class EarthGenerator extends BasicCubeGenerator {
             ICubeGenerator cubeGenerator = cubicWorld.getCubeGenerator();
             if (cubeGenerator instanceof EarthGenerator) {
                 //prefetch terrain data
-                ((EarthGenerator) cubeGenerator).cache.getUnchecked(pos);
+                try {
+                    ((EarthGenerator) cubeGenerator).cache.getUnchecked(pos);
+                } catch (Exception e) {
+                    //i don't think it's possible any more for an exception to be thrown here, but if one does get thrown somehow this will prevent it
+                    //  from screwing up the CC async cube/column loading
+                    TerraMod.LOGGER.error("async exception while prefetching data for " + pos, e);
+                }
             }
         }
     }
