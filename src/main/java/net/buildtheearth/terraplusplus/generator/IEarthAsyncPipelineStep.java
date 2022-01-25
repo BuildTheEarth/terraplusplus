@@ -10,6 +10,7 @@ import net.minecraft.util.math.ChunkPos;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static net.daporkchop.lib.common.util.PorkUtil.*;
@@ -19,45 +20,48 @@ import static net.daporkchop.lib.common.util.PorkUtil.*;
  */
 public interface IEarthAsyncPipelineStep<D, V, B extends IEarthAsyncDataBuilder<V>> {
     static <V, B extends IEarthAsyncDataBuilder<V>> CompletableFuture<V> getFuture(ChunkPos pos, GeneratorDatasets datasets, IEarthAsyncPipelineStep<?, V, B>[] steps, Supplier<B> builderFactory) {
-        int baseX = Coords.cubeToMinBlock(pos.x);
-        int baseZ = Coords.cubeToMinBlock(pos.z);
+        //i used the future to create the future
+        return CompletableFuture.supplyAsync(() -> {
+            int baseX = Coords.cubeToMinBlock(pos.x);
+            int baseZ = Coords.cubeToMinBlock(pos.z);
 
-        CompletableFuture<?>[] futures = new CompletableFuture[steps.length];
-        try {
-            Bounds2d chunkBounds = Bounds2d.of(baseX, baseX + 16, baseZ, baseZ + 16);
-            CornerBoundingBox2d chunkBoundsGeo = chunkBounds.toCornerBB(datasets.projection(), false).toGeo();
+            CompletableFuture<?>[] futures = new CompletableFuture[steps.length];
+            try {
+                Bounds2d chunkBounds = Bounds2d.of(baseX, baseX + 16, baseZ, baseZ + 16);
+                CornerBoundingBox2d chunkBoundsGeo = chunkBounds.toCornerBB(datasets.projection(), false).toGeo();
 
-            for (int i = 0; i < steps.length; i++) {
-                try {
-                    futures[i] = steps[i].requestData(pos, datasets, chunkBounds, chunkBoundsGeo);
-                } catch (OutOfProjectionBoundsException ignored) {
-                }
-            }
-        } catch (OutOfProjectionBoundsException ignored) {
-        }
-
-        boolean areAnyFuturesNull = Arrays.stream(futures).anyMatch(Objects::isNull);
-        CompletableFuture<?>[] nonNullFutures = areAnyFuturesNull
-                ? Arrays.stream(futures).filter(Objects::nonNull).toArray(CompletableFuture[]::new)
-                : futures;
-
-        CompletableFuture<V> future = (nonNullFutures.length != 0 ? CompletableFuture.allOf(nonNullFutures) : CompletableFuture.completedFuture(null))
-                .thenApply(unused -> {
-                    B builder = builderFactory.get();
-
-                    for (int i = 0; i < steps.length; i++) {
-                        CompletableFuture<?> stepFuture = futures[i];
-                        steps[i].bake(pos, builder, stepFuture != null ? uncheckedCast(stepFuture.join()) : null);
+                for (int i = 0; i < steps.length; i++) {
+                    try {
+                        futures[i] = steps[i].requestData(pos, datasets, chunkBounds, chunkBoundsGeo);
+                    } catch (OutOfProjectionBoundsException ignored) {
                     }
-
-                    return builder.build();
-                });
-        future.whenComplete((data, t) -> {
-            if (t != null) {
-                TerraMod.LOGGER.error("async exception while loading data", t);
+                }
+            } catch (OutOfProjectionBoundsException ignored) {
             }
-        });
-        return future;
+
+            boolean areAnyFuturesNull = Arrays.stream(futures).anyMatch(Objects::isNull);
+            CompletableFuture<?>[] nonNullFutures = areAnyFuturesNull
+                    ? Arrays.stream(futures).filter(Objects::nonNull).toArray(CompletableFuture[]::new)
+                    : futures;
+
+            CompletableFuture<V> future = (nonNullFutures.length != 0 ? CompletableFuture.allOf(nonNullFutures) : CompletableFuture.completedFuture(null))
+                    .thenApply(unused -> {
+                        B builder = builderFactory.get();
+
+                        for (int i = 0; i < steps.length; i++) {
+                            CompletableFuture<?> stepFuture = futures[i];
+                            steps[i].bake(pos, builder, stepFuture != null ? uncheckedCast(stepFuture.join()) : null);
+                        }
+
+                        return builder.build();
+                    });
+            future.whenComplete((data, t) -> {
+                if (t != null) {
+                    TerraMod.LOGGER.error("async exception while loading data", t);
+                }
+            });
+            return future;
+        }).thenCompose(Function.identity());
     }
 
     /**
