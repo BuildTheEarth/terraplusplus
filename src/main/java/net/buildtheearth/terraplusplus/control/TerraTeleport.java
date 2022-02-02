@@ -30,6 +30,8 @@ import java.util.concurrent.CompletableFuture;
 
 public class TerraTeleport extends Command {
 
+    private static final DecimalFormat DECIMAL_FORMATTER = new DecimalFormat("##.#####");
+
     @Override
     public String getName() {
         return "tpll";
@@ -153,22 +155,18 @@ public class TerraTeleport extends Command {
         altFuture.thenAccept(s -> FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
             for (EntityPlayerMP p : finalReceivers) {
                 if (p.getName().equalsIgnoreCase(sender.getName())) {
-                    p.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Teleporting to ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLat()),
-                            TextFormatting.GRAY, ", ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLng())));
+                    p.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Teleporting to ", TextFormatting.BLUE, DECIMAL_FORMATTER.format(finalDefaultCoords.getLat()),
+                            TextFormatting.GRAY, ", ", TextFormatting.BLUE, DECIMAL_FORMATTER.format(finalDefaultCoords.getLng())));
                 } else if (!sender.getName().equalsIgnoreCase("@")) {
-                    p.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Summoned to ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLat()),
-                            TextFormatting.GRAY, ", ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLng()), TextFormatting.GRAY, " by ", TextFormatting.RED, sender.getDisplayName()));
+                    p.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Summoned to ", TextFormatting.BLUE, DECIMAL_FORMATTER.format(finalDefaultCoords.getLat()),
+                            TextFormatting.GRAY, ", ", TextFormatting.BLUE, DECIMAL_FORMATTER.format(finalDefaultCoords.getLng()), TextFormatting.GRAY, " by ", TextFormatting.RED, sender.getDisplayName()));
                 } else {
-                    p.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Summoned to ", TextFormatting.BLUE, TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLat()),
-                            TextFormatting.GRAY, ", ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLng()), TextFormatting.GRAY));
+                    p.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Summoned to ", TextFormatting.BLUE, TextFormatting.BLUE, DECIMAL_FORMATTER.format(finalDefaultCoords.getLat()),
+                            TextFormatting.GRAY, ", ", TextFormatting.BLUE, DECIMAL_FORMATTER.format(finalDefaultCoords.getLng()), TextFormatting.GRAY));
                 }
                 p.setPositionAndUpdate(proj[0], s, proj[1]);
             }
         }));
-    }
-
-    private String formatDecimal(double val) {
-        return new DecimalFormat("##.#####").format(val);
     }
 
     /**
