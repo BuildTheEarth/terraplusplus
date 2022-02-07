@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 
 import net.buildtheearth.terraminusminus.TerraMinusMinus;
 import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.math.ChunkPos;
+import net.buildtheearth.terraminusminus.substitutes.ChunkPos;
 import net.buildtheearth.terraminusminus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraminusminus.util.bvh.Bounds2d;
 
@@ -21,8 +21,8 @@ public interface IEarthAsyncPipelineStep<D, V, B extends IEarthAsyncDataBuilder<
     static <V, B extends IEarthAsyncDataBuilder<V>> CompletableFuture<V> getFuture(ChunkPos pos, GeneratorDatasets datasets, IEarthAsyncPipelineStep<?, V, B>[] steps, Supplier<B> builderFactory) {
         //i used the future to create the future
         return CompletableFuture.supplyAsync(() -> {
-            int baseX = ChunkPos.cubeToMinBlock(pos.x);
-            int baseZ = ChunkPos.cubeToMinBlock(pos.z);
+            int baseX = ChunkPos.cubeToMinBlock(pos.x());
+            int baseZ = ChunkPos.cubeToMinBlock(pos.z());
 
             CompletableFuture<?>[] futures = new CompletableFuture[steps.length];
             try {

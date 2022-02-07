@@ -20,7 +20,6 @@
 
 package net.buildtheearth.terraminusminus.dataset.geojson;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import lombok.Getter;

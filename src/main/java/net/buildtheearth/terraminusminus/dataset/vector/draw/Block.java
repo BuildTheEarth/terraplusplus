@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraminusminus.TerraConstants;
 import net.buildtheearth.terraminusminus.dataset.osm.JsonParser;
 import net.buildtheearth.terraminusminus.generator.CachedChunkData;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.block.state.IBlockState;
+import net.buildtheearth.terraminusminus.substitutes.BlockState;
 
 /**
  * {@link DrawFunction} which sets the surface block to a fixed block state.
@@ -21,7 +21,7 @@ import net.buildtheearth.terraminusminus.substitutes.net.minecraft.block.state.I
 @RequiredArgsConstructor
 public final class Block implements DrawFunction {
     @NonNull
-    protected final IBlockState state;
+    protected final BlockState state;
 
     @Override
     public void drawOnto(@NonNull CachedChunkData.Builder data, int x, int z, int weight) {
@@ -31,7 +31,7 @@ public final class Block implements DrawFunction {
     static class Parser extends JsonParser<Block> {
         @Override
         public Block read(JsonReader in) throws IOException {
-            return new Block(TerraConstants.GSON.fromJson(in, IBlockState.class));
+            return new Block(TerraConstants.GSON.fromJson(in, BlockState.class));
         }
     }
 }

@@ -13,9 +13,9 @@ import com.google.common.cache.LoadingCache;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraminusminus.generator.biome.IEarthBiomeFilter;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.math.BlockPos;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.math.ChunkPos;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.world.Biome;
+import net.buildtheearth.terraminusminus.substitutes.BlockPos;
+import net.buildtheearth.terraminusminus.substitutes.ChunkPos;
+import net.buildtheearth.terraminusminus.substitutes.Biome;
 import net.buildtheearth.terraminusminus.util.ImmutableCompactArray;
 
 @RequiredArgsConstructor
@@ -51,7 +51,7 @@ public class EarthBiomeProvider {
      */
     @Deprecated
     public Biome getBiome(BlockPos pos) {
-        return this.getBiomesForChunk(new ChunkPos(pos)).get((pos.getX() & 0xF) * 16 + (pos.getZ() & 0xF));
+        return this.getBiomesForChunk(ChunkPos.atBlockPos(pos)).get((pos.x() & 0xF) * 16 + (pos.z() & 0xF));
     }
 
     /**

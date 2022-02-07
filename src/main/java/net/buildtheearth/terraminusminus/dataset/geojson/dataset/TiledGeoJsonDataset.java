@@ -12,7 +12,7 @@ import net.buildtheearth.terraminusminus.dataset.TiledDataset;
 import net.buildtheearth.terraminusminus.dataset.geojson.GeoJsonObject;
 import net.buildtheearth.terraminusminus.projection.EquirectangularProjection;
 import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.math.ChunkPos;
+import net.buildtheearth.terraminusminus.substitutes.ChunkPos;
 import net.buildtheearth.terraminusminus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraminusminus.util.bvh.Bounds2d;
 
@@ -30,7 +30,7 @@ public class TiledGeoJsonDataset extends TiledDataset<GeoJsonObject[]> implement
 
     @Override
     public CompletableFuture<GeoJsonObject[]> load(@NonNull ChunkPos key) throws Exception {
-        return this.delegate.getAsync(String.format("tile/%d/%d.json", key.x, key.z));
+        return this.delegate.getAsync(String.format("tile/%d/%d.json", key.x(), key.z()));
     }
 
     @Override

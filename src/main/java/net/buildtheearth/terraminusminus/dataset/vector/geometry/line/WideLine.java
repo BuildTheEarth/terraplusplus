@@ -11,7 +11,7 @@ import lombok.NonNull;
 import net.buildtheearth.terraminusminus.dataset.geojson.geometry.MultiLineString;
 import net.buildtheearth.terraminusminus.dataset.vector.draw.DrawFunction;
 import net.buildtheearth.terraminusminus.generator.CachedChunkData;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.math.ChunkPos;
+import net.buildtheearth.terraminusminus.substitutes.ChunkPos;
 import net.buildtheearth.terraminusminus.util.MathUtils;
 import net.buildtheearth.terraminusminus.util.bvh.Bounds2d;
 

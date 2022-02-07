@@ -6,10 +6,10 @@ import com.google.common.cache.CacheLoader;
 
 import lombok.NonNull;
 import net.buildtheearth.terraminusminus.generator.data.IEarthDataBaker;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.math.ChunkPos;
+import net.buildtheearth.terraminusminus.substitutes.ChunkPos;
 
 /**
- * {@link CacheLoader} implementation for {@link EarthGenerator} which asynchronously aggregates information from multiple datasets and stores it
+ * {@link CacheLoader} implementation for earth generators, which asynchronously aggregates information from multiple datasets and stores it
  * in a {@link CachedChunkData} for use by the generator.
  *
  * @author DaPorkchop_
@@ -27,4 +27,5 @@ public class ChunkDataLoader extends CacheLoader<ChunkPos, CompletableFuture<Cac
 	public CompletableFuture<CachedChunkData> load(@NonNull ChunkPos pos) {
 		return IEarthAsyncPipelineStep.getFuture(pos, this.datasets, this.bakers, CachedChunkData::builder);
 	}
+
 }

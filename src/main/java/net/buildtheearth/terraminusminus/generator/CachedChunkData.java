@@ -15,9 +15,9 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.block.state.IBlockState;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.math.ChunkPos;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.world.Biome;
+import net.buildtheearth.terraminusminus.substitutes.BlockState;
+import net.buildtheearth.terraminusminus.substitutes.ChunkPos;
+import net.buildtheearth.terraminusminus.substitutes.Biome;
 import net.buildtheearth.terraminusminus.util.CustomAttributeContainer;
 import net.buildtheearth.terraminusminus.util.ImmutableCompactArray;
 import net.daporkchop.lib.common.reference.ReferenceStrength;
@@ -25,7 +25,7 @@ import net.daporkchop.lib.common.reference.cache.Cached;
 import net.daporkchop.lib.common.util.PorkUtil;
 
 /**
- * A collection of data cached per-column by {@link EarthGenerator}.
+ * A collection of data cached per-column by earth generators.
  *
  * @author DaPorkchop_
  */
@@ -58,7 +58,7 @@ public class CachedChunkData extends CustomAttributeContainer {
     @Getter
     private final byte[] biomes;
 
-    private final ImmutableCompactArray<IBlockState> surfaceBlocks;
+    private final ImmutableCompactArray<BlockState> surfaceBlocks;
 
     private final int surfaceMinCube;
     private final int surfaceMaxCube;
@@ -144,7 +144,7 @@ public class CachedChunkData extends CustomAttributeContainer {
         return this.surfaceHeight(x, z) - 1;
     }
 
-    public IBlockState surfaceBlock(int x, int z) {
+    public BlockState surfaceBlock(int x, int z) {
         return this.surfaceBlocks.get(x * 16 + z);
     }
 
@@ -165,7 +165,7 @@ public class CachedChunkData extends CustomAttributeContainer {
 
         private final Biome[] biomes = new Biome[16 * 16];
 
-        protected final IBlockState[] surfaceBlocks = new IBlockState[16 * 16];
+        protected final BlockState[] surfaceBlocks = new BlockState[16 * 16];
 
         /**
          * @deprecated use {@link #builder()} unless you have a specific reason to invoke this constructor directly

@@ -12,7 +12,7 @@ import net.buildtheearth.terraminusminus.dataset.TiledDataset;
 import net.buildtheearth.terraminusminus.dataset.vector.geometry.VectorGeometry;
 import net.buildtheearth.terraminusminus.projection.EquirectangularProjection;
 import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.math.ChunkPos;
+import net.buildtheearth.terraminusminus.substitutes.ChunkPos;
 import net.buildtheearth.terraminusminus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraminusminus.util.bvh.BVH;
 import net.buildtheearth.terraminusminus.util.bvh.Bounds2d;
@@ -31,7 +31,7 @@ public class VectorTiledDataset extends TiledDataset<BVH<VectorGeometry>> implem
 
     @Override
     public CompletableFuture<BVH<VectorGeometry>> load(@NonNull ChunkPos key) throws Exception {
-        return this.delegate.getAsync(String.format("tile/%d/%d.json", key.x, key.z)).thenApply(BVH::of);
+        return this.delegate.getAsync(String.format("tile/%d/%d.json", key.x(), key.z())).thenApply(BVH::of);
     }
 
     @Override

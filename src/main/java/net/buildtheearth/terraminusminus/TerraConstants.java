@@ -7,13 +7,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import net.buildtheearth.terraminusminus.dataset.osm.BlockStateParser;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.block.state.IBlockState;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.world.Biome;
+import net.buildtheearth.terraminusminus.substitutes.BlockState;
+import net.buildtheearth.terraminusminus.substitutes.Biome;
 import net.buildtheearth.terraminusminus.util.BiomeDeserializeMixin;
 
 public class TerraConstants {
     public static final String MODID = "terraplusplus";
-    public static String VERSION = "(development_snapshot)";
+    public static final String VERSION = "(development_snapshot)";
 
     public static String CC_VERSION = "unknown";
 
@@ -22,7 +22,7 @@ public class TerraConstants {
     public static final String othersCommandNode = MODID + ".others";
 
     public static final Gson GSON = new GsonBuilder()
-    		.registerTypeAdapter(IBlockState.class, BlockStateParser.INSTANCE)
+    		.registerTypeAdapter(BlockState.class, BlockStateParser.INSTANCE)
             .create();
 
     public static final JsonMapper JSON_MAPPER = JsonMapper.builder()

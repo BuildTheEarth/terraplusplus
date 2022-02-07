@@ -1,4 +1,4 @@
-package net.buildtheearth.terraminusminus.substitutes.net.minecraft.world;
+package net.buildtheearth.terraminusminus.substitutes;
 
 /**
  * All vanilla Minecraft biomes
@@ -74,7 +74,7 @@ public enum Biome {
     public final String biomeId;
     public final int numericId;
     
-    private Biome(int numericId, String biomeId) {
+    Biome(int numericId, String biomeId) {
     	this.biomeId = biomeId;
     	this.numericId = numericId;
     }

@@ -9,8 +9,8 @@ import net.buildtheearth.terraminusminus.generator.CachedChunkData;
 import net.buildtheearth.terraminusminus.generator.EarthGeneratorPipelines;
 import net.buildtheearth.terraminusminus.generator.GeneratorDatasets;
 import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.math.ChunkPos;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.world.Biome;
+import net.buildtheearth.terraminusminus.substitutes.ChunkPos;
+import net.buildtheearth.terraminusminus.substitutes.Biome;
 import net.buildtheearth.terraminusminus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraminusminus.util.bvh.Bounds2d;
 
@@ -27,7 +27,7 @@ public class NullIslandBaker implements IEarthDataBaker<Void> {
 
     @Override
     public void bake(ChunkPos pos, CachedChunkData.Builder builder, Void data) {
-        if (isNullIsland(pos.x, pos.z)) {
+        if (isNullIsland(pos.x(), pos.z())) {
             Arrays.fill(builder.surfaceHeight(), -1);
 
             byte[] trees = builder.getCustom(EarthGeneratorPipelines.KEY_DATA_TREE_COVER, null);
@@ -35,7 +35,7 @@ public class NullIslandBaker implements IEarthDataBaker<Void> {
                 Arrays.fill(trees, (byte) 0);
             }
 
-            if (((pos.x ^ (pos.x >> 31)) | (pos.z ^ (pos.z >> 31))) == 0) {
+            if (((pos.x() ^ (pos.x() >> 31)) | (pos.z() ^ (pos.z() >> 31))) == 0) {
                 Arrays.fill(builder.biomes(), Biome.FOREST);
             } else {
                 Arrays.fill(builder.biomes(), Biome.PLAINS);

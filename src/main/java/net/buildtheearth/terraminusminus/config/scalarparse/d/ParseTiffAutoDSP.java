@@ -23,7 +23,6 @@ import sun.awt.image.IntegerComponentRaster;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.stream.DoubleStream;
 
 import static net.daporkchop.lib.common.util.PValidation.*;
 

@@ -7,8 +7,8 @@ import lombok.NonNull;
 import net.buildtheearth.terraminusminus.generator.data.TreeCoverBaker;
 import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.block.state.IBlockState;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.math.ChunkPos;
+import net.buildtheearth.terraminusminus.substitutes.BlockState;
+import net.buildtheearth.terraminusminus.substitutes.ChunkPos;
 import net.buildtheearth.terraminusminus.util.TilePos;
 import net.buildtheearth.terraminusminus.util.http.Http;
 
@@ -290,7 +290,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
                         for (int cz = 0; cz < 16; cz++) {
                             int c;
 
-                            IBlockState state = data.surfaceBlock(cx, cz);
+                            BlockState state = data.surfaceBlock(cx, cz);
                             if (state != null) {
 //                                c = state.getMapColor(EmptyWorld.INSTANCE, BlockPos.ORIGIN).colorValue;
                                 c = 0xFFFFFFFF;

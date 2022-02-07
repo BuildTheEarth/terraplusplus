@@ -9,12 +9,12 @@ import java.util.List;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import lombok.NonNull;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.block.state.IBlockState;
+import net.buildtheearth.terraminusminus.substitutes.BlockState;
 import net.daporkchop.lib.binary.bit.BitArray;
 import net.daporkchop.lib.binary.bit.padded.PaddedBitArray;
 
 /**
- * A compact, immutable array of {@link IBlockState}s.
+ * A compact, immutable array of {@link BlockState}s.
  *
  * @author DaPorkchop_
  */

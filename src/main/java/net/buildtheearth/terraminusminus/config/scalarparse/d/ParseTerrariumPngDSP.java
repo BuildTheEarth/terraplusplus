@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import lombok.NonNull;
-import net.buildtheearth.terraminusminus.config.scalarparse.i.IntScalarParser;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;

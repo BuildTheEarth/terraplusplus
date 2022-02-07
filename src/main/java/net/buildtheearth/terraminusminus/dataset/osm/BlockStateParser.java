@@ -1,66 +1,52 @@
 package net.buildtheearth.terraminusminus.dataset.osm;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
-import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.block.Block;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.block.properties.IProperty;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.block.state.IBlockState;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.ResourceLocation;
-import net.daporkchop.lib.common.function.PFunctions;
+import net.buildtheearth.terraminusminus.substitutes.BlockStateBuilder;
+import net.buildtheearth.terraminusminus.substitutes.BlockState;
+import net.buildtheearth.terraminusminus.substitutes.NamespacedName;
 
 /**
  * Parses block states.
  *
- * @author DaPorkchop_
+ * @author DaPorkchop_, SmylerMC
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class BlockStateParser extends JsonParser<IBlockState> {
+public final class BlockStateParser extends JsonParser<BlockState> {
+
     public static final BlockStateParser INSTANCE = new BlockStateParser();
 
     @Override
-    public IBlockState read(JsonReader in) throws IOException {
-        ResourceLocation id = null;
-        Map<String, String> properties = Collections.emptyMap();
-
+    public BlockState read(JsonReader in) throws IOException {
+        BlockStateBuilder builder  = BlockStateBuilder.get();
         in.beginObject();
         while (in.peek() != JsonToken.END_OBJECT) {
             String name = in.nextName();
             switch (name) {
-                case "id":
-                    id = new ResourceLocation(in.nextString());
-                    break;
-                case "properties": {
-                    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+                case "id" -> builder.setBlock(new NamespacedName(in.nextString()));
+                case "properties" -> {
                     in.beginObject();
                     while (in.peek() != JsonToken.END_OBJECT) {
-                        builder.put(in.nextName(), in.nextString());
+                        String propertyName = in.nextName();
+                        switch (in.peek()) {
+                            case STRING -> builder.setProperty(propertyName, in.nextString());
+                            case NUMBER -> builder.setProperty(propertyName, in.nextInt());
+                            case BOOLEAN -> builder.setProperty(propertyName, in.nextBoolean());
+                            default -> throw new IllegalStateException("Invalid property type: " + in.peek());
+                        }
                     }
                     in.endObject();
-                    properties = builder.build();
-                    break;
                 }
-                default:
-                    throw new IllegalStateException("invalid property: " + name);
+                default -> throw new IllegalStateException("Invalid block state: " + name);
             }
         }
         in.endObject();
-
-        IBlockState state = Block.byResourceLocation(id).getDefaultState();
-        Map<String, IProperty<?>> lookup = state.getPropertyKeys().stream().collect(Collectors.toMap(IProperty::getName, PFunctions.identity()));
-        for (Map.Entry<String, String> entry : properties.entrySet()) {
-            IProperty<?> property = lookup.get(entry.getKey());
-            //TODO
-//            state = state.withProperty(property, uncheckedCast(property.parseValue(entry.getValue()).orNull()));
-        }
-        return state;
+        return builder.build();
     }
+
 }

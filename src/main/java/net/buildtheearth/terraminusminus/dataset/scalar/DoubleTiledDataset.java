@@ -15,7 +15,7 @@ import net.buildtheearth.terraminusminus.dataset.TiledHttpDataset;
 import net.buildtheearth.terraplusplus.dataset.BlendMode;
 import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.math.ChunkPos;
+import net.buildtheearth.terraminusminus.substitutes.ChunkPos;
 import net.buildtheearth.terraminusminus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraminusminus.util.IntToDoubleBiFunction;
 import net.buildtheearth.terraminusminus.util.bvh.Bounds2d;
@@ -146,7 +146,7 @@ public abstract class DoubleTiledDataset extends TiledHttpDataset<double[]> impl
                             .thenApply(tile -> { //put tile directly into map when it's loaded
                                 //synchronize because we can't be certain that all of the futures will be completed by the same thread
                                 synchronized (this.loadedTiles) {
-                                    this.loadedTiles.put(BinMath.packXY(pos.x, pos.z), tile);
+                                    this.loadedTiles.put(BinMath.packXY(pos.x(), pos.z()), tile);
                                 }
                                 return tile;
                             }))

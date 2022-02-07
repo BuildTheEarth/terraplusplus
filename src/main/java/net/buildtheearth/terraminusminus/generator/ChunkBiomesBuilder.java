@@ -3,7 +3,7 @@ package net.buildtheearth.terraminusminus.generator;
 import java.util.Arrays;
 
 import lombok.Getter;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.world.Biome;
+import net.buildtheearth.terraminusminus.substitutes.Biome;
 import net.buildtheearth.terraminusminus.util.ImmutableCompactArray;
 import net.daporkchop.lib.common.reference.ReferenceStrength;
 import net.daporkchop.lib.common.reference.cache.Cached;

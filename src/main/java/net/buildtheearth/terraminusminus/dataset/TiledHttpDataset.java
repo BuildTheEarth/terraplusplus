@@ -9,7 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import io.netty.buffer.ByteBuf;
 import lombok.NonNull;
 import net.buildtheearth.terraminusminus.projection.GeographicProjection;
-import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.math.ChunkPos;
+import net.buildtheearth.terraminusminus.substitutes.ChunkPos;
 import net.buildtheearth.terraminusminus.util.http.Http;
 import net.daporkchop.lib.common.misc.string.PStrings;
 
@@ -36,18 +36,18 @@ public abstract class TiledHttpDataset<T> extends TiledDataset<T> {
 
     @Override
     public CompletableFuture<T> load(@NonNull ChunkPos pos) throws Exception {
-        String[] urls = this.urls(pos.x, pos.z);
+        String[] urls = this.urls(pos.x(), pos.z());
 
         if (urls == null || urls.length == 0) { //no urls for tile
             return CompletableFuture.completedFuture(null);
         }
 
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-        this.addProperties(pos.x, pos.z, builder);
+        this.addProperties(pos.x(), pos.z(), builder);
         Map<String, String> properties = builder.build();
 
         return Http.getFirst(
                 Arrays.stream(urls).map(url -> Http.formatUrl(properties, url)).toArray(String[]::new),
-                data -> this.decode(pos.x, pos.z, data));
+                data -> this.decode(pos.x(), pos.z(), data));
     }
 }

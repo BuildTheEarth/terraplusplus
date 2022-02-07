@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableMap;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import net.buildtheearth.terraminusminus.TerraConstants;
 
 import java.util.Map;

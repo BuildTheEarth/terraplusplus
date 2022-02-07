@@ -232,6 +232,7 @@ final class HostManager extends Host {
             request.headers()
                     .set(this.headers)
                     .set(HttpHeaderNames.HOST, HostManager.this.authority)
+                    //TODO Identify as Terra--
                     .set(HttpHeaderNames.USER_AGENT, PStrings.fastFormat("%s/%s CubicChunks/%s", TerraConstants.MODID, TerraConstants.VERSION, TerraConstants.CC_VERSION));
             HttpUtil.setKeepAlive(request, true);
             return request;
