@@ -1,11 +1,12 @@
 plugins {
     id "java"
     id "eclipse"
-    id "maven"
+    id "maven-publish"
 }
 
 compileJava {
-    sourceCompatibility = targetCompatibility = "1.8"
+    sourceCompatibility = targetCompatibility = "17"
+    options.compilerArgs << '--add-exports=java.desktop/sun.awt.image=ALL-UNNAMED'
 }
 
 version = "1.1.0." + ('git rev-list --count HEAD'.execute().text.trim()) + "-1.12.2"
@@ -62,4 +63,5 @@ dependencies {
     // Lombok
     compileOnly "org.projectlombok:lombok:1.18.22"
     annotationProcessor "org.projectlombok:lombok:1.18.22"
+
 }
