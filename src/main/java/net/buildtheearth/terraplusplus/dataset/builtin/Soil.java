@@ -6,7 +6,8 @@ import io.netty.buffer.Unpooled;
 import net.buildtheearth.terraplusplus.util.RLEByteArray;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.function.io.IOSupplier;
-import net.daporkchop.lib.common.ref.Ref;
+import net.daporkchop.lib.common.reference.ReferenceStrength;
+import net.daporkchop.lib.common.reference.cache.Cached;
 
 import java.io.InputStream;
 
@@ -16,7 +17,7 @@ public class Soil extends AbstractBuiltinDataset {
     protected static final int COLS = 10800;
     protected static final int ROWS = 5400;
 
-    private static final Ref<RLEByteArray> DATA_CACHE = Ref.soft((IOSupplier<RLEByteArray>) () -> {
+    private static final Cached<RLEByteArray> DATA_CACHE = Cached.global((IOSupplier<RLEByteArray>) () -> {
         ByteBuf buf;
         try (InputStream in = new LzmaInputStream(Climate.class.getResourceAsStream("soil.lzma"))) {
             buf = Unpooled.wrappedBuffer(StreamUtil.toByteArray(in));
@@ -27,7 +28,7 @@ public class Soil extends AbstractBuiltinDataset {
             builder.append(buf.getByte(i));
         }
         return builder.build();
-    });
+    }, ReferenceStrength.SOFT);
 
     private final RLEByteArray data = DATA_CACHE.get();
 
