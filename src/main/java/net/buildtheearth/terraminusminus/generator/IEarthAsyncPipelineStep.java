@@ -1,10 +1,9 @@
 package net.buildtheearth.terraminusminus.generator;
 
-import static net.daporkchop.lib.common.util.PorkUtil.uncheckedCast;
-
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import net.buildtheearth.terraminusminus.TerraMinusMinus;
@@ -13,50 +12,55 @@ import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.math.Chu
 import net.buildtheearth.terraminusminus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraminusminus.util.bvh.Bounds2d;
 
+import static net.daporkchop.lib.common.util.PorkUtil.*;
+
 /**
  * @author DaPorkchop_
  */
 public interface IEarthAsyncPipelineStep<D, V, B extends IEarthAsyncDataBuilder<V>> {
     static <V, B extends IEarthAsyncDataBuilder<V>> CompletableFuture<V> getFuture(ChunkPos pos, GeneratorDatasets datasets, IEarthAsyncPipelineStep<?, V, B>[] steps, Supplier<B> builderFactory) {
-        int baseX = ChunkPos.cubeToMinBlock(pos.x);
-        int baseZ = ChunkPos.cubeToMinBlock(pos.z);
+        //i used the future to create the future
+        return CompletableFuture.supplyAsync(() -> {
+            int baseX = ChunkPos.cubeToMinBlock(pos.x);
+            int baseZ = ChunkPos.cubeToMinBlock(pos.z);
 
-        CompletableFuture<?>[] futures = new CompletableFuture[steps.length];
-        try {
-            Bounds2d chunkBounds = Bounds2d.of(baseX, baseX + 16, baseZ, baseZ + 16);
-            CornerBoundingBox2d chunkBoundsGeo = chunkBounds.toCornerBB(datasets.projection(), false).toGeo();
+            CompletableFuture<?>[] futures = new CompletableFuture[steps.length];
+            try {
+                Bounds2d chunkBounds = Bounds2d.of(baseX, baseX + 16, baseZ, baseZ + 16);
+                CornerBoundingBox2d chunkBoundsGeo = chunkBounds.toCornerBB(datasets.projection(), false).toGeo();
 
-            for (int i = 0; i < steps.length; i++) {
-                try {
-                    futures[i] = steps[i].requestData(pos, datasets, chunkBounds, chunkBoundsGeo);
-                } catch (OutOfProjectionBoundsException ignored) {
-                }
-            }
-        } catch (OutOfProjectionBoundsException ignored) {
-        }
-
-        boolean areAnyFuturesNull = Arrays.stream(futures).anyMatch(Objects::isNull);
-        CompletableFuture<?>[] nonNullFutures = areAnyFuturesNull
-                ? Arrays.stream(futures).filter(Objects::nonNull).toArray(CompletableFuture[]::new)
-                : futures;
-
-        CompletableFuture<V> future = (nonNullFutures.length != 0 ? CompletableFuture.allOf(nonNullFutures) : CompletableFuture.completedFuture(null))
-                .thenApply(unused -> {
-                    B builder = builderFactory.get();
-
-                    for (int i = 0; i < steps.length; i++) {
-                        CompletableFuture<?> stepFuture = futures[i];
-                        steps[i].bake(pos, builder, stepFuture != null ? uncheckedCast(stepFuture.join()) : null);
+                for (int i = 0; i < steps.length; i++) {
+                    try {
+                        futures[i] = steps[i].requestData(pos, datasets, chunkBounds, chunkBoundsGeo);
+                    } catch (OutOfProjectionBoundsException ignored) {
                     }
-
-                    return builder.build();
-                });
-        future.whenComplete((data, t) -> {
-            if (t != null) {
-                TerraMinusMinus.LOGGER.error("async exception while loading data", t);
+                }
+            } catch (OutOfProjectionBoundsException ignored) {
             }
-        });
-        return future;
+
+            boolean areAnyFuturesNull = Arrays.stream(futures).anyMatch(Objects::isNull);
+            CompletableFuture<?>[] nonNullFutures = areAnyFuturesNull
+                    ? Arrays.stream(futures).filter(Objects::nonNull).toArray(CompletableFuture[]::new)
+                    : futures;
+
+            CompletableFuture<V> future = (nonNullFutures.length != 0 ? CompletableFuture.allOf(nonNullFutures) : CompletableFuture.completedFuture(null))
+                    .thenApply(unused -> {
+                        B builder = builderFactory.get();
+
+                        for (int i = 0; i < steps.length; i++) {
+                            CompletableFuture<?> stepFuture = futures[i];
+                            steps[i].bake(pos, builder, stepFuture != null ? uncheckedCast(stepFuture.join()) : null);
+                        }
+
+                        return builder.build();
+                    });
+            future.whenComplete((data, t) -> {
+                if (t != null) {
+                    TerraMinusMinus.LOGGER.error("async exception while loading data", t);
+                }
+            });
+            return future;
+        }).thenCompose(Function.identity());
     }
 
     /**
