@@ -9,7 +9,7 @@ compileJava {
     options.compilerArgs << '--add-exports=java.desktop/sun.awt.image=ALL-UNNAMED'
 }
 
-version = "1.1.0." + ('git rev-list --count HEAD'.execute().text.trim()) + "-1.12.2"
+version = "0.0.1-" + ('git rev-parse --abbrev-ref HEAD'.execute().text.trim()) + "-" + ('git rev-parse --short HEAD'.execute().text.trim())
 group = "net.buildtheearth"
 
 repositories {
