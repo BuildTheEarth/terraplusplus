@@ -1,8 +1,21 @@
 package net.buildtheearth.terraplusplus.generator;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+
 import io.github.opencubicchunks.cubicchunks.api.util.Coords;
 import io.github.opencubicchunks.cubicchunks.api.util.CubePos;
 import io.github.opencubicchunks.cubicchunks.api.world.ICube;
@@ -29,6 +42,7 @@ import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.feat
 import lombok.NonNull;
 import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.TerraMod;
+import net.buildtheearth.terraplusplus.generator.CachedChunkData.SurfaceColumn;
 import net.buildtheearth.terraplusplus.generator.data.IEarthDataBaker;
 import net.buildtheearth.terraplusplus.generator.populate.IEarthPopulator;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
@@ -50,17 +64,6 @@ import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
-
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-
-import static java.lang.Math.*;
 
 public class EarthGenerator extends BasicCubeGenerator {
     public static final int WATER_DEPTH_OFFSET = 1;
@@ -269,11 +272,20 @@ public class EarthGenerator extends BasicCubeGenerator {
         if (data.intersectsSurface(cubeY)) { //render surface blocks onto cube surface
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
-                    int y = data.surfaceHeight(x, z) - Coords.cubeToMinBlock(cubeY);
-                    IBlockState state;
-                    if ((y & 0xF) == y //don't set surface blocks outside of this cube
-                        && (state = data.surfaceBlock(x, z)) != null) {
-                        primer.setBlockState(x, y, z, state);
+                    SurfaceColumn column = data.surfaceBlock(x, z);
+                    if (data != null) {
+                        int cx = x;
+                        int surfaceY = data.surfaceHeight(x, z) - Coords.cubeToMinBlock(cubeY);
+                        int cz = z;
+                        column.forEachSection(-surfaceY, -surfaceY + 16, (startNode, endNode) -> {
+                            IBlockState state = startNode.value();
+                            if (state == null) return;
+                            int start = startNode.start();
+                            int end = endNode.start();
+                            for (int y = start; y < end; y++) {
+                                primer.setBlockState(cx, y + surfaceY, cz, state);
+                            }
+                        });
                     }
                 }
             }
@@ -377,7 +389,7 @@ public class EarthGenerator extends BasicCubeGenerator {
         Random random = Coords.coordsSeedRandom(this.world.getSeed(), cube.getX(), cube.getY(), cube.getZ());
         Biome biome = cube.getBiome(Coords.getCubeCenter(cube));
 
-        this.cubiccfg.expectedBaseHeight = (float) datas[0].groundHeight(15, 15);
+        this.cubiccfg.expectedBaseHeight = datas[0].groundHeight(15, 15);
 
         for (IEarthPopulator populator : this.populators) {
             populator.populate(this.world, random, cube.getCoords(), biome, datas);

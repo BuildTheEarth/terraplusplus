@@ -1,9 +1,9 @@
 package net.buildtheearth.terraplusplus.dataset.vector.draw;
 
+import java.util.Map;
+
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.buildtheearth.terraplusplus.dataset.osm.JsonParser;
-
-import java.util.Map;
 
 /**
  * @author DaPorkchop_
@@ -20,6 +20,7 @@ public class DrawFunctionParser extends JsonParser.Typed<DrawFunction> {
         TYPES.put("weight_less_than", WeightLessThan.class);
 
         TYPES.put("block", Block.class);
+        TYPES.put("blocks", MultiBlock.class);
         TYPES.put("no_trees", NoTrees.class);
         TYPES.put("ocean", Ocean.class);
         TYPES.put("water", Water.class);
