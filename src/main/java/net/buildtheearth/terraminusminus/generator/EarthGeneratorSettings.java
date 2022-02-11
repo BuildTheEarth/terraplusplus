@@ -37,7 +37,8 @@ import net.buildtheearth.terraminusminus.projection.transform.ProjectionTransfor
 import net.buildtheearth.terraminusminus.projection.transform.ScaleProjectionTransform;
 import net.buildtheearth.terraminusminus.projection.transform.SwapAxesProjectionTransform;
 import net.daporkchop.lib.binary.oio.StreamUtil;
-import net.daporkchop.lib.common.ref.Ref;
+import net.daporkchop.lib.common.reference.ReferenceStrength;
+import net.daporkchop.lib.common.reference.cache.Cached;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -115,8 +116,8 @@ public class EarthGeneratorSettings {
     @Getter(onMethod_ = { @JsonGetter })
     protected final boolean useDefaultTreeCover;
 
-    protected transient final Ref<EarthBiomeProvider> biomeProvider = Ref.soft(() -> new EarthBiomeProvider(this));
-    protected transient final Ref<GeneratorDatasets> datasets = Ref.soft(() -> new GeneratorDatasets(this));
+    protected transient final Cached<EarthBiomeProvider> biomeProvider = Cached.global(() -> new EarthBiomeProvider(this), ReferenceStrength.SOFT);
+    protected transient final Cached<GeneratorDatasets> datasets = Cached.global(() -> new GeneratorDatasets(this), ReferenceStrength.SOFT);
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public EarthGeneratorSettings(

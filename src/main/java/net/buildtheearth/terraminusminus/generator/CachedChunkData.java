@@ -20,8 +20,8 @@ import net.buildtheearth.terraminusminus.substitutes.net.minecraft.util.math.Chu
 import net.buildtheearth.terraminusminus.substitutes.net.minecraft.world.Biome;
 import net.buildtheearth.terraminusminus.util.CustomAttributeContainer;
 import net.buildtheearth.terraminusminus.util.ImmutableCompactArray;
-import net.daporkchop.lib.common.ref.Ref;
-import net.daporkchop.lib.common.ref.ThreadRef;
+import net.daporkchop.lib.common.reference.ReferenceStrength;
+import net.daporkchop.lib.common.reference.cache.Cached;
 import net.daporkchop.lib.common.util.PorkUtil;
 
 /**
@@ -31,7 +31,7 @@ import net.daporkchop.lib.common.util.PorkUtil;
  */
 public class CachedChunkData extends CustomAttributeContainer {
     public static final int BLANK_HEIGHT = -1;
-    
+
     public static final int WATER_DEPTH_OFFSET = 1;
 
     public static final int WATERDEPTH_DEFAULT = (byte) 0x80;
@@ -41,7 +41,7 @@ public class CachedChunkData extends CustomAttributeContainer {
     public static final int WATERDEPTH_TYPE_WATER = (byte) 0x00;
     public static final int WATERDEPTH_TYPE_OCEAN = (byte) 0x40;
 
-    private static final Ref<Builder> BUILDER_CACHE = ThreadRef.soft(Builder::new);
+    private static final Cached<Builder> BUILDER_CACHE = Cached.threadLocal(Builder::new, ReferenceStrength.SOFT);
 
     public static Builder builder() {
         return BUILDER_CACHE.get().reset();

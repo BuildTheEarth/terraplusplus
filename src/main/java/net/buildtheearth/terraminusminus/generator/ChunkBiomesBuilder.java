@@ -5,8 +5,8 @@ import java.util.Arrays;
 import lombok.Getter;
 import net.buildtheearth.terraminusminus.substitutes.net.minecraft.world.Biome;
 import net.buildtheearth.terraminusminus.util.ImmutableCompactArray;
-import net.daporkchop.lib.common.ref.Ref;
-import net.daporkchop.lib.common.ref.ThreadRef;
+import net.daporkchop.lib.common.reference.ReferenceStrength;
+import net.daporkchop.lib.common.reference.cache.Cached;
 
 /**
  * Builds a 16x16 area of chunks.
@@ -15,7 +15,7 @@ import net.daporkchop.lib.common.ref.ThreadRef;
  */
 @Getter
 public class ChunkBiomesBuilder implements IEarthAsyncDataBuilder<ImmutableCompactArray<Biome>> {
-    private static final Ref<ChunkBiomesBuilder> BUILDER_CACHE = ThreadRef.soft(ChunkBiomesBuilder::new);
+    private static final Cached<ChunkBiomesBuilder> BUILDER_CACHE = Cached.threadLocal(ChunkBiomesBuilder::new, ReferenceStrength.SOFT);
 
     public static ChunkBiomesBuilder get() {
         return BUILDER_CACHE.get().reset();
