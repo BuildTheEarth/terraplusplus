@@ -1,19 +1,26 @@
 package net.buildtheearth.terraminusminus.util.geo;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
 import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+
+import static net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException.*;
 
 /**
  * Utilities for assisting in the parsing of latitude and longitude strings into Decimals.
  * <p>
  * Adapted version from gbif parsers
  */
-public class CoordinateParseUtils {
+public final class CoordinateParseUtils {
+
     private final static String DMS = "\\s*(\\d{1,3})\\s*(?:°|d|º| |g|o)"  // The degrees
                                       + "\\s*([0-6]?\\d)\\s*(?:'|m| |´|’|′)" // The minutes
                                       + "\\s*(?:"                            // Non-capturing group
@@ -32,6 +39,15 @@ public class CoordinateParseUtils {
     private final static Pattern DMS_COORD = Pattern.compile("^" + DMS + "([NSEOW])" + "[ ,;/]?" + DMS + "([NSEOW])$", Pattern.CASE_INSENSITIVE);
     private final static String POSITIVE = "NEO";
 
+    private static final char[] PART_DELIMITERS = ";/,".toCharArray();
+    private static final List<Function<String, Double>> NUMBER_PARSERS;
+    static {
+        List<Function<String, Double>> parsers = new ArrayList<>();
+        parsers.add(Double::parseDouble);
+        parsers.add(CoordinateParseUtils::parseDoubleWithCommaDecimalSeparator);
+        NUMBER_PARSERS = Collections.unmodifiableList(parsers);
+    }
+
     private static boolean inRange(double lat, double lon) {
         return Double.compare(lat, 90) <= 0 && Double.compare(lat, -90) >= 0 && Double.compare(lon, 180) <= 0 && Double.compare(lon, -180) >= 0;
     }
@@ -44,64 +60,92 @@ public class CoordinateParseUtils {
         return POSITIVE.contains(direction.toUpperCase()) ? 1 : -1;
     }
 
-    // 02° 49' 52" N	131° 47' 03" E
+    /**
+     * Parses a String to a {@link LatLng} object, while being as flexible as possible.
+     * It can understand both decimal and DMS coordinates, and even a mix of them.
+     * <p>
+     * Coordinates can use both a period <code>.</code>, or a comma <code>,</code> as the decimal separator,
+     * as long as the same is used for both the latitude and longitude.
+     * <p>
+     * The coordinates can be separated by whitespaces, a semicolon <code>;</code>, a slash <code>/</code> or a comma <code>,</code>.
+     * <p>
+     * If the context doesn't make it clear which of latitude or longitude comes first, latitude is assumed.
+     *
+     * @param coordinates   the coordinates to parse
+     *
+     * @return the parsed coordinates
+     */
     public static LatLng parseVerbatimCoordinates(final String coordinates) {
         if (Strings.isNullOrEmpty(coordinates)) {
             return null;
         }
-        Matcher m = DMS_COORD.matcher(coordinates);
-        if (m.find()) {
-            final String dir1 = m.group(4);
-            final String dir2 = m.group(8);
-            // first parse coords regardless whether they are lat or lon
-            double c1 = coordFromMatcher(m, 1, 2, 3, dir1);
-            double c2 = coordFromMatcher(m, 5, 6, 7, dir2);
-            // now see what order the coords are in:
-            if (isLat(dir1) && !isLat(dir2)) {
-                return validateAndRound(c1, c2);
+        try {
 
-            } else if (!isLat(dir1) && isLat(dir2)) {
-                return validateAndRound(c2, c1);
+            // Try parsing a string without a clear separator
+            Matcher m = DMS_COORD.matcher(coordinates);
+            if (m.find()) {
 
-            } else {
+                final String direction1 = m.group(4);
+                final String direction2 = m.group(8);
+
+                for (Function<String, Double> format: NUMBER_PARSERS) {
+
+                    try {
+
+                        // First parse coordinates regardless whether they are lat or lon
+                        double coordinate1 = coordFromMatcher(m, 1, 2, 3, direction1, format);
+                        double coordinate2 = coordFromMatcher(m, 5, 6, 7, direction2, format);
+
+                        // Now see what order the coordinates are in:
+                        if (isLat(direction1) && !isLat(direction2)) {
+                            checkLongitudeLatitudeInRange(coordinate2, coordinate1);
+                            return validateAndRound(coordinate1, coordinate2);
+                        } else if (!isLat(direction1) && isLat(direction2)) {
+                            return validateAndRound(coordinate2, coordinate1);
+                        } else {
+                            return null;
+                        }
+
+                    } catch (Exception ignored) {
+                    }
+
+                }
+
                 return null;
+
             }
 
-        } else if (coordinates.length() > 2) {
-            // try to split and then use lat/lon parsing
-            for (final char delim : ",;/ ".toCharArray()) {
-                int cnt = StringUtils.countMatches(coordinates, String.valueOf(delim));
-                if (cnt == 1) {
-                    String[] latlon = StringUtils.split(coordinates, delim);
-                    if (latlon.length == 2) {
+            // Now try parsing with a separator
+            String[] latlon = separateParts(coordinates);
 
-                        Double lat = null;
-                        Double lon = null;
-                        try {
-                            lat = Double.parseDouble(latlon[0]);
-                            lon = Double.parseDouble(latlon[1]);
-                        } catch (Exception ignored) {
-                        }
-
-                        if (lat == null || lon == null) {
-
-                            try {
-                                lat = parseDMS(latlon[0], true);
-                                lon = parseDMS(latlon[1], false);
-                            } catch (IllegalArgumentException e) {
-                                return null;
-                            }
-                        }
-
-                        return validateAndRound(lat, lon);
-                    }
+            // Try with DMS format
+            for (Function<String, Double> format: NUMBER_PARSERS) {
+                try {
+                    double lat = parseDMS(latlon[0], true, format);
+                    double lon = parseDMS(latlon[1], false, format);
+                    return validateAndRound(lat, lon);
+                } catch (IllegalArgumentException | OutOfProjectionBoundsException ignored) {
                 }
             }
+
+            // Try with literal values
+            for (Function<String, Double> format: NUMBER_PARSERS) {
+                try {
+                    double lat = format.apply(latlon[0]);
+                    double lon = format.apply(latlon[1]);
+                    return validateAndRound(lat, lon);
+                } catch (Exception ignored) {
+                }
+            }
+
+            // Failed :(
+            return null;
+        } catch (NumberFormatException e) {
+            return null;
         }
-        return null;
     }
 
-    private static LatLng validateAndRound(double lat, double lon) {
+    private static LatLng validateAndRound(double lat, double lon) throws OutOfProjectionBoundsException {
         lat = roundTo6decimals(lat);
         lon = roundTo6decimals(lon);
 
@@ -120,18 +164,39 @@ public class CoordinateParseUtils {
             }
         }
 
-        return null;
+        throw OutOfProjectionBoundsException.get();
     }
 
-    /**
-     * Parses a single DMS coordinate
-     *
-     * @param coord
-     * @param lat
-     * @return the converted decimal up to 6 decimals accuracy
-     */
-    @VisibleForTesting
-    protected static double parseDMS(String coord, boolean lat) {
+    private static String[] separateParts(String coordinates) throws NumberFormatException {
+
+        // First, remove leading and trailing blanks
+        coordinates = coordinates.trim();
+
+        // Then, look for the first blank, if there is one
+        final int firstBlankStart = coordinates.indexOf(" ");
+        if (firstBlankStart > 0) {
+            int firstBlankEnd = firstBlankStart;
+            while (coordinates.charAt(firstBlankEnd) == ' ') firstBlankEnd++;
+
+            // Then look for any other blank, if there is one, the string is malformed
+            if (coordinates.indexOf(' ', firstBlankEnd) >= 0) throw new NumberFormatException();
+
+            // Split at the blank
+            return new String[] {coordinates.substring(0, firstBlankStart), coordinates.substring(firstBlankEnd)};
+        }
+
+        // Look for a potential delimiter that only appears once
+        for (final char delimiter : PART_DELIMITERS) {
+            int count = StringUtils.countMatches(coordinates, String.valueOf(delimiter));
+            if (count == 1) return StringUtils.split(coordinates, delimiter);
+        }
+
+        // We didn't manage to split, the string is malformed
+        throw new NumberFormatException();
+
+    }
+
+    static double parseDMS(String coord, boolean lat, Function<String, Double> format) {
         final String DIRS = lat ? "NS" : "EOW";
         coord = coord.trim().toUpperCase();
 
@@ -148,15 +213,15 @@ public class CoordinateParseUtils {
             // without the direction chuck it at the regex
             Matcher m = DMS_SINGLE.matcher(coord);
             if (m.find()) {
-                return coordFromMatcher(m, 1, 2, 3, String.valueOf(dir));
+                return coordFromMatcher(m, 1, 2, 3, String.valueOf(dir), format);
             } else {
                 m = DM_SINGLE.matcher(coord);
                 if (m.find()) {
-                    return coordFromMatcher(m, 1, 2, String.valueOf(dir));
+                    return coordFromMatcher(m, 1, 2, String.valueOf(dir), format);
                 } else {
                     m = D_SINGLE.matcher(coord);
                     if (m.find()) {
-                        return coordFromMatcher(m, 1, String.valueOf(dir));
+                        return coordFromMatcher(m, 1, String.valueOf(dir), format);
                     }
                 }
             }
@@ -164,19 +229,22 @@ public class CoordinateParseUtils {
         throw new IllegalArgumentException();
     }
 
-    private static double coordFromMatcher(Matcher m, int idx1, int idx2, int idx3, String sign) {
-        return roundTo6decimals(coordSign(sign) *
-                                dmsToDecimal(Double.parseDouble(m.group(idx1)), Double.parseDouble(m.group(idx2)), Double.parseDouble(m.group(idx3))));
+    private static double coordFromMatcher(Matcher m, int idx1, int idx2, int idx3, String sign, Function<String, Double> format) {
+        double degrees = format.apply(m.group(idx1));
+        double minutes = format.apply(m.group(idx2));
+        double seconds = format.apply(m.group(idx3));
+        return roundTo6decimals(coordSign(sign) * dmsToDecimal(degrees, minutes, seconds));
     }
 
-    private static double coordFromMatcher(Matcher m, int idx1, int idx2, String sign) {
-        return roundTo6decimals(coordSign(sign) *
-                                dmsToDecimal(Double.parseDouble(m.group(idx1)), Double.parseDouble(m.group(idx2)), 0.0));
+    private static double coordFromMatcher(Matcher m, int idx1, int idx2, String sign, Function<String, Double> format) {
+        double degrees = format.apply(m.group(idx1));
+        double minutes = format.apply(m.group(idx2));
+        return roundTo6decimals(coordSign(sign) * dmsToDecimal(degrees, minutes, 0.0));
     }
 
-    private static double coordFromMatcher(Matcher m, int idx1, String sign) {
-        return roundTo6decimals(coordSign(sign) *
-                                dmsToDecimal(Double.parseDouble(m.group(idx1)), 0.0, 0.0));
+    private static double coordFromMatcher(Matcher m, int idx1, String sign, Function<String, Double> format) {
+        double degrees = format.apply(m.group(idx1));
+        return roundTo6decimals(coordSign(sign) * dmsToDecimal(degrees, 0.0, 0.0));
     }
 
     private static double dmsToDecimal(double degree, Double minutes, Double seconds) {
@@ -188,6 +256,10 @@ public class CoordinateParseUtils {
     // round to 6 decimals (~1m precision) since no way we're getting anything legitimately more precise
     private static Double roundTo6decimals(Double x) {
         return x == null ? null : Math.round(x * Math.pow(10, 6)) / Math.pow(10, 6);
+    }
+
+    private static double parseDoubleWithCommaDecimalSeparator(String str) {
+        return Double.parseDouble(str.replaceAll(",", "."));
     }
 
     private CoordinateParseUtils() {
