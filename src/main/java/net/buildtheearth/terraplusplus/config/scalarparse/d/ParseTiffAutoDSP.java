@@ -18,12 +18,13 @@ import org.apache.commons.imaging.formats.tiff.constants.GdalLibraryTagConstants
 import org.apache.commons.imaging.formats.tiff.constants.TiffConstants;
 import org.apache.commons.imaging.formats.tiff.constants.TiffTagConstants;
 import org.apache.commons.imaging.formats.tiff.photometricinterpreters.PhotometricInterpreter;
-import sun.awt.image.IntegerComponentRaster;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collections;
-import java.util.stream.DoubleStream;
 
 import static net.daporkchop.lib.common.util.PValidation.*;
 
@@ -145,12 +146,30 @@ public class ParseTiffAutoDSP implements DoubleScalarParser {
                 throw new IllegalArgumentException("unsupported sample format: " + sampleFormat);
         }
 
-        int[] src = ((IntegerComponentRaster) img.getRaster()).getDataStorage();
-        checkArg(src.length == dst.length, "data length invalid?!?");
-        for (int i = 0; i < dst.length; i++) {
-            dst[i] = (src[i] & mask) << shift >> shift;
+        try {
+            int[] src = this.getIntegerDataStorage(img.getRaster());
+            checkArg(src.length == dst.length, "data length invalid?!?");
+            for (int i = 0; i < dst.length; i++) {
+                dst[i] = (src[i] & mask) << shift >> shift;
+            }
+        } catch(InvocationTargetException | IllegalAccessException e) {
+            throw new IllegalArgumentException("Coule not reflectively get a TIFF image's internal data storage!", e);
         }
 
         return true;
+    }
+
+    private static final Method INTEGER_COMPONENT_RASTER_GET_DATA_STORAGE_METHOD;
+    static {
+        try {
+            Class<?> clazz = Class.forName("sun.awt.image.IntegerComponentRaster");
+            INTEGER_COMPONENT_RASTER_GET_DATA_STORAGE_METHOD = clazz.getDeclaredMethod("getDataStorage");
+        } catch(ClassNotFoundException | NoSuchMethodException e) {
+            throw new IllegalStateException("Could not reflectively get sun.awt.IntegerComponentRaster#getDataStorage()", e);
+        }
+    }
+
+    private int[] getIntegerDataStorage(WritableRaster raster) throws InvocationTargetException, IllegalAccessException {
+        return (int[]) INTEGER_COMPONENT_RASTER_GET_DATA_STORAGE_METHOD.invoke(raster);
     }
 }
