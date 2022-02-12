@@ -65,3 +65,16 @@ dependencies {
     annotationProcessor "org.projectlombok:lombok:1.18.22"
 
 }
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = project.group
+            artifactId = 'terraminusminus'
+            version = project.version
+
+            from components.java
+        }
+    }
+}
+
