@@ -8,8 +8,8 @@ import lombok.NonNull;
 import lombok.Setter;
 import net.buildtheearth.terraplusplus.util.CustomAttributeContainer;
 import net.buildtheearth.terraplusplus.util.ImmutableCompactArray;
-import net.daporkchop.lib.common.ref.Ref;
-import net.daporkchop.lib.common.ref.ThreadRef;
+import net.daporkchop.lib.common.reference.ReferenceStrength;
+import net.daporkchop.lib.common.reference.cache.Cached;
 import net.daporkchop.lib.common.util.PorkUtil;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Biomes;
@@ -36,7 +36,7 @@ public class CachedChunkData extends CustomAttributeContainer {
     public static final int WATERDEPTH_TYPE_WATER = (byte) 0x00;
     public static final int WATERDEPTH_TYPE_OCEAN = (byte) 0x40;
 
-    private static final Ref<Builder> BUILDER_CACHE = ThreadRef.soft(Builder::new);
+    private static final Cached<Builder> BUILDER_CACHE = Cached.threadLocal(Builder::new, ReferenceStrength.SOFT);
 
     public static Builder builder() {
         return BUILDER_CACHE.get().reset();

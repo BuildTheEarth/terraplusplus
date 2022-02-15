@@ -66,7 +66,7 @@ dependencies {
 
     shade "com.fasterxml.jackson.core:jackson-databind:2.11.2"
 
-    shade("net.daporkchop.lib:binary:0.5.5-SNAPSHOT")  {
+    shade("net.daporkchop.lib:binary:0.5.7-SNAPSHOT")  {
         exclude group: "io.netty"
     }
 

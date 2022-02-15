@@ -39,8 +39,8 @@ import net.buildtheearth.terraplusplus.projection.transform.ProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ScaleProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.SwapAxesProjectionTransform;
 import net.daporkchop.lib.binary.oio.StreamUtil;
-import net.daporkchop.lib.common.ref.Ref;
-import net.minecraft.world.biome.BiomeProvider;
+import net.daporkchop.lib.common.reference.ReferenceStrength;
+import net.daporkchop.lib.common.reference.cache.Cached;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 
@@ -131,8 +131,8 @@ public class EarthGeneratorSettings {
     @Getter(onMethod_ = { @JsonGetter })
     protected final boolean useDefaultTreeCover;
 
-    protected transient final Ref<EarthBiomeProvider> biomeProvider = Ref.soft(() -> new EarthBiomeProvider(this));
-    protected transient final Ref<CustomGeneratorSettings> customCubic = Ref.soft(() -> {
+    protected transient final Cached<EarthBiomeProvider> biomeProvider = Cached.global(() -> new EarthBiomeProvider(this), ReferenceStrength.SOFT);
+    protected transient final Cached<CustomGeneratorSettings> customCubic = Cached.global(() -> {
         CustomGeneratorSettings cfg;
         if (this.cwg().isEmpty()) { //use new minimal defaults
             cfg = new CustomGeneratorSettings();
@@ -150,8 +150,8 @@ public class EarthGeneratorSettings {
         }
         cfg.waterLevel = 0;
         return cfg;
-    });
-    protected transient final Ref<GeneratorDatasets> datasets = Ref.soft(() -> new GeneratorDatasets(this));
+    }, ReferenceStrength.SOFT);
+    protected transient final Cached<GeneratorDatasets> datasets = Cached.global(() -> new GeneratorDatasets(this), ReferenceStrength.SOFT);
 
     @Getter
     protected transient final Set<PopulateChunkEvent.Populate.EventType> skipChunkPopulation;

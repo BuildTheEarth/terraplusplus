@@ -7,7 +7,8 @@ import io.netty.buffer.Unpooled;
 import net.buildtheearth.terraplusplus.util.MathUtils;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.function.io.IOSupplier;
-import net.daporkchop.lib.common.ref.Ref;
+import net.daporkchop.lib.common.reference.ReferenceStrength;
+import net.daporkchop.lib.common.reference.cache.Cached;
 import net.daporkchop.lib.common.util.PArrays;
 
 import java.io.InputStream;
@@ -23,9 +24,9 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
     protected static final double VECTOR_SCALE_FACTOR = 1.0d / 1.1473979730192934d;
     protected static final int SIDE_LENGTH = 256;
 
-    protected static final Ref<InvertableVectorField> INVERSE_CACHE = Ref.soft((IOSupplier<InvertableVectorField>) () -> {
-        double[][] vx = PArrays.filled(SIDE_LENGTH + 1, double[][]::new, i -> new double[SIDE_LENGTH + 1 - i]);
-        double[][] vy = PArrays.filled(SIDE_LENGTH + 1, double[][]::new, i -> new double[SIDE_LENGTH + 1 - i]);
+    protected static final Cached<InvertableVectorField> INVERSE_CACHE = Cached.global((IOSupplier<InvertableVectorField>) () -> {
+        double[][] vx = PArrays.filledBy(SIDE_LENGTH + 1, double[][]::new, i -> new double[SIDE_LENGTH + 1 - i]);
+        double[][] vy = PArrays.filledBy(SIDE_LENGTH + 1, double[][]::new, i -> new double[SIDE_LENGTH + 1 - i]);
 
         ByteBuf buf;
         try (InputStream in = new LzmaInputStream(ConformalDynmaxionProjection.class.getResourceAsStream("conformal.lzma"))) {
@@ -40,7 +41,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
         }
 
         return new InvertableVectorField(vx, vy);
-    });
+    }, ReferenceStrength.SOFT);
 
     protected final InvertableVectorField inverse = INVERSE_CACHE.get();
 

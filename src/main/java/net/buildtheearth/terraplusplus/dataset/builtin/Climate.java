@@ -7,7 +7,8 @@ import net.buildtheearth.terraplusplus.dataset.BlendMode;
 import net.buildtheearth.terraplusplus.util.IntToDoubleBiFunction;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.function.io.IOSupplier;
-import net.daporkchop.lib.common.ref.Ref;
+import net.daporkchop.lib.common.reference.ReferenceStrength;
+import net.daporkchop.lib.common.reference.cache.Cached;
 
 import java.io.InputStream;
 
@@ -15,7 +16,7 @@ public abstract class Climate extends AbstractBuiltinDataset implements IntToDou
     public static final int COLS = 720;
     public static final int ROWS = 360;
 
-    private static final Ref<double[]> DATA_CACHE = Ref.soft((IOSupplier<double[]>) () -> {
+    private static final Cached<double[]> DATA_CACHE = Cached.global((IOSupplier<double[]>) () -> {
         ByteBuf buf;
         try (InputStream in = new LzmaInputStream(Climate.class.getResourceAsStream("climate.lzma"))) {
             buf = Unpooled.wrappedBuffer(StreamUtil.toByteArray(in));
@@ -27,7 +28,7 @@ public abstract class Climate extends AbstractBuiltinDataset implements IntToDou
             out[i++] = buf.readFloat();
         }
         return out;
-    });
+    }, ReferenceStrength.SOFT);
 
     protected final double[] data = DATA_CACHE.get();
 

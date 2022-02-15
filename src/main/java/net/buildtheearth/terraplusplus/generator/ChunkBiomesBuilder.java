@@ -2,8 +2,8 @@ package net.buildtheearth.terraplusplus.generator;
 
 import lombok.Getter;
 import net.buildtheearth.terraplusplus.util.ImmutableCompactArray;
-import net.daporkchop.lib.common.ref.Ref;
-import net.daporkchop.lib.common.ref.ThreadRef;
+import net.daporkchop.lib.common.reference.ReferenceStrength;
+import net.daporkchop.lib.common.reference.cache.Cached;
 import net.minecraft.world.biome.Biome;
 
 import java.util.Arrays;
@@ -15,7 +15,7 @@ import java.util.Arrays;
  */
 @Getter
 public class ChunkBiomesBuilder implements IEarthAsyncDataBuilder<ImmutableCompactArray<Biome>> {
-    private static final Ref<ChunkBiomesBuilder> BUILDER_CACHE = ThreadRef.soft(ChunkBiomesBuilder::new);
+    private static final Cached<ChunkBiomesBuilder> BUILDER_CACHE = Cached.threadLocal(ChunkBiomesBuilder::new, ReferenceStrength.SOFT);
 
     public static ChunkBiomesBuilder get() {
         return BUILDER_CACHE.get().reset();
