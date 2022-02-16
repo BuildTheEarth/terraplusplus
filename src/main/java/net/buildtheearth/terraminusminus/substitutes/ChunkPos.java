@@ -1,5 +1,8 @@
 package net.buildtheearth.terraminusminus.substitutes;
 
+/**
+ * The position of a Chunk (a vertical 16*worldHeight*16 blocks column), in a Minecraft world.
+ */
 public record ChunkPos(int x, int z) {
 
     public int getMinBlockX() {

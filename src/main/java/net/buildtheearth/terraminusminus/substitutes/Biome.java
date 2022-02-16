@@ -1,7 +1,9 @@
 package net.buildtheearth.terraminusminus.substitutes;
 
 /**
- * All vanilla Minecraft biomes
+ * All vanilla Minecraft 1.12.2 biomes.
+ *
+ * Terra++'s biomes are not data-driven yet, so this is a simple enum.
  * 
  * @author SmylerMC
  *

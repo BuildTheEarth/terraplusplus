@@ -9,7 +9,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import net.buildtheearth.terraminusminus.substitutes.BlockStateBuilder;
 import net.buildtheearth.terraminusminus.substitutes.BlockState;
-import net.buildtheearth.terraminusminus.substitutes.NamespacedName;
+import net.buildtheearth.terraminusminus.substitutes.Identifier;
 
 /**
  * Parses block states.
@@ -28,7 +28,7 @@ public final class BlockStateParser extends JsonParser<BlockState> {
         while (in.peek() != JsonToken.END_OBJECT) {
             String name = in.nextName();
             switch (name) {
-                case "id" -> builder.setBlock(new NamespacedName(in.nextString()));
+                case "id" -> builder.setBlock(new Identifier(in.nextString()));
                 case "properties" -> {
                     in.beginObject();
                     while (in.peek() != JsonToken.END_OBJECT) {

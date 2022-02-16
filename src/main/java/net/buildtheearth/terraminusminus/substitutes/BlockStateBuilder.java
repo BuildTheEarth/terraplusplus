@@ -12,7 +12,7 @@ public final class BlockStateBuilder {
 
     //TODO maintain a cache of all states
 
-    private NamespacedName block;
+    private Identifier block;
     private Map<String, BlockPropertyValue> properties = new HashMap<>();
     private static final Cached<BlockStateBuilder> instances = Cached.threadLocal(BlockStateBuilder::new, ReferenceStrength.SOFT);
 
@@ -20,7 +20,7 @@ public final class BlockStateBuilder {
         return instances.get();
     }
 
-    public BlockStateBuilder setBlock(NamespacedName name) {
+    public BlockStateBuilder setBlock(Identifier name) {
         this.block = name;
         return this;
     }
@@ -63,10 +63,10 @@ public final class BlockStateBuilder {
         return this;
     }
 
-    private record BlockStateImplementation(NamespacedName block, Map<String, BlockPropertyValue> properties) implements BlockState {
+    private record BlockStateImplementation(Identifier block, Map<String, BlockPropertyValue> properties) implements BlockState {
 
         @Override
-        public NamespacedName getBlock() {
+        public Identifier getBlock() {
             return this.block;
         }
 

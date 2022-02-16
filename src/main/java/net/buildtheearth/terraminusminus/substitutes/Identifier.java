@@ -3,12 +3,12 @@ package net.buildtheearth.terraminusminus.substitutes;
 import lombok.Getter;
 
 @Getter
-public class NamespacedName implements Comparable<NamespacedName> {
+public class Identifier implements Comparable<Identifier> {
 
 	private final String namespace;
 	private final String name;
 
-    public NamespacedName(String path) {
+    public Identifier(String path) {
         if (path == null || path.length() <= 0) throw new IllegalArgumentException("Name cannot be null or empty");
         int found = path.indexOf(':');
         if (found < 0) {
@@ -22,7 +22,7 @@ public class NamespacedName implements Comparable<NamespacedName> {
         }
     }
 
-	public NamespacedName(String namespace, String name) {
+	public Identifier(String namespace, String name) {
         if (namespace == null || namespace.length() <= 0) throw new IllegalArgumentException("Invalid namespace:" + namespace);
         if (name == null || name.length() <= 0) throw new IllegalArgumentException("Invalid name: " + name);
         this.namespace = namespace;
@@ -37,7 +37,7 @@ public class NamespacedName implements Comparable<NamespacedName> {
     @Override
 	public boolean equals(Object other) {
 		if(this == other) return true;
-		if(!(other instanceof NamespacedName otherName)) return false;
+		if(!(other instanceof Identifier otherName)) return false;
         return this.namespace.equals(otherName.namespace) && this.name.equals(otherName.name);
 	}
 
@@ -47,7 +47,7 @@ public class NamespacedName implements Comparable<NamespacedName> {
 	}
 
     @Override
-	public int compareTo(NamespacedName other) {
+	public int compareTo(Identifier other) {
 		int spaces = this.namespace.compareTo(other.namespace);
         return spaces != 0 ? spaces: this.name.compareTo(other.name);
 	}
