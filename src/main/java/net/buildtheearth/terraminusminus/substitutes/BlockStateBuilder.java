@@ -61,7 +61,17 @@ public final class BlockStateBuilder {
         return this;
     }
 
-    private record BlockStateImplementation(Identifier block, Map<String, BlockPropertyValue> properties) implements BlockState {
+    static class BlockStateImplementation implements BlockState {
+
+        private final Identifier block;
+        private final Map<String, BlockPropertyValue> properties;
+
+        Object bukkitBlockData;
+
+        public BlockStateImplementation(Identifier block, Map<String, BlockPropertyValue> properties) {
+            this.block = block;
+            this.properties = properties;
+        }
 
         @Override
         public Identifier getBlock() {
@@ -91,6 +101,27 @@ public final class BlockStateBuilder {
         @Override
         public Map<String, BlockPropertyValue> getProperties() {
             return this.properties;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+
+            BlockStateImplementation that = (BlockStateImplementation) o;
+
+            if (!block.equals(that.block))
+                return false;
+            return properties.equals(that.properties);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = block.hashCode();
+            result = 31 * result + properties.hashCode();
+            return result;
         }
 
     }
