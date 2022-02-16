@@ -10,8 +10,6 @@ import static java.util.Collections.*;
 
 public final class BlockStateBuilder {
 
-    //TODO maintain a cache of all states
-
     private Identifier block;
     private Map<String, BlockPropertyValue> properties = new HashMap<>();
     private static final Cached<BlockStateBuilder> instances = Cached.threadLocal(BlockStateBuilder::new, ReferenceStrength.SOFT);
