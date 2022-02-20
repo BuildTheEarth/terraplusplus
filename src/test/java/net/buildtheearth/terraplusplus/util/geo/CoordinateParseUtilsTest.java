@@ -31,6 +31,7 @@ public class CoordinateParseUtilsTest {
         this.testValidStringParsing("02°49'52\"N,131°47'03\"E", 131.784167, 2.831111);
         this.testValidStringParsing("2.831111s,131.784167w", -131.784167, -2.831111);
         this.testValidStringParsing("-2.831111,-131.784167", -131.784167, -2.831111);
+        this.testValidStringParsing("-2.831111, -131.784167", -131.784167, -2.831111);
 
         // Comma variant of the above
         this.testValidStringParsing("2,831111s;131,784167w", -131.784167, -2.831111);

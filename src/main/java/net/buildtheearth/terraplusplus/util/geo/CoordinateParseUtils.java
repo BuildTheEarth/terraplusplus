@@ -8,6 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
+import net.daporkchop.lib.common.util.PArrays;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Strings;
@@ -173,13 +174,22 @@ public final class CoordinateParseUtils {
         coordinates = coordinates.trim();
 
         // Then, look for the first blank, if there is one
-        final int firstBlankStart = coordinates.indexOf(" ");
+        int firstBlankStart = coordinates.indexOf(" ");
         if (firstBlankStart > 0) {
             int firstBlankEnd = firstBlankStart;
             while (coordinates.charAt(firstBlankEnd) == ' ') firstBlankEnd++;
 
             // Then look for any other blank, if there is one, the string is malformed
             if (coordinates.indexOf(' ', firstBlankEnd) >= 0) throw new NumberFormatException();
+
+            // If the first char directly before the blank is a part separator,
+            // and is the only occurrence, consider it part of the blank
+            char charBeforeBlank = coordinates.charAt(firstBlankStart - 1);
+            if (firstBlankStart > 1
+                    && PArrays.linearSearch(PART_DELIMITERS, charBeforeBlank) >= 0
+                    && coordinates.indexOf(charBeforeBlank, firstBlankEnd) < 0) {
+                firstBlankStart--;
+            }
 
             // Split at the blank
             return new String[] {coordinates.substring(0, firstBlankStart), coordinates.substring(firstBlankEnd)};
