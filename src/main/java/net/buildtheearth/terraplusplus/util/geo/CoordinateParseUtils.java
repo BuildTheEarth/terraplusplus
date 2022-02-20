@@ -195,10 +195,13 @@ public final class CoordinateParseUtils {
             return new String[] {coordinates.substring(0, firstBlankStart), coordinates.substring(firstBlankEnd)};
         }
 
-        // Look for a potential delimiter that only appears once
+        // Look for a potential delimiter that only appears once and is not at the start or end of the string
         for (final char delimiter : PART_DELIMITERS) {
             int count = StringUtils.countMatches(coordinates, String.valueOf(delimiter));
-            if (count == 1) return StringUtils.split(coordinates, delimiter);
+            int delimiterIndex;
+            if (count == 1 && (delimiterIndex = coordinates.indexOf(delimiter)) > 0 && delimiterIndex < coordinates.length() - 1) {
+                return StringUtils.split(coordinates, delimiter);
+            }
         }
 
         // We didn't manage to split, the string is malformed
@@ -269,6 +272,7 @@ public final class CoordinateParseUtils {
     }
 
     private static double parseDoubleWithCommaDecimalSeparator(String str) {
+        if (str.indexOf(".") > 0) throw new NumberFormatException("Illegal char in comma number: " + ".");
         return Double.parseDouble(str.replaceAll(",", "."));
     }
 
