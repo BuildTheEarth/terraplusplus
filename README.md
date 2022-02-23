@@ -1,6 +1,6 @@
 <img src="https://github.com/BuildTheEarth/terraplusplus/blob/master/docs/images/logo.png" width="500" height="250">
 
-
+![https://github.com/buildtheearth](https://go.buildtheearth.net/official-shield)
 [![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/BuildTheEarth/terraplusplus/blob/master/LICENSE.MD)
 [![GitHub Release](https://img.shields.io/github/release/buildtheearth/terraplusplus.svg?style=flat)](https://github.com/BuildTheEarth/terraplusplus/releases)
 [![Discord Chat](https://img.shields.io/discord/706317564904472627.svg)](https://discord.gg/BGpmp3sfH5)  
