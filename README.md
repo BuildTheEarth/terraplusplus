@@ -2,14 +2,13 @@
 <img src="https://github.com/BuildTheEarth/terraplusplus/blob/master/docs/images/logo.png" width="400" height="200">
 
 # 
-#### A multi-server utility for the BuildTheEarth project.
+#### A feature-rich fork of Terra121 focusing on performance.
 
 ![https://github.com/buildtheearth](https://go.buildtheearth.net/official-shield)
 [![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/BuildTheEarth/terraplusplus/blob/master/LICENSE.MD)
 [![GitHub Release](https://img.shields.io/github/release/buildtheearth/terraplusplus.svg?style=flat)](https://github.com/BuildTheEarth/terraplusplus/releases)
 ![https://github.com/buildtheearth/terraplusplus](https://img.shields.io/tokei/lines/github/buildtheearth/terraplusplus)
 [![Discord Chat](https://img.shields.io/discord/706317564904472627.svg)](https://discord.gg/BGpmp3sfH5)  
-
 </div>
 
 ## What is it?
