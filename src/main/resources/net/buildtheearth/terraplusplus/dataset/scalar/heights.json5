@@ -593,10 +593,10 @@
     // Belgium
     //
 
-    { //17
+    { //flanders
         "dataset": {
             "urls": [
-                "https://cloud.daporkchop.net/gis/dem/earth/be/17/${x}/${z}.tiff"
+                "https://cloud.daporkchop.net/gis/dem/earth/be/flanders/17/${x}/${z}.tiff"
             ],
             "projection": {
                 "web_mercator": {
@@ -610,10 +610,10 @@
             }
         },
         "bounds": {
-            "minX": 2.8362315216769836,
-            "maxX": 6.440252767430284,
-            "minZ": 49.47403919378999,
-            "maxZ": 50.82243110753968
+            "minX": 2.4515956531781997,
+            "maxX": 6.012148317873223,
+            "minZ": 50.627505113319046,
+            "maxZ": 51.55948363648645
         },
         "zooms": {
             "min": 0,
