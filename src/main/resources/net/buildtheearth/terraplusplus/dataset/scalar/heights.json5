@@ -684,6 +684,39 @@
     },
 
     //
+    // Netherlands
+    //
+
+    { //17
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/nl/ahn4/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "LINEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": {
+            "minX": 3.2002051708662096,
+            "maxX": 7.272727072490497,
+            "minZ": 50.727947168851905,
+            "maxZ": 53.55480587409559
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 101.0
+    },
+
+    //
     // Canada
     // https://search.open.canada.ca/openmap/957782bf-847c-4644-a757-e383c0057995
     //
