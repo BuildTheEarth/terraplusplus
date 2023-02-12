@@ -205,11 +205,33 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         State state = new State(EarthGeneratorSettings.parseUncached(new String(StreamUtil.toByteArray(EarthGeneratorSettings.class.getResourceAsStream("bte_generator_settings.json5")))));
         state.initSettings();
 
-        double[] proj = state.projection.fromGeo(8.57696d, 47.21763d); //switzerland
-        //proj = state.projection.fromGeo(12.58589, 55.68841); //copenhagen
-        //proj = state.projection.fromGeo(24.7535, 59.4435); //tallinn
-        //proj = state.projection.fromGeo(14.50513, 46.05108); //ljubljana
-        //proj = new double[2];
+        double[] proj = new double[2]; //null island
+        proj = state.projection.fromGeo(8.57696d, 47.21763d); //steinhausen, switzerland
+        //proj = state.projection.fromGeo(12.58589, 55.68841); //copenhagen, denmark
+        //proj = state.projection.fromGeo(24.7535, 59.4435); //tallinn, estonia
+        //proj = state.projection.fromGeo(14.50513, 46.05108); //ljubljana, slovenia
+        //proj = state.projection.fromGeo(2.29118, 48.86020); //paris, france
+        //proj = state.projection.fromGeo(-9.42956, 52.97183); //cliffs of moher, ireland
+        //proj = state.projection.fromGeo(9.70089, 39.92472); //tortoli, italy
+        //proj = state.projection.fromGeo(15.085464455006724, 37.50954065726297); //somewhere in sicily
+        //proj = state.projection.fromGeo(12.610463237424899, 37.673937184583636); //somewhere in sicily
+        //proj = state.projection.fromGeo(9.6726, 45.6699); //lombardia, italy
+        //proj = state.projection.fromGeo(8.93058, 44.40804); //genova, italy
+        //proj = state.projection.fromGeo(16.5922, 38.9069); //catanzaro, italy
+        //proj = state.projection.fromGeo(-3.7070, 40.4168); //madrid, spain
+        //proj = state.projection.fromGeo(-5.57589, 37.47938); //middle of nowhere, spain
+        //proj = state.projection.fromGeo(13.37156, 52.52360); //berlin, germany
+        //proj = state.projection.fromGeo(11.63779, 52.11903); //magdeburg, germany
+        //proj = state.projection.fromGeo(7.206603551122279, 50.66019804133367); //röhndorf, germany
+        //proj = state.projection.fromGeo(12.35027, 51.33524); //leipzig, germany
+        //proj = state.projection.fromGeo(14.80963, 50.88887); //zittau, germany
+        //proj = state.projection.fromGeo(9.60552, 50.79986); //niederaula, germany
+        //proj = state.projection.fromGeo(-6.25900, 53.34702); //dublin, ireland
+        //proj = state.projection.fromGeo(5.33831, 50.22487); //marche-en-famenne, belgium
+        //proj = state.projection.fromGeo(6.14179, 49.61317); //luxembourg, luxembourg
+        //proj = state.projection.fromGeo(-123.02556, 49.30506); //vancouver, canada
+        //proj = state.projection.fromGeo(4.34115, 50.85378); //brussels, belgium
+        //proj = state.projection.fromGeo(4.90607, 52.38375); //amsterdam, netherlands
         state.setView(floorI(proj[0]) >> 4, floorI(proj[1]) >> 4, 0);
 
         state.update();

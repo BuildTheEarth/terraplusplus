@@ -529,6 +529,39 @@
                     ]
                 }
             },
+            //fill residential areas with brick
+            {
+                "type": "condition",
+                "if": {
+                    "type": "tag",
+                    "landuse": [
+                        "commercial",
+                        "education",
+                        "residential",
+                        "industrial",
+                        "retail",
+                        "institutional"
+                    ]
+                },
+                "emit": {
+                    "type": "rasterize_fill",
+                    "draw": {
+                        "type": "block",
+                        "state": {
+                            "id": "minecraft:brick_block"
+                        }
+                    },
+                    "layer": {
+                        "type": "tag",
+                        "key": "layer",
+                        "fallback": -1
+                    },
+                    "levels": {
+                        "min": 3,
+                        "max": 1000
+                    }
+                }
+            },
             //rasterize river polygons
             {
                 "type": "condition",

@@ -6,6 +6,7 @@ import net.buildtheearth.terraplusplus.dataset.geojson.geometry.MultiLineString;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunction;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
+import net.buildtheearth.terraplusplus.util.jackson.IntRange;
 
 import static java.lang.Math.*;
 import static net.daporkchop.lib.common.math.PMath.*;
@@ -16,14 +17,18 @@ import static net.daporkchop.lib.common.math.PMath.*;
 public class NarrowLine extends AbstractLine {
     protected final int weight;
 
-    public NarrowLine(@NonNull String id, double layer, @NonNull DrawFunction draw, @NonNull MultiLineString lines, int weight) {
-        super(id, layer, draw, lines);
+    public NarrowLine(@NonNull String id, double layer, @NonNull DrawFunction draw, IntRange levels, @NonNull MultiLineString lines, int weight) {
+        super(id, layer, draw, levels, lines);
 
         this.weight = weight;
     }
 
     @Override
     public void apply(@NonNull CachedChunkData.Builder builder, int tileX, int tileZ, int zoom, @NonNull Bounds2d bounds) {
+        if (!this.containsZoom(zoom)) {
+            return;
+        }
+
         int baseX = Coords.cubeToMinBlock(tileX);
         int baseZ = Coords.cubeToMinBlock(tileZ);
         double scale = 1.0d / (1 << zoom);

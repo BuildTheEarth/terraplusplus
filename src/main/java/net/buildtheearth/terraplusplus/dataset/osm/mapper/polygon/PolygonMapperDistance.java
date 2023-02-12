@@ -1,5 +1,6 @@
 package net.buildtheearth.terraplusplus.dataset.osm.mapper.polygon;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,6 +13,7 @@ import net.buildtheearth.terraplusplus.dataset.osm.dvalue.DValue;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunction;
 import net.buildtheearth.terraplusplus.dataset.vector.geometry.VectorGeometry;
 import net.buildtheearth.terraplusplus.dataset.vector.geometry.polygon.DistancePolygon;
+import net.buildtheearth.terraplusplus.util.jackson.IntRange;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -27,20 +29,23 @@ import static net.daporkchop.lib.common.util.PorkUtil.*;
 public final class PolygonMapperDistance implements PolygonMapper {
     protected final DrawFunction draw;
     protected final DValue layer;
+    protected final IntRange levels;
     protected final int maxDist;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public PolygonMapperDistance(
             @JsonProperty(value = "draw", required = true) @NonNull DrawFunction draw,
             @JsonProperty(value = "layer", required = true) @NonNull DValue layer,
+            @JsonProperty("levels") @JsonAlias("level") IntRange levels,
             @JsonProperty("maxDist") Integer maxDist) {
         this.draw = draw;
         this.layer = layer;
+        this.levels = levels;
         this.maxDist = fallbackIfNull(maxDist, 2);
     }
 
     @Override
     public Collection<VectorGeometry> apply(String id, @NonNull Map<String, String> tags, @NonNull Geometry originalGeometry, @NonNull MultiPolygon projectedGeometry) {
-        return Collections.singletonList(new DistancePolygon(id, this.layer.apply(tags), this.draw, projectedGeometry, this.maxDist));
+        return Collections.singletonList(new DistancePolygon(id, this.layer.apply(tags), this.draw, this.levels, projectedGeometry, this.maxDist));
     }
 }

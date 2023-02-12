@@ -8,6 +8,7 @@ import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunction;
 import net.buildtheearth.terraplusplus.dataset.vector.geometry.AbstractVectorGeometry;
 import net.buildtheearth.terraplusplus.dataset.vector.geometry.Segment;
 import net.buildtheearth.terraplusplus.util.bvh.BVH;
+import net.buildtheearth.terraplusplus.util.jackson.IntRange;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +20,8 @@ import java.util.List;
 public abstract class AbstractLine extends AbstractVectorGeometry {
     protected final BVH<Segment> segments;
 
-    public AbstractLine(@NonNull String id, double layer, @NonNull DrawFunction draw, @NonNull MultiLineString lines) {
-        super(id, layer, draw);
+    public AbstractLine(@NonNull String id, double layer, @NonNull DrawFunction draw, IntRange levels, @NonNull MultiLineString lines) {
+        super(id, layer, draw, levels);
 
         List<Segment> segments = new ArrayList<>();
         for (LineString line : lines.lines()) { //convert MultiLineString to line segments

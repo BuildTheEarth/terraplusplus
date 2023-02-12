@@ -11,6 +11,7 @@ import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunction;
 import net.buildtheearth.terraplusplus.dataset.vector.geometry.AbstractVectorGeometry;
 import net.buildtheearth.terraplusplus.dataset.vector.geometry.Segment;
 import net.buildtheearth.terraplusplus.util.interval.IntervalTree;
+import net.buildtheearth.terraplusplus.util.jackson.IntRange;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,8 +34,8 @@ public abstract class AbstractPolygon extends AbstractVectorGeometry {
     protected final double minZ;
     protected final double maxZ;
 
-    public AbstractPolygon(@NonNull String id, double layer, @NonNull DrawFunction draw, @NonNull MultiPolygon polygons) {
-        super(id, layer, draw);
+    public AbstractPolygon(@NonNull String id, double layer, @NonNull DrawFunction draw, IntRange levels, @NonNull MultiPolygon polygons) {
+        super(id, layer, draw, levels);
 
         //compute bounds and convert multipolygon to line segments
         double minX = Double.POSITIVE_INFINITY;

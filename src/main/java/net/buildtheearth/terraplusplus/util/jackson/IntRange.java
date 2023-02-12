@@ -33,4 +33,14 @@ public class IntRange {
         this.min = min;
         this.max = max;
     }
+
+    /**
+     * Checks if this range contains the given value.
+     *
+     * @param value the value
+     * @return {@code true} if this range contains the given value
+     */
+    public boolean contains(int value) {
+        return value >= this.min && value <= this.max;
+    }
 }

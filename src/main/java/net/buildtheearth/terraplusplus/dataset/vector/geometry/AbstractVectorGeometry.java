@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.LineString;
 import net.buildtheearth.terraplusplus.dataset.geojson.geometry.Point;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunction;
+import net.buildtheearth.terraplusplus.util.jackson.IntRange;
 
 import java.util.List;
 
@@ -32,4 +33,9 @@ public abstract class AbstractVectorGeometry implements VectorGeometry {
     protected final double layer;
     @NonNull
     protected final DrawFunction draw;
+    protected final IntRange levels;
+
+    protected boolean containsZoom(int zoom) {
+        return this.levels == null || this.levels.contains(zoom);
+    }
 }

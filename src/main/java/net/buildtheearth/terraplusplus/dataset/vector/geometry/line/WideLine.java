@@ -7,6 +7,7 @@ import net.buildtheearth.terraplusplus.dataset.geojson.geometry.MultiLineString;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunction;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
+import net.buildtheearth.terraplusplus.util.jackson.IntRange;
 import net.minecraft.util.math.MathHelper;
 
 import static java.lang.Math.*;
@@ -18,14 +19,18 @@ import static net.daporkchop.lib.common.math.PMath.*;
 public class WideLine extends NarrowLine {
     protected final double radius;
 
-    public WideLine(@NonNull String id, double layer, @NonNull DrawFunction draw, @NonNull MultiLineString lines, double radius) {
-        super(id, layer, draw, lines, floorI(radius));
+    public WideLine(@NonNull String id, double layer, @NonNull DrawFunction draw, IntRange levels, @NonNull MultiLineString lines, double radius) {
+        super(id, layer, draw, levels, lines, floorI(radius));
 
         this.radius = radius;
     }
 
     @Override
     public void apply(@NonNull CachedChunkData.Builder builder, int tileX, int tileZ, int zoom, @NonNull Bounds2d bounds) {
+        if (!this.containsZoom(zoom)) {
+            return;
+        }
+
         if (this.radius <= 1 << zoom) {
             super.apply(builder, tileX, tileZ, zoom, bounds);
             return;

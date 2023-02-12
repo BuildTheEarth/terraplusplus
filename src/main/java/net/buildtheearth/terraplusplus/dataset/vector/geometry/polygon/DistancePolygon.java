@@ -6,6 +6,7 @@ import net.buildtheearth.terraplusplus.dataset.geojson.geometry.MultiPolygon;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunction;
 import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
+import net.buildtheearth.terraplusplus.util.jackson.IntRange;
 
 import java.util.Arrays;
 
@@ -22,14 +23,18 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 public final class DistancePolygon extends AbstractPolygon {
     protected final int maxDist;
 
-    public DistancePolygon(@NonNull String id, double layer, @NonNull DrawFunction draw, @NonNull MultiPolygon polygons, int maxDist) {
-        super(id, layer, draw, polygons);
+    public DistancePolygon(@NonNull String id, double layer, @NonNull DrawFunction draw, IntRange levels, @NonNull MultiPolygon polygons, int maxDist) {
+        super(id, layer, draw, levels, polygons);
 
         this.maxDist = positive(maxDist, "maxDist");
     }
 
     @Override
     public void apply(@NonNull CachedChunkData.Builder builder, int tileX, int tileZ, int zoom, @NonNull Bounds2d bounds) {
+        if (!this.containsZoom(zoom)) {
+            return;
+        }
+
         int baseX = Coords.cubeToMinBlock(tileX << zoom);
         int baseZ = Coords.cubeToMinBlock(tileZ << zoom);
 
