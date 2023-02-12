@@ -544,22 +544,65 @@
                     ]
                 },
                 "emit": {
-                    "type": "rasterize_fill",
-                    "draw": {
-                        "type": "block",
-                        "state": {
-                            "id": "minecraft:brick_block"
+                    "type": "all",
+                    "children": [
+                        {
+                            "type": "rasterize_fill",
+                            "draw": {
+                                "type": "conditional_random",
+                                "chance": 0.25,
+                                "child": {
+                                    "type": "block",
+                                    "state": {
+                                        "id": "minecraft:brick_block"
+                                    },
+                                }
+                            },
+                            "layer": {
+                                "type": "tag",
+                                "key": "layer",
+                                "fallback": -1
+                            },
+                            "level": 1
+                        },
+                        {
+                            "type": "rasterize_fill",
+                            "draw": {
+                                "type": "conditional_random",
+                                "chance": 0.5,
+                                "child": {
+                                    "type": "block",
+                                    "state": {
+                                        "id": "minecraft:brick_block"
+                                    },
+                                }
+                            },
+                            "layer": {
+                                "type": "tag",
+                                "key": "layer",
+                                "fallback": -1
+                            },
+                            "level": 2
+                        },
+                        {
+                            "type": "rasterize_fill",
+                            "draw": {
+                                "type": "block",
+                                "state": {
+                                    "id": "minecraft:brick_block"
+                                }
+                            },
+                            "layer": {
+                                "type": "tag",
+                                "key": "layer",
+                                "fallback": -1
+                            },
+                            "levels": {
+                                "min": 3,
+                                "max": 1000
+                            }
                         }
-                    },
-                    "layer": {
-                        "type": "tag",
-                        "key": "layer",
-                        "fallback": -1
-                    },
-                    "levels": {
-                        "min": 3,
-                        "max": 1000
-                    }
+                    ]
                 }
             },
             //rasterize river polygons

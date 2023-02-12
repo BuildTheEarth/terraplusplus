@@ -46,6 +46,7 @@ import net.buildtheearth.terraplusplus.dataset.scalar.tile.mode.TileModeSlippyMa
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunction;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionAll;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionBlock;
+import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionConditionalRandom;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionNoTrees;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionOcean;
 import net.buildtheearth.terraplusplus.dataset.vector.draw.DrawFunctionWater;
@@ -186,6 +187,8 @@ public class GlobalParseRegistries {
     public final BiMap<String, Class<? extends DrawFunction>> VECTOR_DRAW_FUNCTIONS = new BiMapBuilder<String, Class<? extends DrawFunction>>()
             //mergers
             .put("all", DrawFunctionAll.class)
+            //conditional
+            .put("conditional_random", DrawFunctionConditionalRandom.class)
             //weight modifiers
             .put("weight_add", DrawFunctionWeightAdd.class)
             .put("weight_clamp", DrawFunctionWeightClamp.class)
