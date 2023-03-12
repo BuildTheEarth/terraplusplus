@@ -1,12 +1,14 @@
 package net.buildtheearth.terraplusplus.projection.wkt;
 
 import lombok.Builder;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import net.buildtheearth.terraplusplus.projection.wkt.unit.WKTLengthUnit;
+
+import java.io.IOException;
 
 /**
  * @author DaPorkchop_
@@ -15,7 +17,7 @@ import net.buildtheearth.terraplusplus.projection.wkt.unit.WKTLengthUnit;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @RequiredArgsConstructor
-@Data
+@Getter
 public final class WKTEllipsoid extends WKTObject {
     @NonNull
     private final String name;
@@ -32,8 +34,15 @@ public final class WKTEllipsoid extends WKTObject {
     private final WKTLengthUnit lengthUnit = WKTLengthUnit.METRE;
 
     @Override
-    public String toString() {
-        return "ELLIPSOID[\"" + this.name.replace("\"", "\"\"") + "\", " + this.semiMajorAxis + ", " + this.inverseFlattening + ", " + this.lengthUnit
-               + (this.id() != null ? ", " + this.id() : "") + ']';
+    public void write(@NonNull WKTWriter writer) throws IOException {
+        writer.beginObject("ELLIPSOID")
+                .writeQuotedLatinString(this.name)
+                .writeUnsignedNumericLiteral(this.semiMajorAxis)
+                .writeUnsignedNumericLiteral(this.inverseFlattening);
+        this.lengthUnit.write(writer);
+        if (this.id() != null) {
+            this.id().write(writer);
+        }
+        writer.endObject();
     }
 }

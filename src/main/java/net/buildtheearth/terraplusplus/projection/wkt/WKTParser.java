@@ -9,6 +9,9 @@ import net.daporkchop.lib.common.util.PorkUtil;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.PushbackReader;
+import java.nio.CharBuffer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.Math.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
@@ -18,36 +21,50 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @UtilityClass
 public class WKTParser {
-    public static WKTEllipsoid parseEllipsoid(@NonNull PushbackReader reader) throws IOException {
-        return parseEllipsoid(reader, readKeyword(reader));
+    // https://docs.opengeospatial.org/is/18-010r7/18-010r7.html#13
+    private static final Pattern period = Pattern.compile("\\.");
+    private static final Pattern sign = Pattern.compile("[+\\-]");
+    private static final Pattern digit = Pattern.compile("\\d");
+    private static final Pattern unsigned_integer = Pattern.compile(digit + "+");
+    private static final Pattern signed_integer = Pattern.compile("(?:" + sign + ")?" + unsigned_integer);
+    private static final Pattern exponent = signed_integer;
+    private static final Pattern exact_numeric_literal = Pattern.compile(unsigned_integer + "(?:" + period + "(?:" + unsigned_integer + ")?)?|" + period + unsigned_integer);
+    private static final Pattern mantissa = exact_numeric_literal;
+    private static final Pattern approximate_numeric_literal = Pattern.compile("(?:" + mantissa + ")E" + exponent);
+    private static final Pattern unsigned_numeric_literal = Pattern.compile("(?>" + approximate_numeric_literal + ")|" + exact_numeric_literal);
+    private static final Pattern signed_numeric_literal = Pattern.compile("(?:" + sign + ")?(?:" + unsigned_numeric_literal + ')');
+    private static final Pattern number = Pattern.compile(signed_numeric_literal + "|" + unsigned_numeric_literal);
+
+    public static WKTEllipsoid parseEllipsoid(@NonNull CharBuffer buffer) {
+        return parseEllipsoid(buffer, readKeyword(buffer));
     }
 
-    private static WKTEllipsoid parseEllipsoid(@NonNull PushbackReader reader, @NonNull String keyword) throws IOException {
+    private static WKTEllipsoid parseEllipsoid(@NonNull CharBuffer buffer, @NonNull String keyword) {
         checkState("ELLIPSOID".equals(keyword) || "SPHEROID".equals(keyword), keyword);
 
-        skipWhitespace(reader);
-        readAndExpectChar(reader, '[');
+        skipWhitespace(buffer);
+        readAndExpectChar(buffer, '[');
 
         WKTEllipsoid.WKTEllipsoidBuilder builder = WKTEllipsoid.builder();
-        builder.name(readQuotedLatinString(reader));
+        builder.name(readQuotedLatinString(buffer));
 
-        skipWhitespace(reader);
-        readAndExpectChar(reader, ',');
-        builder.semiMajorAxis(readUnsignedNumericLiteral(reader));
+        skipWhitespace(buffer);
+        readAndExpectChar(buffer, ',');
+        builder.semiMajorAxis(readUnsignedNumericLiteral(buffer));
 
-        skipWhitespace(reader);
-        readAndExpectChar(reader, ',');
-        builder.inverseFlattening(readUnsignedNumericLiteral(reader));
+        skipWhitespace(buffer);
+        readAndExpectChar(buffer, ',');
+        builder.inverseFlattening(readUnsignedNumericLiteral(buffer));
 
-        skipWhitespace(reader);
-        char c = readChar(reader);
+        skipWhitespace(buffer);
+        char c = buffer.get();
         switch (c) {
             case ',':
-                String attributeKeyword = readKeyword(reader);
+                String attributeKeyword = readKeyword(buffer);
                 switch (attributeKeyword) {
                     case "LENGTHUNIT":
                     case "UNIT":
-                        builder.lengthUnit(parseLengthUnit(reader, attributeKeyword));
+                        builder.lengthUnit(parseLengthUnit(buffer, attributeKeyword));
                         break;
                     default:
                         throw new IllegalArgumentException(attributeKeyword);
@@ -59,43 +76,43 @@ public class WKTParser {
                 throw new IllegalArgumentException(String.valueOf(c));
         }
 
-        parseRemainingAttributes(reader, builder);
+        parseRemainingAttributes(buffer, builder);
         return builder.build();
     }
 
-    public static WKTLengthUnit parseLengthUnit(@NonNull PushbackReader reader) throws IOException {
-        return parseLengthUnit(reader, readKeyword(reader));
+    public static WKTLengthUnit parseLengthUnit(@NonNull CharBuffer buffer) {
+        return parseLengthUnit(buffer, readKeyword(buffer));
     }
 
-    private static WKTLengthUnit parseLengthUnit(@NonNull PushbackReader reader, @NonNull String keyword) throws IOException {
+    private static WKTLengthUnit parseLengthUnit(@NonNull CharBuffer buffer, @NonNull String keyword) {
         checkState("LENGTHUNIT".equals(keyword) || "UNIT".equals(keyword), keyword);
 
-        skipWhitespace(reader);
-        readAndExpectChar(reader, '[');
+        skipWhitespace(buffer);
+        readAndExpectChar(buffer, '[');
 
         WKTLengthUnit.WKTLengthUnitBuilder builder = WKTLengthUnit.builder();
-        builder.name(readQuotedLatinString(reader));
+        builder.name(readQuotedLatinString(buffer));
 
-        skipWhitespace(reader);
-        readAndExpectChar(reader, ',');
-        builder.conversionFactor(readUnsignedNumericLiteral(reader));
+        skipWhitespace(buffer);
+        readAndExpectChar(buffer, ',');
+        builder.conversionFactor(readUnsignedNumericLiteral(buffer));
 
-        parseRemainingAttributes(reader, builder);
+        parseRemainingAttributes(buffer, builder);
 
         return builder.build();
     }
 
-    private static void parseRemainingAttributes(@NonNull PushbackReader reader, @NonNull WKTObject.WKTObjectBuilder<?, ?> builder) throws IOException {
+    private static void parseRemainingAttributes(@NonNull CharBuffer buffer, @NonNull WKTObject.WKTObjectBuilder<?, ?> builder) {
         while (true) {
-            skipWhitespace(reader);
-            char c = readChar(reader);
+            skipWhitespace(buffer);
+            char c = buffer.get();
             switch (c) {
                 case ',':
-                    String attributeKeyword = readKeyword(reader);
+                    String attributeKeyword = readKeyword(buffer);
                     switch (attributeKeyword) {
                         case "ID":
                         case "AUTHORITY":
-                            builder.id(parseAuthority(reader, attributeKeyword));
+                            builder.id(parseAuthority(buffer, attributeKeyword));
                             break;
                         default:
                             throw new IllegalArgumentException(attributeKeyword);
@@ -109,198 +126,222 @@ public class WKTParser {
         }
     }
 
-    private static WKTID parseAuthority(@NonNull PushbackReader reader) throws IOException {
-        return parseAuthority(reader, readKeyword(reader));
+    private static WKTID parseAuthority(@NonNull CharBuffer buffer) {
+        return parseAuthority(buffer, readKeyword(buffer));
     }
 
-    private static WKTID parseAuthority(@NonNull PushbackReader reader, @NonNull String keyword) throws IOException {
+    private static WKTID parseAuthority(@NonNull CharBuffer buffer, @NonNull String keyword) {
         checkState("ID".equals(keyword) || "AUTHORITY".equals(keyword), keyword);
 
-        skipWhitespace(reader);
-        readAndExpectChar(reader, '[');
+        skipWhitespace(buffer);
+        readAndExpectChar(buffer, '[');
 
         WKTID.WKTIDBuilder builder = WKTID.builder();
-        builder.authorityName(readQuotedLatinString(reader));
+        builder.authorityName(readQuotedLatinString(buffer));
 
-        skipWhitespace(reader);
-        readAndExpectChar(reader, ',');
-        skipWhitespace(reader);
+        skipWhitespace(buffer);
+        readAndExpectChar(buffer, ',');
+        skipWhitespace(buffer);
 
-        char c = readChar(reader);
-        reader.unread(c);
+        char c = buffer.charAt(0);
         if (c == '"') {
-            builder.authorityUniqueIdentifier(readQuotedLatinString(reader));
+            builder.authorityUniqueIdentifier(readQuotedLatinString(buffer));
         } else {
-            builder.authorityUniqueIdentifier(readUnsignedInteger(reader));
+            builder.authorityUniqueIdentifier(readUnsignedInteger(buffer));
         }
 
-        skipWhitespace(reader);
-        readAndExpectChar(reader, ']');
+        skipWhitespace(buffer);
+        readAndExpectChar(buffer, ']');
 
         return builder.build();
     }
 
-    private static String readKeyword(@NonNull PushbackReader reader) throws IOException {
-        try (Handle<StringBuilder> handle = PorkUtil.STRINGBUILDER_POOL.get()) {
-            StringBuilder builder = handle.get();
-            builder.setLength(0);
+    private static String readKeyword(@NonNull CharBuffer buffer) {
+        skipWhitespace(buffer);
 
-            skipWhitespace(reader);
-
-            //read until we find a character that isn't an uppercase latin char
-            while (true) {
-                char c = readChar(reader);
-                if (c >= 'A' && c <= 'Z') {
-                    builder.append(c);
-                } else {
-                    reader.unread(c);
-                    break;
-                }
-            }
-
-            return builder.toString().intern();
+        int start = buffer.position();
+        int end = start;
+        for (char c; (c = buffer.get(end)) >= 'A' && c <= 'Z'; ) { //find the index of the first non-alphabetic char
+            end++;
         }
+        String value = buffer.subSequence(0, end - start).toString();
+        buffer.position(end);
+        return value;
     }
 
     /**
      * @see <a href="https://docs.opengeospatial.org/is/12-063r5/12-063r5.html#15>WKT Specification §6.3.4: WKT characters</a>
      */
-    private static String readQuotedLatinString(@NonNull PushbackReader reader) throws IOException {
-        try (Handle<StringBuilder> handle = PorkUtil.STRINGBUILDER_POOL.get()) {
-            StringBuilder builder = handle.get();
-            builder.setLength(0);
+    private static String readQuotedLatinString(@NonNull CharBuffer buffer) {
+        //find the opening quote
+        skipWhitespace(buffer);
+        readAndExpectChar(buffer, '"');
 
-            //find the opening quote
-            skipWhitespace(reader);
-            readAndExpectChar(reader, '"');
-
-            //read until we find a closing quote
-            while (true) {
-                char c = readChar(reader);
-                if (c == '"') { //this could be a closing quote
-                    char next = readChar(reader);
-                    if (next == '"') { //double doublequote -> doublequote
-                        builder.append('"');
-                    } else { //end of file
-                        reader.unread(next);
-                        break;
-                    }
+        //read until we find a closing quote
+        int start = buffer.position();
+        int end = start;
+        for (char c; ;) {
+            c = buffer.get(end);
+            if (c == '"') { //this could be a closing quote
+                //peek at the next char to see if this is a double doublequote
+                if (buffer.get(end + 1) == '"') {
+                    end += 2; //double doublequote -> doublequote, skip it and advance
                 } else {
-                    builder.append(c);
+                    break;
                 }
+            } else {
+                end++;
             }
-
-            return builder.toString().intern();
         }
+
+        String value = buffer.subSequence(0, end - start).toString().replace("\"\"", "\"");
+        buffer.position(end);
+        readAndExpectChar(buffer, '"');
+        return value;
     }
 
-    private static long readUnsignedInteger(@NonNull PushbackReader reader) throws IOException {
-        skipWhitespace(reader);
+    /*private static long readSignedInteger(@NonNull CharBuffer buffer) {
+        skipWhitespace(buffer);
 
-        char c = readChar(reader);
+        Matcher matcher = signed_integer.matcher(buffer);
+        checkState(matcher.find(), "expected <signed_integer> at %d", buffer.position());
+
+        long value = Long.parseLong(matcher.group());
+        buffer.position(buffer.position() + matcher.end());
+        return value;
+    }
+
+    private static long readUnsignedInteger(@NonNull CharBuffer buffer) {
+        skipWhitespace(buffer);
+
+        Matcher matcher = unsigned_integer.matcher(buffer);
+        checkState(matcher.find(), "expected <unsigned_integer> at %d", buffer.position());
+
+        long value = Long.parseUnsignedLong(matcher.group());
+        buffer.position(buffer.position() + matcher.end());
+        return value;
+    }
+
+    private static double readUnsignedNumericLiteral(@NonNull CharBuffer buffer) {
+        skipWhitespace(buffer);
+
+        Matcher matcher = unsigned_numeric_literal.matcher(buffer);
+        checkState(matcher.find(), "expected <unsigned_numeric_literal> at %d", buffer.position());
+
+        double value = Double.parseDouble(matcher.group());
+        buffer.position(buffer.position() + matcher.end());
+        return value;
+    }*/
+
+    private static long readUnsignedInteger(@NonNull CharBuffer buffer) {
+        skipWhitespace(buffer);
+
+        char c = buffer.get();
         checkState(c >= '0' && c <= '9', "expected digit, found '%c'", c);
 
         long value = 0L;
         do {
             value = addExact(multiplyExact(value, 10L), c - '0');
-            c = readChar(reader);
+            c = buffer.get();
         } while (c >= '0' && c <= '9');
-        reader.unread(c);
+        buffer.position(buffer.position() - 1);
 
         return value;
     }
 
-    private static long readSignedInteger(@NonNull PushbackReader reader) throws IOException {
-        skipWhitespace(reader);
+    private static long readSignedInteger(@NonNull CharBuffer buffer) {
+        skipWhitespace(buffer);
 
-        char c = readChar(reader);
+        char c = buffer.get();
         switch (c) {
             case '-':
-                return -readUnsignedInteger(reader);
+                return -readUnsignedInteger(buffer);
             default:
-                reader.unread(c);
+                buffer.position(buffer.position() - 1);
             case '+':
-                return readUnsignedInteger(reader);
+                return readUnsignedInteger(buffer);
         }
     }
 
-    private static double readUnsignedNumericLiteral(@NonNull PushbackReader reader) throws IOException {
-        skipWhitespace(reader);
+    private static double readUnsignedNumericLiteral(@NonNull CharBuffer buffer) {
+        skipWhitespace(buffer);
 
-        char c = readChar(reader);
+        char c = buffer.get();
         if (c == '.') { //<exact numeric literal>: second case
-            return readExactNumericLiteral_fractionalPart(reader);
+            return readExactNumericLiteral_fractionalPart(buffer);
         } else {
-            reader.unread(c);
+            buffer.position(buffer.position() - 1);
         }
 
-        double value = readUnsignedInteger(reader);
+        double value = readUnsignedInteger(buffer);
 
-        c = readChar(reader);
+        c = buffer.get();
         switch (c) {
             case 'E': //<approximate numeric literal>
-                return value * pow(10.0d, readSignedInteger(reader));
+                return value * pow(10.0d, readSignedInteger(buffer));
             case '.': //<exact numeric literal>: first case
-                c = readChar(reader);
-                reader.unread(c);
+                c = buffer.get();
+                buffer.position(buffer.position() - 1);
                 if (c >= '0' && c <= '9') {
-                    value += readExactNumericLiteral_fractionalPart(reader);
+                    value += readExactNumericLiteral_fractionalPart(buffer);
 
-                    c = readChar(reader);
+                    c = buffer.get();
                     if (c == 'E') { //<approximate numeric literal>
-                        return value * pow(10.0d, readSignedInteger(reader));
+                        return value * pow(10.0d, readSignedInteger(buffer));
                     } else {
-                        reader.unread(c);
+                        buffer.position(buffer.position() - 1);
                     }
                 } else if (c == 'E') { //<approximate numeric literal>
-                    readChar(reader);
-                    return value * pow(10.0d, readSignedInteger(reader));
+                    buffer.get();
+                    return value * pow(10.0d, readSignedInteger(buffer));
                 }
                 return value;
             default:
-                reader.unread(c);
+                buffer.position(buffer.position() - 1);
                 return value;
         }
     }
 
-    private static double readExactNumericLiteral_fractionalPart(@NonNull PushbackReader reader) throws IOException {
+    private static double readExactNumericLiteral_fractionalPart(@NonNull CharBuffer buffer) {
         double value = 0.0d;
         double factor = 0.1d;
 
-        char c = readChar(reader);
+        char c = buffer.get();
         checkState(c >= '0' && c <= '9', "expected digit, found '%c'", c);
         do {
             value += factor * (c - '0');
             factor *= 0.1d;
 
-            c = readChar(reader);
+            c = buffer.get();
         } while (c >= '0' && c <= '9');
-        reader.unread(c);
+        buffer.position(buffer.position() - 1);
 
         return value;
     }
+    
+    /*private static double readNumber(@NonNull CharBuffer buffer) {
+        skipWhitespace(buffer);
+        
+        Matcher matcher = number.matcher(buffer);
+        checkState(matcher.find(), "expected <number> at %d", buffer.position());
 
-    private static void skipWhitespace(@NonNull PushbackReader reader) throws IOException {
-        while (true) {
-            char c = readChar(reader);
-            if (!isWhitespace(c)) {
-                reader.unread(c);
-                return;
-            }
+        double value = Double.parseDouble(matcher.group());
+        buffer.position(buffer.position() + matcher.end());
+        return value;
+    }*/
+
+    private static void skipWhitespace(@NonNull CharBuffer buffer) {
+        while (isWhitespace(buffer.get())) {
+            //empty
         }
+
+        //jump back to the previous position, as we've already read the first non-whitespace char
+        buffer.position(buffer.position() - 1);
     }
 
-    private static void readAndExpectChar(@NonNull PushbackReader reader, char expected) throws IOException {
-        char c = readChar(reader);
+    private static void readAndExpectChar(@NonNull CharBuffer buffer, char expected) {
+        char c = buffer.get();
         checkState(c == expected, "expected '%c', but found '%c'", expected, c);
-    }
-
-    private static char readChar(@NonNull PushbackReader reader) throws IOException {
-        int c = reader.read();
-        if (c < 0) {
-            throw new EOFException();
-        }
-        return (char) c;
     }
 
     private static boolean isWhitespace(char c) {

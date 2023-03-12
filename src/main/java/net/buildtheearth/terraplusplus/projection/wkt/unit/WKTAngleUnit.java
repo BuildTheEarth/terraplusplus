@@ -1,11 +1,14 @@
 package net.buildtheearth.terraplusplus.projection.wkt.unit;
 
-import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
+import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
+
+import java.io.IOException;
 
 /**
  * @author DaPorkchop_
@@ -14,7 +17,7 @@ import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @RequiredArgsConstructor
-@Data
+@Getter
 public final class WKTAngleUnit extends WKTObject {
     @NonNull
     private final String name;
@@ -25,7 +28,13 @@ public final class WKTAngleUnit extends WKTObject {
     private final double conversionFactor;
 
     @Override
-    public String toString() {
-        return "ANGLEUNIT[\"" + this.name.replace("\"", "\"\"") + "\", " + this.conversionFactor + (this.id() != null ? ", " + this.id() : "") + ']';
+    public void write(@NonNull WKTWriter writer) throws IOException {
+        writer.beginObject("ANGLEUNIT")
+                .writeQuotedLatinString(this.name)
+                .writeUnsignedNumericLiteral(this.conversionFactor);
+        if (this.id() != null) {
+            this.id().write(writer);
+        }
+        writer.endObject();
     }
 }

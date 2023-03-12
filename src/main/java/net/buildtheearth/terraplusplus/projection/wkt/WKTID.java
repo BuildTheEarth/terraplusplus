@@ -1,10 +1,12 @@
 package net.buildtheearth.terraplusplus.projection.wkt;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.With;
+
+import java.io.IOException;
 
 /**
  * @author DaPorkchop_
@@ -21,9 +23,23 @@ public final class WKTID {
     private final Object authorityUniqueIdentifier;
 
     @Override
+    @SneakyThrows(IOException.class)
     public String toString() {
-        return "ID[\"" + this.authorityName.replace("\"", "\"\"") + "\", "
-               + (this.authorityUniqueIdentifier instanceof Number ? this.authorityUniqueIdentifier.toString() : '"' + this.authorityUniqueIdentifier.toString().replace("\"", "\"\"") + '"')
-               + ']';
+        StringBuilder builder = new StringBuilder();
+        try (WKTWriter writer = new WKTWriter.ToAppendable(builder, " ", "", " ")) {
+            this.write(writer);
+        }
+        return builder.toString();
+    }
+
+    public void write(@NonNull WKTWriter writer) throws IOException {
+        writer.beginObject("ID")
+                .writeQuotedLatinString(this.authorityName);
+        if (this.authorityUniqueIdentifier instanceof Number) {
+            writer.writeUnsignedNumericLiteral((Number) this.authorityUniqueIdentifier);
+        } else {
+            writer.writeQuotedLatinString(this.authorityUniqueIdentifier.toString());
+        }
+        writer.endObject();
     }
 }
