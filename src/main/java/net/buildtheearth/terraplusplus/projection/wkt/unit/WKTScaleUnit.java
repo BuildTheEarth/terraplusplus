@@ -6,6 +6,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
+import net.buildtheearth.terraplusplus.projection.wkt.WKTParseSchema;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
 
 import java.io.IOException;
@@ -19,6 +20,13 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @Getter
 public final class WKTScaleUnit extends WKTObject {
+    public static final WKTParseSchema<WKTScaleUnit> PARSE_SCHEMA = WKTParseSchema.builder(WKTScaleUnitBuilderImpl::new, WKTScaleUnitBuilder::build)
+            .permitKeyword("SCALEUNIT")
+            .requiredStringProperty(WKTScaleUnit.WKTScaleUnitBuilder::name)
+            .requiredUnsignedNumericAsDoubleProperty(WKTScaleUnit.WKTScaleUnitBuilder::conversionFactor)
+            .inheritFrom(BASE_PARSE_SCHEMA)
+            .build();
+
     @NonNull
     private final String name;
 

@@ -16,6 +16,14 @@ import java.io.IOException;
 @Data
 @With
 public final class WKTID {
+    public static final WKTParseSchema<WKTID> PARSE_SCHEMA = WKTParseSchema.builder(WKTID::builder, WKTIDBuilder::build)
+            .permitKeyword("ID", "AUTHORITY")
+            .requiredStringProperty(WKTIDBuilder::authorityName)
+            .addSimpleProperty(
+                    reader -> reader.peek() == WKTReader.Token.QUOTED_LATIN_STRING ? reader.nextQuotedLatinString() : reader.nextUnsignedNumericLiteral(),
+                    WKTIDBuilder::authorityUniqueIdentifier, true)
+            .build();
+
     @NonNull
     private final String authorityName;
 

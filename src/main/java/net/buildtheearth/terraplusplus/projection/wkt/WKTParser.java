@@ -1,16 +1,12 @@
 package net.buildtheearth.terraplusplus.projection.wkt;
 
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import net.buildtheearth.terraplusplus.projection.wkt.unit.WKTLengthUnit;
-import net.daporkchop.lib.common.pool.handle.Handle;
-import net.daporkchop.lib.common.util.PorkUtil;
 
-import java.io.EOFException;
 import java.io.IOException;
-import java.io.PushbackReader;
 import java.nio.CharBuffer;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.Math.*;
@@ -35,49 +31,13 @@ public class WKTParser {
     private static final Pattern signed_numeric_literal = Pattern.compile("(?:" + sign + ")?(?:" + unsigned_numeric_literal + ')');
     private static final Pattern number = Pattern.compile(signed_numeric_literal + "|" + unsigned_numeric_literal);
 
+    @SneakyThrows(IOException.class)
     public static WKTEllipsoid parseEllipsoid(@NonNull CharBuffer buffer) {
-        return parseEllipsoid(buffer, readKeyword(buffer));
-    }
-
-    private static WKTEllipsoid parseEllipsoid(@NonNull CharBuffer buffer, @NonNull String keyword) {
-        checkState("ELLIPSOID".equals(keyword) || "SPHEROID".equals(keyword), keyword);
-
-        skipWhitespace(buffer);
-        readAndExpectChar(buffer, '[');
-
-        WKTEllipsoid.WKTEllipsoidBuilder builder = WKTEllipsoid.builder();
-        builder.name(readQuotedLatinString(buffer));
-
-        skipWhitespace(buffer);
-        readAndExpectChar(buffer, ',');
-        builder.semiMajorAxis(readUnsignedNumericLiteral(buffer));
-
-        skipWhitespace(buffer);
-        readAndExpectChar(buffer, ',');
-        builder.inverseFlattening(readUnsignedNumericLiteral(buffer));
-
-        skipWhitespace(buffer);
-        char c = buffer.get();
-        switch (c) {
-            case ',':
-                String attributeKeyword = readKeyword(buffer);
-                switch (attributeKeyword) {
-                    case "LENGTHUNIT":
-                    case "UNIT":
-                        builder.lengthUnit(parseLengthUnit(buffer, attributeKeyword));
-                        break;
-                    default:
-                        throw new IllegalArgumentException(attributeKeyword);
-                }
-                break;
-            case ']':
-                return builder.build();
-            default:
-                throw new IllegalArgumentException(String.valueOf(c));
+        try (WKTReader reader = new WKTReader.FromCharBuffer(buffer)) {
+            return WKTEllipsoid.PARSE_SCHEMA.parse(reader);
         }
 
-        parseRemainingAttributes(buffer, builder);
-        return builder.build();
+        //return parseEllipsoid(buffer, readKeyword(buffer));
     }
 
     public static WKTLengthUnit parseLengthUnit(@NonNull CharBuffer buffer) {
@@ -180,7 +140,7 @@ public class WKTParser {
         //read until we find a closing quote
         int start = buffer.position();
         int end = start;
-        for (char c; ;) {
+        for (char c; ; ) {
             c = buffer.get(end);
             if (c == '"') { //this could be a closing quote
                 //peek at the next char to see if this is a double doublequote

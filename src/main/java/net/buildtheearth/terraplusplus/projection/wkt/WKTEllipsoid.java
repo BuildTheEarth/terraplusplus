@@ -19,6 +19,15 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @Getter
 public final class WKTEllipsoid extends WKTObject {
+    public static final WKTParseSchema<WKTEllipsoid> PARSE_SCHEMA = WKTParseSchema.builder(WKTEllipsoidBuilderImpl::new, WKTEllipsoidBuilder::build)
+            .permitKeyword("ELLIPSOID", "SPHEROID")
+            .requiredStringProperty(WKTEllipsoidBuilder::name)
+            .requiredUnsignedNumericAsDoubleProperty(WKTEllipsoidBuilder::semiMajorAxis)
+            .requiredUnsignedNumericAsDoubleProperty(WKTEllipsoidBuilder::inverseFlattening)
+            .optionalObjectProperty(WKTLengthUnit.PARSE_SCHEMA, WKTEllipsoidBuilder::lengthUnit)
+            .inheritFrom(BASE_PARSE_SCHEMA)
+            .build();
+
     @NonNull
     private final String name;
 

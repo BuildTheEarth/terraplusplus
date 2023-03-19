@@ -1,11 +1,9 @@
 package wkt;
 
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTParser;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.nio.CharBuffer;
 
 import static org.junit.Assert.*;
@@ -19,7 +17,6 @@ public class WKTParserTest {
     }
 
     @Test
-    //@SneakyThrows(IOException.class)
     public void testEllipsoid() {
         assertEquals(
                 "ELLIPSOID[\"WGS 84\", 6378137.0, 298.257223563, LENGTHUNIT[\"metre\", 1.0], ID[\"EPSG\", 7030]]",
@@ -42,16 +39,5 @@ public class WKTParserTest {
         assertEquals(
                 "ELLIPSOID[\"Sphere\", 6371000.0, 0.0, LENGTHUNIT[\"metre\", 1.0]]",
                 WKTParser.parseEllipsoid(buffer("ELLIPSOID[\"Sphere\",6371000,0,LENGTHUNIT[\"metre\",1.0]]")).toString());
-
-        /*
-        //System.out.println(TerraConstants.JSON_MAPPER.readValue("{\"$schema\": \"https://proj.org/schemas/v0.5/projjson.schema.json\",\"type\": \"Ellipsoid\",\"name\": \"WGS 84\",\"semi_major_axis\": 6378137,\"inverse_flattening\": 298.257223563,\"id\": {\"authority\": \"EPSG\",\"code\": 7030}}", WKTID.class));
-        System.out.println(TerraConstants.JSON_MAPPER.readValue("{\"type\":\"AngularUnit\",\"name\": \"EPSG\",\"conversion_factor\": 7030}", WKTUnit.class));
-        System.out.println(TerraConstants.JSON_MAPPER.readValue("{\"type\":\"AngularUnit\",\"name\": \"EPSG\",\"conversion_factor\": 7030,\"id\":{\"authority\":\"EPSG\",\"code\":7030}}", WKTUnit.class));
-
-        System.out.println(TerraConstants.JSON_MAPPER.readValue("{\"authority\": \"EPSG\",\"code\": 7030}", WKTID.class));
-        System.out.println(TerraConstants.JSON_MAPPER.readValue("{\"authority\": \"EPSG\",\"code\": 7030}", WKTID.class).toPROJJSON());
-
-        System.out.println(TerraConstants.JSON_MAPPER.readValue("{\"$schema\": \"https://proj.org/schemas/v0.5/projjson.schema.json\",\"type\": \"Ellipsoid\",\"name\": \"WGS 84\",\"semi_major_axis\": 6378137,\"inverse_flattening\": 298.257223563,\"id\": {\"authority\": \"EPSG\",\"code\": 7030}}", WKTEllipsoid.class).toPROJJSON());
-        */
     }
 }

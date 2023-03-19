@@ -18,6 +18,11 @@ import java.io.IOException;
 @Data
 @SuperBuilder
 public abstract class WKTObject {
+    protected static final WKTParseSchema<WKTObject> BASE_PARSE_SCHEMA = WKTParseSchema.<WKTObject, WKTObjectBuilder<WKTObject, ?>>builder(() -> null, WKTObjectBuilder::build)
+            .permitKeyword("")
+            .optionalObjectProperty(WKTID.PARSE_SCHEMA, WKTObjectBuilder::id)
+            .build();
+
     @Builder.Default
     private final WKTID id = null;
 
