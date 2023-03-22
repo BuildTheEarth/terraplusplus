@@ -47,7 +47,14 @@ public interface WKTReader extends AutoCloseable {
     /**
      * Reads the next token from the stream, asserts that it is {@link Token#ENUM} and returns the enum value.
      */
-    <E extends Enum<E>> E nextEnum(@NonNull Class<E> enumClass) throws IOException;
+    String nextEnumName() throws IOException;
+
+    /**
+     * Reads the next token from the stream, asserts that it is {@link Token#ENUM} and returns the enum value.
+     */
+    default <E extends Enum<E>> E nextEnum(@NonNull Class<E> enumClass) throws IOException {
+        return Enum.valueOf(enumClass, this.nextEnumName());
+    }
 
     @Override
     void close() throws IOException;
@@ -108,7 +115,7 @@ public interface WKTReader extends AutoCloseable {
                     //find the next character after the word token to determine whether this is a BEGIN_OBJECT or an ENUM
                     do {
                         c = this.buffer.charAt(++i);
-                    } while (c >= 'A' && c <= 'Z');
+                    } while ((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_');
 
                     if (isWhitespace(c)) {
                         do { //skip any whitespace
@@ -151,7 +158,7 @@ public interface WKTReader extends AutoCloseable {
             checkState(c >= 'A' && c <= 'Z', "not a valid keyword start character: '%c'", c);
 
             while (!isWhitespace(c = this.buffer.get()) && c != '[') {
-                checkState((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'), "not a valid keyword character: '%c'", c);
+                checkState((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_', "not a valid keyword character: '%c'", c);
             }
 
             int end = this.buffer.position();
@@ -197,7 +204,7 @@ public interface WKTReader extends AutoCloseable {
         }
 
         @Override
-        public <E extends Enum<E>> E nextEnum(@NonNull Class<E> enumClass) throws IOException {
+        public String nextEnumName() throws IOException {
             this.skipToNextValue();
 
             int start = this.buffer.position();
@@ -205,7 +212,7 @@ public interface WKTReader extends AutoCloseable {
             checkState(c >= 'A' && c <= 'Z', "not a valid enum start character: '%c'", c);
 
             while (!isWhitespace(c = this.buffer.get()) && c != ',' && c != ']') {
-                checkState((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'), "not a valid enum character: '%c'", c);
+                checkState((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_', "not a valid enum character: '%c'", c);
             }
 
             int end = this.buffer.position();
@@ -217,7 +224,7 @@ public interface WKTReader extends AutoCloseable {
             //unread last character (which is either ',' or ']')
             this.buffer.position(this.buffer.position() - 1);
 
-            return Enum.valueOf(enumClass, this.buffer.duplicate().position(start).limit(end - 1).toString());
+            return this.buffer.duplicate().position(start).limit(end - 1).toString();
         }
 
         private long readUnsignedInteger() {
@@ -270,6 +277,8 @@ public interface WKTReader extends AutoCloseable {
         }
 
         private Number nextUnsignedNumericLiteral0() {
+            int start = this.buffer.position();
+
             char c = this.buffer.get();
             if (c == '.') { //<exact numeric literal>: second case
                 return this.readExactNumericLiteral_fractionalPart();
@@ -278,35 +287,31 @@ public interface WKTReader extends AutoCloseable {
             }
 
             long value = this.readUnsignedInteger();
-            double valueAsDouble;
 
             c = this.buffer.get();
             switch (c) {
                 case 'E': //<approximate numeric literal>
-                    valueAsDouble = value;
-                    checkState((long) valueAsDouble == value, "%d cannot be converted to double without loss of precision!", value);
-
-                    return valueAsDouble * pow(10.0d, this.readSignedInteger());
+                    this.readSignedInteger();
+                    return Double.parseDouble(this.buffer.duplicate().position(start).limit(this.buffer.position()).toString());
                 case '.': //<exact numeric literal>: first case
-                    valueAsDouble = value;
-                    checkState((long) valueAsDouble == value, "%d cannot be converted to double without loss of precision!", value);
-
                     c = this.buffer.get();
                     this.buffer.position(this.buffer.position() - 1);
                     if (c >= '0' && c <= '9') {
-                        valueAsDouble += this.readExactNumericLiteral_fractionalPart();
+                        this.readExactNumericLiteral_fractionalPart();
 
                         c = this.buffer.get();
                         if (c == 'E') { //<approximate numeric literal>
-                            return valueAsDouble * pow(10.0d, this.readSignedInteger());
+                            this.readSignedInteger();
+                            //return valueAsDouble * pow(10.0d, this.readSignedInteger());
                         } else {
                             this.buffer.position(this.buffer.position() - 1);
                         }
                     } else if (c == 'E') { //<approximate numeric literal>
                         this.buffer.get();
-                        return valueAsDouble * pow(10.0d, this.readSignedInteger());
+                        this.readSignedInteger();
+                        //return valueAsDouble * pow(10.0d, this.readSignedInteger());
                     }
-                    return valueAsDouble;
+                    return Double.parseDouble(this.buffer.duplicate().position(start).limit(this.buffer.position()).toString());
                 default:
                     this.buffer.position(this.buffer.position() - 1);
                     return value;

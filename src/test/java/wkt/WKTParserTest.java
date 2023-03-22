@@ -2,9 +2,16 @@ package wkt;
 
 import lombok.NonNull;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTParser;
+import net.buildtheearth.terraplusplus.projection.wkt.WKTStyle;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.CharBuffer;
+import java.util.Objects;
+import java.util.Properties;
 
 import static org.junit.Assert.*;
 
@@ -14,6 +21,23 @@ import static org.junit.Assert.*;
 public class WKTParserTest {
     private static CharBuffer buffer(@NonNull String text) {
         return CharBuffer.wrap(text.toCharArray()).asReadOnlyBuffer();
+    }
+
+    private static final Properties EPSG = new Properties();
+
+    @BeforeClass
+    public static void loadProperties() throws IOException {
+        try (InputStream in = new BufferedInputStream(Objects.requireNonNull(WKTParserTest.class.getResourceAsStream("epsg.properties")))) {
+            EPSG.load(in);
+        }
+    }
+
+    @Test
+    public void testWKTFormat() {
+        EPSG.forEach((key, wkt) -> {
+            String formatted = WKTStyle.ONE_LINE.format(wkt.toString());
+            assertEquals(wkt.toString(), formatted);
+        });
     }
 
     @Test
@@ -27,11 +51,11 @@ public class WKTParserTest {
                 WKTParser.parseEllipsoid(buffer("SPHEROID[\"GRS 1980\",6378137.0,298.257222101]")).toString());
 
         assertEquals(
-                "ELLIPSOID[\"Clark 1866\", 2.0925832164E7, 294.97869821, LENGTHUNIT[\"US survey foot\", 0.304800609601219]]",
+                "ELLIPSOID[\"Clark 1866\", 20925832.164, 294.97869821, LENGTHUNIT[\"US survey foot\", 0.304800609601219]]",
                 WKTParser.parseEllipsoid(buffer("ELLIPSOID[\"Clark 1866\",20925832.164,294.97869821, LENGTHUNIT[\"US survey foot\",0.304800609601219]]")).toString());
 
         assertEquals(
-                "ELLIPSOID[\"Clark 1866\", 2.0925832164E7, 294.97869821, LENGTHUNIT[\"US survey foot\", 0.304800609601219]]",
+                "ELLIPSOID[\"Clark 1866\", 20925832.164, 294.97869821, LENGTHUNIT[\"US survey foot\", 0.304800609601219]]",
                 WKTParser.parseEllipsoid(buffer("ELLIPSOID[\"Clark 1866\",2.0925832164E7,294.97869821, LENGTHUNIT[\"US survey foot\",0.304800609601219]]")).toString());
 
         assertEquals(

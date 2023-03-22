@@ -4,6 +4,8 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 import static net.daporkchop.lib.common.util.PValidation.*;
 
@@ -47,11 +49,20 @@ public interface WKTWriter extends AutoCloseable {
     WKTWriter writeSignedNumericLiteral(@NonNull Number number) throws IOException;
 
     /**
+     * Writes the given {@link String} as an enum value.
+     *
+     * @param value the {@link String}
+     */
+    WKTWriter writeEnumName(@NonNull String value) throws IOException;
+
+    /**
      * Writes the given {@link Enum} as an enum value.
      *
      * @param value the {@link Enum}
      */
-    WKTWriter writeEnum(@NonNull Enum<?> value) throws IOException;
+    default WKTWriter writeEnum(@NonNull Enum<?> value) throws IOException {
+        return this.writeEnumName(value.name());
+    }
 
     default WKTWriter writeRequiredObject(@NonNull WKTObject object) throws IOException {
         object.write(this);
@@ -89,11 +100,7 @@ public interface WKTWriter extends AutoCloseable {
         protected final Appendable target;
 
         @NonNull
-        protected final CharSequence lineBreak;
-        @NonNull
-        protected final CharSequence indent;
-        @NonNull
-        protected final CharSequence afterComma;
+        protected final WKTStyle style;
 
         protected int depth = 0;
         protected boolean writtenFirstElementInObject = false;
@@ -112,7 +119,7 @@ public interface WKTWriter extends AutoCloseable {
                 this.target.append(',');
 
                 if (!this.shouldPrefixNextValueWithNewline) {
-                    this.target.append(this.afterComma);
+                    this.target.append(this.style.afterComma());
                 }
             }
             if (this.shouldPrefixNextValueWithNewline) {
@@ -122,15 +129,15 @@ public interface WKTWriter extends AutoCloseable {
         }
 
         protected void writeLineBreakAndIndent() throws IOException {
-            this.target.append(this.lineBreak);
+            this.target.append(this.style.lineBreak());
             for (int i = 0; i < this.depth; i++) {
-                this.target.append(this.indent);
+                this.target.append(this.style.indent());
             }
         }
 
         @Override
         public WKTWriter beginObject(@NonNull String keyword) throws IOException {
-            checkArg(!keyword.isEmpty() && keyword.matches("[A-Z][A-Z0-9]*"), "illegal WKT keyword '%s'", keyword);
+            checkArg(!keyword.isEmpty() && keyword.matches("[A-Z][A-Z0-9_]*"), "illegal WKT keyword '%s'", keyword);
 
             if (this.hasStartedObject()) { //this isn't the root object, add some indentation
                 this.shouldPrefixNextValueWithNewline = true;
@@ -172,21 +179,29 @@ public interface WKTWriter extends AutoCloseable {
                 end = string.length() - ".0".length();
             }
             this.target.append(string, start, end);*/
-            this.target.append(number.toString());
+
+            if ((number instanceof Float || number instanceof Double) && (true || (Math.round(number.doubleValue()) == number.doubleValue() && Math.abs(number.doubleValue()) < 1E10d))) {
+                NumberFormat format = NumberFormat.getInstance(Locale.ROOT);
+                format.setGroupingUsed(false);
+                format.setMinimumFractionDigits(1);
+                format.setMaximumFractionDigits(100);
+                //this.target.append(String.format("%.1f", number));
+                this.target.append(format.format(number));
+            } else {
+                this.target.append(number.toString());
+            }
             return this;
         }
 
         @Override
         public WKTWriter writeSignedNumericLiteral(@NonNull Number number) throws IOException {
-            this.beforeWriteValue();
-            this.target.append(number.toString());
-            return this;
+            return this.writeUnsignedNumericLiteral(number);
         }
 
         @Override
-        public WKTWriter writeEnum(@NonNull Enum<?> value) throws IOException {
+        public WKTWriter writeEnumName(@NonNull String value) throws IOException {
             this.beforeWriteValue();
-            this.target.append(value.name());
+            this.target.append(value);
             return this;
         }
 

@@ -17,17 +17,17 @@ import java.io.IOException;
 public abstract class WKTObject {
     @Override
     public String toString() {
-        return this.toString(" ", "", " ");
+        return this.toString(WKTStyle.ONE_LINE);
     }
 
     public String toPrettyString() {
-        return this.toString("\n", "    ", " ");
+        return this.toString(WKTStyle.PRETTY);
     }
 
     @SneakyThrows(IOException.class)
-    public String toString(@NonNull CharSequence lineBreak, @NonNull CharSequence indent, @NonNull CharSequence afterComma) {
+    public String toString(@NonNull WKTStyle style) {
         StringBuilder builder = new StringBuilder();
-        try (WKTWriter writer = new WKTWriter.ToAppendable(builder, lineBreak, indent, afterComma)) {
+        try (WKTWriter writer = new WKTWriter.ToAppendable(builder, style)) {
             this.write(writer);
         }
         return builder.toString();
