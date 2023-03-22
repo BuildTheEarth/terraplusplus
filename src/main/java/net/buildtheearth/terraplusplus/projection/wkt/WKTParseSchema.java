@@ -54,19 +54,33 @@ public abstract class WKTParseSchema<T> {
 
             B builder = this.builderFactory.get();
 
-            for (Iterator<Property<? super B>> itr = this.properties.iterator(); itr.hasNext(); ) {
+            int currentPropertyVisitCount = 0;
+            Property<? super B> property = null;
+
+            for (Iterator<Property<? super B>> itr = this.properties.iterator(); property != null || itr.hasNext(); ) {
                 WKTReader.Token nextToken = reader.peek();
                 String nextKeyword = nextToken == WKTReader.Token.BEGIN_OBJECT ? reader.nextKeyword() : null;
 
                 do {
-                    Property<? super B> property = itr.next();
+                    if (property == null) { //we need to advance to the next property
+                        currentPropertyVisitCount = 0;
+                        property = itr.next();
+                    }
+
                     if (property.expectedToken != null && property.expectedToken != nextToken) {
-                        checkState(property.optional, "while parsing '%s': next non-optional property expects %s, but found %s!", keyword, property.expectedToken, nextToken);
+                        checkState(property.optional || (property.repeatable && currentPropertyVisitCount > 0), "while parsing '%s': next non-optional property expects %s, but found %s!", keyword, property.expectedToken, nextToken);
+                        property = null; //set the property to null so we can advance to the next one on the next loop
                         continue; //this is an optional property, skip it
                     } else if (!property.tryParse(reader, builder, nextToken, nextKeyword)) {
-                        checkState(property.optional, "while parsing '%s': next non-optional property couldn't accept %s (%s)", keyword, nextToken, nextKeyword);
+                        checkState(property.optional || (property.repeatable && currentPropertyVisitCount > 0), "while parsing '%s': next non-optional property couldn't accept %s (%s)", keyword, nextToken, nextKeyword);
+                        property = null; //set the property to null so we can advance to the next one on the next loop
                         continue; //this is an optional property, skip it
                     } else { //we successfully parsed the property, advance to the next one
+                        if (property.repeatable) { //the property is repeatable, try to visit it again
+                            currentPropertyVisitCount++;
+                        } else { //non-repeatable properties should immediately be set to null so we can advance to the next one
+                            property = null;
+                        }
                         break;
                     }
                 } while (itr.hasNext());
@@ -98,7 +112,7 @@ public abstract class WKTParseSchema<T> {
             }
 
             public <TMP> Builder<T, B> addSimpleProperty(@NonNull IOFunction<? super WKTReader, TMP> read, @NonNull BiConsumer<? super B, ? super TMP> set, boolean optional) {
-                return this.addProperty(new Property<B>(null, optional) {
+                return this.addProperty(new Property<B>(null, optional, false) {
                     @Override
                     public boolean tryParse(@NonNull WKTReader reader, @NonNull B builder, @NonNull WKTReader.Token token, String keyword) throws IOException {
                         set.accept(builder, read.applyThrowing(reader));
@@ -143,9 +157,45 @@ public abstract class WKTParseSchema<T> {
                 return this.addUnsignedNumericAsDoubleProperty(builderCallback, true);
             }
 
+            public Builder<T, B> addSignedNumericProperty(@NonNull BiConsumer<? super B, ? super Number> builderCallback, boolean optional) {
+                return this.addSimpleProperty(WKTReader::nextSignedNumericLiteral, builderCallback, optional);
+            }
+
+            public Builder<T, B> requiredSignedNumericProperty(@NonNull BiConsumer<? super B, ? super Number> builderCallback) {
+                return this.addSignedNumericProperty(builderCallback, false);
+            }
+
+            public Builder<T, B> optionalSignedNumericProperty(@NonNull BiConsumer<? super B, ? super Number> builderCallback) {
+                return this.addSignedNumericProperty(builderCallback, true);
+            }
+
+            public Builder<T, B> addSignedNumericAsDoubleProperty(@NonNull ObjDoubleConsumer<? super B> builderCallback, boolean optional) {
+                return this.addSimpleProperty(WKTReader::nextSignedNumericLiteral, (builder, value) -> builderCallback.accept(builder, value.doubleValue()), optional);
+            }
+
+            public Builder<T, B> requiredSignedNumericAsDoubleProperty(@NonNull ObjDoubleConsumer<? super B> builderCallback) {
+                return this.addSignedNumericAsDoubleProperty(builderCallback, false);
+            }
+
+            public Builder<T, B> optionalSignedNumericAsDoubleProperty(@NonNull ObjDoubleConsumer<? super B> builderCallback) {
+                return this.addSignedNumericAsDoubleProperty(builderCallback, true);
+            }
+
+            public <E extends Enum<E>> Builder<T, B> addEnumProperty(@NonNull Class<E> enumClass, @NonNull BiConsumer<? super B, ? super E> builderCallback, boolean optional) {
+                return this.addSimpleProperty(reader -> reader.nextEnum(enumClass), builderCallback, optional);
+            }
+
+            public <E extends Enum<E>> Builder<T, B> requiredEnumProperty(@NonNull Class<E> enumClass, @NonNull BiConsumer<? super B, ? super E> builderCallback) {
+                return this.addEnumProperty(enumClass, builderCallback, false);
+            }
+
+            public <E extends Enum<E>> Builder<T, B> optionalEnumProperty(@NonNull Class<E> enumClass, @NonNull BiConsumer<? super B, ? super E> builderCallback) {
+                return this.addEnumProperty(enumClass, builderCallback, true);
+            }
+
             public <O> Builder<T, B> addObjectProperty(@NonNull WKTParseSchema<? extends O> schema, @NonNull BiConsumer<? super B, ? super O> set, boolean optional) {
                 UsingBuilder<? extends O, ?> realSchema = uncheckedCast(schema);
-                return this.addProperty(new Property<B>(WKTReader.Token.BEGIN_OBJECT, optional) {
+                return this.addProperty(new Property<B>(WKTReader.Token.BEGIN_OBJECT, optional, false) {
                     @Override
                     public boolean tryParse(@NonNull WKTReader reader, @NonNull B builder, @NonNull WKTReader.Token token, String keyword) throws IOException {
                         checkArg(token == WKTReader.Token.BEGIN_OBJECT && keyword != null, "token=%s, keyword=%s", token, keyword);
@@ -166,6 +216,23 @@ public abstract class WKTParseSchema<T> {
 
             public <O> Builder<T, B> optionalObjectProperty(@NonNull WKTParseSchema<? extends O> schema, @NonNull BiConsumer<? super B, ? super O> set) {
                 return this.addObjectProperty(schema, set, true);
+            }
+
+            public <O> Builder<T, B> addObjectListProperty(@NonNull WKTParseSchema<? extends O> schema, @NonNull BiConsumer<? super B, ? super O> add, boolean optional) {
+                UsingBuilder<? extends O, ?> realSchema = uncheckedCast(schema);
+                return this.addProperty(new Property<B>(WKTReader.Token.BEGIN_OBJECT, optional, true) {
+                    @Override
+                    public boolean tryParse(@NonNull WKTReader reader, @NonNull B builder, @NonNull WKTReader.Token token, String keyword) throws IOException {
+                        checkArg(token == WKTReader.Token.BEGIN_OBJECT && keyword != null, "token=%s, keyword=%s", token, keyword);
+
+                        if (this.optional() && !realSchema.permittedKeywords.contains(keyword)) { //skip if optional and keyword mismatch
+                            return false;
+                        }
+
+                        add.accept(builder, realSchema.parse(reader, keyword));
+                        return true;
+                    }
+                });
             }
 
             public Builder<T, B> inheritFrom(@NonNull WKTParseSchema<? super T> baseSchema) {
@@ -197,6 +264,7 @@ public abstract class WKTParseSchema<T> {
         private static abstract class Property<B> implements IPropertyParser<B> {
             private final WKTReader.Token expectedToken;
             private final boolean optional;
+            private final boolean repeatable;
         }
     }
 }

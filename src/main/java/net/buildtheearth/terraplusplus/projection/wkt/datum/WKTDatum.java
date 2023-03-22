@@ -4,7 +4,6 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTEllipsoid;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
@@ -17,10 +16,9 @@ import java.io.IOException;
  * @author DaPorkchop_
  */
 @EqualsAndHashCode(callSuper = true)
-@SuperBuilder
-@RequiredArgsConstructor
+@SuperBuilder(toBuilder = true)
 @Getter
-public final class WKTDatum extends WKTObject {
+public final class WKTDatum extends WKTObject.WithID {
     public static final WKTParseSchema<WKTDatum> PARSE_SCHEMA = WKTParseSchema.builder(WKTDatumBuilderImpl::new, WKTDatumBuilder::build)
             .permitKeyword("DATUM", "TRF", "GEODETICDATUM")
             .requiredStringProperty(WKTDatumBuilder::name)
@@ -40,5 +38,11 @@ public final class WKTDatum extends WKTObject {
 
     @Override
     public void write(@NonNull WKTWriter writer) throws IOException {
+        writer.beginObject("DATUM")
+                .writeQuotedLatinString(this.name)
+                .writeRequiredObject(this.ellipsoid)
+                .writeOptionalObject(this.anchor)
+                .writeOptionalObject(this.id())
+                .endObject();
     }
 }

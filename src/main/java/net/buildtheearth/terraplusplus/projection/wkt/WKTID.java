@@ -1,10 +1,9 @@
 package net.buildtheearth.terraplusplus.projection.wkt;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.With;
+import lombok.experimental.SuperBuilder;
 
 import java.io.IOException;
 
@@ -12,11 +11,11 @@ import java.io.IOException;
  * @author DaPorkchop_
  * @see <a href="https://docs.opengeospatial.org/is/12-063r5/12-063r5.html#143">WKT Specification §C.2: Backward compatibility of CRS common attributes</a>
  */
-@Builder
-@Data
-@With
-public final class WKTID {
-    public static final WKTParseSchema<WKTID> PARSE_SCHEMA = WKTParseSchema.builder(WKTID::builder, WKTIDBuilder::build)
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
+@Getter
+public final class WKTID extends WKTObject {
+    public static final WKTParseSchema<WKTID> PARSE_SCHEMA = WKTParseSchema.builder(WKTIDBuilderImpl::new, WKTIDBuilder::build)
             .permitKeyword("ID", "AUTHORITY")
             .requiredStringProperty(WKTIDBuilder::authorityName)
             .addSimpleProperty(
@@ -31,15 +30,6 @@ public final class WKTID {
     private final Object authorityUniqueIdentifier;
 
     @Override
-    @SneakyThrows(IOException.class)
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        try (WKTWriter writer = new WKTWriter.ToAppendable(builder, " ", "", " ")) {
-            this.write(writer);
-        }
-        return builder.toString();
-    }
-
     public void write(@NonNull WKTWriter writer) throws IOException {
         writer.beginObject("ID")
                 .writeQuotedLatinString(this.authorityName);

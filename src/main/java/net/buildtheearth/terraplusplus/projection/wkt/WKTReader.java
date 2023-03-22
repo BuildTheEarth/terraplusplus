@@ -2,6 +2,7 @@ package net.buildtheearth.terraplusplus.projection.wkt;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import net.daporkchop.lib.common.util.PorkUtil;
 
 import java.io.IOException;
 import java.nio.CharBuffer;
@@ -38,6 +39,16 @@ public interface WKTReader extends AutoCloseable {
      */
     Number nextUnsignedNumericLiteral() throws IOException;
 
+    /**
+     * Reads the next token from the stream, asserts that it is {@link Token#NUMBER} and returns the numeric value.
+     */
+    Number nextSignedNumericLiteral() throws IOException;
+
+    /**
+     * Reads the next token from the stream, asserts that it is {@link Token#ENUM} and returns the enum value.
+     */
+    <E extends Enum<E>> E nextEnum(@NonNull Class<E> enumClass) throws IOException;
+
     @Override
     void close() throws IOException;
 
@@ -49,6 +60,7 @@ public interface WKTReader extends AutoCloseable {
         END_OBJECT,
         QUOTED_LATIN_STRING,
         NUMBER,
+        ENUM,
     }
 
     /**
@@ -93,10 +105,29 @@ public interface WKTReader extends AutoCloseable {
                 }
 
                 if (c >= 'A' && c <= 'Z') {
-                    return Token.BEGIN_OBJECT;
+                    //find the next character after the word token to determine whether this is a BEGIN_OBJECT or an ENUM
+                    do {
+                        c = this.buffer.charAt(++i);
+                    } while (c >= 'A' && c <= 'Z');
+
+                    if (isWhitespace(c)) {
+                        do { //skip any whitespace
+                            i++;
+                        } while (isWhitespace(c = this.buffer.charAt(i)));
+                    }
+
+                    switch (c) {
+                        case ',':
+                        case ']':
+                            return Token.ENUM;
+                        case '[':
+                            return Token.BEGIN_OBJECT;
+                    }
+                    throw new IllegalStateException("unexpected character after keyword: '" + c + '"');
                 } else if (c >= '0' && c <= '9') {
                     return Token.NUMBER;
                 }
+
                 switch (c) {
                     case '"':
                         return Token.QUOTED_LATIN_STRING;
@@ -165,6 +196,30 @@ public interface WKTReader extends AutoCloseable {
             return builder.toString();
         }
 
+        @Override
+        public <E extends Enum<E>> E nextEnum(@NonNull Class<E> enumClass) throws IOException {
+            this.skipToNextValue();
+
+            int start = this.buffer.position();
+            char c = this.buffer.get();
+            checkState(c >= 'A' && c <= 'Z', "not a valid enum start character: '%c'", c);
+
+            while (!isWhitespace(c = this.buffer.get()) && c != ',' && c != ']') {
+                checkState((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9'), "not a valid enum character: '%c'", c);
+            }
+
+            int end = this.buffer.position();
+            if (c != ',' && c != ']') {
+                this.skipWhitespace();
+                checkState((c = this.buffer.get()) == ',' || c == ']', "expected enum termination character, but found '%c'", c);
+            }
+
+            //unread last character (which is either ',' or ']')
+            this.buffer.position(this.buffer.position() - 1);
+
+            return Enum.valueOf(enumClass, this.buffer.duplicate().position(start).limit(end - 1).toString());
+        }
+
         private long readUnsignedInteger() {
             char c = this.buffer.get();
             checkState(c >= '0' && c <= '9', "expected digit, found '%c'", c);
@@ -192,26 +247,29 @@ public interface WKTReader extends AutoCloseable {
         }
 
         private double readExactNumericLiteral_fractionalPart() {
-            double value = 0.0d;
-            double factor = 0.1d;
+            int start = this.buffer.position();
 
             char c = this.buffer.get();
             checkState(c >= '0' && c <= '9', "expected digit, found '%c'", c);
-            do {
-                value += factor * (c - '0');
-                factor *= 0.1d;
 
+            //seek ahead until we find the last digit
+            do {
                 c = this.buffer.get();
             } while (c >= '0' && c <= '9');
             this.buffer.position(this.buffer.position() - 1);
+            int end = this.buffer.position();
 
-            return value;
+            //parsing floating-point numbers without loss of precision is hard, so i can't be bothered to do it
+            return Double.parseDouble("0." + this.buffer.duplicate().position(start).limit(end));
         }
 
         @Override
         public Number nextUnsignedNumericLiteral() {
             this.skipToNextValue();
+            return this.nextUnsignedNumericLiteral0();
+        }
 
+        private Number nextUnsignedNumericLiteral0() {
             char c = this.buffer.get();
             if (c == '.') { //<exact numeric literal>: second case
                 return this.readExactNumericLiteral_fractionalPart();
@@ -252,6 +310,34 @@ public interface WKTReader extends AutoCloseable {
                 default:
                     this.buffer.position(this.buffer.position() - 1);
                     return value;
+            }
+        }
+
+        @Override
+        public Number nextSignedNumericLiteral() throws IOException {
+            this.skipToNextValue();
+
+            switch (this.buffer.get()) {
+                default:
+                    this.buffer.position(this.buffer.position() - 1); //neither plus nor minus, unread previous char and assume positive
+                    //fall through
+                case '+':
+                    //read unsigned number and return it without changes
+                    return this.nextUnsignedNumericLiteral0();
+                case '-':
+                    //read unsigned number, then negate it before returning
+                    Number unsigned = this.nextUnsignedNumericLiteral0();
+                    if (unsigned instanceof Float) {
+                        return -unsigned.floatValue();
+                    } else if (unsigned instanceof Double) {
+                        return -unsigned.doubleValue();
+                    } else if (unsigned instanceof Integer) {
+                        return Math.multiplyExact(unsigned.intValue(), -1);
+                    } else if (unsigned instanceof Long) {
+                        return Math.multiplyExact(unsigned.longValue(), -1L);
+                    } else {
+                        throw new IllegalStateException(PorkUtil.className(unsigned));
+                    }
             }
         }
 

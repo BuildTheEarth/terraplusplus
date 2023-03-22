@@ -4,7 +4,6 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import net.buildtheearth.terraplusplus.projection.wkt.unit.WKTLengthUnit;
 
@@ -15,10 +14,9 @@ import java.io.IOException;
  * @see <a href="https://docs.opengeospatial.org/is/12-063r5/12-063r5.html#52">WKT Specification §8.2.1: Geodetic datum - Ellipsoid</a>
  */
 @EqualsAndHashCode(callSuper = true)
-@SuperBuilder
-@RequiredArgsConstructor
+@SuperBuilder(toBuilder = true)
 @Getter
-public final class WKTEllipsoid extends WKTObject {
+public final class WKTEllipsoid extends WKTObject.WithID {
     public static final WKTParseSchema<WKTEllipsoid> PARSE_SCHEMA = WKTParseSchema.builder(WKTEllipsoidBuilderImpl::new, WKTEllipsoidBuilder::build)
             .permitKeyword("ELLIPSOID", "SPHEROID")
             .requiredStringProperty(WKTEllipsoidBuilder::name)
@@ -47,11 +45,9 @@ public final class WKTEllipsoid extends WKTObject {
         writer.beginObject("ELLIPSOID")
                 .writeQuotedLatinString(this.name)
                 .writeUnsignedNumericLiteral(this.semiMajorAxis)
-                .writeUnsignedNumericLiteral(this.inverseFlattening);
-        this.lengthUnit.write(writer);
-        if (this.id() != null) {
-            this.id().write(writer);
-        }
-        writer.endObject();
+                .writeUnsignedNumericLiteral(this.inverseFlattening)
+                .writeRequiredObject(this.lengthUnit)
+                .writeOptionalObject(this.id())
+                .endObject();
     }
 }

@@ -1,6 +1,5 @@
 package net.buildtheearth.terraplusplus.projection.wkt;
 
-import lombok.Builder;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -39,6 +38,39 @@ public interface WKTWriter extends AutoCloseable {
      * @param number the {@link Number}
      */
     WKTWriter writeUnsignedNumericLiteral(@NonNull Number number) throws IOException;
+
+    /**
+     * Writes the given {@link Number} as a signed numeric literal.
+     *
+     * @param number the {@link Number}
+     */
+    WKTWriter writeSignedNumericLiteral(@NonNull Number number) throws IOException;
+
+    /**
+     * Writes the given {@link Enum} as an enum value.
+     *
+     * @param value the {@link Enum}
+     */
+    WKTWriter writeEnum(@NonNull Enum<?> value) throws IOException;
+
+    default WKTWriter writeRequiredObject(@NonNull WKTObject object) throws IOException {
+        object.write(this);
+        return this;
+    }
+
+    default WKTWriter writeOptionalObject(WKTObject object) throws IOException {
+        if (object != null) {
+            object.write(this);
+        }
+        return this;
+    }
+
+    default WKTWriter writeObjectList(@NonNull Iterable<? extends WKTObject> objects) throws IOException {
+        for (WKTObject object : objects) {
+            object.write(this);
+        }
+        return this;
+    }
 
     /**
      * Signifies that this writer has finished writing all objects.
@@ -131,7 +163,30 @@ public interface WKTWriter extends AutoCloseable {
         @Override
         public WKTWriter writeUnsignedNumericLiteral(@NonNull Number number) throws IOException {
             this.beforeWriteValue();
-            this.target.append(number.toString()); //TODO
+
+            /*String string = number.toString();
+            int start = 0;
+            int end = string.length();
+
+            if (string.length() > ".0".length() && string.endsWith(".0")) { //skip redundant trailing decimal which is appended to floating-point numbers for some reason
+                end = string.length() - ".0".length();
+            }
+            this.target.append(string, start, end);*/
+            this.target.append(number.toString());
+            return this;
+        }
+
+        @Override
+        public WKTWriter writeSignedNumericLiteral(@NonNull Number number) throws IOException {
+            this.beforeWriteValue();
+            this.target.append(number.toString());
+            return this;
+        }
+
+        @Override
+        public WKTWriter writeEnum(@NonNull Enum<?> value) throws IOException {
+            this.beforeWriteValue();
+            this.target.append(value.name());
             return this;
         }
 
