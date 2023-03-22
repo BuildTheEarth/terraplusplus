@@ -36,17 +36,16 @@ public final class WKTEllipsoid extends WKTObject.WithID {
      */
     private final double inverseFlattening;
 
-    @NonNull
     @Builder.Default
-    private final WKTLengthUnit lengthUnit = WKTLengthUnit.METRE;
+    private final WKTLengthUnit lengthUnit = null;
 
     @Override
     public void write(@NonNull WKTWriter writer) throws IOException {
-        writer.beginObject("ELLIPSOID")
+        writer.beginObject("SPHEROID")
                 .writeQuotedLatinString(this.name)
                 .writeUnsignedNumericLiteral(this.semiMajorAxis)
                 .writeUnsignedNumericLiteral(this.inverseFlattening)
-                .writeRequiredObject(this.lengthUnit)
+                .writeOptionalObject(this.lengthUnit)
                 .writeOptionalObject(this.id())
                 .endObject();
     }

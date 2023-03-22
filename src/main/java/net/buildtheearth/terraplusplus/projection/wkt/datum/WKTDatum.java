@@ -23,6 +23,7 @@ public final class WKTDatum extends WKTObject.WithID {
             .permitKeyword("DATUM", "TRF", "GEODETICDATUM")
             .requiredStringProperty(WKTDatumBuilder::name)
             .requiredObjectProperty(WKTEllipsoid.PARSE_SCHEMA, WKTDatumBuilder::ellipsoid)
+            .optionalObjectProperty(WKTTOWGS84.PARSE_SCHEMA, WKTDatumBuilder::toWGS84)
             .optionalObjectProperty(WKTDatumAnchor.PARSE_SCHEMA, WKTDatumBuilder::anchor)
             .inheritFrom(BASE_PARSE_SCHEMA)
             .build();
@@ -34,6 +35,9 @@ public final class WKTDatum extends WKTObject.WithID {
     private final WKTEllipsoid ellipsoid;
 
     @Builder.Default
+    private final WKTTOWGS84 toWGS84 = null;
+
+    @Builder.Default
     private final WKTDatumAnchor anchor = null;
 
     @Override
@@ -41,6 +45,7 @@ public final class WKTDatum extends WKTObject.WithID {
         writer.beginObject("DATUM")
                 .writeQuotedLatinString(this.name)
                 .writeRequiredObject(this.ellipsoid)
+                .writeOptionalObject(this.toWGS84)
                 .writeOptionalObject(this.anchor)
                 .writeOptionalObject(this.id())
                 .endObject();

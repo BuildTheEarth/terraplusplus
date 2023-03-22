@@ -35,7 +35,7 @@ public final class WKTScaleUnit extends WKTObject.WithID {
 
     @Override
     public void write(@NonNull WKTWriter writer) throws IOException {
-        writer.beginObject("SCALEUNIT")
+        writer.beginObject("UNIT")
                 .writeQuotedLatinString(this.name)
                 .writeUnsignedNumericLiteral(this.conversionFactor)
                 .writeOptionalObject(this.id())

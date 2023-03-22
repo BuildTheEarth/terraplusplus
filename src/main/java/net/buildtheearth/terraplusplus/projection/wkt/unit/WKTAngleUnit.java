@@ -37,7 +37,7 @@ public final class WKTAngleUnit extends WKTObject.WithID {
 
     @Override
     public void write(@NonNull WKTWriter writer) throws IOException {
-        writer.beginObject("ANGLEUNIT")
+        writer.beginObject("UNIT")
                 .writeQuotedLatinString(this.name)
                 .writeUnsignedNumericLiteral(this.conversionFactor)
                 .writeOptionalObject(this.id())

@@ -48,5 +48,14 @@ public final class WKTAxis extends WKTObject {
         UP,
         DOWN,
         OTHER,
+
+        //there aren't Official:tm: values
+        NORTH_EAST,
+        NORTH_WEST,
+        SOUTH_EAST,
+        SOUTH_WEST,
+        GEOCENTRIC_X,
+        GEOCENTRIC_Y,
+        GEOCENTRIC_Z,
     }
 }

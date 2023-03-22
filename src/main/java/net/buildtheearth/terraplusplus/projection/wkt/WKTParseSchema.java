@@ -31,6 +31,8 @@ public abstract class WKTParseSchema<T> {
         return new UsingBuilder.Builder<>(builderFactory, builderBuild);
     }
 
+    public abstract boolean isPermittedKeyword(@NonNull String keyword);
+
     public T parse(@NonNull WKTReader reader) throws IOException {
         return this.parse(reader, reader.nextKeyword());
     }
@@ -47,6 +49,11 @@ public abstract class WKTParseSchema<T> {
 
         private final Set<String> permittedKeywords;
         private final List<Property<? super B>> properties;
+
+        @Override
+        public boolean isPermittedKeyword(@NonNull String keyword) {
+            return this.permittedKeywords.contains(keyword);
+        }
 
         @Override
         public T parse(@NonNull WKTReader reader, @NonNull String keyword) throws IOException {
@@ -231,6 +238,24 @@ public abstract class WKTParseSchema<T> {
 
                         add.accept(builder, realSchema.parse(reader, keyword));
                         return true;
+                    }
+                });
+            }
+
+            public <O> Builder<T, B> addAnyObjectProperty(@NonNull Supplier<List<? extends WKTParseSchema<? extends O>>> schemasFactory, @NonNull BiConsumer<? super B, ? super O> set, boolean optional) {
+                return this.addProperty(new Property<B>(WKTReader.Token.BEGIN_OBJECT, optional, false) {
+                    @Override
+                    public boolean tryParse(@NonNull WKTReader reader, @NonNull B builder, @NonNull WKTReader.Token token, String keyword) throws IOException {
+                        checkArg(token == WKTReader.Token.BEGIN_OBJECT && keyword != null, "token=%s, keyword=%s", token, keyword);
+
+                        List<UsingBuilder<? extends O, ?>> realSchemas = uncheckedCast(schemasFactory.get());
+                        for (UsingBuilder<? extends O, ?> realSchema : realSchemas) {
+                            if (realSchema.permittedKeywords.contains(keyword)) {
+                                set.accept(builder, realSchema.parse(reader, keyword));
+                            }
+                        }
+
+                        return !this.optional();
                     }
                 });
             }
