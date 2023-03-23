@@ -1,15 +1,18 @@
 package net.buildtheearth.terraplusplus.projection.wkt.datum;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
-import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
+import lombok.extern.jackson.Jacksonized;
 
 /**
  * @author DaPorkchop_
  */
+@JsonIgnoreProperties("$schema")
+@Jacksonized
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 @Getter
-public abstract class WKTDatum extends WKTObject.WithNameAndID implements WKTObject.AutoDeserialize {
+public final class WKTStaticGeodeticDatum extends WKTGeodeticDatum {
 }

@@ -1,50 +1,40 @@
 package net.buildtheearth.terraplusplus.projection.wkt.datum;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
-import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTBoundingBox;
+import lombok.extern.jackson.Jacksonized;
 import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTEllipsoid;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
-import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTPrimeMeridian;
 
 import java.io.IOException;
 
 /**
  * @author DaPorkchop_
  */
+@JsonIgnoreProperties("$schema")
+@Jacksonized
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 @Getter
-public abstract class WKTGeodeticDatum extends WKTDatum {
+public final class WKTGeodeticDatumEnsemble extends WKTDatumEnsemble {
     @NonNull
     @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
     private final WKTEllipsoid ellipsoid;
 
-    @Builder.Default
-    private final String scope = null;
-
-    @Builder.Default
-    private final String area = null;
-
-    @NonNull
-    private final WKTBoundingBox bbox;
-
-    @Builder.Default
-    @JsonProperty("prime_meridian")
-    private final WKTPrimeMeridian primeMeridian = null;
+    //TODO: prime meridian
 
     @Override
     public void write(@NonNull WKTWriter writer) throws IOException {
-        writer.beginObject("DATUM")
+        writer.beginObject("ENSEMBLE")
+                .writeQuotedLatinString(this.name())
+                .writeObjectList(this.members())
                 .writeRequiredObject(this.ellipsoid)
-                .writeRequiredObject(this.bbox)
+                .beginObject("ENSEMBLEACCURACY").writeUnsignedNumericLiteral(this.accuracy()).endObject()
                 .writeOptionalObject(this.id())
-                .endObject()
-                .writeOptionalObject(this.primeMeridian);
+                .endObject();
     }
 }

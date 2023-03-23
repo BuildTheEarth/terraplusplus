@@ -1,13 +1,23 @@
 package net.buildtheearth.terraplusplus.projection.wkt;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.experimental.SuperBuilder;
+import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTDynamicGeodeticDatum;
+import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTGeodeticDatumEnsemble;
+import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTStaticGeodeticDatum;
+import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTEllipsoid;
+import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTID;
 
 import java.io.IOException;
+
+import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 /**
  * @author DaPorkchop_
@@ -38,6 +48,24 @@ public abstract class WKTObject {
     /**
      * @author DaPorkchop_
      */
+    @JsonIgnoreProperties("$schema")
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+    @JsonSubTypes({
+            @JsonSubTypes.Type(value = WKTGeodeticDatumEnsemble.class, name = "DatumEnsemble"),
+            @JsonSubTypes.Type(value = WKTDynamicGeodeticDatum.class, name = "DynamicGeodeticReferenceFrame"),
+            @JsonSubTypes.Type(value = WKTStaticGeodeticDatum.class, name = "StaticGeodeticReferenceFrame"),
+
+            @JsonSubTypes.Type(value = WKTEllipsoid.class, name = "Ellipsoid"),
+    })
+    public interface AutoDeserialize {
+        default <T extends WKTObject> T asWKTObject() {
+            return uncheckedCast(this);
+        }
+    }
+
+    /**
+     * @author DaPorkchop_
+     */
     @EqualsAndHashCode(callSuper = true)
     @SuperBuilder(toBuilder = true)
     @Getter
@@ -49,5 +77,16 @@ public abstract class WKTObject {
 
         @Builder.Default
         private final WKTID id = null;
+    }
+
+    /**
+     * @author DaPorkchop_
+     */
+    @EqualsAndHashCode(callSuper = true)
+    @SuperBuilder(toBuilder = true)
+    @Getter
+    public static abstract class WithNameAndID extends WKTObject.WithID {
+        @NonNull
+        private final String name;
     }
 }

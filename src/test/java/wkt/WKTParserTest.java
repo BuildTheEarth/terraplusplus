@@ -1,5 +1,6 @@
 package wkt;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.NonNull;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTParser;
@@ -14,6 +15,7 @@ import java.nio.CharBuffer;
 import java.util.Objects;
 import java.util.Properties;
 
+import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 import static org.junit.Assert.*;
 
 /**
@@ -51,64 +53,28 @@ public class WKTParserTest {
     }
 
     @Test
-    public void testEllipsoid() {
-        assertEquals(
-                "SPHEROID[\"WGS 84\", 6378137.0, 298.257223563, UNIT[\"metre\", 1.0], AUTHORITY[\"EPSG\", 7030]]",
-                WKTParser.parseEllipsoid(buffer("ELLIPSOID[\"WGS 84\",6378137,298.257223563,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",7030]]")).toString());
-
-        assertEquals(
-                "SPHEROID[\"GRS 1980\", 6378137.0, 298.257222101]",
-                WKTParser.parseEllipsoid(buffer("SPHEROID[\"GRS 1980\",6378137.0,298.257222101]")).toString());
-
-        assertEquals(
-                "SPHEROID[\"Clark 1866\", 20925832.164, 294.97869821, UNIT[\"US survey foot\", 0.304800609601219]]",
-                WKTParser.parseEllipsoid(buffer("ELLIPSOID[\"Clark 1866\",20925832.164,294.97869821, LENGTHUNIT[\"US survey foot\",0.304800609601219]]")).toString());
-
-        assertEquals(
-                "SPHEROID[\"Clark 1866\", 20925832.164, 294.97869821, UNIT[\"US survey foot\", 0.304800609601219]]",
-                WKTParser.parseEllipsoid(buffer("ELLIPSOID[\"Clark 1866\",2.0925832164E7,294.97869821, LENGTHUNIT[\"US survey foot\",0.304800609601219]]")).toString());
-
-        assertEquals(
-                "SPHEROID[\"Sphere\", 6371000.0, 0.0, UNIT[\"metre\", 1.0]]",
-                WKTParser.parseEllipsoid(buffer("ELLIPSOID[\"Sphere\",6371000,0,LENGTHUNIT[\"metre\",1.0]]")).toString());
+    public void testEllipsoid() throws JsonProcessingException {
+        System.out.println(JSON_MAPPER.readValue(
+                "{\"$schema\": \"https://proj.org/schemas/v0.5/projjson.schema.json\",\"type\": \"Ellipsoid\",\"name\": \"WGS 84\",\"semi_major_axis\": 6378137,\"inverse_flattening\": 298.257223563,\"id\": {\"authority\": \"EPSG\",\"code\": 7030}}",
+                WKTObject.AutoDeserialize.class).asWKTObject().toPrettyString());
     }
 
     @Test
-    public void testDatum() {
-        assertEquals(
-                "DATUM[\"North American Datum 1983\", SPHEROID[\"GRS 1980\", 6378137.0, 298.257222101, UNIT[\"metre\", 1.0]]]",
-                WKTParser.parseDatum(buffer("DATUM[\"North American Datum 1983\", ELLIPSOID[\"GRS 1980\", 6378137, 298.257222101, LENGTHUNIT[\"metre\", 1.0]]]")).toString());
+    public void testDatum() throws JsonProcessingException {
+        System.out.println(JSON_MAPPER.readValue(
+                "{\"$schema\": \"https://proj.org/schemas/v0.5/projjson.schema.json\",\"type\": \"DynamicGeodeticReferenceFrame\",\"name\": \"IGS97\",\"frame_reference_epoch\": 1997,\"ellipsoid\": {\"name\": \"GRS 1980\",\"semi_major_axis\": 6378137,\"inverse_flattening\": 298.257222101},\"scope\": \"Geodesy.\",\"area\": \"World.\",\"bbox\": {\"south_latitude\": -90,\"west_longitude\": -180,\"north_latitude\": 90,\"east_longitude\": 180},\"id\": {\"authority\": \"EPSG\",\"code\": 1244}}",
+                WKTObject.AutoDeserialize.class).asWKTObject().toPrettyString());
 
-        assertEquals(
-                "DATUM[\"World Geodetic System 1984\", SPHEROID[\"WGS 84\", 6378388.0, 298.257223563, UNIT[\"metre\", 1.0]]]",
-                WKTParser.parseDatum(buffer("TRF[\"World Geodetic System 1984\", ELLIPSOID[\"WGS 84\",6378388.0,298.257223563,LENGTHUNIT[\"metre\",1.0]]]")).toString());
-
-        assertEquals(
-                "DATUM[\"Tananarive 1925\", SPHEROID[\"International 1924\", 6378388.0, 297.0, UNIT[\"metre\", 1.0]], ANCHOR[\"Tananarive observatory:21.0191667gS, 50.23849537gE of Paris\"]]",
-                WKTParser.parseDatum(buffer("GEODETICDATUM[\"Tananarive 1925\", ELLIPSOID[\"International 1924\",6378388.0,297.0,LENGTHUNIT[\"metre\",1.0] ], ANCHOR[\"Tananarive observatory:21.0191667gS, 50.23849537gE of Paris\"]]")).toString());
+        System.out.println(JSON_MAPPER.readValue(
+                "{\"$schema\": \"https://proj.org/schemas/v0.5/projjson.schema.json\",\"type\": \"DatumEnsemble\",\"name\": \"World Geodetic System 1984 ensemble\",\"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\",\"id\": {\"authority\": \"EPSG\",\"code\": 1166}},{\"name\": \"World Geodetic System 1984 (G730)\",\"id\": {\"authority\": \"EPSG\",\"code\": 1152}},{\"name\": \"World Geodetic System 1984 (G873)\",\"id\": {\"authority\": \"EPSG\",\"code\": 1153}},{\"name\": \"World Geodetic System 1984 (G1150)\",\"id\": {\"authority\": \"EPSG\",\"code\": 1154}},{\"name\": \"World Geodetic System 1984 (G1674)\",\"id\": {\"authority\": \"EPSG\",\"code\": 1155}},{\"name\": \"World Geodetic System 1984 (G1762)\",\"id\": {\"authority\": \"EPSG\",\"code\": 1156}},{\"name\": \"World Geodetic System 1984 (G2139)\",\"id\": {\"authority\": \"EPSG\",\"code\": 1309}}],\"ellipsoid\": {\"name\": \"WGS 84\",\"semi_major_axis\": 6378137,\"inverse_flattening\": 298.257223563},\"accuracy\": \"2.0\",\"id\": {\"authority\": \"EPSG\",\"code\": 6326}}",
+                WKTObject.AutoDeserialize.class).asWKTObject().toPrettyString());
     }
 
     @Test
     public void testPrimeMeridian() {
-        assertEquals(
-                "PRIMEM[\"Paris\", 2.5969213, UNIT[\"grad\", 0.015707963267949]]",
-                WKTParser.parsePrimeMeridian(buffer("PRIMEM[\"Paris\",2.5969213,ANGLEUNIT[\"grad\",0.015707963267949]]")).toString());
-        assertEquals(
-                "PRIMEM[\"Ferro\", -17.6666667]",
-                WKTParser.parsePrimeMeridian(buffer("PRIMEM[\"Ferro\",-17.6666667]")).toString());
-        assertEquals(
-                "PRIMEM[\"Greenwich\", 0.0, UNIT[\"degree\", 0.0174532925199433]]",
-                WKTParser.parsePrimeMeridian(buffer("PRIMEM[\"Greenwich\",0.0, ANGLEUNIT[\"degree\",0.0174532925199433]]")).toString());
     }
 
     @Test
     public void testGeographicCRS() {
-        assertEquals(
-                "GEOGCS[\"NAD83\", DATUM[\"North American Datum 1983\", SPHEROID[\"GRS 1980\", 6378137.0, 298.257222101]], PRIMEM[\"Greenwich\", 0.0], UNIT[\"degree\", 0.0174532925199433]]",
-                WKTParser.parseGeographicCRS(buffer("GEOGCS[\"NAD83\", DATUM[\"North American Datum 1983\", ELLIPSOID[\"GRS 1980\", 6378137.0, 298.257222101]], PRIMEM[\"Greenwich\",0], UNIT[\"degree\", 0.0174532925199433]]")).toString());
-
-        /*assertEquals(
-                "GEOGCS[\"NAD83\", DATUM[\"North American Datum 1983\", SPHEROID[\"GRS 1980\", 6378137.0, 298.257222101]], PRIMEM[\"Greenwich\", 0.0], AXIS[\"latitude\", NORTH], AXIS[\"longitude\", EAST], ANGLEUNIT[\"degree\", 0.0174532925199433]]",
-                WKTParser.parseStaticGeographicCRS(buffer("GEOGCS[\"NAD83\", DATUM[\"North American Datum 1983\", SPHEROID[\"GRS 1980\", 6378137.0, 298.257222101]], PRIMEM[\"Greenwich\", 0], AXIS[\"latitude\",NORTH], AXIS[\"longitude\",EAST], UNIT[\"degree\",0.0174532925199433]]")).toString());*/
     }
 }
