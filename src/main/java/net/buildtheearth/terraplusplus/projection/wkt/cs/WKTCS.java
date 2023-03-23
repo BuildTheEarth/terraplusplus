@@ -1,4 +1,4 @@
-package net.buildtheearth.terraplusplus.projection.wkt.crs;
+package net.buildtheearth.terraplusplus.projection.wkt.cs;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -11,5 +11,5 @@ import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 @Getter
-public abstract class AbstractWKTCRS extends WKTObject.WithID {
+public abstract class WKTCS extends WKTObject.WithID {
 }

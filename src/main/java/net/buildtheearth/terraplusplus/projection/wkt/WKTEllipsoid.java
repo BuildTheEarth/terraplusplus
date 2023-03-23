@@ -41,7 +41,7 @@ public final class WKTEllipsoid extends WKTObject.WithID {
 
     @Override
     public void write(@NonNull WKTWriter writer) throws IOException {
-        writer.beginObject("SPHEROID")
+        writer.beginObject("ELLIPSOID")
                 .writeQuotedLatinString(this.name)
                 .writeUnsignedNumericLiteral(this.semiMajorAxis)
                 .writeUnsignedNumericLiteral(this.inverseFlattening)

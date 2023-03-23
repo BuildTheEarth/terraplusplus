@@ -31,7 +31,7 @@ public final class WKTID extends WKTObject {
 
     @Override
     public void write(@NonNull WKTWriter writer) throws IOException {
-        writer.beginObject("AUTHORITY")
+        writer.beginObject("ID")
                 .writeQuotedLatinString(this.authorityName);
         if (this.authorityUniqueIdentifier instanceof Number) {
             writer.writeUnsignedNumericLiteral((Number) this.authorityUniqueIdentifier);

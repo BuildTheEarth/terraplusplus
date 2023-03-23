@@ -4,7 +4,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
-import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTParseSchema;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
 
@@ -17,29 +16,27 @@ import java.io.IOException;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 @Getter
-public final class WKTLengthUnit extends WKTObject.WithID {
+public final class WKTLengthUnit extends WKTUnit {
     public static final WKTLengthUnit METRE = builder().name("metre").conversionFactor(1.0d).build();
 
     public static final WKTParseSchema<WKTLengthUnit> PARSE_SCHEMA = WKTParseSchema.builder(WKTLengthUnitBuilderImpl::new, WKTLengthUnitBuilder::build)
             .permitKeyword("LENGTHUNIT", "UNIT")
-            .requiredStringProperty(WKTLengthUnitBuilder::name)
-            .requiredUnsignedNumericAsDoubleProperty(WKTLengthUnitBuilder::conversionFactor)
             .inheritFrom(BASE_PARSE_SCHEMA)
             .build();
-
-    @NonNull
-    private final String name;
 
     /**
      * The number of meters per unit.
      */
-    private final double conversionFactor;
+    @Override
+    public double conversionFactor() {
+        return super.conversionFactor();
+    }
 
     @Override
     public void write(@NonNull WKTWriter writer) throws IOException {
-        writer.beginObject("UNIT")
-                .writeQuotedLatinString(this.name)
-                .writeUnsignedNumericLiteral(this.conversionFactor)
+        writer.beginObject("LENGTHUNIT")
+                .writeQuotedLatinString(this.name())
+                .writeUnsignedNumericLiteral(this.conversionFactor())
                 .writeOptionalObject(this.id())
                 .endObject();
     }

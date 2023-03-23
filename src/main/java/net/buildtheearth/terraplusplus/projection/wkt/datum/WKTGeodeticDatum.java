@@ -3,7 +3,6 @@ package net.buildtheearth.terraplusplus.projection.wkt.datum;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
-import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
 
 /**
  * @author DaPorkchop_
@@ -11,5 +10,5 @@ import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 @Getter
-public abstract class WKTDatum extends WKTObject.WithID {
+public abstract class WKTGeodeticDatum extends WKTDatum {
 }

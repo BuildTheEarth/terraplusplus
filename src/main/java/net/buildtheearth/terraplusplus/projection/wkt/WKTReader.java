@@ -200,7 +200,7 @@ public interface WKTReader extends AutoCloseable {
                     builder.append(c);
                 }
             }
-            return builder.toString();
+            return builder.toString().intern();
         }
 
         @Override
@@ -224,7 +224,7 @@ public interface WKTReader extends AutoCloseable {
             //unread last character (which is either ',' or ']')
             this.buffer.position(this.buffer.position() - 1);
 
-            return this.buffer.duplicate().position(start).limit(end - 1).toString();
+            return this.buffer.duplicate().position(start).limit(end - 1).toString().intern();
         }
 
         private long readUnsignedInteger() {
