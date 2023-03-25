@@ -17,6 +17,8 @@ import java.io.IOException;
 @SuperBuilder(toBuilder = true)
 @Getter
 public final class WKTScaleUnit extends WKTUnit {
+    public static final WKTScaleUnit UNITY = builder().name("unity").conversionFactor(1.0d).build();
+
     public static final WKTParseSchema<WKTScaleUnit> PARSE_SCHEMA = WKTParseSchema.builder(WKTScaleUnitBuilderImpl::new, WKTScaleUnitBuilder::build)
             .permitKeyword("LENGTHUNIT", "UNIT")
             .inheritFrom(BASE_PARSE_SCHEMA)

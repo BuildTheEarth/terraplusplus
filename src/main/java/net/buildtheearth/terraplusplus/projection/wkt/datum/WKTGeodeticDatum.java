@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
+import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
 import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTBoundingBox;
 import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTEllipsoid;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
@@ -20,7 +21,7 @@ import java.io.IOException;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 @Getter
-public abstract class WKTGeodeticDatum extends WKTDatum {
+public abstract class WKTGeodeticDatum extends WKTDatum implements WKTObject.ScopeExtentIdentifierRemark { //this isn't supposed to have a scope extent identifier, but some projections seem to give it one anyway?
     @NonNull
     @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
     private final WKTEllipsoid ellipsoid;
@@ -31,8 +32,11 @@ public abstract class WKTGeodeticDatum extends WKTDatum {
     @Builder.Default
     private final String area = null;
 
-    @NonNull
-    private final WKTBoundingBox bbox;
+    @Builder.Default
+    private final String usage = null;
+
+    @Builder.Default
+    private final WKTBoundingBox bbox = null;
 
     @Builder.Default
     @JsonProperty("prime_meridian")
@@ -42,7 +46,7 @@ public abstract class WKTGeodeticDatum extends WKTDatum {
     public void write(@NonNull WKTWriter writer) throws IOException {
         writer.beginObject("DATUM")
                 .writeRequiredObject(this.ellipsoid)
-                .writeRequiredObject(this.bbox)
+                .writeOptionalObject(this.bbox)
                 .writeOptionalObject(this.id())
                 .endObject()
                 .writeOptionalObject(this.primeMeridian);
