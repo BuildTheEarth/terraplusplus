@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
-import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
+import net.buildtheearth.terraplusplus.projection.wkt.AbstractWKTObject;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
 
 import java.io.IOException;
@@ -31,7 +31,7 @@ public abstract class WKTDatumEnsemble extends WKTDatum {
     @EqualsAndHashCode(callSuper = true)
     @SuperBuilder(toBuilder = true)
     @Getter
-    public static final class Member extends WKTObject.WithNameAndID {
+    public static final class Member extends AbstractWKTObject.WithNameAndID {
         @Override
         public void write(@NonNull WKTWriter writer) throws IOException {
             writer.beginObject("MEMBER")

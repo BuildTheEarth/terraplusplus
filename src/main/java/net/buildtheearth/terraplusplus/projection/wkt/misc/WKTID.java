@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
-import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
+import net.buildtheearth.terraplusplus.projection.wkt.AbstractWKTObject;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTParseSchema;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTReader;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
@@ -20,7 +20,7 @@ import java.io.IOException;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 @Getter
-public final class WKTID extends WKTObject {
+public final class WKTID extends AbstractWKTObject {
     public static final WKTParseSchema<WKTID> PARSE_SCHEMA = WKTParseSchema.builder(WKTIDBuilderImpl::new, WKTIDBuilder::build)
             .permitKeyword("ID", "AUTHORITY")
             .requiredStringProperty(WKTIDBuilder::authority)

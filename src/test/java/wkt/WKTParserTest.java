@@ -5,15 +5,21 @@ import lombok.NonNull;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTParser;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTStyle;
+import net.daporkchop.lib.common.function.throwing.EBiConsumer;
+import net.daporkchop.lib.unsafe.PUnsafe;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.CharBuffer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 import static org.junit.Assert.*;
@@ -26,30 +32,51 @@ public class WKTParserTest {
         return CharBuffer.wrap(text.toCharArray()).asReadOnlyBuffer();
     }
 
-    private static final Properties EPSG = new Properties();
+    private static final Properties EPSG_WKT1 = new Properties();
+    private static final Properties EPSG_PROJJSON = new Properties();
 
     @BeforeClass
     public static void loadProperties() throws IOException {
         try (InputStream in = new BufferedInputStream(Objects.requireNonNull(WKTParserTest.class.getResourceAsStream("epsg.properties")))) {
-            EPSG.load(in);
+            EPSG_WKT1.load(in);
+        }
+
+        try (InputStream in = new BufferedInputStream(Files.newInputStream(Paths.get("/media/daporkchop/data/srs/srs-renamed/one_line/PROJJSON.properties")))) {
+            EPSG_PROJJSON.load(in);
         }
     }
 
     @Test
-    public void testWKTFormat() {
-        EPSG.forEach((key, wkt) -> {
+    public void testFormatWKT() {
+        EPSG_WKT1.forEach((key, wkt) -> {
             String formatted = WKTStyle.ONE_LINE.format(wkt.toString());
             assertEquals(wkt.toString(), formatted);
         });
     }
 
     @Test
-    public void testWKTParse() {
-        EPSG.forEach((key, wkt) -> {
+    public void testParseWKT() {
+        EPSG_WKT1.forEach((key, wkt) -> {
             WKTObject parsed = WKTParser.parse(buffer(wkt.toString()));
             String formatted = parsed.toString(WKTStyle.ONE_LINE);
             assertEquals(wkt.toString(), formatted);
         });
+    }
+
+    @Test
+    public void testParsePROJJSON() {
+        AtomicInteger successful = new AtomicInteger();
+        EPSG_PROJJSON.forEach((key, projjson) -> {
+            try {
+                WKTObject parsed = JSON_MAPPER.readValue(projjson.toString(), WKTObject.AutoDeserialize.class);
+
+                successful.incrementAndGet();
+            } catch (JsonProcessingException e) {
+                //ignore
+                PUnsafe.throwException(new RuntimeException(key.toString(), e)); //TODO
+            }
+        });
+        System.out.printf("parsed %d/%d (%.2f%%)\n", successful.get(), EPSG_PROJJSON.size(), (double) successful.get() / EPSG_PROJJSON.size() * 100.0d);
     }
 
     @Test

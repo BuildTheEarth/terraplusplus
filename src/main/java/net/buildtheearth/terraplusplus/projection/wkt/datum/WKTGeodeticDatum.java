@@ -21,7 +21,7 @@ import java.io.IOException;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 @Getter
-public abstract class WKTGeodeticDatum extends WKTDatum implements WKTObject.ScopeExtentIdentifierRemark { //this isn't supposed to have a scope extent identifier, but some projections seem to give it one anyway?
+public abstract class WKTGeodeticDatum extends WKTDatum implements WKTObject.WithScopeExtentIdentifierRemark { //this isn't supposed to have a scope extent identifier, but some projections seem to give it one anyway?
     @NonNull
     @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
     private final WKTEllipsoid ellipsoid;

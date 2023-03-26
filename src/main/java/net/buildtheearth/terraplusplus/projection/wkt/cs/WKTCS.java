@@ -1,5 +1,6 @@
 package net.buildtheearth.terraplusplus.projection.wkt.cs;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -7,7 +8,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
-import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
+import net.buildtheearth.terraplusplus.projection.wkt.AbstractWKTObject;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
 import net.buildtheearth.terraplusplus.projection.wkt.unit.WKTUnit;
 
@@ -17,11 +18,12 @@ import java.util.List;
 /**
  * @author DaPorkchop_
  */
+@JsonIgnoreProperties("$schema")
 @Jacksonized
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 @Getter
-public final class WKTCS extends WKTObject.WithID {
+public final class WKTCS extends AbstractWKTObject.WithID {
     @NonNull
     @JsonProperty("subtype")
     private final Type type;

@@ -3,12 +3,7 @@ package net.buildtheearth.terraplusplus.projection.wkt;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.SneakyThrows;
-import lombok.experimental.SuperBuilder;
 import net.buildtheearth.terraplusplus.projection.wkt.crs.WKTProjectedCRS;
 import net.buildtheearth.terraplusplus.projection.wkt.crs.WKTStaticGeographicCRS;
 import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTDynamicGeodeticDatum;
@@ -16,36 +11,26 @@ import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTGeodeticDatumEnse
 import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTStaticGeodeticDatum;
 import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTEllipsoid;
 import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTID;
+import net.buildtheearth.terraplusplus.projection.wkt.unit.WKTAngleUnit;
+import net.buildtheearth.terraplusplus.projection.wkt.unit.WKTLengthUnit;
+import net.buildtheearth.terraplusplus.projection.wkt.unit.WKTScaleUnit;
+import net.buildtheearth.terraplusplus.projection.wkt.unit.WKTUnit;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 import static net.daporkchop.lib.common.util.PorkUtil.*;
 
 /**
  * @author DaPorkchop_
  */
-@EqualsAndHashCode
-@SuperBuilder(toBuilder = true)
-public abstract class WKTObject {
-    @Override
-    public String toString() {
-        return this.toString(WKTStyle.ONE_LINE);
-    }
+public interface WKTObject {
+    String toPrettyString();
 
-    public String toPrettyString() {
-        return this.toString(WKTStyle.PRETTY);
-    }
+    String toString(@NonNull WKTStyle style);
 
-    @SneakyThrows(IOException.class)
-    public String toString(@NonNull WKTStyle style) {
-        StringBuilder builder = new StringBuilder();
-        try (WKTWriter writer = new WKTWriter.ToAppendable(builder, style)) {
-            this.write(writer);
-        }
-        return builder.toString();
-    }
-
-    public abstract void write(@NonNull WKTWriter writer) throws IOException;
+    void write(@NonNull WKTWriter writer) throws IOException;
 
     /**
      * @author DaPorkchop_
@@ -62,40 +47,39 @@ public abstract class WKTObject {
             @JsonSubTypes.Type(value = WKTStaticGeodeticDatum.class, name = "GeodeticReferenceFrame"),
 
             @JsonSubTypes.Type(value = WKTEllipsoid.class, name = "Ellipsoid"),
+
+            //@JsonSubTypes.Type(value = WKTUnit.class, name = "Unit"),
+            @JsonSubTypes.Type(value = WKTAngleUnit.class, name = "AngularUnit"),
+            @JsonSubTypes.Type(value = WKTLengthUnit.class, name = "LinearUnit"),
+            @JsonSubTypes.Type(value = WKTScaleUnit.class, name = "ScaleUnit"),
     })
-    public interface AutoDeserialize {
+    interface AutoDeserialize extends WKTObject {
         default <T extends WKTObject> T asWKTObject() {
             return uncheckedCast(this);
         }
     }
 
-    public interface ScopeExtentIdentifierRemark { //TODO: marker interface
+    /**
+     * @author DaPorkchop_
+     */
+    interface WithID {
+        WKTID id();
+
+        default List<WKTID> ids() { //TODO: support multiple IDs
+            return Collections.singletonList(this.id());
+        }
     }
 
     /**
      * @author DaPorkchop_
      */
-    @EqualsAndHashCode(callSuper = true)
-    @SuperBuilder(toBuilder = true)
-    @Getter
-    public static abstract class WithID extends WKTObject {
-        protected static final WKTParseSchema<WithID> BASE_PARSE_SCHEMA = WKTParseSchema.<WithID, WithIDBuilder<WithID, ?>>builder(() -> null, WithIDBuilder::build)
-                .permitKeyword("")
-                .optionalObjectProperty(WKTID.PARSE_SCHEMA, WithIDBuilder::id)
-                .build();
-
-        @Builder.Default
-        private final WKTID id = null;
+    interface WithName {
+        String name();
     }
 
     /**
      * @author DaPorkchop_
      */
-    @EqualsAndHashCode(callSuper = true)
-    @SuperBuilder(toBuilder = true)
-    @Getter
-    public static abstract class WithNameAndID extends WKTObject.WithID {
-        @NonNull
-        private final String name;
+    interface WithScopeExtentIdentifierRemark extends WithID { //TODO: marker interface
     }
 }

@@ -3,7 +3,7 @@ package net.buildtheearth.terraplusplus.projection.wkt.datum;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
-import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
+import net.buildtheearth.terraplusplus.projection.wkt.AbstractWKTObject;
 
 /**
  * @author DaPorkchop_
@@ -11,5 +11,5 @@ import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 @Getter
-public abstract class WKTDatum extends WKTObject.WithNameAndID implements WKTObject.AutoDeserialize {
+public abstract class WKTDatum extends AbstractWKTObject.WithNameAndID implements AbstractWKTObject.AutoDeserialize {
 }
