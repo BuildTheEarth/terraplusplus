@@ -66,7 +66,13 @@ public class WKTParserTest {
     @Test
     public void testParsePROJJSON() {
         AtomicInteger successful = new AtomicInteger();
+        AtomicInteger total = new AtomicInteger();
         EPSG_PROJJSON.forEach((key, projjson) -> {
+            if (projjson.toString().contains("is deprecated")) {
+                return;
+            }
+
+            total.getAndIncrement();
             try {
                 WKTObject parsed = JSON_MAPPER.readValue(projjson.toString(), WKTObject.AutoDeserialize.class);
 
@@ -76,7 +82,7 @@ public class WKTParserTest {
                 PUnsafe.throwException(new RuntimeException(key.toString(), e)); //TODO
             }
         });
-        System.out.printf("parsed %d/%d (%.2f%%)\n", successful.get(), EPSG_PROJJSON.size(), (double) successful.get() / EPSG_PROJJSON.size() * 100.0d);
+        System.out.printf("parsed %d/%d (%.2f%%)\n", successful.get(), total.get(), (double) successful.get() / total.get() * 100.0d);
     }
 
     @Test

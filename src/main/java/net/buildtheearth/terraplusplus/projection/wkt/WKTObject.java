@@ -4,11 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.NonNull;
+import net.buildtheearth.terraplusplus.projection.wkt.crs.WKTCompoundCRS;
 import net.buildtheearth.terraplusplus.projection.wkt.crs.WKTProjectedCRS;
 import net.buildtheearth.terraplusplus.projection.wkt.crs.WKTStaticGeographicCRS;
+import net.buildtheearth.terraplusplus.projection.wkt.crs.WKTVerticalCRS;
 import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTDynamicGeodeticDatum;
 import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTGeodeticDatumEnsemble;
 import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTStaticGeodeticDatum;
+import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTVerticalDatum;
 import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTEllipsoid;
 import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTID;
 import net.buildtheearth.terraplusplus.projection.wkt.unit.WKTAngleUnit;
@@ -38,13 +41,16 @@ public interface WKTObject {
     @JsonIgnoreProperties("$schema")
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
     @JsonSubTypes({
-            @JsonSubTypes.Type(value = WKTProjectedCRS.class, name = "ProjectedCRS"),
+            @JsonSubTypes.Type(value = WKTCompoundCRS.class, name = "CompoundCRS"),
             @JsonSubTypes.Type(value = WKTStaticGeographicCRS.class, name = "GeodeticCRS"),
             @JsonSubTypes.Type(value = WKTStaticGeographicCRS.class, name = "GeographicCRS"),
+            @JsonSubTypes.Type(value = WKTProjectedCRS.class, name = "ProjectedCRS"),
+            @JsonSubTypes.Type(value = WKTVerticalCRS.class, name = "VerticalCRS"),
 
             @JsonSubTypes.Type(value = WKTGeodeticDatumEnsemble.class, name = "DatumEnsemble"),
             @JsonSubTypes.Type(value = WKTDynamicGeodeticDatum.class, name = "DynamicGeodeticReferenceFrame"),
             @JsonSubTypes.Type(value = WKTStaticGeodeticDatum.class, name = "GeodeticReferenceFrame"),
+            @JsonSubTypes.Type(value = WKTVerticalDatum.class, name = "VerticalReferenceFrame"),
 
             @JsonSubTypes.Type(value = WKTEllipsoid.class, name = "Ellipsoid"),
 
