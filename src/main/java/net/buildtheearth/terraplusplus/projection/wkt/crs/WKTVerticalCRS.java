@@ -30,8 +30,6 @@ public final class WKTVerticalCRS extends WKTCRS {
     @NonNull
     private final WKTDatum datum;
 
-    //TODO: special datum_ensemble member
-
     @NonNull
     @JsonProperty("coordinate_system")
     private final WKTCS coordinateSystem;

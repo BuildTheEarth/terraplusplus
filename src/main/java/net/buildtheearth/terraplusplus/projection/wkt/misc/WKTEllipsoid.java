@@ -2,19 +2,14 @@ package net.buildtheearth.terraplusplus.projection.wkt.misc;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
-import lombok.val;
 import net.buildtheearth.terraplusplus.projection.wkt.AbstractWKTObject;
-import net.buildtheearth.terraplusplus.projection.wkt.WKTParseSchema;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
-import net.buildtheearth.terraplusplus.projection.wkt.unit.WKTLengthUnit;
 import net.buildtheearth.terraplusplus.projection.wkt.unit.WKTValueInMetreOrValueAndUnit;
 
 import java.io.IOException;
@@ -33,21 +28,12 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 @SuperBuilder(toBuilder = true)
 @Getter
 public final class WKTEllipsoid extends AbstractWKTObject.WithID implements AbstractWKTObject.AutoDeserialize {
-    public static final WKTParseSchema<WKTEllipsoid> PARSE_SCHEMA = WKTParseSchema.builder(WKTEllipsoidBuilderImpl::new, WKTEllipsoidBuilder::build)
-            .permitKeyword("ELLIPSOID", "SPHEROID")
-            .requiredStringProperty(WKTEllipsoidBuilder::name)
-            //.requiredUnsignedNumericAsDoubleProperty(WKTEllipsoidBuilder::semiMajorAxis)
-            //.requiredUnsignedNumericAsDoubleProperty(WKTEllipsoidBuilder::inverseFlattening)
-            //.optionalObjectProperty(WKTLengthUnit.PARSE_SCHEMA, WKTEllipsoidBuilder::lengthUnit)
-            .inheritFrom(BASE_PARSE_SCHEMA)
-            .build();
-
     @NonNull
     private final String name;
 
-    //TODO: may be null if 'radius' is set @NonNull
+    @Builder.Default
     @JsonProperty("semi_major_axis")
-    private final WKTValueInMetreOrValueAndUnit semiMajorAxis;
+    private final WKTValueInMetreOrValueAndUnit semiMajorAxis = null;
 
     /**
      * May be {@code 0.0d}, representing a value of infinity (in which case the ellipsoid is a sphere).
@@ -83,9 +69,6 @@ public final class WKTEllipsoid extends AbstractWKTObject.WithID implements Abst
         @Override
         public WKTEllipsoid build() {
             WKTEllipsoid ellipsoid = new WKTEllipsoid(this);
-
-            //TODO: ensure units are consistent
-
             checkState(Stream.of(ellipsoid.inverseFlattening, ellipsoid.semiMinorAxis, ellipsoid.radius).filter(Objects::nonNull).count() == 1,
                     "exactly one of inverseFlattening or semiMinorAxis or radius must be set!");
             return ellipsoid;

@@ -56,11 +56,6 @@ public abstract class AbstractWKTObject implements WKTObject {
     @SuperBuilder(toBuilder = true)
     @Getter
     public static abstract class WithID extends AbstractWKTObject implements WKTObject.WithID {
-        protected static final WKTParseSchema<AbstractWKTObject.WithID> BASE_PARSE_SCHEMA = WKTParseSchema.<AbstractWKTObject.WithID, WithIDBuilder<AbstractWKTObject.WithID, ?>>builder(() -> null, WithIDBuilder::build)
-                .permitKeyword("")
-                .optionalObjectProperty(WKTID.PARSE_SCHEMA, WithIDBuilder::id)
-                .build();
-
         @Builder.Default
         private final WKTID id = null;
     }

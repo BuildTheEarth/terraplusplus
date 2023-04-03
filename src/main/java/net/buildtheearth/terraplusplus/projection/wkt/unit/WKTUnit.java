@@ -1,6 +1,5 @@
 package net.buildtheearth.terraplusplus.projection.wkt.unit;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonParser;
@@ -13,10 +12,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
-import lombok.extern.jackson.Jacksonized;
 import net.buildtheearth.terraplusplus.projection.wkt.AbstractWKTObject;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
-import net.buildtheearth.terraplusplus.projection.wkt.WKTParseSchema;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
 
 import java.io.IOException;
@@ -30,13 +27,6 @@ import java.io.IOException;
 @SuperBuilder(toBuilder = true)
 @Getter
 public abstract class WKTUnit extends AbstractWKTObject.WithID implements WKTObject.AutoDeserialize {
-    protected static final WKTParseSchema<WKTUnit> BASE_PARSE_SCHEMA = WKTParseSchema.<WKTUnit, WKTUnitBuilder<WKTUnit, ?>>builder(() -> null, WKTUnitBuilder::build)
-            .permitKeyword("")
-            .requiredStringProperty(WKTUnitBuilder::name)
-            .requiredUnsignedNumericAsDoubleProperty(WKTUnitBuilder::conversionFactor)
-            .inheritFrom(AbstractWKTObject.WithID.BASE_PARSE_SCHEMA)
-            .build();
-
     @NonNull
     private final String name;
 

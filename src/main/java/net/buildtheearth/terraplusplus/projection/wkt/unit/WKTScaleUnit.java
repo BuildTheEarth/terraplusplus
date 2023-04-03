@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
-import net.buildtheearth.terraplusplus.projection.wkt.WKTParseSchema;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
 
 import java.io.IOException;
@@ -22,11 +21,6 @@ import java.io.IOException;
 @Getter
 public final class WKTScaleUnit extends WKTUnit {
     public static final WKTScaleUnit UNITY = builder().name("unity").conversionFactor(1.0d).build();
-
-    public static final WKTParseSchema<WKTScaleUnit> PARSE_SCHEMA = WKTParseSchema.builder(WKTScaleUnitBuilderImpl::new, WKTScaleUnitBuilder::build)
-            .permitKeyword("LENGTHUNIT", "UNIT")
-            .inheritFrom(BASE_PARSE_SCHEMA)
-            .build();
 
     /**
      * The number of meters per unit.

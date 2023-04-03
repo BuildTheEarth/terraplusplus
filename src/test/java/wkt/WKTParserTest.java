@@ -3,15 +3,12 @@ package wkt;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.NonNull;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
-import net.buildtheearth.terraplusplus.projection.wkt.WKTParser;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTStyle;
-import net.daporkchop.lib.common.function.throwing.EBiConsumer;
 import net.daporkchop.lib.unsafe.PUnsafe;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.CharBuffer;
@@ -28,10 +25,6 @@ import static org.junit.Assert.*;
  * @author DaPorkchop_
  */
 public class WKTParserTest {
-    private static CharBuffer buffer(@NonNull String text) {
-        return CharBuffer.wrap(text.toCharArray()).asReadOnlyBuffer();
-    }
-
     private static final Properties EPSG_WKT1 = new Properties();
     private static final Properties EPSG_PROJJSON = new Properties();
 
@@ -55,23 +48,10 @@ public class WKTParserTest {
     }
 
     @Test
-    public void testParseWKT() {
-        EPSG_WKT1.forEach((key, wkt) -> {
-            WKTObject parsed = WKTParser.parse(buffer(wkt.toString()));
-            String formatted = parsed.toString(WKTStyle.ONE_LINE);
-            assertEquals(wkt.toString(), formatted);
-        });
-    }
-
-    @Test
     public void testParsePROJJSON() {
         AtomicInteger successful = new AtomicInteger();
         AtomicInteger total = new AtomicInteger();
         EPSG_PROJJSON.forEach((key, projjson) -> {
-            if (key.toString().startsWith("{\"$schema\"") || projjson.toString().contains("is deprecated") || projjson.toString().startsWith("use the")) {
-                return;
-            }
-
             total.getAndIncrement();
             try {
                 WKTObject parsed = JSON_MAPPER.readValue(projjson.toString(), WKTObject.AutoDeserialize.class);
@@ -79,7 +59,7 @@ public class WKTParserTest {
                 successful.incrementAndGet();
             } catch (JsonProcessingException e) {
                 //ignore
-                PUnsafe.throwException(new RuntimeException(key.toString(), e)); //TODO
+                PUnsafe.throwException(new RuntimeException(key.toString(), e));
             }
         });
         System.out.printf("parsed %d/%d (%.2f%%)\n", successful.get(), total.get(), (double) successful.get() / total.get() * 100.0d);
@@ -101,10 +81,6 @@ public class WKTParserTest {
         System.out.println(JSON_MAPPER.readValue(
                 "{\"$schema\": \"https://proj.org/schemas/v0.5/projjson.schema.json\",\"type\": \"DatumEnsemble\",\"name\": \"World Geodetic System 1984 ensemble\",\"members\": [{\"name\": \"World Geodetic System 1984 (Transit)\",\"id\": {\"authority\": \"EPSG\",\"code\": 1166}},{\"name\": \"World Geodetic System 1984 (G730)\",\"id\": {\"authority\": \"EPSG\",\"code\": 1152}},{\"name\": \"World Geodetic System 1984 (G873)\",\"id\": {\"authority\": \"EPSG\",\"code\": 1153}},{\"name\": \"World Geodetic System 1984 (G1150)\",\"id\": {\"authority\": \"EPSG\",\"code\": 1154}},{\"name\": \"World Geodetic System 1984 (G1674)\",\"id\": {\"authority\": \"EPSG\",\"code\": 1155}},{\"name\": \"World Geodetic System 1984 (G1762)\",\"id\": {\"authority\": \"EPSG\",\"code\": 1156}},{\"name\": \"World Geodetic System 1984 (G2139)\",\"id\": {\"authority\": \"EPSG\",\"code\": 1309}}],\"ellipsoid\": {\"name\": \"WGS 84\",\"semi_major_axis\": 6378137,\"inverse_flattening\": 298.257223563},\"accuracy\": \"2.0\",\"id\": {\"authority\": \"EPSG\",\"code\": 6326}}",
                 WKTObject.AutoDeserialize.class).asWKTObject().toPrettyString());
-    }
-
-    @Test
-    public void testPrimeMeridian() {
     }
 
     @Test
