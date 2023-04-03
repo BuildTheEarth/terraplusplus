@@ -25,6 +25,7 @@ public class TerraConstants {
             .configure(JsonReadFeature.ALLOW_LEADING_DECIMAL_POINT_FOR_NUMBERS, true)
             .configure(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS, true)
             .configure(JsonReadFeature.ALLOW_TRAILING_COMMA, true)
+            .configure(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER, true)
             .addMixIn(Biome.class, BiomeMixin.class)
             .addMixIn(IBlockState.class, BlockStateMixin.class)
             .build();

@@ -2,6 +2,7 @@ package net.buildtheearth.terraplusplus.projection.wkt.crs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -11,7 +12,9 @@ import net.buildtheearth.terraplusplus.projection.wkt.AbstractWKTObject;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
 import net.buildtheearth.terraplusplus.projection.wkt.cs.WKTCS;
+import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTDatum;
 import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTVerticalDatum;
+import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTVerticalDatumEnsemble;
 
 import java.io.IOException;
 
@@ -23,9 +26,9 @@ import java.io.IOException;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 @Getter
-public final class WKTVerticalCRS extends WKTGeographicCRS {
+public final class WKTVerticalCRS extends WKTCRS {
     @NonNull
-    private final WKTVerticalDatum datum;
+    private final WKTDatum datum;
 
     //TODO: special datum_ensemble member
 
@@ -56,6 +59,14 @@ public final class WKTVerticalCRS extends WKTGeographicCRS {
                     .writeQuotedLatinString(this.name())
                     .writeOptionalObject(this.id())
                     .endObject();
+        }
+    }
+
+    public abstract static class WKTVerticalCRSBuilder<C extends WKTVerticalCRS, B extends WKTVerticalCRSBuilder<C, B>> extends WKTCRSBuilder<C, B> {
+        @JsonProperty("datum_ensemble")
+        @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
+        public B datumEnsemble(@NonNull WKTVerticalDatumEnsemble ensemble) {
+            return this.datum(ensemble);
         }
     }
 }

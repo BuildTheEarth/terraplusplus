@@ -68,7 +68,7 @@ public class WKTParserTest {
         AtomicInteger successful = new AtomicInteger();
         AtomicInteger total = new AtomicInteger();
         EPSG_PROJJSON.forEach((key, projjson) -> {
-            if (projjson.toString().contains("is deprecated")) {
+            if (key.toString().startsWith("{\"$schema\"") || projjson.toString().contains("is deprecated") || projjson.toString().startsWith("use the")) {
                 return;
             }
 

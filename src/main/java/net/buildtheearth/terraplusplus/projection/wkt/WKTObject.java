@@ -14,6 +14,7 @@ import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTGeodeticDatumEnse
 import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTStaticGeodeticDatum;
 import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTStaticVerticalDatum;
 import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTVerticalDatum;
+import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTVerticalDatumEnsemble;
 import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTEllipsoid;
 import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTID;
 import net.buildtheearth.terraplusplus.projection.wkt.unit.WKTAngleUnit;
@@ -54,6 +55,7 @@ public interface WKTObject {
             @JsonSubTypes.Type(value = WKTDynamicVerticalDatum.class, name = "DynamicVerticalReferenceFrame"),
             @JsonSubTypes.Type(value = WKTStaticGeodeticDatum.class, name = "GeodeticReferenceFrame"),
             @JsonSubTypes.Type(value = WKTStaticVerticalDatum.class, name = "VerticalReferenceFrame"),
+            @JsonSubTypes.Type(value = WKTVerticalDatumEnsemble.class, name = "VerticalDatumEnsemble"),
 
             @JsonSubTypes.Type(value = WKTEllipsoid.class, name = "Ellipsoid"),
 

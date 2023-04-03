@@ -86,4 +86,60 @@ public abstract class AbstractWKTObject implements WKTObject {
         @NonNull
         private final String name;
     }
+
+    /**
+     * @author DaPorkchop_
+     */
+    @EqualsAndHashCode(callSuper = true)
+    @SuperBuilder(toBuilder = true)
+    @Getter
+    public static abstract class WithScopeExtentIdentifierRemark extends AbstractWKTObject.WithID implements WKTObject.WithScopeExtentIdentifierRemark {
+        @NonNull
+        @Builder.Default
+        private final List<WKTUsage> usages = Collections.emptyList();
+
+        public abstract static class WithScopeExtentIdentifierRemarkBuilder<C extends WithScopeExtentIdentifierRemark, B extends WithScopeExtentIdentifierRemarkBuilder<C, B>> extends WithIDBuilder<C, B> {
+            private WKTUsage currentUsage() {
+                if (this.usages$set) {
+                    checkState(this.usages$value.size() == 1, "more than one usage is currently set!");
+                    return this.usages$value.get(0);
+                } else {
+                    return WKTUsage.builder().scope("UNSET").build();
+                }
+            }
+
+            public B scope(@NonNull String scope) {
+                return this.usages(ImmutableList.of(this.currentUsage().toBuilder().scope(scope).build()));
+            }
+
+            public B area(@NonNull String area) {
+                return this.usages(ImmutableList.of(this.currentUsage().toBuilder().area(area).build()));
+            }
+
+            public B bbox(@NonNull WKTGeographicBoundingBox bbox) {
+                return this.usages(ImmutableList.of(this.currentUsage().toBuilder().bbox(bbox).build()));
+            }
+
+            @JsonProperty("vertical_extent")
+            public B verticalExtent(@NonNull WKTVerticalExtent verticalExtent) {
+                return this.usages(ImmutableList.of(this.currentUsage().toBuilder().verticalExtent(verticalExtent).build()));
+            }
+
+            //TODO: temporal extent
+            /*public B bbox(@NonNull WKTGeographicBoundingBox bbox) {
+                return this.usages(ImmutableList.of(this.currentUsage().toBuilder().bbox(bbox).build()));
+            }*/
+        }
+    }
+
+    /**
+     * @author DaPorkchop_
+     */
+    @EqualsAndHashCode(callSuper = true)
+    @SuperBuilder(toBuilder = true)
+    @Getter
+    public static abstract class WithNameAndScopeExtentIdentifierRemark extends AbstractWKTObject.WithScopeExtentIdentifierRemark implements WKTObject.WithName {
+        @NonNull
+        private final String name;
+    }
 }
