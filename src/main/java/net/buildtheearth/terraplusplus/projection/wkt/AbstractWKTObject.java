@@ -1,5 +1,8 @@
 package net.buildtheearth.terraplusplus.projection.wkt;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.google.common.collect.ImmutableList;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -7,8 +10,15 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.experimental.SuperBuilder;
 import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTID;
+import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTUsage;
+import net.buildtheearth.terraplusplus.projection.wkt.misc.extent.WKTGeographicBoundingBox;
+import net.buildtheearth.terraplusplus.projection.wkt.misc.extent.WKTVerticalExtent;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+
+import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * @author DaPorkchop_

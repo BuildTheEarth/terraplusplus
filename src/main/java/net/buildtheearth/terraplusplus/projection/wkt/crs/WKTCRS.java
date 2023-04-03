@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 import net.buildtheearth.terraplusplus.projection.wkt.AbstractWKTObject;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
-import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTBoundingBox;
+import net.buildtheearth.terraplusplus.projection.wkt.misc.extent.WKTGeographicBoundingBox;
 
 /**
  * @author DaPorkchop_
@@ -25,5 +25,5 @@ public abstract class WKTCRS extends AbstractWKTObject.WithNameAndID implements 
     private final String usage = null;
 
     @Builder.Default
-    private final WKTBoundingBox bbox = null;
+    private final WKTGeographicBoundingBox bbox = null;
 }

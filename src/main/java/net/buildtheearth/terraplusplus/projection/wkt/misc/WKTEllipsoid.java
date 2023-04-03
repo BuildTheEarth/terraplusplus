@@ -2,6 +2,7 @@ package net.buildtheearth.terraplusplus.projection.wkt.misc;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -14,6 +15,8 @@ import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
 import net.buildtheearth.terraplusplus.projection.wkt.unit.WKTLengthUnit;
 
 import java.io.IOException;
+
+import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * @author DaPorkchop_
@@ -37,14 +40,25 @@ public final class WKTEllipsoid extends AbstractWKTObject.WithID implements Abst
     @NonNull
     private final String name;
 
+    @NonNull
     @JsonProperty("semi_major_axis")
-    private final double semiMajorAxis;
+    private final Double semiMajorAxis;
 
     /**
      * May be {@code 0.0d}, representing a value of infinity (in which case the ellipsoid is a sphere).
+     * <p>
+     * Exactly one of this field and {@link #semiMinorAxis} is non-{@code null}.
      */
+    @Builder.Default
     @JsonProperty("inverse_flattening")
-    private final double inverseFlattening;
+    private final Double inverseFlattening = null;
+
+    /**
+     * Exactly one of this field and {@link #inverseFlattening} is non-{@code null}.
+     */
+    @Builder.Default
+    @JsonProperty("semi_minor_axis")
+    private final Double semiMinorAxis = null;
 
     @Builder.Default
     @JsonProperty("length_unit")
@@ -55,9 +69,18 @@ public final class WKTEllipsoid extends AbstractWKTObject.WithID implements Abst
         writer.beginObject("ELLIPSOID")
                 .writeQuotedLatinString(this.name)
                 .writeUnsignedNumericLiteral(this.semiMajorAxis)
-                .writeUnsignedNumericLiteral(this.inverseFlattening)
+                .writeUnsignedNumericLiteral(this.inverseFlattening) //TODO: compute inverse flattening from semi_minor_axis if necessary
                 .writeOptionalObject(this.lengthUnit)
                 .writeOptionalObject(this.id())
                 .endObject();
+    }
+
+    static final class WKTEllipsoidBuilderImpl extends WKTEllipsoidBuilder<WKTEllipsoid, WKTEllipsoidBuilderImpl> {
+        @Override
+        public WKTEllipsoid build() {
+            WKTEllipsoid ellipsoid = new WKTEllipsoid(this);
+            checkState(ellipsoid.inverseFlattening != null ^ ellipsoid.semiMinorAxis != null, "exactly one of inverseFlattening or semiMinorAxis must be set!");
+            return ellipsoid;
+        }
     }
 }

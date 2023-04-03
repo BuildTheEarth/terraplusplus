@@ -1,4 +1,4 @@
-package net.buildtheearth.terraplusplus.projection.wkt.misc;
+package net.buildtheearth.terraplusplus.projection.wkt.misc.extent;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
-import net.buildtheearth.terraplusplus.projection.wkt.AbstractWKTObject;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
 
 import java.io.IOException;
@@ -18,7 +17,7 @@ import java.io.IOException;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 @Getter
-public final class WKTBoundingBox extends AbstractWKTObject {
+public final class WKTGeographicBoundingBox extends WKTExtent {
     @JsonProperty("south_latitude")
     private final double southLatitude;
 

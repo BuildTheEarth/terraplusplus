@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
-import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTBoundingBox;
+import net.buildtheearth.terraplusplus.projection.wkt.misc.extent.WKTGeographicBoundingBox;
 import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTEllipsoid;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
 import net.buildtheearth.terraplusplus.projection.wkt.misc.WKTPrimeMeridian;
@@ -36,7 +36,7 @@ public abstract class WKTGeodeticDatum extends WKTDatum implements WKTObject.Wit
     private final String usage = null;
 
     @Builder.Default
-    private final WKTBoundingBox bbox = null;
+    private final WKTGeographicBoundingBox bbox = null;
 
     @Builder.Default
     @JsonProperty("prime_meridian")
