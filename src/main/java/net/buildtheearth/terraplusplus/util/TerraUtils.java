@@ -2,6 +2,7 @@ package net.buildtheearth.terraplusplus.util;
 
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
+import net.daporkchop.lib.common.util.PorkUtil;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
@@ -10,6 +11,8 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -285,5 +288,192 @@ public class TerraUtils {
         }
 
         return len0 - len1;
+    }
+
+    /**
+     * Converts the given {@code double} to {@code long} without loss of precision.
+     *
+     * @param value the {@code double}
+     * @return the given value as a {@code long}
+     * @throws ArithmeticException if the given value cannot be converted to {@code long} without loss of precision
+     */
+    public static long toLongExact(double value) throws ArithmeticException {
+        if ((long) value != value) {
+            throw new ArithmeticException("loss of precision when converting to long");
+        }
+        return (long) value;
+    }
+
+    /**
+     * Converts the given {@link Number} to {@code long} without loss of precision.
+     *
+     * @param value the {@link Number}
+     * @return the given value as a {@code long}
+     * @throws ArithmeticException if the given value cannot be converted to {@code long} without loss of precision
+     */
+    public static long toLongExact(@NonNull Number value) throws ArithmeticException {
+        if (value instanceof Long || value instanceof Integer || value instanceof Short || value instanceof Byte) {
+            //these types can be converted to long without loss of precision
+            return value.longValue();
+        } else if (value instanceof Double || value instanceof Float) {
+            //these types can be converted to double without loss of precision, and from there we can try to convert to long
+            return toLongExact(value.doubleValue());
+        } else if (value instanceof BigDecimal) {
+            return ((BigDecimal) value).longValueExact();
+        } else if (value instanceof BigInteger) {
+            return ((BigInteger) value).longValueExact();
+        } else {
+            throw new IllegalArgumentException("unknown Number type: " + PorkUtil.className(value));
+        }
+    }
+
+    /**
+     * Converts the given {@code long} to {@code double} without loss of precision.
+     *
+     * @param value the {@code long}
+     * @return the given value as a {@code double}
+     * @throws ArithmeticException if the given value cannot be converted to {@code double} without loss of precision
+     */
+    public static double toDoubleExact(long value) throws ArithmeticException {
+        if ((long) (double) value != value) {
+            throw new ArithmeticException("loss of precision when converting to double");
+        }
+        return value;
+    }
+
+    /**
+     * Converts the given {@link BigInteger} to {@code double} without loss of precision.
+     *
+     * @param value the {@link BigInteger}
+     * @return the given value as a {@code double}
+     * @throws ArithmeticException if the given value cannot be converted to {@code double} without loss of precision
+     */
+    public static double toDoubleExact(@NonNull BigInteger value) throws ArithmeticException {
+        return toDoubleExact(value.longValueExact());
+    }
+
+    /**
+     * Converts the given {@link BigDecimal} to {@code double} without loss of precision.
+     *
+     * @param value the {@link BigDecimal}
+     * @return the given value as a {@code double}
+     * @throws ArithmeticException if the given value cannot be converted to {@code double} without loss of precision
+     */
+    public static double toDoubleExact(@NonNull BigDecimal value) throws ArithmeticException {
+        //we could probably do some cool stuff like checking if the precision and scale are within the possible range, however this
+        // lazier approach is guaranteed to work correctly
+        double doubleValue = value.doubleValue();
+        if (!BigDecimal.valueOf(doubleValue).equals(value)) {
+            throw new ArithmeticException("loss of precision when converting to double");
+        }
+        return doubleValue;
+    }
+
+    /**
+     * Converts the given {@link Number} to {@code double} without loss of precision.
+     *
+     * @param value the {@link Number}
+     * @return the given value as a {@code double}
+     * @throws ArithmeticException if the given value cannot be converted to {@code double} without loss of precision
+     */
+    public static double toDoubleExact(@NonNull Number value) throws ArithmeticException {
+        if (value instanceof Double || value instanceof Integer || value instanceof Float
+            || value instanceof Short || value instanceof Byte) {
+            //these types can be converted to double without loss of precision
+            return value.doubleValue();
+        } else if (value instanceof Long) {
+            return toDoubleExact(value.longValue());
+        } else if (value instanceof BigDecimal) {
+            return toDoubleExact((BigDecimal) value);
+        } else if (value instanceof BigInteger) {
+            return toDoubleExact((BigInteger) value);
+        } else {
+            throw new IllegalArgumentException("unknown Number type: " + PorkUtil.className(value));
+        }
+    }
+
+    /**
+     * Converts the given {@link Number} to {@link BigDecimal} without loss of precision.
+     *
+     * @param value the {@link Number}
+     * @return the given value as a {@link BigDecimal}
+     * @throws ArithmeticException if the given value cannot be converted to {@link BigDecimal} without loss of precision
+     */
+    public static BigDecimal toBigDecimalExact(@NonNull Number value) throws ArithmeticException {
+        if (value instanceof Double || value instanceof Float) {
+            //these types can be converted to double without loss of precision, and from there we can convert losslessly to BigDecimal
+            return BigDecimal.valueOf(value.doubleValue());
+        } else if (value instanceof Long || value instanceof Integer || value instanceof Short || value instanceof Byte) {
+            //these types can be converted to long without loss of precision, and from there we can convert losslessly to BigDecimal
+            return BigDecimal.valueOf(value.longValue());
+        } else if (value instanceof BigDecimal) {
+            return (BigDecimal) value;
+        } else if (value instanceof BigInteger) {
+            return new BigDecimal((BigInteger) value);
+        } else {
+            throw new IllegalArgumentException("unknown Number type: " + PorkUtil.className(value));
+        }
+    }
+
+    /**
+     * Converts the given {@link Number} to {@link BigInteger} without loss of precision.
+     *
+     * @param value the {@link Number}
+     * @return the given value as a {@link BigInteger}
+     * @throws ArithmeticException if the given value cannot be converted to {@link BigInteger} without loss of precision
+     */
+    public static BigInteger toBigIntegerExact(@NonNull Number value) throws ArithmeticException {
+        if (value instanceof Long || value instanceof Integer || value instanceof Short || value instanceof Byte) {
+            //these types can be converted to long without loss of precision, and from there we can convert losslessly to BigInteger
+            return BigInteger.valueOf(value.longValue());
+        } else if (value instanceof Double || value instanceof Float) {
+            //these types can be converted to double without loss of precision, from there we can try to convert to long, and
+            // if that succeeds we can convert losslessly to BigInteger
+            return BigInteger.valueOf(toLongExact(value.doubleValue()));
+        } else if (value instanceof BigDecimal) {
+            return ((BigDecimal) value).toBigIntegerExact();
+        } else if (value instanceof BigInteger) {
+            return (BigInteger) value;
+        } else {
+            throw new IllegalArgumentException("unknown Number type: " + PorkUtil.className(value));
+        }
+    }
+
+    public static boolean isPrimitiveIntegerType(@NonNull Number value) {
+        return value instanceof Long || value instanceof Integer || value instanceof Short || value instanceof Byte;
+    }
+
+    public static boolean isAnyIntegerType(@NonNull Number value) {
+        return isPrimitiveIntegerType(value) || value instanceof BigInteger;
+    }
+
+    public static boolean isPrimitiveFloatingPointType(@NonNull Number value) {
+        return value instanceof Double || value instanceof Float;
+    }
+
+    public static boolean isAnyFloatingPointType(@NonNull Number value) {
+        return isPrimitiveFloatingPointType(value) || value instanceof BigDecimal;
+    }
+
+    public static boolean numbersEqual(@NonNull Number a, @NonNull Number b) {
+        checkArg(isAnyIntegerType(a) || isAnyFloatingPointType(a), "unknown Number type: %s", a.getClass());
+        checkArg(isAnyIntegerType(b) || isAnyFloatingPointType(b), "unknown Number type: %s", b.getClass());
+
+        if (a.getClass() == b.getClass()) {
+            //they are both the same numeric type, compare using Object#equals(Object)
+            return a.equals(b);
+        } else if (isPrimitiveIntegerType(a) && isPrimitiveIntegerType(b)) {
+            //all primitive integral types can be converted to long without loss of precision
+            return a.longValue() == b.longValue();
+        } else if (isPrimitiveFloatingPointType(a) && isPrimitiveFloatingPointType(b)) {
+            //all primitive floating-point types can be converted to double without loss of precision
+            return a.doubleValue() == b.doubleValue();
+        } else if (isAnyIntegerType(a) && isAnyIntegerType(b)) {
+            //at least one of the two values is a BigInteger, so we'll convert both values to BigInteger and compare those (could be optimized more, i don't care)
+            return toBigIntegerExact(a).equals(toBigIntegerExact(b));
+        } else {
+            //at least one of the two values is a BigDecimal, so we'll convert both values to BigDecimal and compare those (could be optimized more, i don't care)
+            return toBigDecimalExact(a).compareTo(toBigDecimalExact(b)) == 0;
+        }
     }
 }
