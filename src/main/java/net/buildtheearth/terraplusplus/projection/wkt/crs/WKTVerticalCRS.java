@@ -9,11 +9,8 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
 import net.buildtheearth.terraplusplus.projection.wkt.AbstractWKTObject;
-import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
-import net.buildtheearth.terraplusplus.projection.wkt.cs.WKTCS;
 import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTDatum;
-import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTVerticalDatum;
 import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTVerticalDatumEnsemble;
 
 import java.io.IOException;
@@ -26,19 +23,15 @@ import java.io.IOException;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 @Getter
-public final class WKTVerticalCRS extends WKTCRS {
+public final class WKTVerticalCRS extends WKTCRS.WithCoordinateSystem {
     @NonNull
     private final WKTDatum datum;
-
-    @NonNull
-    @JsonProperty("coordinate_system")
-    private final WKTCS coordinateSystem;
 
     @Override
     public void write(@NonNull WKTWriter writer) throws IOException {
         writer.beginObject("VERTCRS")
                 .writeRequiredObject(this.datum)
-                .writeRequiredObject(this.coordinateSystem)
+                .writeRequiredObject(this.coordinateSystem())
                 .writeOptionalObject(this.id())
                 .endObject();
     }
@@ -60,7 +53,7 @@ public final class WKTVerticalCRS extends WKTCRS {
         }
     }
 
-    public abstract static class WKTVerticalCRSBuilder<C extends WKTVerticalCRS, B extends WKTVerticalCRSBuilder<C, B>> extends WKTCRSBuilder<C, B> {
+    public abstract static class WKTVerticalCRSBuilder<C extends WKTVerticalCRS, B extends WKTVerticalCRSBuilder<C, B>> extends WithCoordinateSystemBuilder<C, B> {
         @JsonProperty("datum_ensemble")
         @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
         public B datumEnsemble(@NonNull WKTVerticalDatumEnsemble ensemble) {

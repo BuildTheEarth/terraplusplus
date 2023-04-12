@@ -10,5 +10,5 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
 @Getter
-public abstract class WKTGeographicCRS extends WKTCRS {
+public abstract class WKTGeographicCRS extends WKTCRS.WithCoordinateSystem {
 }

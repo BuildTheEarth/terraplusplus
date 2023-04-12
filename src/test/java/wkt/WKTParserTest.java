@@ -4,6 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.NonNull;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTStyle;
+import net.buildtheearth.terraplusplus.projection.wkt.crs.WKTCRS;
+import net.buildtheearth.terraplusplus.projection.wkt.crs.WKTCompoundCRS;
+import net.daporkchop.lib.common.util.PorkUtil;
 import net.daporkchop.lib.unsafe.PUnsafe;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -14,9 +17,15 @@ import java.io.InputStream;
 import java.nio.CharBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 import static org.junit.Assert.*;
@@ -34,7 +43,7 @@ public class WKTParserTest {
             EPSG_WKT1.load(in);
         }
 
-        try (InputStream in = new BufferedInputStream(Files.newInputStream(Paths.get("/media/daporkchop/data/srs/srs-renamed/one_line/PROJJSON.properties")))) {
+        try (InputStream in = new BufferedInputStream(Files.newInputStream(Paths.get("/home/daporkchop/srs/PROJJSON.properties")))) {
             EPSG_PROJJSON.load(in);
         }
     }
@@ -51,18 +60,57 @@ public class WKTParserTest {
     public void testParsePROJJSON() {
         AtomicInteger successful = new AtomicInteger();
         AtomicInteger total = new AtomicInteger();
-        EPSG_PROJJSON.forEach((key, projjson) -> {
+        EPSG_PROJJSON.forEach((rawKey, rawProjjson) -> {
+            String key = rawKey.toString();
+            String projjson = rawProjjson.toString();
+
             total.getAndIncrement();
             try {
-                WKTObject parsed = JSON_MAPPER.readValue(projjson.toString(), WKTObject.AutoDeserialize.class);
+                WKTObject parsed = JSON_MAPPER.readValue(projjson, WKTObject.AutoDeserialize.class);
 
                 successful.incrementAndGet();
             } catch (JsonProcessingException e) {
                 //ignore
-                PUnsafe.throwException(new RuntimeException(key.toString(), e));
+                PUnsafe.throwException(new RuntimeException(key, e));
             }
         });
         System.out.printf("parsed %d/%d (%.2f%%)\n", successful.get(), total.get(), (double) successful.get() / total.get() * 100.0d);
+    }
+
+    @Test
+    public void findCoordinateSystemDimensions() {
+        List<Integer> dimensionCounts = new ArrayList<>();
+
+        EPSG_PROJJSON.forEach((rawKey, rawProjjson) -> {
+            String key = rawKey.toString();
+            String projjson = rawProjjson.toString();
+
+            try {
+                WKTObject parsed = JSON_MAPPER.readValue(projjson, WKTObject.AutoDeserialize.class);
+                try {
+                    int dimensionCount = dimensionCount(parsed);
+                    dimensionCounts.add(dimensionCount);
+                } catch (IllegalArgumentException e) {
+                    dimensionCounts.add(-1);
+                }
+            } catch (JsonProcessingException e) {
+                //ignore
+            }
+        });
+
+        System.out.println((Object) dimensionCounts.stream().collect(Collectors.groupingBy(Function.identity(), TreeMap::new, Collectors.counting())));
+    }
+
+    private static int dimensionCount(WKTObject obj) {
+        if (obj instanceof WKTCRS) {
+            if (obj instanceof WKTCRS.WithCoordinateSystem) {
+                return ((WKTCRS.WithCoordinateSystem) obj).coordinateSystem().axes().size();
+            } else if (obj instanceof WKTCompoundCRS) {
+                return ((WKTCompoundCRS) obj).components().stream().mapToInt(WKTParserTest::dimensionCount).sum();
+            }
+        }
+
+        throw new IllegalArgumentException(PorkUtil.className(obj));
     }
 
     @Test

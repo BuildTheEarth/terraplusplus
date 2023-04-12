@@ -9,7 +9,6 @@ import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.jackson.Jacksonized;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTWriter;
-import net.buildtheearth.terraplusplus.projection.wkt.cs.WKTCS;
 import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTDatum;
 import net.buildtheearth.terraplusplus.projection.wkt.datum.WKTGeodeticDatumEnsemble;
 
@@ -27,20 +26,16 @@ public final class WKTStaticGeographicCRS extends WKTGeographicCRS {
     @NonNull
     private final WKTDatum datum;
 
-    @NonNull
-    @JsonProperty("coordinate_system")
-    private final WKTCS coordinateSystem;
-
     @Override
     public void write(@NonNull WKTWriter writer) throws IOException {
         writer.beginObject("GEOGCRS")
                 .writeRequiredObject(this.datum)
-                .writeRequiredObject(this.coordinateSystem)
+                .writeRequiredObject(this.coordinateSystem())
                 .writeOptionalObject(this.id())
                 .endObject();
     }
 
-    public abstract static class WKTStaticGeographicCRSBuilder<C extends WKTStaticGeographicCRS, B extends WKTStaticGeographicCRSBuilder<C, B>> extends WKTGeographicCRS.WKTGeographicCRSBuilder<C, B> {
+    public abstract static class WKTStaticGeographicCRSBuilder<C extends WKTStaticGeographicCRS, B extends WKTStaticGeographicCRSBuilder<C, B>> extends WKTGeographicCRSBuilder<C, B> {
         @JsonProperty("datum_ensemble")
         @JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
         public B datumEnsemble(@NonNull WKTGeodeticDatumEnsemble ensemble) {
