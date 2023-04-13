@@ -93,7 +93,7 @@ public abstract class AbstractAxisUnitConverter implements AxisUnitConverter {
      *
      * @author DaPorkchop_
      */
-    public interface Sequence {
-        ImmutableList<? extends AxisUnitConverter> converters();
+    public interface RepresentableAsSequence {
+        AxisUnitConverterSequence asConverterSequence();
     }
 }

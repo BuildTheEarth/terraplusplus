@@ -18,7 +18,7 @@ import java.util.function.Predicate;
 @Data
 @EqualsAndHashCode(callSuper = false, cacheStrategy = EqualsAndHashCode.CacheStrategy.LAZY)
 @SuppressWarnings("UnstableApiUsage")
-public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter implements AbstractAxisUnitConverter.Sequence {
+public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter implements AbstractAxisUnitConverter.RepresentableAsSequence {
     @NonNull
     private final ImmutableList<AxisUnitConverter> converters;
 
@@ -38,6 +38,11 @@ public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter i
     @Override
     protected AxisUnitConverter inverse0() {
         return new AxisUnitConverterSequence(this.converters.reverse().stream().map(AxisUnitConverter::inverse).collect(ImmutableList.toImmutableList()));
+    }
+
+    @Override
+    public AxisUnitConverterSequence asConverterSequence() {
+        return this;
     }
 
     private static <T> void addRangeTo(@NonNull ImmutableList<? extends T> src, int srcBegin, int srcEnd, @NonNull ImmutableList.Builder<? super T> dst) {
@@ -318,8 +323,8 @@ public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter i
             // to be inserted into the sequence)
             if (!flattened) {
                 flattened = true;
-                converters = maybeFlatten(converters, converter -> converter instanceof AbstractAxisUnitConverter.Sequence
-                        ? ((AbstractAxisUnitConverter.Sequence) converter).converters()
+                converters = maybeFlatten(converters, converter -> converter instanceof RepresentableAsSequence
+                        ? ((RepresentableAsSequence) converter).asConverterSequence().converters()
                         : null);
             }
 
@@ -373,9 +378,30 @@ public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter i
 
                 return null;
             });
-
-            //TODO: maybe try to apply more optimizations?
         } while (converters != prevConverters);
+
+        switch (converters.size()) {
+            case 0:
+            case 1:
+                throw new IllegalStateException();
+            case 2:
+                //special cases with where there are two converters
+                AxisUnitConverter a = converters.get(0);
+                AxisUnitConverter b = converters.get(1);
+                if (a instanceof AxisUnitConverterMultiply && b instanceof AxisUnitConverterAdd) { // [multiply, add] -> multiply and add
+                    double aFactor = ((AxisUnitConverterMultiply) a).factor();
+                    double bOffset = ((AxisUnitConverterAdd) b).offset();
+
+                    return maybeIntern(new AxisUnitConverterMultiplyAdd(aFactor, bOffset), intern);
+                } else if (a instanceof AxisUnitConverterAdd && b instanceof AxisUnitConverterMultiply) { // [add, multiply] -> multiply and add
+                    double aOffset = ((AxisUnitConverterAdd) a).offset();
+                    double bFactor = ((AxisUnitConverterMultiply) b).factor();
+
+                    // (value + a) * b = value * b + a * b
+                    return maybeIntern(new AxisUnitConverterMultiplyAdd(bFactor, aOffset * bFactor), intern);
+                }
+                break;
+        }
 
         //intern the converters if requested
         if (intern) {

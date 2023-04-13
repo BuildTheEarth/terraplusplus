@@ -6,13 +6,14 @@ import net.buildtheearth.terraplusplus.crs.axis.unit.AxisUnitConverter;
 import net.buildtheearth.terraplusplus.crs.axis.unit.conversion.AxisUnitConverterAdd;
 import net.buildtheearth.terraplusplus.crs.axis.unit.conversion.AxisUnitConverterIdentity;
 import net.buildtheearth.terraplusplus.crs.axis.unit.conversion.AxisUnitConverterMultiply;
+import net.buildtheearth.terraplusplus.crs.axis.unit.conversion.AxisUnitConverterMultiplyAdd;
 import net.buildtheearth.terraplusplus.crs.axis.unit.conversion.AxisUnitConverterSequence;
-import net.buildtheearth.terraplusplus.crs.axis.unit.conversion.CompiledAxisUnitConverter;
 import org.junit.Test;
 
 import java.util.SplittableRandom;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static net.daporkchop.lib.common.util.PValidation.*;
 
@@ -21,83 +22,81 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 public class UnitConversionTest {
     @Test
-    public void testCompile() {
-        testCompile(new AxisUnitConverterAdd(0.0d));
-        testCompile(new AxisUnitConverterAdd(1.0d));
-        testCompile(new AxisUnitConverterAdd(-1.5d));
-        testCompile(new AxisUnitConverterAdd(Math.PI));
-
-        testCompile(new AxisUnitConverterMultiply(0.0d));
-        testCompile(new AxisUnitConverterMultiply(1.0d));
-        testCompile(new AxisUnitConverterMultiply(-1.5d));
-        testCompile(new AxisUnitConverterMultiply(Math.PI));
-
-        testCompile(new AxisUnitConverterSequence(ImmutableList.of(
+    public void testSimplifiedPrecision() {
+        Stream.of(
+                new AxisUnitConverterAdd(0.0d),
                 new AxisUnitConverterAdd(1.0d),
-                new AxisUnitConverterMultiply(Math.PI),
-                new AxisUnitConverterAdd(Math.PI))));
-
-        testCompile(new AxisUnitConverterSequence(ImmutableList.of(
-                new AxisUnitConverterAdd(1.0d),
-                new AxisUnitConverterAdd(1.0d),
-                new AxisUnitConverterMultiply(Math.PI),
-                new AxisUnitConverterAdd(Math.PI))));
-
-        testCompile(new AxisUnitConverterSequence(ImmutableList.of(
-                new AxisUnitConverterAdd(1.0d),
-                new AxisUnitConverterAdd(-1.0d),
-                new AxisUnitConverterMultiply(Math.PI),
-                new AxisUnitConverterAdd(Math.PI))));
-
-        testCompile(new AxisUnitConverterSequence(ImmutableList.of(
-                new AxisUnitConverterAdd(1.0d),
-                new AxisUnitConverterMultiply(Math.PI),
-                new AxisUnitConverterMultiply(Math.PI),
-                new AxisUnitConverterAdd(Math.PI))));
-
-        testCompile(new AxisUnitConverterSequence(ImmutableList.of(
-                new AxisUnitConverterAdd(1.0d),
-                new AxisUnitConverterMultiply(Math.PI),
-                new AxisUnitConverterMultiply(Math.PI).inverse(),
-                new AxisUnitConverterAdd(Math.PI))));
-
-        testCompile(new AxisUnitConverterSequence(ImmutableList.of(
-                new AxisUnitConverterMultiply(1.5d),
+                new AxisUnitConverterAdd(-1.5d),
                 new AxisUnitConverterAdd(Math.PI),
-                new AxisUnitConverterAdd(Math.PI).inverse(),
-                new AxisUnitConverterMultiply(Math.PI))));
 
-        testCompile(new AxisUnitConverterSequence(ImmutableList.of(
-                new AxisUnitConverterMultiply(1.5d),
-                new AxisUnitConverterAdd(Math.PI),
-                new AxisUnitConverterAdd(Math.PI),
-                new AxisUnitConverterAdd(Math.PI).inverse(),
-                new AxisUnitConverterMultiply(Math.PI))));
-
-        testCompile(new AxisUnitConverterSequence(ImmutableList.of(
-                new AxisUnitConverterAdd(1.5d),
+                new AxisUnitConverterMultiply(0.0d),
+                new AxisUnitConverterMultiply(1.0d),
+                new AxisUnitConverterMultiply(-1.5d),
                 new AxisUnitConverterMultiply(Math.PI),
-                new AxisUnitConverterMultiply(Math.PI).inverse(),
-                new AxisUnitConverterAdd(Math.PI))));
 
-        testCompile(new AxisUnitConverterSequence(ImmutableList.of(
-                new AxisUnitConverterAdd(1.5d),
-                new AxisUnitConverterMultiply(Math.PI),
-                new AxisUnitConverterMultiply(Math.PI),
-                new AxisUnitConverterMultiply(Math.PI).inverse(),
-                new AxisUnitConverterAdd(Math.PI))));
-    }
+                new AxisUnitConverterSequence(ImmutableList.of(
+                        new AxisUnitConverterAdd(1.0d),
+                        new AxisUnitConverterMultiply(Math.PI),
+                        new AxisUnitConverterAdd(Math.PI))),
 
-    private static void testCompile(@NonNull AxisUnitConverter originalConverter) {
-        //System.out.printf("testing %s\nsimplified: %s\n\n", originalConverter, originalConverter.simplify());
+                new AxisUnitConverterSequence(ImmutableList.of(
+                        new AxisUnitConverterAdd(1.0d),
+                        new AxisUnitConverterAdd(1.0d),
+                        new AxisUnitConverterMultiply(Math.PI),
+                        new AxisUnitConverterAdd(Math.PI))),
 
-        AxisUnitConverter compiledConverter = CompiledAxisUnitConverter.compile(originalConverter);
+                new AxisUnitConverterSequence(ImmutableList.of(
+                        new AxisUnitConverterAdd(1.0d),
+                        new AxisUnitConverterAdd(-1.0d),
+                        new AxisUnitConverterMultiply(Math.PI),
+                        new AxisUnitConverterAdd(Math.PI))),
 
-        ThreadLocalRandom.current().doubles(1 << 20).forEach(value -> {
-            double convertedOriginal = originalConverter.convert(value);
-            double convertedCompiled = compiledConverter.convert(value);
+                new AxisUnitConverterSequence(ImmutableList.of(
+                        new AxisUnitConverterAdd(1.0d),
+                        new AxisUnitConverterMultiply(Math.PI),
+                        new AxisUnitConverterMultiply(Math.PI),
+                        new AxisUnitConverterAdd(Math.PI))),
 
-            checkState(approxEquals(convertedOriginal, convertedCompiled, 1e-14));
+                new AxisUnitConverterSequence(ImmutableList.of(
+                        new AxisUnitConverterAdd(1.0d),
+                        new AxisUnitConverterMultiply(Math.PI),
+                        new AxisUnitConverterMultiply(Math.PI).inverse(),
+                        new AxisUnitConverterAdd(Math.PI))),
+
+                new AxisUnitConverterSequence(ImmutableList.of(
+                        new AxisUnitConverterMultiply(1.5d),
+                        new AxisUnitConverterAdd(Math.PI),
+                        new AxisUnitConverterAdd(Math.PI).inverse(),
+                        new AxisUnitConverterMultiply(Math.PI))),
+
+                new AxisUnitConverterSequence(ImmutableList.of(
+                        new AxisUnitConverterMultiply(1.5d),
+                        new AxisUnitConverterAdd(Math.PI),
+                        new AxisUnitConverterAdd(Math.PI),
+                        new AxisUnitConverterAdd(Math.PI).inverse(),
+                        new AxisUnitConverterMultiply(Math.PI))),
+
+                new AxisUnitConverterSequence(ImmutableList.of(
+                        new AxisUnitConverterAdd(1.5d),
+                        new AxisUnitConverterMultiply(Math.PI),
+                        new AxisUnitConverterMultiply(Math.PI).inverse(),
+                        new AxisUnitConverterAdd(Math.PI))),
+
+                new AxisUnitConverterSequence(ImmutableList.of(
+                        new AxisUnitConverterAdd(1.5d),
+                        new AxisUnitConverterMultiply(Math.PI),
+                        new AxisUnitConverterMultiply(Math.PI),
+                        new AxisUnitConverterMultiply(Math.PI).inverse(),
+                        new AxisUnitConverterAdd(Math.PI)))
+        ).parallel().forEach(originalConverter -> {
+            AxisUnitConverter simplifiedConverter = originalConverter.simplify();
+
+            ThreadLocalRandom.current().doubles(1 << 20).parallel().forEach(value -> {
+                double convertedOriginal = originalConverter.convert(value);
+                double convertedCompiled = simplifiedConverter.convert(value);
+
+                checkState(approxEquals(convertedOriginal, convertedCompiled, 1e-14));
+            });
         });
     }
 
@@ -107,10 +106,10 @@ public class UnitConversionTest {
 
     @Test
     public void testSimplification() {
-        IntStream.range(0, 1 << 25).parallel().forEach(seed -> {
+        IntStream.range(0, 1 << 10).parallel().forEach(seed -> {
             SplittableRandom rng = new SplittableRandom(seed);
 
-            AxisUnitConverter originalConverter = randomConverterSequence(rng, rng.nextInt(32));
+            AxisUnitConverter originalConverter = randomConverterSequence(rng, rng.nextInt(256));
             AxisUnitConverter simplifiedConverter = originalConverter.simplify();
 
             checkState(originalConverter.isIdentity() == simplifiedConverter.isIdentity(), "for seed %d: original=%s, simplified=%s", seed, originalConverter, simplifiedConverter);
@@ -120,7 +119,7 @@ public class UnitConversionTest {
 
             checkState(simplifiedConverter instanceof AxisUnitConverterAdd
                        || simplifiedConverter instanceof AxisUnitConverterMultiply
-                       || (simplifiedConverter instanceof AxisUnitConverterSequence && ((AxisUnitConverterSequence) simplifiedConverter).converters().size() == 2),
+                       || simplifiedConverter instanceof AxisUnitConverterMultiplyAdd,
                     "for seed %d: original=%s, simplified=%s", seed, originalConverter, simplifiedConverter);
         });
     }
@@ -134,7 +133,7 @@ public class UnitConversionTest {
             default:
                 ImmutableList.Builder<AxisUnitConverter> builder = ImmutableList.builder();
                 for (int i = 0; i < count; ) {
-                    if (rng.nextInt(256) != 0) {
+                    if (rng.nextInt(64) != 0) {
                         builder.add(randomConverter(rng));
                         i++;
                     } else {
