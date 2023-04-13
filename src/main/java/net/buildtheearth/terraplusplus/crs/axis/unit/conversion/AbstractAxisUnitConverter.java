@@ -86,4 +86,14 @@ public abstract class AbstractAxisUnitConverter implements AxisUnitConverter {
     protected AxisUnitConverter tryAndThen(@NonNull AxisUnitConverter next) {
         return null;
     }
+
+    /**
+     * An {@link AxisUnitConverter} which actually represents multiple {@link AxisUnitConverter}s combined into one, but may be "un-combined" into
+     * its component steps to allow for further optimization.
+     *
+     * @author DaPorkchop_
+     */
+    public interface Sequence {
+        ImmutableList<? extends AxisUnitConverter> converters();
+    }
 }
