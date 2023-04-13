@@ -6,7 +6,7 @@ import lombok.Getter;
  * @author DaPorkchop_
  */
 @Getter
-public enum CoordinateAxis {
+public enum AxisDirection {
     NORTH,
     NORTH_NORTH_EAST,
     NORTH_EAST,
@@ -40,18 +40,18 @@ public enum CoordinateAxis {
     DISPLAY_DOWN(DISPLAY_UP),
     ;
 
-    private final CoordinateAxis opposite;
+    private final AxisDirection opposite;
 
     /**
      * This axis' absolute direction.
      */
-    private final CoordinateAxis absolute;
+    private final AxisDirection absolute;
 
-    CoordinateAxis() {
+    AxisDirection() {
         this(null);
     }
 
-    CoordinateAxis(CoordinateAxis opposite) {
+    AxisDirection(AxisDirection opposite) {
         this.opposite = opposite;
 
         this.absolute = opposite != null && opposite.ordinal() < this.ordinal() ? opposite : this;

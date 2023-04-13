@@ -1,5 +1,7 @@
 package net.buildtheearth.terraplusplus.crs;
 
+import com.google.common.collect.ImmutableList;
+import net.buildtheearth.terraplusplus.crs.axis.Axis;
 import net.buildtheearth.terraplusplus.util.Internable;
 
 /**
@@ -7,7 +9,7 @@ import net.buildtheearth.terraplusplus.util.Internable;
  */
 public interface CRS extends Internable<CRS> {
     /**
-     * @return the number of coordinate axes in this system
+     * @return a {@link ImmutableList list} of the {@link Axis axes} which make up this coordinate system
      */
-    int dim();
+    ImmutableList<Axis> axes();
 }

@@ -16,6 +16,22 @@ public class InternHelper {
     private static final Interner<Object> INTERNER = Interners.newWeakInterner();
 
     public static <T> T intern(@NonNull T instance) {
+        if (instance instanceof String) {
+            return uncheckedCast(((String) instance).intern());
+        }
+
         return uncheckedCast(INTERNER.intern(instance));
+    }
+
+    public static String intern(@NonNull String instance) {
+        return instance.intern();
+    }
+
+    public static <T extends Internable<? super T>> T tryInternNullable(T instance) {
+        return instance != null ? uncheckedCast(instance.intern()) : null;
+    }
+
+    public static String tryInternNullable(String instance) {
+        return instance != null ? instance.intern() : null;
     }
 }
