@@ -1,4 +1,4 @@
-package net.buildtheearth.terraplusplus.crs.axis;
+package net.buildtheearth.terraplusplus.crs.cs.axis;
 
 import lombok.Getter;
 

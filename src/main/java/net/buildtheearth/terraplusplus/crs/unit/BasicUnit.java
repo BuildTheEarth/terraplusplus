@@ -1,4 +1,4 @@
-package net.buildtheearth.terraplusplus.crs.axis.unit;
+package net.buildtheearth.terraplusplus.crs.unit;
 
 import lombok.AccessLevel;
 import lombok.Data;
@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.With;
-import net.buildtheearth.terraplusplus.crs.axis.unit.conversion.AxisUnitConverterIdentity;
+import net.buildtheearth.terraplusplus.crs.unit.conversion.UnitConverterIdentity;
 import net.buildtheearth.terraplusplus.util.InternHelper;
 import net.daporkchop.lib.common.util.PorkUtil;
 
@@ -17,21 +17,21 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 @Data
-public final class BasicAxisUnit implements AxisUnit {
-    public static BasicAxisUnit makeBase(@NonNull UnitType type) {
-        return new BasicAxisUnit(type, null, null, null, null);
+public final class BasicUnit implements Unit {
+    public static BasicUnit makeBase(@NonNull UnitType type) {
+        return new BasicUnit(type, null, null, null, null);
     }
 
-    public static BasicAxisUnit makeBase(@NonNull UnitType type, String name, String symbol) {
-        return new BasicAxisUnit(type, null, null, name, symbol);
+    public static BasicUnit makeBase(@NonNull UnitType type, String name, String symbol) {
+        return new BasicUnit(type, null, null, name, symbol);
     }
 
     @NonNull
     private final UnitType type;
 
-    private final AxisUnit baseUnit;
+    private final Unit baseUnit;
     @Getter(AccessLevel.NONE)
-    private final AxisUnitConverter toBaseConverter; //non-null iff (this.baseUnit != null)
+    private final UnitConverter toBaseConverter; //non-null iff (this.baseUnit != null)
 
     @With
     private final String name;
@@ -39,10 +39,10 @@ public final class BasicAxisUnit implements AxisUnit {
     private final String symbol;
 
     @Override
-    public AxisUnitConverter convertTo(@NonNull AxisUnit target) {
+    public UnitConverter convertTo(@NonNull Unit target) {
         checkArg(this.type == target.type(), "can't convert from %s to %s: mismatched unit types!", this, target);
 
-        AxisUnit targetBaseUnit = target.baseUnit();
+        Unit targetBaseUnit = target.baseUnit();
         if (this.baseUnit != null) {
             if (targetBaseUnit != null) {
                 //both units are derived from a base unit - we can only convert between them if they're both derived from the same base
@@ -68,29 +68,29 @@ public final class BasicAxisUnit implements AxisUnit {
                 //neither unit is derived from another unit, meaning they are both base units - we can only convert between them if they're both the same
                 checkArg(this.equals(target), "can't convert from %s to %s: mismatched base units!", this, target);
 
-                return AxisUnitConverterIdentity.instance();
+                return UnitConverterIdentity.instance();
             }
         }
     }
 
     @Override
-    public AxisUnit transform(@NonNull AxisUnitConverter converter) {
-        return new BasicAxisUnit(this.type,
+    public Unit transform(@NonNull UnitConverter converter) {
+        return new BasicUnit(this.type,
                 PorkUtil.fallbackIfNull(this.baseUnit, this),
                 this.toBaseConverter != null ? converter.andThen(this.toBaseConverter) : converter,
                 null, null);
     }
 
     @Override
-    public AxisUnit intern() {
-        AxisUnit baseUnit = InternHelper.tryInternNullable(this.baseUnit);
-        AxisUnitConverter toBaseConverter = InternHelper.tryInternNullable(this.toBaseConverter);
+    public Unit intern() {
+        Unit baseUnit = InternHelper.tryInternNullable(this.baseUnit);
+        UnitConverter toBaseConverter = InternHelper.tryInternNullable(this.toBaseConverter);
         String name = InternHelper.tryInternNullable(this.name);
         String symbol = InternHelper.tryInternNullable(this.symbol);
 
         //noinspection StringEquality
         return InternHelper.intern(baseUnit != this.baseUnit || toBaseConverter != this.toBaseConverter || name != this.name || symbol != this.symbol
-                ? new BasicAxisUnit(this.type, baseUnit, toBaseConverter, name, symbol)
+                ? new BasicUnit(this.type, baseUnit, toBaseConverter, name, symbol)
                 : this);
     }
 }

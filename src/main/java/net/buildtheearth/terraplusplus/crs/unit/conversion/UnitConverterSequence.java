@@ -1,10 +1,10 @@
-package net.buildtheearth.terraplusplus.crs.axis.unit.conversion;
+package net.buildtheearth.terraplusplus.crs.unit.conversion;
 
 import com.google.common.collect.ImmutableList;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
-import net.buildtheearth.terraplusplus.crs.axis.unit.AxisUnitConverter;
+import net.buildtheearth.terraplusplus.crs.unit.UnitConverter;
 import net.daporkchop.lib.common.function.plain.TriFunction;
 
 import java.util.Objects;
@@ -18,13 +18,13 @@ import java.util.function.Predicate;
 @Data
 @EqualsAndHashCode(callSuper = false, cacheStrategy = EqualsAndHashCode.CacheStrategy.LAZY)
 @SuppressWarnings("UnstableApiUsage")
-public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter implements AbstractAxisUnitConverter.RepresentableAsSequence {
+public final class UnitConverterSequence extends AbstractUnitConverter implements AbstractUnitConverter.RepresentableAsSequence {
     @NonNull
-    private final ImmutableList<AxisUnitConverter> converters;
+    private final ImmutableList<UnitConverter> converters;
 
     @Override
     public boolean isIdentity() {
-        return this.converters.stream().allMatch(AxisUnitConverter::isIdentity);
+        return this.converters.stream().allMatch(UnitConverter::isIdentity);
     }
 
     @Override
@@ -36,12 +36,12 @@ public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter i
     }
 
     @Override
-    protected AxisUnitConverter inverse0() {
-        return new AxisUnitConverterSequence(this.converters.reverse().stream().map(AxisUnitConverter::inverse).collect(ImmutableList.toImmutableList()));
+    protected UnitConverter inverse0() {
+        return new UnitConverterSequence(this.converters.reverse().stream().map(UnitConverter::inverse).collect(ImmutableList.toImmutableList()));
     }
 
     @Override
-    public AxisUnitConverterSequence asConverterSequence() {
+    public UnitConverterSequence asConverterSequence() {
         return this;
     }
 
@@ -300,10 +300,10 @@ public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter i
     }
 
     @Override
-    protected AxisUnitConverter withChildrenInterned() {
-        ImmutableList<AxisUnitConverter> converters = this.converters;
-        ImmutableList<AxisUnitConverter> internedConverters = maybeRemap(converters, AxisUnitConverter::intern);
-        return converters == internedConverters ? this : new AxisUnitConverterSequence(internedConverters);
+    protected UnitConverter withChildrenInterned() {
+        ImmutableList<UnitConverter> converters = this.converters;
+        ImmutableList<UnitConverter> internedConverters = maybeRemap(converters, UnitConverter::intern);
+        return converters == internedConverters ? this : new UnitConverterSequence(internedConverters);
     }
 
     private static boolean isInverseFactors(double a, double b) {
@@ -312,9 +312,9 @@ public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter i
     }
 
     @Override
-    protected AxisUnitConverter simplify0() {
-        ImmutableList<AxisUnitConverter> converters = this.converters;
-        ImmutableList<AxisUnitConverter> prevConverters;
+    protected UnitConverter simplify0() {
+        ImmutableList<UnitConverter> converters = this.converters;
+        ImmutableList<UnitConverter> prevConverters;
 
         //this loop will keep running until no more optimizations can be made
         boolean flattened = false;
@@ -324,7 +324,7 @@ public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter i
             //special handling for special converter counts
             switch (converters.size()) {
                 case 0:
-                    return AxisUnitConverterIdentity.instance();
+                    return UnitConverterIdentity.instance();
                 case 1:
                     return converters.get(0).simplify();
             }
@@ -340,23 +340,23 @@ public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter i
             }
 
             //simplify the converters
-            converters = maybeRemap(converters, AxisUnitConverter::simplify);
+            converters = maybeRemap(converters, UnitConverter::simplify);
 
             //remove identity converters
-            converters = maybeRemove(converters, AxisUnitConverter::isIdentity);
+            converters = maybeRemove(converters, UnitConverter::isIdentity);
 
             //try to merge neighboring converters
             converters = maybeMerge2Neighbors(converters, (first, second) -> {
                 if (first.getClass() == second.getClass()) { //both are the same type
-                    if (first instanceof AxisUnitConverterAdd) {
-                        return new AxisUnitConverterAdd(((AxisUnitConverterAdd) first).offset() + ((AxisUnitConverterAdd) second).offset());
-                    } else if (first instanceof AxisUnitConverterMultiply) {
-                        double firstFactor = ((AxisUnitConverterMultiply) first).factor();
-                        double secondFactor = ((AxisUnitConverterMultiply) second).factor();
+                    if (first instanceof UnitConverterAdd) {
+                        return new UnitConverterAdd(((UnitConverterAdd) first).offset() + ((UnitConverterAdd) second).offset());
+                    } else if (first instanceof UnitConverterMultiply) {
+                        double firstFactor = ((UnitConverterMultiply) first).factor();
+                        double secondFactor = ((UnitConverterMultiply) second).factor();
                         if (isInverseFactors(firstFactor, secondFactor)) { //one is the inverse of the other
-                            return AxisUnitConverterIdentity.instance();
+                            return UnitConverterIdentity.instance();
                         } else {
-                            return new AxisUnitConverterMultiply(firstFactor * secondFactor);
+                            return new UnitConverterMultiply(firstFactor * secondFactor);
                         }
                     }
                 }
@@ -365,26 +365,26 @@ public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter i
             });
 
             converters = maybeMerge3Neighbors(converters, (a, b, c) -> {
-                if (a instanceof AxisUnitConverterMultiply && b instanceof AxisUnitConverterAdd && c instanceof AxisUnitConverterMultiply) {
-                    double aFactor = ((AxisUnitConverterMultiply) a).factor();
-                    double bOffset = ((AxisUnitConverterAdd) b).offset();
-                    double cFactor = ((AxisUnitConverterMultiply) c).factor();
+                if (a instanceof UnitConverterMultiply && b instanceof UnitConverterAdd && c instanceof UnitConverterMultiply) {
+                    double aFactor = ((UnitConverterMultiply) a).factor();
+                    double bOffset = ((UnitConverterAdd) b).offset();
+                    double cFactor = ((UnitConverterMultiply) c).factor();
 
                     if (isInverseFactors(aFactor, cFactor)) {
-                        return ImmutableList.of(new AxisUnitConverterAdd(1.0d / aFactor == cFactor
+                        return ImmutableList.of(new UnitConverterAdd(1.0d / aFactor == cFactor
                                 ? bOffset / aFactor // (value * a + b) / a = value + (b / a)
                                 : bOffset * cFactor // ((value / c) + b) * c = value + b * c
                         ));
                     } else { // (value * a + b) * c = value * a * c + b * c
-                        return ImmutableList.of(new AxisUnitConverterMultiply(aFactor * cFactor), new AxisUnitConverterAdd(bOffset * cFactor));
+                        return ImmutableList.of(new UnitConverterMultiply(aFactor * cFactor), new UnitConverterAdd(bOffset * cFactor));
                     }
-                } else if (a instanceof AxisUnitConverterAdd && b instanceof AxisUnitConverterMultiply && c instanceof AxisUnitConverterAdd) {
-                    double aOffset = ((AxisUnitConverterAdd) a).offset();
-                    double bFactor = ((AxisUnitConverterMultiply) b).factor();
-                    double cOffset = ((AxisUnitConverterAdd) c).offset();
+                } else if (a instanceof UnitConverterAdd && b instanceof UnitConverterMultiply && c instanceof UnitConverterAdd) {
+                    double aOffset = ((UnitConverterAdd) a).offset();
+                    double bFactor = ((UnitConverterMultiply) b).factor();
+                    double cOffset = ((UnitConverterAdd) c).offset();
 
                     // ((value + a) * b) + c = value * b + (a * b + c)
-                    return ImmutableList.of(new AxisUnitConverterMultiply(bFactor), new AxisUnitConverterAdd(aOffset * bFactor + cOffset));
+                    return ImmutableList.of(new UnitConverterMultiply(bFactor), new UnitConverterAdd(aOffset * bFactor + cOffset));
                 }
 
                 return null;
@@ -397,30 +397,30 @@ public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter i
                 throw new IllegalStateException();
             case 2:
                 //special cases with where there are two converters
-                AxisUnitConverter a = converters.get(0);
-                AxisUnitConverter b = converters.get(1);
-                if (a instanceof AxisUnitConverterMultiply && b instanceof AxisUnitConverterAdd) { // [multiply, add] -> multiply and add
-                    double aFactor = ((AxisUnitConverterMultiply) a).factor();
-                    double bOffset = ((AxisUnitConverterAdd) b).offset();
+                UnitConverter a = converters.get(0);
+                UnitConverter b = converters.get(1);
+                if (a instanceof UnitConverterMultiply && b instanceof UnitConverterAdd) { // [multiply, add] -> multiply and add
+                    double aFactor = ((UnitConverterMultiply) a).factor();
+                    double bOffset = ((UnitConverterAdd) b).offset();
 
-                    return new AxisUnitConverterMultiplyAdd(aFactor, bOffset);
-                } else if (a instanceof AxisUnitConverterAdd && b instanceof AxisUnitConverterMultiply) { // [add, multiply] -> multiply and add
-                    double aOffset = ((AxisUnitConverterAdd) a).offset();
-                    double bFactor = ((AxisUnitConverterMultiply) b).factor();
+                    return new UnitConverterMultiplyAdd(aFactor, bOffset);
+                } else if (a instanceof UnitConverterAdd && b instanceof UnitConverterMultiply) { // [add, multiply] -> multiply and add
+                    double aOffset = ((UnitConverterAdd) a).offset();
+                    double bFactor = ((UnitConverterMultiply) b).factor();
 
                     // (value + a) * b = value * b + a * b
-                    return new AxisUnitConverterMultiplyAdd(bFactor, aOffset * bFactor);
+                    return new UnitConverterMultiplyAdd(bFactor, aOffset * bFactor);
                 }
                 break;
         }
 
-        return converters == this.converters ? this : new AxisUnitConverterSequence(converters);
+        return converters == this.converters ? this : new UnitConverterSequence(converters);
     }
 
     @Override
-    protected AxisUnitConverter tryAndThen(@NonNull AxisUnitConverter next) {
-        if (next instanceof AxisUnitConverterSequence) { //concatenate the two sequences, as otherwise we'd end up with a sequence of sequences (which would be stupid)
-            return new AxisUnitConverterSequence(concat(this.converters, ((AxisUnitConverterSequence) next).converters));
+    protected UnitConverter tryAndThen(@NonNull UnitConverter next) {
+        if (next instanceof UnitConverterSequence) { //concatenate the two sequences, as otherwise we'd end up with a sequence of sequences (which would be stupid)
+            return new UnitConverterSequence(concat(this.converters, ((UnitConverterSequence) next).converters));
         }
 
         //TODO: do we care about trying to do further simplifications here?

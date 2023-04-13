@@ -1,16 +1,16 @@
-package net.buildtheearth.terraplusplus.crs.axis.unit.conversion;
+package net.buildtheearth.terraplusplus.crs.unit.conversion;
 
 import com.google.common.collect.ImmutableList;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import net.buildtheearth.terraplusplus.crs.axis.unit.AxisUnitConverter;
+import net.buildtheearth.terraplusplus.crs.unit.UnitConverter;
 
 /**
  * @author DaPorkchop_
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-public final class AxisUnitConverterMultiplyAdd extends AbstractAxisUnitConverter implements AbstractAxisUnitConverter.RepresentableAsSequence {
+public final class UnitConverterMultiplyAdd extends AbstractUnitConverter implements AbstractUnitConverter.RepresentableAsSequence {
     private final double factor;
     private final double offset;
 
@@ -25,20 +25,20 @@ public final class AxisUnitConverterMultiplyAdd extends AbstractAxisUnitConverte
     }
 
     @Override
-    public AxisUnitConverterSequence asConverterSequence() {
-        return new AxisUnitConverterSequence(ImmutableList.of(
-                new AxisUnitConverterMultiply(this.factor),
-                new AxisUnitConverterAdd(this.offset)
+    public UnitConverterSequence asConverterSequence() {
+        return new UnitConverterSequence(ImmutableList.of(
+                new UnitConverterMultiply(this.factor),
+                new UnitConverterAdd(this.offset)
         ));
     }
 
     @Override
-    protected AxisUnitConverter inverse0() {
+    protected UnitConverter inverse0() {
         return this.asConverterSequence().inverse();
     }
 
     @Override
-    protected AxisUnitConverter simplify0() {
+    protected UnitConverter simplify0() {
         //this is already maximally simplified
         return this;
     }

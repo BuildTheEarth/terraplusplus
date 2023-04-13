@@ -1,17 +1,17 @@
-package net.buildtheearth.terraplusplus.crs.axis.unit.conversion;
+package net.buildtheearth.terraplusplus.crs.unit.conversion;
 
 import lombok.NonNull;
-import net.buildtheearth.terraplusplus.crs.axis.unit.AxisUnitConverter;
+import net.buildtheearth.terraplusplus.crs.unit.UnitConverter;
 
 /**
- * An {@link AxisUnitConverter} which does nothing.
+ * An {@link UnitConverter} which does nothing.
  *
  * @author DaPorkchop_
  */
-public final class AxisUnitConverterIdentity implements AxisUnitConverter {
-    private static final AxisUnitConverterIdentity INSTANCE = new AxisUnitConverterIdentity();
+public final class UnitConverterIdentity implements UnitConverter {
+    private static final UnitConverterIdentity INSTANCE = new UnitConverterIdentity();
 
-    public static AxisUnitConverterIdentity instance() {
+    public static UnitConverterIdentity instance() {
         return INSTANCE;
     }
 
@@ -34,22 +34,22 @@ public final class AxisUnitConverterIdentity implements AxisUnitConverter {
     }
 
     @Override
-    public AxisUnitConverter inverse() {
+    public UnitConverter inverse() {
         return this;
     }
 
     @Override
-    public AxisUnitConverter simplify() {
+    public UnitConverter simplify() {
         return this;
     }
 
     @Override
-    public AxisUnitConverter andThen(@NonNull AxisUnitConverter next) {
+    public UnitConverter andThen(@NonNull UnitConverter next) {
         return next;
     }
 
     @Override
-    public AxisUnitConverter intern() {
+    public UnitConverter intern() {
         return this;
     }
 }

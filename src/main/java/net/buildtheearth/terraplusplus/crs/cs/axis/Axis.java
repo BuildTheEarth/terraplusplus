@@ -1,8 +1,8 @@
-package net.buildtheearth.terraplusplus.crs.axis;
+package net.buildtheearth.terraplusplus.crs.cs.axis;
 
 import lombok.Data;
 import lombok.NonNull;
-import net.buildtheearth.terraplusplus.crs.axis.unit.AxisUnit;
+import net.buildtheearth.terraplusplus.crs.unit.Unit;
 import net.buildtheearth.terraplusplus.util.InternHelper;
 import net.buildtheearth.terraplusplus.util.Internable;
 
@@ -26,10 +26,10 @@ public final class Axis implements Internable<Axis> {
     private final AxisDirection direction;
 
     /**
-     * The {@link AxisUnit unit} used for values on this axis.
+     * The {@link Unit unit} used for values on this axis.
      */
     @NonNull
-    private final AxisUnit unit;
+    private final Unit unit;
 
     /**
      * The minimum coordinate value allowed on this axis, or {@code null} if no such limit exists.
@@ -53,7 +53,7 @@ public final class Axis implements Internable<Axis> {
     @Override
     public Axis intern() {
         String name = this.name.intern();
-        AxisUnit unit = this.unit.intern();
+        Unit unit = this.unit.intern();
 
         //noinspection StringEquality
         return InternHelper.intern(name != this.name || unit != this.unit

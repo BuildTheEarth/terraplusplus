@@ -1,4 +1,4 @@
-package net.buildtheearth.terraplusplus.crs.axis.unit;
+package net.buildtheearth.terraplusplus.crs.unit;
 
 import lombok.NonNull;
 import net.buildtheearth.terraplusplus.util.Internable;
@@ -8,7 +8,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 /**
  * @author DaPorkchop_
  */
-public interface AxisUnitConverter extends Internable<AxisUnitConverter> {
+public interface UnitConverter extends Internable<UnitConverter> {
     boolean isIdentity();
 
     /**
@@ -74,21 +74,21 @@ public interface AxisUnitConverter extends Internable<AxisUnitConverter> {
     }
 
     /**
-     * @return an {@link AxisUnitConverter} which performs the inverse of this converter's operation
+     * @return an {@link UnitConverter} which performs the inverse of this converter's operation
      */
-    AxisUnitConverter inverse();
+    UnitConverter inverse();
 
     /**
-     * @return an {@link AxisUnitConverter} which is equivalent to this one, but may be able to execute more efficiently
+     * @return an {@link UnitConverter} which is equivalent to this one, but may be able to execute more efficiently
      */
-    AxisUnitConverter simplify();
+    UnitConverter simplify();
 
     /**
-     * Prefixes this {@link AxisUnitConverter} with the given {@link AxisUnitConverter}, resulting in an {@link AxisUnitConverter} such that
+     * Prefixes this {@link UnitConverter} with the given {@link UnitConverter}, resulting in an {@link UnitConverter} such that
      * {@code next.convert(this.convert(x)) == this.andThen(next).convert(x)} (ignoring any potential loss of precision).
      *
-     * @param next the next {@link AxisUnitConverter}
-     * @return the resulting concatenated {@link AxisUnitConverter}
+     * @param next the next {@link UnitConverter}
+     * @return the resulting concatenated {@link UnitConverter}
      */
-    AxisUnitConverter andThen(@NonNull AxisUnitConverter next);
+    UnitConverter andThen(@NonNull UnitConverter next);
 }

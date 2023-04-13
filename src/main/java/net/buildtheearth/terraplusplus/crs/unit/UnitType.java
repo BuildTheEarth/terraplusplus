@@ -1,4 +1,4 @@
-package net.buildtheearth.terraplusplus.crs.axis.unit;
+package net.buildtheearth.terraplusplus.crs.unit;
 
 /**
  * @author DaPorkchop_
