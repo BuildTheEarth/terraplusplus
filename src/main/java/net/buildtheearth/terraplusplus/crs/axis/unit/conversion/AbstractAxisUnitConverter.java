@@ -11,10 +11,6 @@ import net.buildtheearth.terraplusplus.util.InternHelper;
  * @author DaPorkchop_
  */
 public abstract class AbstractAxisUnitConverter implements AxisUnitConverter {
-    protected static AxisUnitConverter maybeIntern(@NonNull AxisUnitConverter converter, boolean intern) {
-        return intern ? converter.intern() : converter;
-    }
-
     @Override
     public abstract boolean isIdentity();
 
@@ -45,7 +41,11 @@ public abstract class AbstractAxisUnitConverter implements AxisUnitConverter {
             return AxisUnitConverterIdentity.instance().intern();
         }
 
-        return InternHelper.intern(this.simplify(true));
+        return InternHelper.intern(this.withChildrenInterned());
+    }
+
+    protected AxisUnitConverter withChildrenInterned() {
+        return this;
     }
 
     @Override
@@ -54,7 +54,7 @@ public abstract class AbstractAxisUnitConverter implements AxisUnitConverter {
             return AxisUnitConverterIdentity.instance();
         }
 
-        return this.simplify(false);
+        return this.simplify0();
     }
 
     /**
@@ -62,10 +62,9 @@ public abstract class AbstractAxisUnitConverter implements AxisUnitConverter {
      * <p>
      * The user may assume that this {@link AbstractAxisUnitConverter} is not {@link #isIdentity() an identity conversion}.
      *
-     * @param intern if {@code true}, any nested {@link AxisUnitConverter}s in the returned {@link AxisUnitConverter} must be interned
      * @return an {@link AxisUnitConverter} which is equivalent to this one, but may be able to execute more efficiently
      */
-    protected abstract AxisUnitConverter simplify(boolean intern);
+    protected abstract AxisUnitConverter simplify0();
 
     @Override
     public final AxisUnitConverter andThen(@NonNull AxisUnitConverter next) {
@@ -77,10 +76,10 @@ public abstract class AbstractAxisUnitConverter implements AxisUnitConverter {
 
         AxisUnitConverter result = this.tryAndThen(next);
         if (result != null) {
-            return result.simplify();
+            return result;
         }
 
-        return new AxisUnitConverterSequence(ImmutableList.of(this, next)).simplify();
+        return new AxisUnitConverterSequence(ImmutableList.of(this, next));
     }
 
     protected AxisUnitConverter tryAndThen(@NonNull AxisUnitConverter next) {

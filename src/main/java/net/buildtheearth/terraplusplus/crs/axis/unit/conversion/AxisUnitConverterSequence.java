@@ -295,13 +295,24 @@ public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter i
         }
     }
 
+    private static <T> ImmutableList<T> concat(@NonNull ImmutableList<? extends T> l, @NonNull ImmutableList<? extends T> r) {
+        return ImmutableList.<T>builder().addAll(l).addAll(r).build();
+    }
+
+    @Override
+    protected AxisUnitConverter withChildrenInterned() {
+        ImmutableList<AxisUnitConverter> converters = this.converters;
+        ImmutableList<AxisUnitConverter> internedConverters = maybeRemap(converters, AxisUnitConverter::intern);
+        return converters == internedConverters ? this : new AxisUnitConverterSequence(internedConverters);
+    }
+
     private static boolean isInverseFactors(double a, double b) {
         //check both ways to account for floating-point error
         return a == 1.0d / b || 1.0d / a == b;
     }
 
     @Override
-    protected AxisUnitConverter simplify(boolean intern) {
+    protected AxisUnitConverter simplify0() {
         ImmutableList<AxisUnitConverter> converters = this.converters;
         ImmutableList<AxisUnitConverter> prevConverters;
 
@@ -313,9 +324,9 @@ public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter i
             //special handling for special converter counts
             switch (converters.size()) {
                 case 0:
-                    return maybeIntern(AxisUnitConverterIdentity.instance(), intern);
+                    return AxisUnitConverterIdentity.instance();
                 case 1:
-                    return maybeIntern(converters.get(0).simplify(), intern);
+                    return converters.get(0).simplify();
             }
 
             //flatten nested converter sequences
@@ -392,20 +403,15 @@ public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter i
                     double aFactor = ((AxisUnitConverterMultiply) a).factor();
                     double bOffset = ((AxisUnitConverterAdd) b).offset();
 
-                    return maybeIntern(new AxisUnitConverterMultiplyAdd(aFactor, bOffset), intern);
+                    return new AxisUnitConverterMultiplyAdd(aFactor, bOffset);
                 } else if (a instanceof AxisUnitConverterAdd && b instanceof AxisUnitConverterMultiply) { // [add, multiply] -> multiply and add
                     double aOffset = ((AxisUnitConverterAdd) a).offset();
                     double bFactor = ((AxisUnitConverterMultiply) b).factor();
 
                     // (value + a) * b = value * b + a * b
-                    return maybeIntern(new AxisUnitConverterMultiplyAdd(bFactor, aOffset * bFactor), intern);
+                    return new AxisUnitConverterMultiplyAdd(bFactor, aOffset * bFactor);
                 }
                 break;
-        }
-
-        //intern the converters if requested
-        if (intern) {
-            converters = maybeRemap(converters, AxisUnitConverter::intern);
         }
 
         return converters == this.converters ? this : new AxisUnitConverterSequence(converters);
@@ -414,10 +420,7 @@ public final class AxisUnitConverterSequence extends AbstractAxisUnitConverter i
     @Override
     protected AxisUnitConverter tryAndThen(@NonNull AxisUnitConverter next) {
         if (next instanceof AxisUnitConverterSequence) { //concatenate the two sequences, as otherwise we'd end up with a sequence of sequences (which would be stupid)
-            return new AxisUnitConverterSequence(ImmutableList.<AxisUnitConverter>builder()
-                    .addAll(this.converters)
-                    .addAll(((AxisUnitConverterSequence) next).converters)
-                    .build());
+            return new AxisUnitConverterSequence(concat(this.converters, ((AxisUnitConverterSequence) next).converters));
         }
 
         //TODO: do we care about trying to do further simplifications here?

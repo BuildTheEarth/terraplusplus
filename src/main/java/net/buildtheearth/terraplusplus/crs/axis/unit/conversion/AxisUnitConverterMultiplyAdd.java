@@ -38,7 +38,7 @@ public final class AxisUnitConverterMultiplyAdd extends AbstractAxisUnitConverte
     }
 
     @Override
-    protected AxisUnitConverter simplify(boolean intern) {
+    protected AxisUnitConverter simplify0() {
         //this is already maximally simplified
         return this;
     }

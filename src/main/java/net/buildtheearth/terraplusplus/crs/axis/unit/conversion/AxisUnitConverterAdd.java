@@ -29,7 +29,7 @@ public final class AxisUnitConverterAdd extends AbstractAxisUnitConverter {
     }
 
     @Override
-    protected AxisUnitConverter simplify(boolean intern) {
+    protected AxisUnitConverter simplify0() {
         return this;
     }
 
