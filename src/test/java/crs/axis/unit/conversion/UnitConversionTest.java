@@ -133,8 +133,15 @@ public class UnitConversionTest {
                 return randomConverter(rng);
             default:
                 ImmutableList.Builder<AxisUnitConverter> builder = ImmutableList.builder();
-                for (int i = 0; i < count; i++) {
-                    builder.add(randomConverter(rng));
+                for (int i = 0; i < count; ) {
+                    if (rng.nextInt(256) != 0) {
+                        builder.add(randomConverter(rng));
+                        i++;
+                    } else {
+                        int batchCount = rng.nextInt(count - i);
+                        builder.add(randomConverterSequence(rng, batchCount));
+                        i += batchCount;
+                    }
                 }
                 return new AxisUnitConverterSequence(builder.build());
         }
