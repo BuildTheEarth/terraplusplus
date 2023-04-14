@@ -27,11 +27,11 @@ public class InternHelper {
         return instance.intern();
     }
 
-    public static <T extends Internable<? super T>> T tryInternNullable(T instance) {
+    public static <T extends Internable<? super T>> T tryInternNullableInternable(T instance) {
         return instance != null ? uncheckedCast(instance.intern()) : null;
     }
 
-    public static String tryInternNullable(String instance) {
+    public static String tryInternNullableString(String instance) {
         return instance != null ? instance.intern() : null;
     }
 }

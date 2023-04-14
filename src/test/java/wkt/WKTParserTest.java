@@ -1,11 +1,12 @@
 package wkt;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import lombok.NonNull;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTStyle;
 import net.buildtheearth.terraplusplus.projection.wkt.crs.WKTCRS;
 import net.buildtheearth.terraplusplus.projection.wkt.crs.WKTCompoundCRS;
+import net.buildtheearth.terraplusplus.projection.wkt.cs.WKTCS;
+import net.daporkchop.lib.common.function.throwing.EFunction;
 import net.daporkchop.lib.common.util.PorkUtil;
 import net.daporkchop.lib.unsafe.PUnsafe;
 import org.junit.BeforeClass;
@@ -14,11 +15,9 @@ import org.junit.Test;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.CharBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -43,7 +42,7 @@ public class WKTParserTest {
             EPSG_WKT1.load(in);
         }
 
-        try (InputStream in = new BufferedInputStream(Files.newInputStream(Paths.get("/home/daporkchop/srs/PROJJSON.properties")))) {
+        try (InputStream in = new BufferedInputStream(Files.newInputStream(Paths.get("/media/daporkchop/data/srs/srs-renamed/one_line/PROJJSON.properties")))) {
             EPSG_PROJJSON.load(in);
         }
     }
@@ -79,26 +78,16 @@ public class WKTParserTest {
 
     @Test
     public void findCoordinateSystemDimensions() {
-        List<Integer> dimensionCounts = new ArrayList<>();
-
-        EPSG_PROJJSON.forEach((rawKey, rawProjjson) -> {
-            String key = rawKey.toString();
-            String projjson = rawProjjson.toString();
-
-            try {
-                WKTObject parsed = JSON_MAPPER.readValue(projjson, WKTObject.AutoDeserialize.class);
-                try {
-                    int dimensionCount = dimensionCount(parsed);
-                    dimensionCounts.add(dimensionCount);
-                } catch (IllegalArgumentException e) {
-                    dimensionCounts.add(-1);
-                }
-            } catch (JsonProcessingException e) {
-                //ignore
-            }
-        });
-
-        System.out.println((Object) dimensionCounts.stream().collect(Collectors.groupingBy(Function.identity(), TreeMap::new, Collectors.counting())));
+        System.out.println((Object) EPSG_PROJJSON.values().stream()
+                .map((EFunction<Object, WKTCRS>) projjson -> JSON_MAPPER.readValue(projjson.toString(), WKTCRS.class))
+                .map(crs -> {
+                    try {
+                        return dimensionCount(crs);
+                    } catch (IllegalArgumentException e) {
+                        return -1;
+                    }
+                })
+                .collect(Collectors.groupingBy(Function.identity(), TreeMap::new, Collectors.counting())));
     }
 
     private static int dimensionCount(WKTObject obj) {
@@ -111,6 +100,26 @@ public class WKTParserTest {
         }
 
         throw new IllegalArgumentException(PorkUtil.className(obj));
+    }
+
+    @Test
+    public void findCoordinateSystemAxisOrders() {
+        EPSG_PROJJSON.values().stream()
+                .map((EFunction<Object, WKTCRS>) projjson -> JSON_MAPPER.readValue(projjson.toString(), WKTCRS.class))
+                .filter(WKTCRS.WithCoordinateSystem.class::isInstance)
+                .collect(Collectors.groupingBy(Object::getClass,
+                        Collectors.groupingBy(crs -> ((WKTCRS.WithCoordinateSystem) crs).coordinateSystem(),
+                                Collectors.counting())))
+                .entrySet().stream().sorted(Comparator.comparing(entry -> entry.getKey().getTypeName()))
+                .forEachOrdered(topEntry -> {
+                    System.out.println(topEntry.getKey() + ":");
+                    topEntry.getValue().entrySet().stream().sorted(Map.Entry.<WKTCS, Long>comparingByValue().reversed())
+                            .forEachOrdered(entry -> {
+                                WKTCS cs = entry.getKey();
+                                System.out.println("    " + entry.getValue() + "x " + cs.type() + ' ' + cs.axes() + " unit=" + cs.unit());
+                            });
+                    System.out.println();
+                });
     }
 
     @Test

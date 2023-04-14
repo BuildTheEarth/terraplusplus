@@ -17,7 +17,7 @@ public interface Unit extends Internable<Unit> {
     UnitType type();
 
     /**
-     * @return the unscaled unit which this unit is derived from
+     * @return the unscaled unit which this unit is derived from, or {@code null} if it is not derived from another unit
      */
     Unit baseUnit();
 
@@ -39,6 +39,14 @@ public interface Unit extends Internable<Unit> {
      * @throws IllegalArgumentException if the given {@code target} unit is of a different {@link #type()} than this unit
      */
     UnitConverter convertTo(@NonNull Unit target);
+
+    /**
+     * Checks if this unit is compatible with the given unit.
+     *
+     * @param other the {@link Unit} to check for compatibility with
+     * @return {@code true} if this unit is compatible with the given unit
+     */
+    boolean compatibleWith(@NonNull Unit other);
 
     default Unit add(double offset) {
         return this.transform(new UnitConverterAdd(offset));

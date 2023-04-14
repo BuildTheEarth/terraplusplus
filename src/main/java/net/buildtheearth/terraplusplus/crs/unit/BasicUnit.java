@@ -2,6 +2,7 @@ package net.buildtheearth.terraplusplus.crs.unit;
 
 import lombok.AccessLevel;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 @Data
+@EqualsAndHashCode(cacheStrategy = EqualsAndHashCode.CacheStrategy.LAZY)
 public final class BasicUnit implements Unit {
     public static BasicUnit makeBase(@NonNull UnitType type) {
         return new BasicUnit(type, null, null, null, null);
@@ -74,7 +76,21 @@ public final class BasicUnit implements Unit {
     }
 
     @Override
+    public boolean compatibleWith(@NonNull Unit other) {
+        if (this.equals(other)) {
+            return true;
+        }
+
+        return this.type.equals(other.type())
+               && PorkUtil.fallbackIfNull(this.baseUnit, this).equals(PorkUtil.fallbackIfNull(other.baseUnit(), other));
+    }
+
+    @Override
     public Unit transform(@NonNull UnitConverter converter) {
+        if (converter.isIdentity()) {
+            return this;
+        }
+
         return new BasicUnit(this.type,
                 PorkUtil.fallbackIfNull(this.baseUnit, this),
                 this.toBaseConverter != null ? converter.andThen(this.toBaseConverter) : converter,
@@ -83,10 +99,10 @@ public final class BasicUnit implements Unit {
 
     @Override
     public Unit intern() {
-        Unit baseUnit = InternHelper.tryInternNullable(this.baseUnit);
-        UnitConverter toBaseConverter = InternHelper.tryInternNullable(this.toBaseConverter);
-        String name = InternHelper.tryInternNullable(this.name);
-        String symbol = InternHelper.tryInternNullable(this.symbol);
+        Unit baseUnit = InternHelper.tryInternNullableInternable(this.baseUnit);
+        UnitConverter toBaseConverter = InternHelper.tryInternNullableInternable(this.toBaseConverter);
+        String name = InternHelper.tryInternNullableString(this.name);
+        String symbol = InternHelper.tryInternNullableString(this.symbol);
 
         //noinspection StringEquality
         return InternHelper.intern(baseUnit != this.baseUnit || toBaseConverter != this.toBaseConverter || name != this.name || symbol != this.symbol
