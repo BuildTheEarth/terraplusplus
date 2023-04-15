@@ -3,8 +3,10 @@ package wkt;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTObject;
 import net.buildtheearth.terraplusplus.projection.wkt.WKTStyle;
+import net.buildtheearth.terraplusplus.projection.wkt.WKTToTPPConverter;
 import net.buildtheearth.terraplusplus.projection.wkt.crs.WKTCRS;
 import net.buildtheearth.terraplusplus.projection.wkt.crs.WKTCompoundCRS;
+import net.buildtheearth.terraplusplus.projection.wkt.crs.WKTGeographicCRS;
 import net.buildtheearth.terraplusplus.projection.wkt.cs.WKTCS;
 import net.daporkchop.lib.common.function.throwing.EFunction;
 import net.daporkchop.lib.common.util.PorkUtil;
@@ -74,6 +76,24 @@ public class WKTParserTest {
             }
         });
         System.out.printf("parsed %d/%d (%.2f%%)\n", successful.get(), total.get(), (double) successful.get() / total.get() * 100.0d);
+    }
+
+    @Test
+    public void testConvertToTPP() {
+        System.out.println("convert to t++: " + EPSG_PROJJSON.values().stream()
+                .map((EFunction<Object, WKTCRS>) projjson -> JSON_MAPPER.readValue(projjson.toString(), WKTCRS.class))
+                .filter(WKTGeographicCRS.class::isInstance)
+                .mapToInt(crs -> {
+                    try {
+                        WKTToTPPConverter.convertCRS(crs);
+                        return 1;
+                    } catch (RuntimeException e) {
+                        //ignore
+                        //PUnsafe.throwException(e);
+                        return 0;
+                    }
+                })
+                .summaryStatistics());
     }
 
     @Test

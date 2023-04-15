@@ -33,11 +33,9 @@ public final class BasicUnit implements Unit {
 
     private final Unit baseUnit;
     @Getter(AccessLevel.NONE)
-    private final UnitConverter toBaseConverter; //non-null iff (this.baseUnit != null)
+    private final UnitConverter toBaseConverter; //non-null => (this.baseUnit != null)
 
-    @With
     private final String name;
-    @With
     private final String symbol;
 
     @Override
@@ -51,13 +49,14 @@ public final class BasicUnit implements Unit {
                 checkArg(this.baseUnit.equals(target.baseUnit()), "can't convert from %s to %s: mismatched base units!", this, target);
 
                 //convert to the base unit, and from there to the target unit
-                return this.toBaseConverter.andThen(targetBaseUnit.convertTo(target));
+                UnitConverter targetBaseToTarget = targetBaseUnit.convertTo(target);
+                return this.toBaseConverter != null ? this.toBaseConverter.andThen(targetBaseToTarget) : targetBaseToTarget;
             } else {
                 //this unit is derived from another unit, but the target unit is a base unit - we can only convert between them if the target unit is this unit's base
                 checkArg(this.baseUnit.equals(target), "can't convert from %s to %s: mismatched base units!", this, target);
 
                 //convert from this unit to the base unit (which is already the target unit)
-                return this.toBaseConverter;
+                return PorkUtil.fallbackIfNull(this.toBaseConverter, UnitConverterIdentity.instance());
             }
         } else {
             if (targetBaseUnit != null) {
@@ -95,6 +94,32 @@ public final class BasicUnit implements Unit {
                 PorkUtil.fallbackIfNull(this.baseUnit, this),
                 this.toBaseConverter != null ? converter.andThen(this.toBaseConverter) : converter,
                 null, null);
+    }
+
+    @Override
+    public Unit withName(String name) {
+        //noinspection StringEquality
+        if (name == this.name) {
+            return this;
+        }
+
+        return new BasicUnit(this.type,
+                PorkUtil.fallbackIfNull(this.baseUnit, this),
+                this.toBaseConverter,
+                name, this.symbol);
+    }
+
+    @Override
+    public Unit withSymbol(String symbol) {
+        //noinspection StringEquality
+        if (symbol == this.symbol) {
+            return this;
+        }
+
+        return new BasicUnit(this.type,
+                PorkUtil.fallbackIfNull(this.baseUnit, this),
+                this.toBaseConverter,
+                this.name, symbol);
     }
 
     @Override

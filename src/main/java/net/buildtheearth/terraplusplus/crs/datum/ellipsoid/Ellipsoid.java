@@ -9,6 +9,10 @@ import net.buildtheearth.terraplusplus.crs.unit.Unit;
  */
 @Data
 public class Ellipsoid {
+    public static Ellipsoid createSphere(@NonNull Unit lengthUnit, double radius) {
+        return new Ellipsoid(lengthUnit, radius, radius, Double.POSITIVE_INFINITY, false);
+    }
+
     public static Ellipsoid createFromAxes(@NonNull Unit lengthUnit, double semiMajorAxis, double semiMinorAxis) {
         return new Ellipsoid(lengthUnit, semiMajorAxis, semiMinorAxis, semiMajorAxis / (semiMajorAxis - semiMinorAxis), false);
     }
