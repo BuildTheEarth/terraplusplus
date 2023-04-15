@@ -25,7 +25,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 @Getter
 @With(AccessLevel.PRIVATE)
 @ToString(onlyExplicitlyIncluded = true)
-@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, cacheStrategy = EqualsAndHashCode.CacheStrategy.LAZY, callSuper = true)
 public final class EllipsoidalCS extends AbstractCoordinateSystem {
     @NonNull
     @ToString.Include
@@ -120,20 +120,8 @@ public final class EllipsoidalCS extends AbstractCoordinateSystem {
         return point[this.longitudeAxis];
     }
 
-    public void extractLongitude(int srcDimension, @NonNull double[] src, int srcOff, int srcStride, @NonNull double[] dst, int dstOff, int dstStride, int cnt) {
-        this.checkDimension(srcDimension);
-        for (int i = 0; i < cnt; i++, srcOff += srcStride, dstOff += dstStride) {
-            dst[dstOff] = src[srcOff + this.longitudeAxis];
-        }
-    }
-
     public double extractLongitudeRadians(@NonNull double[] point) {
         return this.longitudeConverter.convert(this.extractLongitude(point));
-    }
-
-    public void extractLongitudeRadians(int srcDimension, @NonNull double[] src, int srcOff, int srcStride, @NonNull double[] dst, int dstOff, int dstStride, int cnt) {
-        this.checkDimension(srcDimension);
-        this.longitudeConverter.convert(src, srcOff + this.longitudeAxis, srcStride, dst, dstOff, dstStride, cnt);
     }
 
     public double extractLatitude(@NonNull double[] point) {
