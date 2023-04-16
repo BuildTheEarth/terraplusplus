@@ -7,24 +7,24 @@ import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.buildtheearth.terraplusplus.generator.CliffReplacer;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import net.buildtheearth.terraplusplus.util.TilePos;
-import net.daporkchop.fp2.compat.vanilla.FastRegistry;
+/*import net.daporkchop.fp2.compat.vanilla.FastRegistry;
 import net.daporkchop.fp2.mode.heightmap.HeightmapData;
 import net.daporkchop.fp2.mode.heightmap.HeightmapPos;
 import net.daporkchop.fp2.mode.heightmap.HeightmapTile;
-import net.daporkchop.fp2.mode.heightmap.server.gen.rough.AbstractRoughHeightmapGenerator;
+import net.daporkchop.fp2.mode.heightmap.server.gen.rough.AbstractRoughHeightmapGenerator;*/
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.WorldServer;
 
 import java.util.function.Supplier;
 
-import static net.daporkchop.fp2.mode.heightmap.HeightmapConstants.*;
+//import static net.daporkchop.fp2.mode.heightmap.HeightmapConstants.*;
 import static net.daporkchop.lib.common.math.PMath.*;
 
 /**
  * @author DaPorkchop_
  */
-public class TerraHeightmapGeneratorRough extends AbstractRoughHeightmapGenerator {
+/*public class TerraHeightmapGeneratorRough extends AbstractRoughHeightmapGenerator {
     protected final EarthGenerator generator;
 
     public TerraHeightmapGeneratorRough(@NonNull WorldServer world) {
@@ -103,4 +103,4 @@ public class TerraHeightmapGeneratorRough extends AbstractRoughHeightmapGenerato
             }
         }
     }
-}
+}*/

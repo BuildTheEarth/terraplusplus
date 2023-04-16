@@ -1,18 +1,22 @@
 package net.buildtheearth.terraplusplus.control;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.ImmutableMap;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomCubicWorldType;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import net.buildtheearth.terraplusplus.util.TerraConstants;
+import lombok.SneakyThrows;
 import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
+import net.buildtheearth.terraplusplus.projection.SISProjectionWrapper;
 import net.buildtheearth.terraplusplus.projection.transform.OffsetProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ScaleProjectionTransform;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.daporkchop.lib.common.function.io.IOSupplier;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.util.PArrays;
@@ -35,6 +39,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.apache.sis.referencing.operation.projection.ProjectionException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -46,7 +51,6 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -208,7 +212,7 @@ public class AdvancedEarthGui extends GuiScreen {
 
             ScaledResolution scale = new ScaledResolution(Minecraft.getMinecraft());
             int sc = scale.getScaleFactor();
-            GL11.glEnable(GL11.GL_SCISSOR_TEST);
+            //GL11.glEnable(GL11.GL_SCISSOR_TEST);
             int height = this.entriesHeight;
             GL11.glScissor(5 * sc, VERTICAL_PADDING * sc, this.entriesWidth * sc, (this.height - VERTICAL_PADDING * 2) * sc);
 
@@ -247,7 +251,7 @@ public class AdvancedEarthGui extends GuiScreen {
         this.drawString(this.fontRenderer, I18n.format("terraplusplus.gui.world_size_header"), this.width - this.imgSize + 15, this.height - VERTICAL_PADDING - 30, 0xFFFFFFFF);
         this.drawString(this.fontRenderer, I18n.format("terraplusplus.gui.world_size_numbers", this.worldSizeX, this.worldSizeY), this.width - this.imgSize + 15, this.height - VERTICAL_PADDING - 15, 0xFFFFFFFF);
 
-        for(GuiButton button : this.nonTranslatedButtons) {
+        for (GuiButton button : this.nonTranslatedButtons) {
             button.drawButton(this.mc, mouseX, mouseY, partialTicks);
         }
     }
@@ -451,6 +455,36 @@ public class AdvancedEarthGui extends GuiScreen {
                         @Override
                         protected void appendValue(StringBuilder out, int i) {
                             out.append(Double.parseDouble(this.textFields[i].getText()));
+                        }
+                    };
+                }
+            },
+            wkt { //not actually a transform, also i don't care
+                @Override
+                protected TransformEntry newSubEntry(ProjectionEntry entry, AdvancedEarthGui gui, int x, int y, int width) {
+                    return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraConstants.MODID + ".gui.transformation.wkt", "wkt") {
+                        @Override
+                        public void initFrom(ProjectionTransform in) {
+                            this.textFields[0].setMaxStringLength(1 << 25);
+
+                            if (in instanceof SISProjectionWrapper) {
+                                SISProjectionWrapper projection = (SISProjectionWrapper) in;
+                                this.textFields[0].setText(projection.getProjectedCRSAsWKT());
+                            } else {
+                                this.textFields[0].setText("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]");
+                            }
+                        }
+
+                        @Override
+                        @SneakyThrows(JsonProcessingException.class)
+                        public void toJson(StringBuilder out) {
+                            out.setLength(0);
+                            out.append(TerraConstants.JSON_MAPPER.writeValueAsString(ImmutableMap.of("wkt", ImmutableMap.of("wkt", this.textFields[0].getText()))));
+                        }
+
+                        @Override
+                        protected void appendValue(StringBuilder out, int i) {
+                            throw new UnsupportedOperationException();
                         }
                     };
                 }
@@ -988,7 +1022,7 @@ public class AdvancedEarthGui extends GuiScreen {
                         }
 
                         dst[yi * width + xi] = this.src[(SRC_H - yPixel - 1) * SRC_W + xPixel];
-                    } catch (OutOfProjectionBoundsException ignored) {
+                    } catch (Exception ignored) { //TODO: fix exceptions here
                         //sample out of bounds, skip it
                     }
                 }
