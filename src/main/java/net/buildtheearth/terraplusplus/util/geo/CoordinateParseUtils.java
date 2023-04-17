@@ -44,7 +44,7 @@ public class CoordinateParseUtils {
     }
 
     // 02° 49' 52" N	131° 47' 03" E
-    public static LatLng parseVerbatimCoordinates(final String coordinates) {
+    public static EllipsoidalCoordinates parseVerbatimCoordinates(final String coordinates) {
         if (Strings.isNullOrEmpty(coordinates)) {
             return null;
         }
@@ -100,24 +100,23 @@ public class CoordinateParseUtils {
         return null;
     }
 
-    private static LatLng validateAndRound(double lat, double lon) {
-        final double latOrig = lat;
-        final double lngOrig = lon;
+    private static EllipsoidalCoordinates validateAndRound(double lat, double lon) {
         lat = roundTo6decimals(lat);
         lon = roundTo6decimals(lon);
 
         if (Double.compare(lat, 0) == 0 && Double.compare(lon, 0) == 0) {
-            return new LatLng(0, 0);
+            return EllipsoidalCoordinates.zero();
         }
 
         if (inRange(lat, lon)) {
-            return new LatLng(lat, lon);
+            return EllipsoidalCoordinates.fromLatLonDegrees(lat, lon);
         }
 
         if (Double.compare(lat, 90) > 0 || Double.compare(lat, -90) < 0) {
             // try and swap
             if (inRange(lon, lat)) {
-                return new LatLng(lat, lon);
+                //TODO: i'm pretty sure this is wrong, and that the arguments here are in fact supposed to be reversed
+                return EllipsoidalCoordinates.fromLatLonDegrees(lat, lon);
             }
         }
 
@@ -180,6 +179,8 @@ public class CoordinateParseUtils {
                                 dmsToDecimal(Double.parseDouble(m.group(idx1)), 0.0, 0.0));
     }
 
+    //TODO: get rid of all the use of Double in here, it's gross
+
     private static double dmsToDecimal(double degree, Double minutes, Double seconds) {
         minutes = minutes == null ? 0 : minutes;
         seconds = seconds == null ? 0 : seconds;
@@ -188,7 +189,7 @@ public class CoordinateParseUtils {
 
     // round to 6 decimals (~1m precision) since no way we're getting anything legitimately more precise
     private static Double roundTo6decimals(Double x) {
-        return x == null ? null : Math.round(x * Math.pow(10, 6)) / Math.pow(10, 6);
+        return x == null ? null : Math.round(x * 1e6) * 1e-6;
     }
 
     private CoordinateParseUtils() {

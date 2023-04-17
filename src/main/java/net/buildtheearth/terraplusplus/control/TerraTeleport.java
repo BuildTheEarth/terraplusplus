@@ -9,7 +9,7 @@ import net.buildtheearth.terraplusplus.generator.EarthGeneratorPipelines;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.buildtheearth.terraplusplus.util.geo.CoordinateParseUtils;
-import net.buildtheearth.terraplusplus.util.geo.LatLng;
+import net.buildtheearth.terraplusplus.util.geo.EllipsoidalCoordinates;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -86,16 +86,16 @@ public class TerraTeleport extends Command {
         }
 
         double altitude = Double.NaN;
-        LatLng defaultCoords = CoordinateParseUtils.parseVerbatimCoordinates(this.getRawArguments(args).trim());
+        EllipsoidalCoordinates defaultCoords = CoordinateParseUtils.parseVerbatimCoordinates(this.getRawArguments(args).trim());
 
         if (defaultCoords == null) {
-            LatLng possiblePlayerCoords = CoordinateParseUtils.parseVerbatimCoordinates(this.getRawArguments(this.selectArray(args, 1)));
+            EllipsoidalCoordinates possiblePlayerCoords = CoordinateParseUtils.parseVerbatimCoordinates(this.getRawArguments(this.selectArray(args, 1)));
             if (possiblePlayerCoords != null) {
                 defaultCoords = possiblePlayerCoords;
             }
         }
 
-        LatLng possibleHeightCoords = CoordinateParseUtils.parseVerbatimCoordinates(this.getRawArguments(this.inverseSelectArray(args, args.length - 1)));
+        EllipsoidalCoordinates possibleHeightCoords = CoordinateParseUtils.parseVerbatimCoordinates(this.getRawArguments(this.inverseSelectArray(args, args.length - 1)));
         if (possibleHeightCoords != null) {
             defaultCoords = possibleHeightCoords;
             try {
@@ -105,7 +105,7 @@ public class TerraTeleport extends Command {
             }
         }
 
-        LatLng possibleHeightNameCoords = CoordinateParseUtils.parseVerbatimCoordinates(this.getRawArguments(this.inverseSelectArray(this.selectArray(args, 1), this.selectArray(args, 1).length - 1)));
+        EllipsoidalCoordinates possibleHeightNameCoords = CoordinateParseUtils.parseVerbatimCoordinates(this.getRawArguments(this.inverseSelectArray(this.selectArray(args, 1), this.selectArray(args, 1).length - 1)));
         if (possibleHeightNameCoords != null) {
             defaultCoords = possibleHeightNameCoords;
             try {
@@ -123,7 +123,7 @@ public class TerraTeleport extends Command {
         double[] proj;
 
         try {
-            proj = terrain.projection.fromGeo(defaultCoords.getLng(), defaultCoords.getLat());
+            proj = terrain.projection.fromGeo(defaultCoords.longitudeDegrees(), defaultCoords.latitudeDegrees());
         } catch (Exception e) {
             sender.sendMessage(TerraUtils.combine(TextFormatting.RED, TerraUtils.translate(TerraConstants.MODID + ".error.numbers")));
             return;
@@ -134,7 +134,7 @@ public class TerraTeleport extends Command {
             try {
                 altFuture = terrain.datasets
                         .<IScalarDataset>getCustom(EarthGeneratorPipelines.KEY_DATASET_HEIGHTS)
-                        .getAsync(defaultCoords.getLng(), defaultCoords.getLat())
+                        .getAsync(defaultCoords.longitudeDegrees(), defaultCoords.latitudeDegrees())
                         .thenApply(a -> a + 1.0d);
             } catch (OutOfProjectionBoundsException e) { //out of bounds, notify user
                 sender.sendMessage(TerraUtils.titleAndCombine(TextFormatting.RED, TerraUtils.translate(TerraConstants.MODID + ".error.numbers")));
@@ -148,18 +148,18 @@ public class TerraTeleport extends Command {
             receivers.add((EntityPlayerMP) sender);
         }
         List<EntityPlayerMP> finalReceivers = receivers;
-        LatLng finalDefaultCoords = defaultCoords;
+        EllipsoidalCoordinates finalDefaultCoords = defaultCoords;
         altFuture.thenAccept(s -> FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
             for (EntityPlayerMP p : finalReceivers) {
                 if (p.getName().equalsIgnoreCase(sender.getName())) {
-                    p.sendMessage(TerraUtils.titleAndCombine(TextFormatting.GRAY, "Teleporting to ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLat()),
-                            TextFormatting.GRAY, ", ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLng())));
+                    p.sendMessage(TerraUtils.titleAndCombine(TextFormatting.GRAY, "Teleporting to ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.latitudeDegrees()),
+                            TextFormatting.GRAY, ", ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.longitudeDegrees())));
                 } else if (!sender.getName().equalsIgnoreCase("@")) {
-                    p.sendMessage(TerraUtils.titleAndCombine(TextFormatting.GRAY, "Summoned to ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLat()),
-                            TextFormatting.GRAY, ", ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLng()), TextFormatting.GRAY, " by ", TextFormatting.RED, sender.getDisplayName()));
+                    p.sendMessage(TerraUtils.titleAndCombine(TextFormatting.GRAY, "Summoned to ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.latitudeDegrees()),
+                            TextFormatting.GRAY, ", ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.longitudeDegrees()), TextFormatting.GRAY, " by ", TextFormatting.RED, sender.getDisplayName()));
                 } else {
-                    p.sendMessage(TerraUtils.titleAndCombine(TextFormatting.GRAY, "Summoned to ", TextFormatting.BLUE, TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLat()),
-                            TextFormatting.GRAY, ", ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.getLng()), TextFormatting.GRAY));
+                    p.sendMessage(TerraUtils.titleAndCombine(TextFormatting.GRAY, "Summoned to ", TextFormatting.BLUE, TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.latitudeDegrees()),
+                            TextFormatting.GRAY, ", ", TextFormatting.BLUE, this.formatDecimal(finalDefaultCoords.longitudeDegrees()), TextFormatting.GRAY));
                 }
                 p.setPositionAndUpdate(proj[0], s, proj[1]);
             }
