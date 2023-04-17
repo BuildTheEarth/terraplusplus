@@ -11,8 +11,8 @@ import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
-import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraplusplus.projection.SISProjectionWrapper;
+import net.buildtheearth.terraplusplus.projection.sis.SISProjectionWrapper;
+import net.buildtheearth.terraplusplus.projection.sis.WKTStandard;
 import net.buildtheearth.terraplusplus.projection.transform.OffsetProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ScaleProjectionTransform;
@@ -39,7 +39,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import org.apache.sis.referencing.operation.projection.ProjectionException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -479,7 +478,9 @@ public class AdvancedEarthGui extends GuiScreen {
                         @SneakyThrows(JsonProcessingException.class)
                         public void toJson(StringBuilder out) {
                             out.setLength(0);
-                            out.append(TerraConstants.JSON_MAPPER.writeValueAsString(ImmutableMap.of("wkt", ImmutableMap.of("wkt", this.textFields[0].getText()))));
+                            out.append(TerraConstants.JSON_MAPPER.writeValueAsString(ImmutableMap.of("wkt", ImmutableMap.of(
+                                    "standard", WKTStandard.WKT2_2015.name(),
+                                    "crs", this.textFields[0].getText()))));
                         }
 
                         @Override

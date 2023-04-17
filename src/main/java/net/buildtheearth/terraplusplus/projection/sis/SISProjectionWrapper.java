@@ -1,4 +1,4 @@
-package net.buildtheearth.terraplusplus.projection;
+package net.buildtheearth.terraplusplus.projection.sis;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
@@ -7,22 +7,14 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
+import net.buildtheearth.terraplusplus.projection.EquirectangularProjection;
+import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.projection.transform.ProjectionTransform;
 import net.daporkchop.lib.common.function.throwing.EConsumer;
-import net.daporkchop.lib.common.ref.Ref;
-import net.daporkchop.lib.common.ref.ThreadRef;
 import org.apache.sis.geometry.DirectPosition2D;
 import org.apache.sis.geometry.Envelopes;
 import org.apache.sis.geometry.GeneralEnvelope;
 import org.apache.sis.internal.referencing.AxisDirections;
-import org.apache.sis.io.wkt.Convention;
-import org.apache.sis.io.wkt.FormattableObject;
-import org.apache.sis.io.wkt.Formatter;
-import org.apache.sis.io.wkt.KeywordCase;
-import org.apache.sis.io.wkt.KeywordStyle;
-import org.apache.sis.io.wkt.Symbols;
-import org.apache.sis.io.wkt.WKTFormat;
-import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
 import org.apache.sis.referencing.CRS;
 import org.apache.sis.referencing.CommonCRS;
 import org.apache.sis.referencing.operation.transform.AbstractMathTransform;
@@ -37,15 +29,12 @@ import org.opengis.referencing.cs.AxisDirection;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 import org.opengis.referencing.operation.CoordinateOperation;
-import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
 import org.opengis.util.FactoryException;
 
 import java.text.ParseException;
 import java.util.Collection;
-import java.util.Locale;
 import java.util.Optional;
-import java.util.TimeZone;
 
 import static net.daporkchop.lib.common.util.PValidation.*;
 
@@ -55,24 +44,6 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 @JsonDeserialize
 @Getter
 public final class SISProjectionWrapper extends ProjectionTransform {
-    private static final Ref<WKTFormat> WKT_FORMAT;
-
-    static {
-        WKTFormat format = new WKTFormat(Locale.ROOT, TimeZone.getDefault());
-        format.setKeywordCase(KeywordCase.UPPER_CASE);
-        format.setKeywordStyle(KeywordStyle.SHORT);
-        format.setConvention(Convention.WKT2);
-        format.setSymbols(Symbols.SQUARE_BRACKETS);
-        format.setIndentation(WKTFormat.SINGLE_LINE);
-
-        WKT_FORMAT = ThreadRef.soft(format::clone);
-    }
-
-    @SneakyThrows(ParseException.class)
-    private static CoordinateReferenceSystem parseWKT(@NonNull String wkt) {
-        return (CoordinateReferenceSystem) WKT_FORMAT.get().parseObject(wkt);
-    }
-
     private final CoordinateReferenceSystem geoCRS = CommonCRS.WGS84.normalizedGeographic();
     private final CoordinateReferenceSystem projectedCRS;
 
@@ -81,9 +52,9 @@ public final class SISProjectionWrapper extends ProjectionTransform {
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public SISProjectionWrapper(
-            //TODO: this is specifically WKT2:2015 (ISO 19162:2015)
-            @JsonProperty(value = "wkt", required = true) @NonNull String wkt) throws FactoryException {
-        this(parseWKT(wkt));
+            @JsonProperty(value = "standard", required = true) @NonNull WKTStandard standard,
+            @JsonProperty(value = "crs", required = true) @NonNull String crs) throws ParseException {
+        this((CoordinateReferenceSystem) standard.parse(crs));
     }
 
     @SneakyThrows(FactoryException.class)
@@ -98,7 +69,7 @@ public final class SISProjectionWrapper extends ProjectionTransform {
 
     @JsonGetter("wkt")
     public String getProjectedCRSAsWKT() {
-        return WKT_FORMAT.get().format(this.projectedCRS);
+        return WKTStandard.WKT2_2015.format(this.projectedCRS);
     }
 
     @Override
@@ -172,22 +143,6 @@ public final class SISProjectionWrapper extends ProjectionTransform {
     @Override
     @SneakyThrows(TransformException.class)
     public double[] bounds() { //TODO: remove or fix this
-        Extent extent = this.projectedCRS.getDomainOfValidity();
-        if (extent != null) {
-            Collection<? extends GeographicExtent> geographicExtents = extent.getGeographicElements();
-            checkState(geographicExtents.size() == 1, "unexpected number of geographic extents: '%s'", geographicExtents.size());
-
-            for (GeographicExtent geographicExtent : geographicExtents) {
-                Envelope envelope = Envelopes.transform(this.fromGeo, new GeneralEnvelope((GeographicBoundingBox) geographicExtent));
-                return new double[]{
-                        envelope.getMinimum(0),
-                        envelope.getMinimum(1),
-                        envelope.getMaximum(0),
-                        envelope.getMaximum(1),
-                };
-            }
-        }
-
         GeneralEnvelope initialGeoEnvelope = new GeneralEnvelope(this.geoCRS);
         initialGeoEnvelope.setEnvelope(this.boundsGeo());
 
@@ -204,6 +159,22 @@ public final class SISProjectionWrapper extends ProjectionTransform {
         if (this.toGeo.getMathTransform() instanceof AbstractMathTransform) {
             Envelope envelope = ((AbstractMathTransform) this.toGeo.getMathTransform()).getDomain(projDomainDefinition).orElse(null);
             if (envelope != null) {
+                return new double[]{
+                        envelope.getMinimum(0),
+                        envelope.getMinimum(1),
+                        envelope.getMaximum(0),
+                        envelope.getMaximum(1),
+                };
+            }
+        }
+
+        Extent extent = this.projectedCRS.getDomainOfValidity();
+        if (extent != null) {
+            Collection<? extends GeographicExtent> geographicExtents = extent.getGeographicElements();
+            checkState(geographicExtents.size() == 1, "unexpected number of geographic extents: '%s'", geographicExtents.size());
+
+            for (GeographicExtent geographicExtent : geographicExtents) {
+                Envelope envelope = Envelopes.transform(this.fromGeo, new GeneralEnvelope((GeographicBoundingBox) geographicExtent));
                 return new double[]{
                         envelope.getMinimum(0),
                         envelope.getMinimum(1),

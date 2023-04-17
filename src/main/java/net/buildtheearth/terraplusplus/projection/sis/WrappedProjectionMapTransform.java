@@ -1,8 +1,8 @@
-package net.buildtheearth.terraplusplus.projection.dymaxion;
+package net.buildtheearth.terraplusplus.projection.sis;
 
-import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import org.apache.sis.geometry.Envelope2D;
 import org.apache.sis.referencing.operation.matrix.Matrix2;
@@ -21,10 +21,12 @@ import java.util.Optional;
  * @author DaPorkchop_
  */
 @RequiredArgsConstructor
-public class DymaxionProjectionMathTransform extends AbstractMathTransform {
-    private final DymaxionProjection projection = new DymaxionProjection();
-
+public final class WrappedProjectionMapTransform extends AbstractMathTransform {
+    @NonNull
+    private final GeographicProjection projection;
     private final boolean fromGeo;
+
+    private transient volatile WrappedProjectionMapTransform inverse;
 
     @Override
     public int getSourceDimensions() {
@@ -101,18 +103,28 @@ public class DymaxionProjectionMathTransform extends AbstractMathTransform {
 
     @Override
     public MathTransform inverse() {
-        return new DymaxionProjectionMathTransform(!this.fromGeo);
+        WrappedProjectionMapTransform inverse = this.inverse;
+        if (inverse == null) {
+            synchronized (this) {
+                if ((inverse = this.inverse) == null) {
+                    inverse = this.inverse = new WrappedProjectionMapTransform(this.projection, !this.fromGeo);
+                    inverse.inverse = this;
+                }
+            }
+        }
+        return inverse;
     }
 
     @Override
     public boolean equals(Object object, ComparisonMode mode) {
-        return object instanceof DymaxionProjectionMathTransform
+        return object instanceof WrappedProjectionMapTransform
                && super.equals(object, mode)
-               && this.fromGeo == ((DymaxionProjectionMathTransform) object).fromGeo;
+               && this.projection.equals(((WrappedProjectionMapTransform) object).projection)
+               && this.fromGeo == ((WrappedProjectionMapTransform) object).fromGeo;
     }
 
     @Override
     protected int computeHashCode() {
-        return super.computeHashCode() * 31 + Boolean.hashCode(this.fromGeo);
+        return (super.computeHashCode() * 31 + this.projection.hashCode()) * 31 + Boolean.hashCode(this.fromGeo);
     }
 }

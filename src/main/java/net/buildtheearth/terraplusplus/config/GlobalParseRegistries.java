@@ -77,7 +77,7 @@ import net.buildtheearth.terraplusplus.generator.settings.osm.GeneratorOSMSettin
 import net.buildtheearth.terraplusplus.projection.EqualEarthProjection;
 import net.buildtheearth.terraplusplus.projection.EquirectangularProjection;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
-import net.buildtheearth.terraplusplus.projection.SISProjectionWrapper;
+import net.buildtheearth.terraplusplus.projection.sis.SISProjectionWrapper;
 import net.buildtheearth.terraplusplus.projection.SinusoidalProjection;
 import net.buildtheearth.terraplusplus.projection.dymaxion.BTEDymaxionProjection;
 import net.buildtheearth.terraplusplus.projection.dymaxion.ConformalDynmaxionProjection;
