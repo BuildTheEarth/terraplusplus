@@ -1024,6 +1024,7 @@ public class AdvancedEarthGui extends GuiScreen {
                         dst[yi * width + xi] = this.src[(SRC_H - yPixel - 1) * SRC_W + xPixel];
                     } catch (Exception ignored) { //TODO: fix exceptions here
                         //sample out of bounds, skip it
+                        int i = 0;
                     }
                 }
                 synchronized (this.textureNeedsUpdate) {

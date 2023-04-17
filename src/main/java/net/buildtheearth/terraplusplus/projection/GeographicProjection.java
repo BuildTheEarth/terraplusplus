@@ -14,6 +14,8 @@ import net.buildtheearth.terraplusplus.projection.epsg.EPSG3785;
 import net.buildtheearth.terraplusplus.projection.epsg.EPSG4326;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.util.TerraUtils;
+import net.buildtheearth.terraplusplus.util.geo.GeographicCoordinates;
+import net.buildtheearth.terraplusplus.util.geo.ProjectedCoordinates2d;
 
 import java.io.IOException;
 import java.util.Map;
@@ -43,8 +45,21 @@ public interface GeographicProjection {
      * @param y - y map coordinate
      * @return {longitude, latitude} in degrees
      * @throws OutOfProjectionBoundsException if the specified point on the projected space cannot be mapped to a point of the geographic space
+     * @see #toGeo(ProjectedCoordinates2d)
      */
     double[] toGeo(double x, double y) throws OutOfProjectionBoundsException;
+
+    /**
+     * Converts map coordinates to geographic coordinates
+     *
+     * @param coordinates the map coordinates
+     * @return {longitude, latitude} in degrees
+     * @throws OutOfProjectionBoundsException if the specified point on the projected space cannot be mapped to a point of the geographic space
+     */
+    default GeographicCoordinates toGeo(@NonNull ProjectedCoordinates2d coordinates) throws OutOfProjectionBoundsException {
+        double[] geo = this.toGeo(coordinates.x(), coordinates.y());
+        return GeographicCoordinates.fromLonLatDegrees(geo[0], geo[1]);
+    }
 
     /**
      * Converts geographic coordinates to map coordinates
@@ -55,6 +70,18 @@ public interface GeographicProjection {
      * @throws OutOfProjectionBoundsException if the specified point on the geographic space cannot be mapped to a point of the projected space
      */
     double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException;
+
+    /**
+     * Converts geographic coordinates to map coordinates
+     *
+     * @param coordinates the map coordinates
+     * @return {x, y} map coordinates
+     * @throws OutOfProjectionBoundsException if the specified point on the geographic space cannot be mapped to a point of the projected space
+     */
+    default ProjectedCoordinates2d fromGeo(@NonNull GeographicCoordinates coordinates) throws OutOfProjectionBoundsException {
+        double[] map = this.fromGeo(coordinates.longitudeDegrees(), coordinates.latitudeDegrees());
+        return ProjectedCoordinates2d.ofXY(map[0], map[1]);
+    }
 
     /**
      * Gives an estimation of the scale of this projection.
@@ -100,7 +127,7 @@ public interface GeographicProjection {
     }
 
     default double[] boundsGeo() {
-        return new double[] {
+        return new double[]{
                 -180, -90, 180, 90
         };
     }

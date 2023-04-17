@@ -44,7 +44,7 @@ public class CoordinateParseUtils {
     }
 
     // 02° 49' 52" N	131° 47' 03" E
-    public static EllipsoidalCoordinates parseVerbatimCoordinates(final String coordinates) {
+    public static GeographicCoordinates parseVerbatimCoordinates(final String coordinates) {
         if (Strings.isNullOrEmpty(coordinates)) {
             return null;
         }
@@ -100,23 +100,23 @@ public class CoordinateParseUtils {
         return null;
     }
 
-    private static EllipsoidalCoordinates validateAndRound(double lat, double lon) {
+    private static GeographicCoordinates validateAndRound(double lat, double lon) {
         lat = roundTo6decimals(lat);
         lon = roundTo6decimals(lon);
 
         if (Double.compare(lat, 0) == 0 && Double.compare(lon, 0) == 0) {
-            return EllipsoidalCoordinates.zero();
+            return GeographicCoordinates.zero();
         }
 
         if (inRange(lat, lon)) {
-            return EllipsoidalCoordinates.fromLatLonDegrees(lat, lon);
+            return GeographicCoordinates.fromLatLonDegrees(lat, lon);
         }
 
         if (Double.compare(lat, 90) > 0 || Double.compare(lat, -90) < 0) {
             // try and swap
             if (inRange(lon, lat)) {
                 //TODO: i'm pretty sure this is wrong, and that the arguments here are in fact supposed to be reversed
-                return EllipsoidalCoordinates.fromLatLonDegrees(lat, lon);
+                return GeographicCoordinates.fromLatLonDegrees(lat, lon);
             }
         }
 

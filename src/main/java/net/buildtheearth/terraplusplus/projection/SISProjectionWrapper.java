@@ -37,6 +37,7 @@ import org.opengis.referencing.cs.AxisDirection;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 import org.opengis.referencing.operation.CoordinateOperation;
+import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
 import org.opengis.util.FactoryException;
 
@@ -97,9 +98,7 @@ public final class SISProjectionWrapper extends ProjectionTransform {
 
     @JsonGetter("wkt")
     public String getProjectedCRSAsWKT() {
-        Formatter formatter = new Formatter(Convention.WKT2, Symbols.SQUARE_BRACKETS, -1);
-        formatter.append((FormattableObject) this.projectedCRS);
-        return formatter.toWKT();
+        return WKT_FORMAT.get().format(this.projectedCRS);
     }
 
     @Override

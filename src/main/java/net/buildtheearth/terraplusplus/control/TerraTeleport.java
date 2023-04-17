@@ -9,7 +9,7 @@ import net.buildtheearth.terraplusplus.generator.EarthGeneratorPipelines;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.buildtheearth.terraplusplus.util.geo.CoordinateParseUtils;
-import net.buildtheearth.terraplusplus.util.geo.EllipsoidalCoordinates;
+import net.buildtheearth.terraplusplus.util.geo.GeographicCoordinates;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -86,16 +86,16 @@ public class TerraTeleport extends Command {
         }
 
         double altitude = Double.NaN;
-        EllipsoidalCoordinates defaultCoords = CoordinateParseUtils.parseVerbatimCoordinates(this.getRawArguments(args).trim());
+        GeographicCoordinates defaultCoords = CoordinateParseUtils.parseVerbatimCoordinates(this.getRawArguments(args).trim());
 
         if (defaultCoords == null) {
-            EllipsoidalCoordinates possiblePlayerCoords = CoordinateParseUtils.parseVerbatimCoordinates(this.getRawArguments(this.selectArray(args, 1)));
+            GeographicCoordinates possiblePlayerCoords = CoordinateParseUtils.parseVerbatimCoordinates(this.getRawArguments(this.selectArray(args, 1)));
             if (possiblePlayerCoords != null) {
                 defaultCoords = possiblePlayerCoords;
             }
         }
 
-        EllipsoidalCoordinates possibleHeightCoords = CoordinateParseUtils.parseVerbatimCoordinates(this.getRawArguments(this.inverseSelectArray(args, args.length - 1)));
+        GeographicCoordinates possibleHeightCoords = CoordinateParseUtils.parseVerbatimCoordinates(this.getRawArguments(this.inverseSelectArray(args, args.length - 1)));
         if (possibleHeightCoords != null) {
             defaultCoords = possibleHeightCoords;
             try {
@@ -105,7 +105,7 @@ public class TerraTeleport extends Command {
             }
         }
 
-        EllipsoidalCoordinates possibleHeightNameCoords = CoordinateParseUtils.parseVerbatimCoordinates(this.getRawArguments(this.inverseSelectArray(this.selectArray(args, 1), this.selectArray(args, 1).length - 1)));
+        GeographicCoordinates possibleHeightNameCoords = CoordinateParseUtils.parseVerbatimCoordinates(this.getRawArguments(this.inverseSelectArray(this.selectArray(args, 1), this.selectArray(args, 1).length - 1)));
         if (possibleHeightNameCoords != null) {
             defaultCoords = possibleHeightNameCoords;
             try {
@@ -148,7 +148,7 @@ public class TerraTeleport extends Command {
             receivers.add((EntityPlayerMP) sender);
         }
         List<EntityPlayerMP> finalReceivers = receivers;
-        EllipsoidalCoordinates finalDefaultCoords = defaultCoords;
+        GeographicCoordinates finalDefaultCoords = defaultCoords;
         altFuture.thenAccept(s -> FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
             for (EntityPlayerMP p : finalReceivers) {
                 if (p.getName().equalsIgnoreCase(sender.getName())) {
