@@ -1,12 +1,15 @@
 package net.buildtheearth.terraplusplus.projection.dymaxion;
 
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import org.apache.sis.geometry.Envelope2D;
+import org.apache.sis.referencing.operation.matrix.Matrix2;
 import org.apache.sis.referencing.operation.projection.ProjectionException;
 import org.apache.sis.referencing.operation.transform.AbstractMathTransform;
 import org.apache.sis.referencing.operation.transform.DomainDefinition;
+import org.apache.sis.util.ComparisonMode;
 import org.opengis.geometry.Envelope;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.Matrix;
@@ -35,23 +38,16 @@ public class DymaxionProjectionMathTransform extends AbstractMathTransform {
 
     @Override
     public Optional<Envelope> getDomain(@NonNull DomainDefinition criteria) throws TransformException {
-        Envelope2D envelope;
+        double[] bounds = this.fromGeo ? this.projection.boundsGeo() : this.projection.bounds();
 
-        if (this.fromGeo) {
-            double[] geoBounds = this.projection.boundsGeo();
-
-            envelope = new Envelope2D();
-            envelope.add(geoBounds[0], geoBounds[1]);
-            envelope.add(geoBounds[2], geoBounds[2]);
-        } else {
-            double[] projectedBounds = this.projection.bounds();
-
-            envelope = new Envelope2D();
-            envelope.add(projectedBounds[0], projectedBounds[1]);
-            envelope.add(projectedBounds[2], projectedBounds[2]);
-        }
-
+        Envelope2D envelope = new Envelope2D();
+        envelope.add(bounds[0], bounds[1]);
+        envelope.add(bounds[2], bounds[3]);
         return Optional.of(criteria.result().map(result -> envelope.createUnion(new Envelope2D(result))).orElse(envelope));
+    }
+
+    private double[] transform(double x, double y) throws OutOfProjectionBoundsException {
+        return this.fromGeo ? this.projection.fromGeo(x, y) : this.projection.toGeo(x, y);
     }
 
     @Override
@@ -60,16 +56,44 @@ public class DymaxionProjectionMathTransform extends AbstractMathTransform {
         double srcY = srcPts[srcOff + 1];
 
         try {
-            double[] result = this.fromGeo ? this.projection.fromGeo(srcX, srcY) : this.projection.toGeo(srcX, srcY);
+            double[] result00 = this.transform(srcX, srcY);
 
-            dstPts[dstOff + 0] = result[0];
-            dstPts[dstOff + 1] = result[1];
+            dstPts[dstOff + 0] = result00[0];
+            dstPts[dstOff + 1] = result00[1];
 
             if (!derivate) {
                 return null;
             }
 
-            throw new UnsupportedOperationException();
+            final double d = 1e-7d;
+
+            double f01;
+            double[] result01;
+            try {
+                f01 = 1.0d;
+                result01 = this.transform(srcX, srcY + d);
+            } catch (OutOfProjectionBoundsException e) {
+                f01 = -1.0d;
+                result01 = this.transform(srcX, srcY - d);
+            }
+
+            double f10;
+            double[] result10;
+            try {
+                f10 = 1.0d;
+                result10 = this.transform(srcX + d, srcY);
+            } catch (OutOfProjectionBoundsException e) {
+                f10 = -1.0d;
+                result10 = this.transform(srcX - d, srcY);
+            }
+
+            Matrix2 mat = new Matrix2(
+                    (result10[0] - result00[0]) * f10,
+                    (result01[0] - result00[0]) * f01,
+                    (result10[1] - result00[1]) * f10,
+                    (result01[1] - result00[1]) * f01);
+            mat.normalizeColumns();
+            return mat;
         } catch (OutOfProjectionBoundsException e) {
             throw new ProjectionException(e);
         }
@@ -77,6 +101,18 @@ public class DymaxionProjectionMathTransform extends AbstractMathTransform {
 
     @Override
     public MathTransform inverse() {
-        return new InverseDymaxionProjectionMathTransform(!this.fromGeo);
+        return new DymaxionProjectionMathTransform(!this.fromGeo);
+    }
+
+    @Override
+    public boolean equals(Object object, ComparisonMode mode) {
+        return object instanceof DymaxionProjectionMathTransform
+               && super.equals(object, mode)
+               && this.fromGeo == ((DymaxionProjectionMathTransform) object).fromGeo;
+    }
+
+    @Override
+    protected int computeHashCode() {
+        return super.computeHashCode() * 31 + Boolean.hashCode(this.fromGeo);
     }
 }
