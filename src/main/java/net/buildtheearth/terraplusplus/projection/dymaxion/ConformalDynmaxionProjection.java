@@ -88,11 +88,6 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
     }
 
     @Override
-    public double metersPerUnit() {
-        return (40075017.0d / (2.0d * Math.PI)) / VECTOR_SCALE_FACTOR;
-    }
-
-    @Override
     public String toString() {
         return "Conformal Dymaxion";
     }

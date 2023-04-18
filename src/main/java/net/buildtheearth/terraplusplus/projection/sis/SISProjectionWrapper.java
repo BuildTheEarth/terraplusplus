@@ -11,14 +11,12 @@ import net.buildtheearth.terraplusplus.projection.EquirectangularProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.projection.transform.ProjectionTransform;
 import net.daporkchop.lib.common.function.throwing.EConsumer;
-import org.apache.sis.geometry.DirectPosition2D;
 import org.apache.sis.geometry.Envelopes;
 import org.apache.sis.geometry.GeneralEnvelope;
 import org.apache.sis.internal.referencing.AxisDirections;
 import org.apache.sis.referencing.CRS;
 import org.apache.sis.referencing.operation.transform.AbstractMathTransform;
 import org.apache.sis.referencing.operation.transform.DomainDefinition;
-import org.opengis.geometry.DirectPosition;
 import org.opengis.geometry.Envelope;
 import org.opengis.metadata.extent.Extent;
 import org.opengis.metadata.extent.GeographicBoundingBox;
@@ -86,11 +84,6 @@ public final class SISProjectionWrapper extends ProjectionTransform {
         double[] point = { longitude, latitude };
         this.fromGeo.getMathTransform().transform(point, 0, point, 0, 1);
         return point;
-    }
-
-    @Override
-    public double metersPerUnit() {
-        throw new UnsupportedOperationException();
     }
 
     private Optional<double[]> tryExtractBoundsFromAxes(@NonNull CoordinateSystem cs, boolean allowInfinity) {

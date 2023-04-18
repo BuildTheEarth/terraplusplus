@@ -24,8 +24,4 @@ public class EPSG4326 extends EPSGProjection {
         return new double[]{ longitude, latitude };
     }
 
-    @Override
-    public double metersPerUnit() {
-        return 100000.0d;
-    }
 }

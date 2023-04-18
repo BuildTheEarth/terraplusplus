@@ -67,11 +67,6 @@ public class ScaleProjectionTransform extends ProjectionTransform {
     }
 
     @Override
-    public double metersPerUnit() {
-        return this.delegate.metersPerUnit() / Math.sqrt((this.x * this.x + this.y * this.y) / 2); //TODO: better transform
-    }
-
-    @Override
     public String toString() {
         return "Scale (" + super.delegate + ") by " + this.x + ", " + this.y;
     }

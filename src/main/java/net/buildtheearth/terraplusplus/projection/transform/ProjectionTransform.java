@@ -31,8 +31,4 @@ public abstract class ProjectionTransform implements GeographicProjection {
         return this.delegate.boundsGeo();
     }
 
-    @Override
-    public double metersPerUnit() {
-        return this.delegate.metersPerUnit();
-    }
 }

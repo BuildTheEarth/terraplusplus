@@ -1,7 +1,6 @@
 package net.buildtheearth.terraplusplus.projection.mercator;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 
@@ -35,11 +34,6 @@ public class CenteredMercatorProjection implements GeographicProjection {
     @Override
     public double[] bounds() {
         return new double[]{ -1, -1, 1, 1 };
-    }
-
-    @Override
-    public double metersPerUnit() {
-        return Math.cos(Math.toRadians(30)) * TerraConstants.EARTH_CIRCUMFERENCE / 2; //Accurate at about 30 degrees
     }
 
     @Override

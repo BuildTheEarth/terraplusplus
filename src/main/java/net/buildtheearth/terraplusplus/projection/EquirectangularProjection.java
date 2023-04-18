@@ -34,18 +34,6 @@ public class EquirectangularProjection implements GeographicProjection {
         return new double[]{ longitude, latitude };
     }
 
-    /**
-     * Gives an estimation of the scale of this projection.
-     * This is just an estimation, as distortion is inevitable when projecting a sphere onto a flat surface,
-     * so this value varies from places to places in reality.
-     *
-     * @return an estimation of the scale of this projection
-     */
-    @Override
-    public double metersPerUnit() {
-        return 100000;
-    }
-
     @Override
     public String toString() {
         return "Equirectangular";

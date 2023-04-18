@@ -1,7 +1,6 @@
 package net.buildtheearth.terraplusplus.projection;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.util.TerraUtils;
 
 /**
@@ -72,11 +71,6 @@ public class EqualEarthProjection implements GeographicProjection {
         double costheta = Math.sqrt(1 - sintheta * sintheta);
 
         return new double[]{ (2 * TerraUtils.ROOT3 * Math.toRadians(longitude) * costheta / 3) / x, y };
-    }
-
-    @Override
-    public double metersPerUnit() {
-        return TerraConstants.EARTH_CIRCUMFERENCE / (2 * this.bounds()[2]);
     }
 
     @Override

@@ -442,11 +442,6 @@ public class DymaxionProjection implements GeographicProjection {
     }
 
     @Override
-    public double metersPerUnit() {
-        return Math.sqrt(510100000000000.0 / (20 * TerraUtils.ROOT3 * ARC * ARC / 4));
-    }
-
-    @Override
     public String toString() {
         return "Dymaxion";
     }

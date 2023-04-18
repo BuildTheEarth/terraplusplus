@@ -84,16 +84,6 @@ public interface GeographicProjection {
     }
 
     /**
-     * Gives an estimation of the scale of this projection.
-     * This is just an estimation, as distortion is inevitable when projecting a sphere onto a flat surface,
-     * so this value varies from places to places in reality.
-     *
-     * @return an estimation of the scale of this projection
-     */
-    //TODO: compute this individually at each point rather than globally
-    double metersPerUnit();
-
-    /**
      * Indicates the minimum and maximum X and Y coordinates on the projected space.
      *
      * @return {minimum X, minimum Y, maximum X, maximum Y}
