@@ -7,6 +7,8 @@ import net.buildtheearth.terraplusplus.util.jackson.mixin.BiomeMixin;
 import net.buildtheearth.terraplusplus.util.jackson.mixin.BlockStateMixin;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.biome.Biome;
+import org.apache.sis.referencing.CommonCRS;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 @UtilityClass
 public class TerraConstants {
@@ -19,7 +21,7 @@ public class TerraConstants {
     public final String defaultCommandNode = MODID + ".command.";
     public final String othersCommandNode = MODID + ".others";
 
-    public final JsonMapper JSON_MAPPER = JsonMapper.builder()
+    public static final JsonMapper JSON_MAPPER = JsonMapper.builder()
             .configure(JsonReadFeature.ALLOW_JAVA_COMMENTS, true)
             .configure(JsonReadFeature.ALLOW_LEADING_ZEROS_FOR_NUMBERS, true)
             .configure(JsonReadFeature.ALLOW_LEADING_DECIMAL_POINT_FOR_NUMBERS, true)
@@ -29,6 +31,11 @@ public class TerraConstants {
             .addMixIn(Biome.class, BiomeMixin.class)
             .addMixIn(IBlockState.class, BlockStateMixin.class)
             .build();
+
+    /**
+     * The {@link CoordinateReferenceSystem} used by Terra++ for geographic coordinates.
+     */
+    public static final CoordinateReferenceSystem TPP_GEO_CRS = CommonCRS.WGS84.normalizedGeographic();
 
     /**
      * Earth's circumference around the equator, in meters.

@@ -16,7 +16,6 @@ import org.apache.sis.geometry.Envelopes;
 import org.apache.sis.geometry.GeneralEnvelope;
 import org.apache.sis.internal.referencing.AxisDirections;
 import org.apache.sis.referencing.CRS;
-import org.apache.sis.referencing.CommonCRS;
 import org.apache.sis.referencing.operation.transform.AbstractMathTransform;
 import org.apache.sis.referencing.operation.transform.DomainDefinition;
 import org.opengis.geometry.DirectPosition;
@@ -36,6 +35,7 @@ import java.text.ParseException;
 import java.util.Collection;
 import java.util.Optional;
 
+import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
@@ -44,7 +44,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 @JsonDeserialize
 @Getter
 public final class SISProjectionWrapper extends ProjectionTransform {
-    private final CoordinateReferenceSystem geoCRS = CommonCRS.WGS84.normalizedGeographic();
+    private final CoordinateReferenceSystem geoCRS = TPP_GEO_CRS;
     private final CoordinateReferenceSystem projectedCRS;
 
     private final CoordinateOperation toGeo;
@@ -73,17 +73,19 @@ public final class SISProjectionWrapper extends ProjectionTransform {
     }
 
     @Override
-    @SneakyThrows //TODO: proper exception handling
+    @SneakyThrows(TransformException.class)
     public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
-        DirectPosition geoPosition = this.toGeo.getMathTransform().transform(new DirectPosition2D(x, y), null);
-        return new double[]{ geoPosition.getOrdinate(0), geoPosition.getOrdinate(1) };
+        double[] point = { x, y };
+        this.toGeo.getMathTransform().transform(point, 0, point, 0, 1);
+        return point;
     }
 
     @Override
-    @SneakyThrows //TODO: proper exception handling
+    @SneakyThrows(TransformException.class)
     public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
-        DirectPosition projectedPosition = this.fromGeo.getMathTransform().transform(new DirectPosition2D(longitude, latitude), null);
-        return new double[]{ projectedPosition.getOrdinate(0), projectedPosition.getOrdinate(1) };
+        double[] point = { longitude, latitude };
+        this.fromGeo.getMathTransform().transform(point, 0, point, 0, 1);
+        return point;
     }
 
     @Override
@@ -113,7 +115,7 @@ public final class SISProjectionWrapper extends ProjectionTransform {
             return Optional.empty();
         }
 
-        return Optional.of(new double[] {
+        return Optional.of(new double[]{
                 longitudeAxis.getMinimumValue(), latitudeAxis.getMinimumValue(),
                 longitudeAxis.getMaximumValue(), latitudeAxis.getMaximumValue(),
         });

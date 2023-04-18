@@ -1,7 +1,9 @@
 package net.buildtheearth.terraplusplus.projection;
 
-public final class OutOfProjectionBoundsException extends Exception {
-    private static final OutOfProjectionBoundsException INSTANCE = new OutOfProjectionBoundsException(false);
+import org.apache.sis.referencing.operation.projection.ProjectionException;
+
+public final class OutOfProjectionBoundsException extends ProjectionException {
+    private static final OutOfProjectionBoundsException INSTANCE = new OutOfProjectionBoundsException();
 
     private static final boolean FAST = Boolean.parseBoolean(System.getProperty("terraplusplus.fastExcept", "true"));
 
@@ -9,7 +11,7 @@ public final class OutOfProjectionBoundsException extends Exception {
         if (FAST) {
             return INSTANCE;
         } else {
-            return new OutOfProjectionBoundsException(true);
+            return new OutOfProjectionBoundsException();
         }
     }
 
@@ -35,7 +37,11 @@ public final class OutOfProjectionBoundsException extends Exception {
         checkInRange(longitude, latitude, 180, 90);
     }
 
-    private OutOfProjectionBoundsException(boolean flag) {
-        super(null, null, flag, flag);
+    @Override
+    public Throwable fillInStackTrace() {
+        if (INSTANCE != null) { //if INSTANCE is null, we're still in the class constructor
+            super.fillInStackTrace();
+        }
+        return this;
     }
 }

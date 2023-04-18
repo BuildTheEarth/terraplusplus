@@ -1,10 +1,6 @@
 package net.buildtheearth.terraplusplus.projection.sis;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableMap;
-import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
-import net.buildtheearth.terraplusplus.projection.GeographicProjection;
-import net.buildtheearth.terraplusplus.util.TerraConstants;
 import org.apache.sis.metadata.iso.citation.Citations;
 import org.apache.sis.parameter.DefaultParameterValueGroup;
 import org.apache.sis.parameter.ParameterBuilder;
@@ -30,17 +26,17 @@ public final class WrappedProjectionOperationMethod extends DefaultOperationMeth
     private static final Map<String, ?> PROPERTIES = ImmutableMap.of(
             NAME_KEY, new ImmutableIdentifier(Citations.fromName("Terra++"), "Terra++", "Terra++ Internal Projection"));
 
-    private static final ParameterDescriptor<String> PARAMETER_TYPE = new ParameterBuilder()
+    static final ParameterDescriptor<String> PARAMETER_TYPE = new ParameterBuilder()
             .addName("type")
             .setRequired(true)
             .create(String.class, null);
 
-    private static final ParameterDescriptor<String> PARAMETER_JSON_ARGS = new ParameterBuilder()
+    static final ParameterDescriptor<String> PARAMETER_JSON_ARGS = new ParameterBuilder()
             .addName("json_args")
             .setRequired(false)
             .create(String.class, "{}");
 
-    private static final ParameterDescriptorGroup PARAMETERS = new ParameterBuilder()
+    static final ParameterDescriptorGroup PARAMETERS = new ParameterBuilder()
             .addName((ImmutableIdentifier) PROPERTIES.get(NAME_KEY))
             .createGroup(PARAMETER_TYPE, PARAMETER_JSON_ARGS);
 
@@ -50,22 +46,6 @@ public final class WrappedProjectionOperationMethod extends DefaultOperationMeth
 
     @Override
     public MathTransform createMathTransform(MathTransformFactory factory, ParameterValueGroup parameters) throws InvalidParameterNameException, ParameterNotFoundException, InvalidParameterValueException, FactoryException {
-        DefaultParameterValueGroup params = (DefaultParameterValueGroup) parameters;
-
-        String typeName = params.stringValue(PARAMETER_TYPE);
-        Class<? extends GeographicProjection> type = GlobalParseRegistries.PROJECTIONS.get(typeName);
-        if (type == null) {
-            throw new InvalidParameterValueException("unknown projection type: \"" + typeName + '"', PARAMETER_TYPE.getName().getCode(), typeName);
-        }
-
-        GeographicProjection projection;
-        String jsonArgs = params.stringValue(PARAMETER_JSON_ARGS);
-        try {
-            projection = TerraConstants.JSON_MAPPER.readValue(jsonArgs, type);
-        } catch (JsonProcessingException e) {
-            throw new InvalidParameterValueException("invalid projection arguments for type \"" + type + "\": \"" + jsonArgs + '"', PARAMETER_JSON_ARGS.getName().getCode(), jsonArgs);
-        }
-
-        return new WrappedProjectionMapTransform(projection, true);
+        return new WrappedProjectionMapTransform(parameters);
     }
 }
