@@ -81,6 +81,9 @@ public class AdvancedEarthGui extends GuiScreen {
 
     public static final ResourceLocation DIRECTIONS_TEXTURE = new ResourceLocation(TerraConstants.MODID, "textures/directions.png");
 
+    protected static final int MOUSE_LEFT = 0;
+    protected static final int MOUSE_RIGHT = 1;
+
     protected final GuiScreen parent;
     protected Consumer<String> whenDone;
 
@@ -273,14 +276,20 @@ public class AdvancedEarthGui extends GuiScreen {
         }
     }
 
+    protected static boolean propagateMousePressed(GuiButton button, Minecraft mc, int mouseX, int mouseY, int mouseEvent) {
+        return button instanceof RightClickableGuiButton
+                ? ((RightClickableGuiButton) button).mousePressed(mc, mouseX, mouseY, mouseEvent)
+                : mouseEvent == MOUSE_LEFT && button.mousePressed(mc, mouseX, mouseY);
+    }
+
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseEvent) {
         this.lastClickMoveX = mouseX;
         this.lastClickMoveY = mouseY;
-        if (this.doneButton.mousePressed(this.mc, mouseX, mouseY)) {
+        if (propagateMousePressed(this.doneButton, this.mc, mouseX, mouseY, mouseEvent)) {
             this.whenDone.accept(this.settings.toString()); //save settings
             this.mc.displayGuiScreen(this.parent); //exit
-        } else if (this.cancelButton.mousePressed(this.mc, mouseX, mouseY)) {
+        } else if (propagateMousePressed(this.cancelButton, this.mc, mouseX, mouseY, mouseEvent)) {
             this.mc.displayGuiScreen(this.parent); //exit without saving
         } else {
             boolean updateQueued = false;
@@ -292,7 +301,7 @@ public class AdvancedEarthGui extends GuiScreen {
                 }
             }
             for (GuiButton button : this.buttonList) {
-                if (button.mousePressed(this.mc, mouseX, mouseY + this.deltaY)) {
+                if (propagateMousePressed(button, this.mc, mouseX, mouseY + this.deltaY, mouseEvent)) {
                     updateQueued = true;
                 }
             }
@@ -353,10 +362,10 @@ public class AdvancedEarthGui extends GuiScreen {
         protected int height = 30;
 
         public ProjectionEntry(EarthGeneratorSettings settings, AdvancedEarthGui gui, int x, int y, int width) {
-            gui.addButton(new GuiButton(0, x + (width >> 1), y, width >> 1, 20, I18n.format(TerraConstants.MODID + ".gui.transformation.add")) {
+            gui.addButton(new RightClickableGuiButton(0, x + (width >> 1), y, width >> 1, 20, I18n.format(TerraConstants.MODID + ".gui.transformation.add")) {
                 @Override
-                public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
-                    if (super.mousePressed(mc, mouseX, mouseY)) {
+                public boolean mousePressed(Minecraft mc, int mouseX, int mouseY, int mouseEvent) {
+                    if (super.mousePressed(mc, mouseX, mouseY, mouseEvent) && mouseEvent == MOUSE_LEFT) {
                         ProjectionEntry.this.entries.add(0, Transformation.values()[0].newSubEntry(ProjectionEntry.this, gui, 0, 0, 1));
                         return true;
                     }
@@ -491,14 +500,15 @@ public class AdvancedEarthGui extends GuiScreen {
                 }
             };
 
-            static {
+            public Transformation next() {
                 Transformation[] values = values();
-                for (int i = 0; i < values.length; i++) {
-                    values[i].next = values[(i + 1) % values.length];
-                }
+                return values[(this.ordinal() + 1) % values.length];
             }
 
-            private Transformation next;
+            public Transformation prev() {
+                Transformation[] values = values();
+                return values[Math.floorMod(this.ordinal() - 1, values.length)];
+            }
 
             protected TransformEntry newSubEntry(ProjectionEntry entry, AdvancedEarthGui gui, int x, int y, int width) {
                 return new TransformEntry(this, entry, gui, x, y, width);
@@ -529,8 +539,8 @@ public class AdvancedEarthGui extends GuiScreen {
 
                 this.upButton = gui.addButton(new EntryButton(x, y, 20, "\u25B2") { //up
                     @Override
-                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
-                        if (super.mousePressed(mc, mouseX, mouseY)) {
+                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY, int mouseEvent) {
+                        if (super.mousePressed(mc, mouseX, mouseY, mouseEvent) && mouseEvent == MOUSE_LEFT) {
                             entry.entries.remove(TransformEntry.this);
                             entry.entries.add(0, TransformEntry.this);
                             return true;
@@ -540,8 +550,8 @@ public class AdvancedEarthGui extends GuiScreen {
                 });
                 this.downButton = gui.addButton(new EntryButton(x + 20, y, 20, "\u25BC") { //down
                     @Override
-                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
-                        if (super.mousePressed(mc, mouseX, mouseY)) {
+                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY, int mouseEvent) {
+                        if (super.mousePressed(mc, mouseX, mouseY, mouseEvent) && mouseEvent == MOUSE_LEFT) {
                             entry.entries.remove(TransformEntry.this);
                             entry.entries.add(entry.entries.size() - 1, TransformEntry.this);
                             return true;
@@ -551,8 +561,8 @@ public class AdvancedEarthGui extends GuiScreen {
                 });
                 this.removeButton = gui.addButton(new EntryButton(x + 40, y, 20, "\u2716") { //remove
                     @Override
-                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
-                        if (super.mousePressed(mc, mouseX, mouseY)) {
+                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY, int mouseEvent) {
+                        if (super.mousePressed(mc, mouseX, mouseY, mouseEvent) && mouseEvent == MOUSE_LEFT) {
                             entry.entries.remove(TransformEntry.this);
                             return true;
                         }
@@ -562,10 +572,16 @@ public class AdvancedEarthGui extends GuiScreen {
 
                 this.nameButton = gui.addButton(new EntryButton(x + 60, y, width - 60, I18n.format(TerraConstants.MODID + ".gui.transformation." + transformation.name())) {
                     @Override
-                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
-                        if (super.mousePressed(mc, mouseX, mouseY)) {
-                            entry.entries.set(entry.entries.indexOf(TransformEntry.this), transformation.next.newSubEntry(entry, gui, 0, 0, 1));
-                            return true;
+                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY, int mouseEvent) {
+                        if (super.mousePressed(mc, mouseX, mouseY, mouseEvent)) {
+                            switch (mouseEvent) {
+                                case MOUSE_LEFT:
+                                    entry.entries.set(entry.entries.indexOf(TransformEntry.this), transformation.next().newSubEntry(entry, gui, 0, 0, 1));
+                                    return true;
+                                case MOUSE_RIGHT:
+                                    entry.entries.set(entry.entries.indexOf(TransformEntry.this), transformation.prev().newSubEntry(entry, gui, 0, 0, 1));
+                                    return true;
+                            }
                         }
                         return false;
                     }
@@ -675,10 +691,16 @@ public class AdvancedEarthGui extends GuiScreen {
 
                 this.button = gui.addButton(new EntryButton(x, y, width, I18n.format(this.fieldName = TerraConstants.MODID + ".gui.projection." + projectionName)) {
                     @Override
-                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
-                        if (super.mousePressed(mc, mouseX, mouseY)) {
-                            RootEntry.this.index = (RootEntry.this.index + 1) % PROJECTION_NAMES.length;
-                            return true;
+                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY, int mouseEvent) {
+                        if (super.mousePressed(mc, mouseX, mouseY, mouseEvent)) {
+                            switch (mouseEvent) {
+                                case MOUSE_LEFT:
+                                    RootEntry.this.index = (RootEntry.this.index + 1) % PROJECTION_NAMES.length;
+                                    return true;
+                                case MOUSE_RIGHT:
+                                    RootEntry.this.index = Math.floorMod(RootEntry.this.index - 1, PROJECTION_NAMES.length);
+                                    return true;
+                            }
                         }
                         return false;
                     }
@@ -712,10 +734,10 @@ public class AdvancedEarthGui extends GuiScreen {
             this.touch = touch;
             this.value = value;
 
-            gui.addButton(new GuiButton(0, x, y, width, 20, I18n.format(TerraConstants.MODID + ".gui." + name) + ": " + I18n.format("options." + (value ? "on" : "off"))) {
+            gui.addButton(new RightClickableGuiButton(0, x, y, width, 20, I18n.format(TerraConstants.MODID + ".gui." + name) + ": " + I18n.format("options." + (value ? "on" : "off"))) {
                 @Override
-                public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
-                    if (super.mousePressed(mc, mouseX, mouseY)) {
+                public boolean mousePressed(Minecraft mc, int mouseX, int mouseY, int mouseEvent) {
+                    if (super.mousePressed(mc, mouseX, mouseY, mouseEvent) && mouseEvent == MOUSE_LEFT) {
                         ToggleEntry.this.value = !ToggleEntry.this.value;
                         return true;
                     }
@@ -751,10 +773,10 @@ public class AdvancedEarthGui extends GuiScreen {
 
             this.text = settings.cwg();
 
-            gui.addButton(new GuiButton(0, x + width - 20, y, 20, 20, "...") {
+            gui.addButton(new RightClickableGuiButton(0, x + width - 20, y, 20, 20, "...") {
                 @Override
-                public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
-                    if (super.mousePressed(mc, mouseX, mouseY)) {
+                public boolean mousePressed(Minecraft mc, int mouseX, int mouseY, int mouseEvent) {
+                    if (super.mousePressed(mc, mouseX, mouseY, mouseEvent) && mouseEvent == MOUSE_LEFT) {
                         GuiCreateWorld fakeParent = new GuiCreateWorld(null);
                         fakeParent.chunkProviderSettingsJson = CWGEntry.this.text;
 
@@ -798,9 +820,36 @@ public class AdvancedEarthGui extends GuiScreen {
     }
 
     /**
+     * A {@link GuiButton} whose {@link #mousePressed(Minecraft, int, int, int) mousePressed()} handler is also aware of the mouse button being pressed.
+     */
+    private static class RightClickableGuiButton extends GuiButton {
+        public RightClickableGuiButton(int buttonId, int x, int y, String buttonText) {
+            super(buttonId, x, y, buttonText);
+        }
+
+        public RightClickableGuiButton(int buttonId, int x, int y, int widthIn, int heightIn, String buttonText) {
+            super(buttonId, x, y, widthIn, heightIn, buttonText);
+        }
+
+        /**
+         * @deprecated use {@link #mousePressed(Minecraft, int, int, int)}
+         */
+        @Override
+        @Deprecated
+        public final boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
+            //return this.mousePressed(mc, mouseX, mouseY, MOUSE_LEFT);
+            throw new UnsupportedOperationException("must use 4-argument mousePressed() overload!");
+        }
+
+        public boolean mousePressed(Minecraft mc, int mouseX, int mouseY, int mouseEvent) {
+            return super.mousePressed(mc, mouseX, mouseY);
+        }
+    }
+
+    /**
      * Did you have enough hacky stuff yet ?
      */
-    private static class EntryButton extends GuiButton {
+    private static class EntryButton extends RightClickableGuiButton {
 
         public EntryButton(int x, int y, int width, String buttonText) {
             super(0, x, y, width, 20, buttonText);
@@ -856,10 +905,10 @@ public class AdvancedEarthGui extends GuiScreen {
 
             for (T value : allValues) {
                 boolean contains = this.values.contains(value);
-                gui.addButton(new GuiButton(0, x + 2, y + this.height, width - 2, 20, value + ": " + (contains ? TextFormatting.RED : TextFormatting.GREEN) + I18n.format("options." + (contains ? "off" : "on"))) {
+                gui.addButton(new RightClickableGuiButton(0, x + 2, y + this.height, width - 2, 20, value + ": " + (contains ? TextFormatting.RED : TextFormatting.GREEN) + I18n.format("options." + (contains ? "off" : "on"))) {
                     @Override
-                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
-                        if (super.mousePressed(mc, mouseX, mouseY)) {
+                    public boolean mousePressed(Minecraft mc, int mouseX, int mouseY, int mouseEvent) {
+                        if (super.mousePressed(mc, mouseX, mouseY, mouseEvent) && mouseEvent == MOUSE_LEFT) {
                             if (!EnumSelectionListEntry.this.values.add(value)) {
                                 EnumSelectionListEntry.this.values.remove(value);
                             }
