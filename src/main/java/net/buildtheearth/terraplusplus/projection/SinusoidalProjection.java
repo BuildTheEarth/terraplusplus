@@ -21,6 +21,11 @@ public class SinusoidalProjection implements GeographicProjection {
     }
 
     @Override
+    public double[] bounds() {
+        return this.boundsGeo();
+    }
+
+    @Override
     public String toString() {
         return "Sinusoidal";
     }

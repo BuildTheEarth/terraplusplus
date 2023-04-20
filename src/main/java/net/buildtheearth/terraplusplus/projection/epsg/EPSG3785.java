@@ -8,7 +8,9 @@ import net.buildtheearth.terraplusplus.projection.mercator.WebMercatorProjection
  *
  * @author DaPorkchop_
  * @see <a href="https://epsg.io/3785>https://epsg.io/3785</a>
+ * @deprecated this is totally wrong: it actually implements EPSG:3857 (not EPSG:3785), and with incorrect scaling
  */
+@Deprecated
 public class EPSG3785 extends EPSGProjection {
     protected static final WebMercatorProjection WEB_MERCATOR_PROJECTION = new WebMercatorProjection();
 

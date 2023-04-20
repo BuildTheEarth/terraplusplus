@@ -74,6 +74,11 @@ public class EqualEarthProjection implements GeographicProjection {
     }
 
     @Override
+    public double[] bounds() {
+        return GeographicProjection.super.bounds();
+    }
+
+    @Override
     public String toString() {
         return "Equal Earth";
     }

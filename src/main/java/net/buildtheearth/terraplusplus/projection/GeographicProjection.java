@@ -16,6 +16,7 @@ import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.buildtheearth.terraplusplus.util.geo.GeographicCoordinates;
 import net.buildtheearth.terraplusplus.util.geo.ProjectedCoordinates2d;
+import net.daporkchop.lib.common.math.PMath;
 
 import java.io.IOException;
 import java.util.Map;
@@ -93,21 +94,21 @@ public interface GeographicProjection {
             double[] boundsGeo = this.boundsGeo();
 
             //get max in by using extreme coordinates
-            double[] bounds = new double[4];
+            double[] bounds = null;
 
-            System.arraycopy(this.fromGeo(boundsGeo[0], boundsGeo[1]), 0, bounds, 0, 2);
-            System.arraycopy(this.fromGeo(boundsGeo[2], boundsGeo[3]), 0, bounds, 2, 2);
-
-            if (bounds[0] > bounds[2]) {
-                double t = bounds[0];
-                bounds[0] = bounds[2];
-                bounds[2] = t;
-            }
-
-            if (bounds[1] > bounds[3]) {
-                double t = bounds[1];
-                bounds[1] = bounds[3];
-                bounds[3] = t;
+            double[] blendFactors = {0.0d, 0.5d, 1.0d};
+            for (double flon : blendFactors) {
+                for (double flat : blendFactors) {
+                    double[] point = this.fromGeo(PMath.lerp(boundsGeo[0], boundsGeo[2], flon), PMath.lerp(boundsGeo[1], boundsGeo[3], flat));
+                    if (bounds == null) {
+                        bounds = new double[]{ point[0], point[1], point[0], point[1] };
+                    } else {
+                        bounds[0] = Math.min(bounds[0], point[0]);
+                        bounds[1] = Math.min(bounds[1], point[1]);
+                        bounds[2] = Math.max(bounds[2], point[0]);
+                        bounds[3] = Math.max(bounds[3], point[1]);
+                    }
+                }
             }
 
             return bounds;

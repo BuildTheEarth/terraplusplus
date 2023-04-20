@@ -26,6 +26,7 @@ import org.opengis.referencing.cs.AxisDirection;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 import org.opengis.referencing.operation.CoordinateOperation;
+import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
 import org.opengis.util.FactoryException;
 
@@ -45,8 +46,8 @@ public final class SISProjectionWrapper extends ProjectionTransform {
     private final CoordinateReferenceSystem geoCRS = TPP_GEO_CRS;
     private final CoordinateReferenceSystem projectedCRS;
 
-    private final CoordinateOperation toGeo;
-    private final CoordinateOperation fromGeo;
+    private final MathTransform toGeo;
+    private final MathTransform fromGeo;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public SISProjectionWrapper(
@@ -61,11 +62,16 @@ public final class SISProjectionWrapper extends ProjectionTransform {
 
         this.projectedCRS = projectedCRS;
 
-        this.toGeo = CRS.findOperation(this.projectedCRS, this.geoCRS, null);
-        this.fromGeo = CRS.findOperation(this.geoCRS, this.projectedCRS, null);
+        this.toGeo = CRS.findOperation(this.projectedCRS, this.geoCRS, null).getMathTransform();
+        this.fromGeo = CRS.findOperation(this.geoCRS, this.projectedCRS, null).getMathTransform();
     }
 
-    @JsonGetter("wkt")
+    @JsonGetter("standard")
+    private WKTStandard standard() {
+        return WKTStandard.WKT2_2015;
+    }
+
+    @JsonGetter("crs")
     public String getProjectedCRSAsWKT() {
         return WKTStandard.WKT2_2015.format(this.projectedCRS);
     }
@@ -74,7 +80,7 @@ public final class SISProjectionWrapper extends ProjectionTransform {
     @SneakyThrows(TransformException.class)
     public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
         double[] point = { x, y };
-        this.toGeo.getMathTransform().transform(point, 0, point, 0, 1);
+        this.toGeo.transform(point, 0, point, 0, 1);
         return point;
     }
 
@@ -82,7 +88,7 @@ public final class SISProjectionWrapper extends ProjectionTransform {
     @SneakyThrows(TransformException.class)
     public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
         double[] point = { longitude, latitude };
-        this.fromGeo.getMathTransform().transform(point, 0, point, 0, 1);
+        this.fromGeo.transform(point, 0, point, 0, 1);
         return point;
     }
 
@@ -146,13 +152,13 @@ public final class SISProjectionWrapper extends ProjectionTransform {
 
         DomainDefinition projDomainDefinition = new DomainDefinition();
 
-        if (this.fromGeo.getMathTransform() instanceof AbstractMathTransform) {
-            ((AbstractMathTransform) this.fromGeo.getMathTransform()).getDomain(geoDomainDefinition)
+        if (this.fromGeo instanceof AbstractMathTransform) {
+            ((AbstractMathTransform) this.fromGeo).getDomain(geoDomainDefinition)
                     .ifPresent((EConsumer<Envelope>) geoEnvelope -> projDomainDefinition.intersect(Envelopes.transform(this.fromGeo, geoEnvelope)));
         }
 
-        if (this.toGeo.getMathTransform() instanceof AbstractMathTransform) {
-            Envelope envelope = ((AbstractMathTransform) this.toGeo.getMathTransform()).getDomain(projDomainDefinition).orElse(null);
+        if (this.toGeo instanceof AbstractMathTransform) {
+            Envelope envelope = ((AbstractMathTransform) this.toGeo).getDomain(projDomainDefinition).orElse(null);
             if (envelope != null) {
                 return new double[]{
                         envelope.getMinimum(0),

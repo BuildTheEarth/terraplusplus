@@ -6,6 +6,9 @@ import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException
 
 /**
  * Implementation of the Mercator projection, normalized between -1 and 1.
+ * <p>
+ * DaPorkchop_ says: you dummies, this isn't actually proper Mercator on an ellipsoid; it's spherical Mercator (aka "Pseudo-Mercator"), and is
+ * identical to {@link WebMercatorProjection} except that it's normalized to a different range and flipped.
  *
  * @see WebMercatorProjection
  * @see <a href="https://en.wikipedia.org/wiki/Mercator_projection"> Wikipedia's article on the Mercator projection</a>
