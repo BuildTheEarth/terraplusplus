@@ -7,13 +7,15 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import net.buildtheearth.terraplusplus.projection.EquirectangularProjection;
+import net.buildtheearth.terraplusplus.control.AdvancedEarthGui;
+import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraplusplus.projection.transform.ProjectionTransform;
 import net.daporkchop.lib.common.function.throwing.EConsumer;
 import org.apache.sis.geometry.Envelopes;
 import org.apache.sis.geometry.GeneralEnvelope;
 import org.apache.sis.internal.referencing.AxisDirections;
+import org.apache.sis.parameter.DefaultParameterValueGroup;
+import org.apache.sis.parameter.ParameterBuilder;
 import org.apache.sis.referencing.CRS;
 import org.apache.sis.referencing.operation.transform.AbstractMathTransform;
 import org.apache.sis.referencing.operation.transform.DomainDefinition;
@@ -21,17 +23,20 @@ import org.opengis.geometry.Envelope;
 import org.opengis.metadata.extent.Extent;
 import org.opengis.metadata.extent.GeographicBoundingBox;
 import org.opengis.metadata.extent.GeographicExtent;
+import org.opengis.parameter.ParameterDescriptor;
+import org.opengis.parameter.ParameterDescriptorGroup;
+import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.cs.AxisDirection;
 import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
-import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
 import org.opengis.util.FactoryException;
 
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 
 import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
@@ -42,24 +47,33 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @JsonDeserialize
 @Getter
-public final class SISProjectionWrapper extends ProjectionTransform {
+public final class SISProjectionWrapper implements GeographicProjection {
     private final CoordinateReferenceSystem geoCRS = TPP_GEO_CRS;
     private final CoordinateReferenceSystem projectedCRS;
 
     private final MathTransform toGeo;
     private final MathTransform fromGeo;
 
+    private static boolean canInvokeNoArgsConstructor() {
+        for (StackTraceElement element : new Throwable().getStackTrace()) {
+            if (AdvancedEarthGui.class.getName().equals(element.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public SISProjectionWrapper(
-            @JsonProperty(value = "standard", required = true) @NonNull WKTStandard standard,
-            @JsonProperty(value = "crs", required = true) @NonNull String crs) throws ParseException {
-        this((CoordinateReferenceSystem) standard.parse(crs));
+            @JsonProperty(value = "standard") WKTStandard standard,
+            @JsonProperty(value = "crs") String crs) throws ParseException {
+        this((standard != null && crs != null) || !canInvokeNoArgsConstructor()
+                ? (CoordinateReferenceSystem) Objects.requireNonNull(standard, "missing required creator property 'standard'").parse(Objects.requireNonNull(crs, "missing required creator property 'crs'"))
+                : TPP_GEO_CRS);
     }
 
     @SneakyThrows(FactoryException.class)
     public SISProjectionWrapper(@NonNull CoordinateReferenceSystem projectedCRS) {
-        super(new EquirectangularProjection());
-
         this.projectedCRS = projectedCRS;
 
         this.toGeo = CRS.findOperation(this.projectedCRS, this.geoCRS, null).getMathTransform();
@@ -73,7 +87,7 @@ public final class SISProjectionWrapper extends ProjectionTransform {
 
     @JsonGetter("crs")
     public String getProjectedCRSAsWKT() {
-        return WKTStandard.WKT2_2015.format(this.projectedCRS);
+        return this.standard().format(this.projectedCRS);
     }
 
     @Override
@@ -138,7 +152,7 @@ public final class SISProjectionWrapper extends ProjectionTransform {
             }
         }
 
-        return this.tryExtractBoundsFromAxes(this.geoCRS.getCoordinateSystem(), false).orElseGet(super::boundsGeo);
+        return this.tryExtractBoundsFromAxes(this.geoCRS.getCoordinateSystem(), false).orElseGet(GeographicProjection.super::boundsGeo);
     }
 
     @Override
@@ -210,5 +224,24 @@ public final class SISProjectionWrapper extends ProjectionTransform {
         } catch (OutOfProjectionBoundsException e) {
             throw new IllegalStateException(this.toString());
         }
+    }
+
+    @Override
+    public ParameterValueGroup parameters() {
+        ParameterDescriptor<WKTStandard> standardParameter = new ParameterBuilder().setRequired(true)
+                .addName("standard")
+                .createEnumerated(WKTStandard.class, WKTStandard.values(), WKTStandard.WKT2_2015);
+
+        ParameterDescriptor<String> crsParameter = new ParameterBuilder().setRequired(true)
+                .addName("crs")
+                .create(String.class, this.standard().format(TPP_GEO_CRS));
+
+        ParameterDescriptorGroup descriptors = new ParameterBuilder().addName("wkt").createGroup(standardParameter, crsParameter);
+        DefaultParameterValueGroup parameters = new DefaultParameterValueGroup(descriptors);
+
+        parameters.getOrCreate(standardParameter).setValue(this.standard());
+        parameters.getOrCreate(crsParameter).setValue(this.getProjectedCRSAsWKT());
+
+        return parameters;
     }
 }

@@ -34,7 +34,6 @@ terraplusplus.gui.transformation.swap_axes=Swap Axes
 ## Projection types
 terraplusplus.gui.projection.centered_mercator=Mercator
 terraplusplus.gui.projection.web_mercator=Web Mercator
-terraplusplus.gui.projection.web_mercator.zoom=Zoom
 terraplusplus.gui.projection.transverse_mercator=Transverse Mercator
 terraplusplus.gui.projection.equirectangular=Equirectangular
 terraplusplus.gui.projection.sinusoidal=Sinusoidal
@@ -42,6 +41,10 @@ terraplusplus.gui.projection.equal_earth=Equal Earth
 terraplusplus.gui.projection.bte_conformal_dymaxion=BuildTheEarth Conformal Dymaxion
 terraplusplus.gui.projection.dymaxion=Dymaxion (not BTE!)
 terraplusplus.gui.projection.conformal_dymaxion=Conformal Dymaxion
+terraplusplus.gui.projection.wkt=WKT §c(Advanced!)§r
+terraplusplus.gui.projection.wkt.standard=WKT Revision
+terraplusplus.gui.projection.wkt.standard.WKT2_2015=WKT2:2015 (ISO 19162:2015)
+terraplusplus.gui.projection.wkt.crs=WKT String
 
 ## command messages
 terraplusplus.command.tpll.usage=Usage: /tpll <latitude> <longitude> [altitude]

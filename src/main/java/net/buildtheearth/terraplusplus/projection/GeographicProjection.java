@@ -12,14 +12,22 @@ import net.buildtheearth.terraplusplus.config.TypedDeserializer;
 import net.buildtheearth.terraplusplus.config.TypedSerializer;
 import net.buildtheearth.terraplusplus.projection.epsg.EPSG3785;
 import net.buildtheearth.terraplusplus.projection.epsg.EPSG4326;
+import net.buildtheearth.terraplusplus.projection.sis.SISProjectionWrapper;
+import net.buildtheearth.terraplusplus.projection.sis.WKTStandard;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.buildtheearth.terraplusplus.util.geo.GeographicCoordinates;
 import net.buildtheearth.terraplusplus.util.geo.ProjectedCoordinates2d;
 import net.daporkchop.lib.common.math.PMath;
+import org.apache.sis.parameter.ParameterBuilder;
+import org.opengis.parameter.ParameterDescriptorGroup;
+import org.opengis.parameter.ParameterValueGroup;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Map;
+
+import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * Support for various projection types.
@@ -258,6 +266,10 @@ public interface GeographicProjection {
         return this.azimuth(x, y, angle, 1E-5);
     }
 
+    default ParameterValueGroup parameters() {
+        return new ParameterBuilder().addName("empty").createGroup().createValue();
+    }
+
     class Deserializer extends TypedDeserializer<GeographicProjection> {
         @Override
         protected Map<String, Class<? extends GeographicProjection>> registry() {
@@ -273,14 +285,31 @@ public interface GeographicProjection {
             }
         }
 
+        @SneakyThrows(ParseException.class)
         private GeographicProjection parseFromString(@NonNull String s) {
-            switch (s) {
-                case "EPSG:3785":
-                case "EPSG:3857": //TODO: EPSG:3857 actually uses the WGS84 ellipsoid rather than a sphere
-                    return new EPSG3785();
-                case "EPSG:4326":
-                    return new EPSG4326();
+            int colonIndex = s.indexOf(':');
+            checkArg(colonIndex >= 0 && colonIndex + 1 != s.length(), "unsupported projection: %s", s);
+
+            String type = s.substring(0, colonIndex);
+            String arg = s.substring(colonIndex + 1);
+            switch (type) {
+                case "EPSG": //TODO
+                    /*switch (s) {
+                        case "EPSG:3785":
+                        case "EPSG:3857": //TODO: EPSG:3857 actually uses the WGS84 ellipsoid rather than a sphere
+                            return new EPSG3785();
+                        case "EPSG:4326":
+                            return new EPSG4326();
+                    }*/
+                    throw new IllegalArgumentException("unsupported projection: " + s);
+                case "WKT2":
+                    if (arg.startsWith("2015:")) {
+                        return new SISProjectionWrapper(WKTStandard.WKT2_2015, arg.substring("2015:".length()));
+                    } else {
+                        throw new IllegalArgumentException("expected format: 'WKT2:2015:<wkt string>'");
+                    }
             }
+
             throw new IllegalArgumentException("unsupported projection: " + s);
         }
     }

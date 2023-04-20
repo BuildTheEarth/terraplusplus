@@ -1,7 +1,6 @@
 package net.buildtheearth.terraplusplus.control;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.collect.ImmutableMap;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomCubicWorldType;
 import lombok.Getter;
 import lombok.NonNull;
@@ -11,8 +10,6 @@ import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
-import net.buildtheearth.terraplusplus.projection.sis.SISProjectionWrapper;
-import net.buildtheearth.terraplusplus.projection.sis.WKTStandard;
 import net.buildtheearth.terraplusplus.projection.transform.OffsetProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ScaleProjectionTransform;
@@ -20,6 +17,7 @@ import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.daporkchop.lib.common.function.io.IOSupplier;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.util.PArrays;
+import net.daporkchop.lib.common.util.PorkUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
@@ -39,18 +37,25 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.apache.sis.parameter.DefaultParameterDescriptorGroup;
+import org.apache.sis.parameter.DefaultParameterValueGroup;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
+import org.opengis.parameter.GeneralParameterDescriptor;
+import org.opengis.parameter.ParameterDescriptor;
 
 import javax.imageio.ImageIO;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
@@ -214,7 +219,7 @@ public class AdvancedEarthGui extends GuiScreen {
 
             ScaledResolution scale = new ScaledResolution(Minecraft.getMinecraft());
             int sc = scale.getScaleFactor();
-            //GL11.glEnable(GL11.GL_SCISSOR_TEST);
+            GL11.glEnable(GL11.GL_SCISSOR_TEST);
             int height = this.entriesHeight;
             GL11.glScissor(5 * sc, VERTICAL_PADDING * sc, this.entriesWidth * sc, (this.height - VERTICAL_PADDING * 2) * sc);
 
@@ -467,38 +472,7 @@ public class AdvancedEarthGui extends GuiScreen {
                     };
                 }
             },
-            wkt { //not actually a transform, also i don't care
-                @Override
-                protected TransformEntry newSubEntry(ProjectionEntry entry, AdvancedEarthGui gui, int x, int y, int width) {
-                    return new ParameterizedTransformEntry(this, entry, gui, x, y, width, TerraConstants.MODID + ".gui.transformation.wkt", "wkt") {
-                        @Override
-                        public void initFrom(ProjectionTransform in) {
-                            this.textFields[0].setMaxStringLength(1 << 25);
-
-                            if (in instanceof SISProjectionWrapper) {
-                                SISProjectionWrapper projection = (SISProjectionWrapper) in;
-                                this.textFields[0].setText(projection.getProjectedCRSAsWKT());
-                            } else {
-                                this.textFields[0].setText("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]");
-                            }
-                        }
-
-                        @Override
-                        @SneakyThrows(JsonProcessingException.class)
-                        public void toJson(StringBuilder out) {
-                            out.setLength(0);
-                            out.append(TerraConstants.JSON_MAPPER.writeValueAsString(ImmutableMap.of("wkt", ImmutableMap.of(
-                                    "standard", WKTStandard.WKT2_2015.name(),
-                                    "crs", this.textFields[0].getText()))));
-                        }
-
-                        @Override
-                        protected void appendValue(StringBuilder out, int i) {
-                            throw new UnsupportedOperationException();
-                        }
-                    };
-                }
-            };
+            ;
 
             public Transformation next() {
                 Transformation[] values = values();
@@ -685,6 +659,14 @@ public class AdvancedEarthGui extends GuiScreen {
             protected final EntryButton button;
             protected final Minecraft mc = Minecraft.getMinecraft();
 
+            protected final DefaultParameterDescriptorGroup parameters;
+            protected final Map<String, ParameterDescriptor<?>> parameterDescriptorsByName = new LinkedHashMap<>();
+            protected final Map<String, Object> parameterValuesByName = new LinkedHashMap<>();
+
+            protected final String[] parameterNames;
+            protected final EntryButton[] buttons;
+            protected final EntryTextField[] textFields;
+
             public RootEntry(GeographicProjection projection, AdvancedEarthGui gui, int x, int y, int width) {
                 String projectionName = GlobalParseRegistries.PROJECTIONS.inverse().get(projection.getClass());
                 this.initialIndex = this.index = PArrays.indexOf(PROJECTION_NAMES, projectionName);
@@ -705,23 +687,111 @@ public class AdvancedEarthGui extends GuiScreen {
                         return false;
                     }
                 });
+
+                DefaultParameterValueGroup parameterValues = new DefaultParameterValueGroup(projection.parameters());
+                this.parameters = DefaultParameterDescriptorGroup.castOrCopy(parameterValues.getDescriptor());
+
+                for (GeneralParameterDescriptor parameter : this.parameters.descriptors()) {
+                    this.parameterDescriptorsByName.put(parameter.getName().getCode(), (ParameterDescriptor<?>) parameter);
+                    this.parameterValuesByName.put(parameter.getName().getCode(), parameterValues.getValue((ParameterDescriptor<?>) parameter));
+                }
+
+                int maxLen = this.parameterDescriptorsByName.keySet().stream()
+                        .map(s -> this.fieldName + '.' + s)
+                        .map(I18n::format)
+                        .mapToInt(gui.fontRenderer::getStringWidth)
+                        .max().orElse(0) + 5;
+
+                this.parameterNames = this.parameterDescriptorsByName.keySet().toArray(new String[0]);
+                this.textFields = new EntryTextField[this.parameterNames.length];
+                this.buttons = new EntryButton[this.parameterNames.length];
+
+                int i = 0;
+                for (Map.Entry<String, Object> entry : this.parameterValuesByName.entrySet()) {
+                    ParameterDescriptor<?> descriptor = this.parameterDescriptorsByName.get(entry.getKey()); //yuck
+
+                    int componentX = x + maxLen;
+                    int componentY = y + 20 + 2 + i * 24;
+                    int componentW = width - maxLen - 2;
+
+                    if (CharSequence.class.isAssignableFrom(descriptor.getValueClass())) {
+                        EntryTextField textField = gui.addEntryTextField(componentX, componentY, componentW, 20);
+                        textField.setMaxStringLength(1 << 25);
+                        textField.setText(Objects.toString(entry.getValue()));
+                        this.textFields[i] = textField;
+                    } else if (descriptor.getValidValues() != null || descriptor.getValueClass().isEnum()) {
+                        Object[] values = descriptor.getValidValues() != null ? descriptor.getValidValues().toArray() : descriptor.getValueClass().getEnumConstants();
+                        int currentIndex = notNegative(PArrays.indexOf(values, entry.getValue()));
+
+                        this.buttons[i] = gui.addButton(new EntryButton(componentX, componentY, componentW, I18n.format(this.fieldName + '.' + entry.getKey() + '.' + entry.getValue())) {
+                            @Override
+                            public boolean mousePressed(Minecraft mc, int mouseX, int mouseY, int mouseEvent) {
+                                if (super.mousePressed(mc, mouseX, mouseY, mouseEvent)) {
+                                    switch (mouseEvent) {
+                                        case MOUSE_LEFT:
+                                            RootEntry.this.parameterValuesByName.put(entry.getKey(), values[(currentIndex + 1) % values.length]);
+                                            return true;
+                                        case MOUSE_RIGHT:
+                                            RootEntry.this.parameterValuesByName.put(entry.getKey(), values[Math.floorMod(currentIndex - 1, values.length)]);
+                                            return true;
+                                    }
+                                }
+                                return false;
+                            }
+                        });
+                    } else {
+                        throw new IllegalArgumentException();
+                    }
+                    i++;
+                }
             }
 
             @Override
             public int height() {
-                return 20 + 2;
+                return 20 + 2 + this.parameterValuesByName.size() * 24;
             }
 
             @Override
             public void render(AdvancedEarthGui gui, int x, int y, int mouseX, int mouseY, int width) {
+                int i = 0;
+                for (String s : this.parameterDescriptorsByName.keySet()) {
+                    gui.fontRenderer.drawString(I18n.format(this.fieldName + '.' + s), x, y + 20 + 2 + i * 24 + (20 - 8) / 2, -1, true);
+                    i++;
+                }
+                for (int j = 0; j < this.textFields.length; j++) {
+                    if (this.textFields[j] != null) {
+                        this.textFields[j].y = y + 20 + 2 + j * 24;
+                        this.textFields[j].actuallyDrawTextBox();
+                    }
+                }
+                for (int j = 0; j < this.buttons.length; j++) {
+                    if (this.buttons[j] != null) {
+                        this.buttons[j].y = y + 20 + 2 + j * 24;
+                        this.buttons[j].actuallyDrawButton(this.mc, mouseX, mouseY);
+                    }
+                }
                 this.button.y = y;
                 this.button.actuallyDrawButton(this.mc, mouseX, mouseY);
             }
 
             @Override
+            @SneakyThrows(JsonProcessingException.class)
             public void toJson(StringBuilder out) {
                 checkArg(out.length() == 0, "must be first element in json output!");
-                out.append("{\"").append(PROJECTION_NAMES[this.index]).append("\":{}}");
+                out.append("{\"").append(PROJECTION_NAMES[this.index]).append("\":");
+
+                if (this.initialIndex == this.index) {
+                    for (int i = 0; i < this.textFields.length; i++) {
+                        if (this.textFields[i] != null) {
+                            this.parameterValuesByName.put(this.parameterNames[i], this.textFields[i].getText());
+                        }
+                    }
+                    out.append(TerraConstants.JSON_MAPPER.writeValueAsString(this.parameterValuesByName));
+                } else {
+                    out.append("{}");
+                }
+
+                out.append('}');
             }
         }
     }
