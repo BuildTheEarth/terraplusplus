@@ -30,7 +30,7 @@ import java.util.SplittableRandom;
  * @author DaPorkchop_
  */
 public class TestSISProjections {
-    private static final double DEFAULT_D = 1e-12d;
+    private static final double DEFAULT_D = 1e-14d;
 
     @BeforeClass
     public static void bootstrap() {
@@ -105,7 +105,7 @@ public class TestSISProjections {
         testProjectionAccuracy(
                 new DymaxionProjection(),
                 new SISProjectionWrapper(WKTStandard.WKT2_2015,
-                        "PROJCRS[\"WGS 84 / Terra++ Dymaxion\",\n"
+                        "PROJCRS[\"WGS 84 / Reversed Axis Order / Terra++ Dymaxion\",\n"
                         + "    BASEGEODCRS[\"WGS 84\",\n"
                         + "        DATUM[\"World Geodetic System 1984\",\n"
                         + "            ELLIPSOID[\"WGS 84\", 6378137, 298.257223563,\n"
@@ -134,7 +134,7 @@ public class TestSISProjections {
         testProjectionAccuracy(
                 EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection(),
                 new ScaleProjectionTransform(new SISProjectionWrapper(WKTStandard.WKT2_2015,
-                        "PROJCRS[\"WGS 84 / BuildTheEarth Conformal Dymaxion\",\n"
+                        "PROJCRS[\"WGS 84 / Reversed Axis Order / BuildTheEarth Conformal Dymaxion (Unscaled)\",\n"
                         + "    BASEGEODCRS[\"WGS 84\",\n"
                         + "        DATUM[\"World Geodetic System 1984\",\n"
                         + "            ELLIPSOID[\"WGS 84\", 6378137, 298.257223563,\n"
@@ -142,7 +142,7 @@ public class TestSISProjections {
                         + "        PRIMEM[\"Greenwich\", 0,\n"
                         + "            ANGLEUNIT[\"degree\", 0.0174532925199433]],\n"
                         + "        ID[\"EPSG\", 4326]],\n"
-                        + "    CONVERSION[\"Terra++ BuildTheEarth Conformal Dymaxion\",\n"
+                        + "    CONVERSION[\"Terra++ BuildTheEarth Conformal Dymaxion (Unscaled)\",\n"
                         + "        METHOD[\"Terra++ Internal Projection\"],\n"
                         + "        PARAMETER[\"type\", \"bte_conformal_dymaxion\"]],\n"
                         + "    CS[Cartesian, 2],\n"
@@ -163,7 +163,7 @@ public class TestSISProjections {
         testProjectionAccuracy(
                 EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection(),
                 new SISProjectionWrapper(WKTStandard.WKT2_2015,
-                        "PROJCRS[\"WGS 84 / BuildTheEarth Conformal Dymaxion\",\n"
+                        "PROJCRS[\"WGS 84 / Reversed Axis Order / BuildTheEarth Conformal Dymaxion (Scaled)\",\n"
                         + "    BASEGEODCRS[\"WGS 84\",\n"
                         + "        DATUM[\"World Geodetic System 1984\",\n"
                         + "            ELLIPSOID[\"WGS 84\", 6378137, 298.257223563,\n"
@@ -171,7 +171,7 @@ public class TestSISProjections {
                         + "        PRIMEM[\"Greenwich\", 0,\n"
                         + "            ANGLEUNIT[\"degree\", 0.0174532925199433]],\n"
                         + "        ID[\"EPSG\", 4326]],\n"
-                        + "    CONVERSION[\"Terra++ BuildTheEarth Conformal Dymaxion\",\n"
+                        + "    CONVERSION[\"Terra++ BuildTheEarth Conformal Dymaxion (Scaled)\",\n"
                         + "        METHOD[\"Terra++ Internal Projection\"],\n"
                         + "        PARAMETER[\"type\", \"scale\"],"
                         + "        PARAMETER[\"json_args\", \"{\"\"delegate\"\": {\"\"bte_conformal_dymaxion\"\": {}}, \"\"x\"\": 7318261.522857145, \"\"y\"\": 7318261.522857145}\"]],\n"
@@ -187,14 +187,53 @@ public class TestSISProjections {
                         + "    BBOX[-90, -180, 90, 180]]"));
     }
 
-    //unfortunately, this has a fair amount of additional floating-point error (off by <= ~1e-11 degrees). maybe that's acceptable? will have to test more...
-    /*@Test
+    @Test
     @SneakyThrows(ParseException.class)
     public void testBTE3() {
         testProjectionAccuracy(
                 EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection(),
                 new SISProjectionWrapper(WKTStandard.WKT2_2015,
-                        "PROJCRS[\"WGS 84 / BuildTheEarth Conformal Dymaxion\",\n"
+                        //TODO: this would be nicer using DERIVEDPROJCRS from WKT2:2019
+                        "FITTED_CS[\"WGS 84 / Reversed Axis Order / BuildTheEarth Conformal Dymaxion (Scaled)\",\n"
+                        + "    PARAM_MT[\"Affine\",\n"
+                        + "        METHOD[\"Affine\", ID[\"EPSG\", 9624]],\n"
+                        + "        PARAMETER[\"num_col\", 3],\n"
+                        + "        PARAMETER[\"num_row\", 3],\n"
+                        + "        PARAMETER[\"elt_0_0\", 1.3664447449393513E-7],\n"
+                        + "        PARAMETER[\"elt_0_1\", 0],\n"
+                        + "        PARAMETER[\"elt_1_0\", 0],\n"
+                        + "        PARAMETER[\"elt_1_1\", 1.3664447449393513E-7]],\n"
+                        + "    PROJCRS[\"WGS 84 / Reversed Axis Order / BuildTheEarth Conformal Dymaxion (Unscaled)\",\n"
+                        + "        BASEGEODCRS[\"WGS 84\",\n"
+                        + "            DATUM[\"World Geodetic System 1984\",\n"
+                        + "                ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n"
+                        + "                    LENGTHUNIT[\"metre\",1]]],\n"
+                        + "            PRIMEM[\"Greenwich\",0,\n"
+                        + "                ANGLEUNIT[\"degree\",0.0174532925199433]]],\n"
+                        + "        CONVERSION[\"Terra++ BuildTheEarth Conformal Dymaxion (Unscaled)\",\n"
+                        + "            METHOD[\"Terra++ Internal Projection\"],\n"
+                        + "            PARAMETER[\"type\", \"bte_conformal_dymaxion\"]],\n"
+                        + "        CS[Cartesian,2],\n"
+                        + "            AXIS[\"X\",east,\n"
+                        + "                ORDER[1],\n"
+                        + "                LENGTHUNIT[\"metre\", 1]],\n"
+                        + "            AXIS[\"Y\",south,\n"
+                        + "                ORDER[2],\n"
+                        + "                LENGTHUNIT[\"metre\", 1]],\n"
+                        + "        SCOPE[\"Minecraft.\"],\n"
+                        + "        AREA[\"World.\"],\n"
+                        + "        BBOX[-90, -180, 90, 180]]]"),
+                1e-8d); //this is significantly less accurate than some of the others!!!
+    }
+
+    //unfortunately, this has a fair amount of additional floating-point error (off by <= ~1e-10 degrees). maybe that's acceptable? will have to test more...
+    @Test
+    @SneakyThrows(ParseException.class)
+    public void testBTE4() {
+        testProjectionAccuracy(
+                EarthGeneratorSettings.parse(EarthGeneratorSettings.BTE_DEFAULT_SETTINGS).projection(),
+                new SISProjectionWrapper(WKTStandard.WKT2_2015,
+                        "PROJCRS[\"WGS 84 / Reversed Axis Order / BuildTheEarth Conformal Dymaxion (Scaled)\",\n"
                         + "    BASEGEODCRS[\"WGS 84\",\n"
                         + "        DATUM[\"World Geodetic System 1984\",\n"
                         + "            ELLIPSOID[\"WGS 84\", 6378137, 298.257223563,\n"
@@ -202,7 +241,7 @@ public class TestSISProjections {
                         + "        PRIMEM[\"Greenwich\", 0,\n"
                         + "            ANGLEUNIT[\"degree\", 0.0174532925199433]],\n"
                         + "        ID[\"EPSG\", 4326]],\n"
-                        + "    CONVERSION[\"Terra++ BuildTheEarth Conformal Dymaxion\",\n"
+                        + "    CONVERSION[\"Terra++ BuildTheEarth Conformal Dymaxion (Unscaled)\",\n"
                         + "        METHOD[\"Terra++ Internal Projection\"],\n"
                         + "        PARAMETER[\"type\", \"bte_conformal_dymaxion\"]],\n"
                         + "    CS[Cartesian, 2],\n"
@@ -214,8 +253,8 @@ public class TestSISProjections {
                         + "            LENGTHUNIT[\"Minecraft Block\", 1.3664447449393513E-7]],\n"
                         + "    SCOPE[\"Minecraft.\"],\n"
                         + "    AREA[\"World.\"],\n"
-                        + "    BBOX[-90, -180, 90, 180]]"));
-    }*/
+                        + "    BBOX[-90, -180, 90, 180]]"), 1e-10d);
+    }
 
     @Test(expected = AssertionError.class) //This should fail, as
     @SneakyThrows(ParseException.class)
@@ -301,7 +340,8 @@ public class TestSISProjections {
                         + "    SCOPE[\"Web mapping and visualisation.\"],\n"
                         + "    AREA[\"World between 85.06°S and 85.06°N.\"],\n"
                         + "    BBOX[-85.06,-180,85.06,180],\n"
-                        + "    ID[\"EPSG\",3857]]"), 6.388019798183263E-6, 6.388019798183263E-6), 128.0d, 128.0d));
+                        + "    ID[\"EPSG\",3857]]"), 6.388019798183263E-6, 6.388019798183263E-6), 128.0d, 128.0d),
+                1e-12d); //this is slightly less accurate
 
         testProjectionAccuracy(
                 new EPSG3785(),
@@ -344,7 +384,8 @@ public class TestSISProjections {
                         + "            LENGTHUNIT[\"metre\",1]],\n"
                         + "    SCOPE[\"Web mapping and visualisation.\"],\n"
                         + "    AREA[\"World between 85.06°S and 85.06°N.\"],\n"
-                        + "    BBOX[-85.06,-180,85.06,180]]"));
+                        + "    BBOX[-85.06,-180,85.06,180]]"),
+                1e-12d); //this is slightly less accurate
     }
 
     @Test
@@ -540,7 +581,8 @@ public class TestSISProjections {
                         + "            LENGTHUNIT[\"metre\",1]],\n"
                         + "    SCOPE[\"Horizontal component of 3D system.\"],\n"
                         + "    AREA[\"World.\"],\n"
-                        + "    BBOX[-90,-180,90,180]]"));
+                        + "    BBOX[-90,-180,90,180]]"),
+                1e-13d); //this is slightly less accurate
     }
 
     private static boolean approxEquals(double[] a, double[] b) {
