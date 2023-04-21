@@ -1,6 +1,8 @@
 package net.buildtheearth.terraplusplus.projection;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import net.buildtheearth.terraplusplus.util.TerraConstants;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
  * Implements the equirectangular map projection, which applies no transformation at all.
@@ -32,6 +34,11 @@ public class EquirectangularProjection implements GeographicProjection {
     public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
         OutOfProjectionBoundsException.checkLongitudeLatitudeInRange(longitude, latitude);
         return new double[]{ longitude, latitude };
+    }
+
+    @Override
+    public CoordinateReferenceSystem projectedCRS() {
+        return TerraConstants.TPP_GEO_CRS;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package net.buildtheearth.terraplusplus.projection.sis;
 
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import net.daporkchop.lib.common.ref.Ref;
 import net.daporkchop.lib.common.ref.ThreadRef;
 import org.apache.sis.io.wkt.Convention;
@@ -39,6 +40,11 @@ public enum WKTStandard {
 
     public Object parse(@NonNull String wkt) throws ParseException {
         return this.format.get().parseObject(wkt);
+    }
+
+    @SneakyThrows(ParseException.class)
+    public Object parseUnchecked(@NonNull String wkt) {
+        return this.parse(wkt);
     }
 
     public String format(@NonNull Object object) {

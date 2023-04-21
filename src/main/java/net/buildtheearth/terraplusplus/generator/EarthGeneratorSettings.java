@@ -57,6 +57,7 @@ import net.daporkchop.lib.common.ref.Ref;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -168,6 +169,10 @@ public class EarthGeneratorSettings {
     @NonNull
     @Getter(onMethod_ = { @JsonGetter })
     protected final GeographicProjection projection;
+
+    @Getter(lazy = true)
+    private final CoordinateReferenceSystem crs = this.projection.projectedCRS();
+
     @NonNull
     @Getter(onMethod_ = { @JsonGetter })
     protected final String cwg;

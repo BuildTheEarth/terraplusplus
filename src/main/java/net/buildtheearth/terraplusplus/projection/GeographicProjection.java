@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
@@ -12,6 +13,7 @@ import net.buildtheearth.terraplusplus.config.TypedDeserializer;
 import net.buildtheearth.terraplusplus.config.TypedSerializer;
 import net.buildtheearth.terraplusplus.projection.epsg.EPSG3785;
 import net.buildtheearth.terraplusplus.projection.epsg.EPSG4326;
+import net.buildtheearth.terraplusplus.projection.epsg.EPSGProjection;
 import net.buildtheearth.terraplusplus.projection.sis.SISProjectionWrapper;
 import net.buildtheearth.terraplusplus.projection.sis.WKTStandard;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
@@ -22,11 +24,14 @@ import net.daporkchop.lib.common.math.PMath;
 import org.apache.sis.parameter.ParameterBuilder;
 import org.opengis.parameter.ParameterDescriptorGroup;
 import org.opengis.parameter.ParameterValueGroup;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Map;
+import java.util.Properties;
 
+import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
@@ -270,6 +275,39 @@ public interface GeographicProjection {
         return new ParameterBuilder().addName("empty").createGroup().createValue();
     }
 
+    @SneakyThrows(ParseException.class)
+    default CoordinateReferenceSystem projectedCRS() {
+        ObjectNode selfRootNode = TerraConstants.JSON_MAPPER.valueToTree(this);
+
+        double[] boundsGeo = this.boundsGeo();
+
+        StringBuilder wkt = new StringBuilder();
+        wkt.append("PROJCRS[\"WGS 84 / Reversed Axis Order / Terra++ Wrapped GeographicProjection: ").append(selfRootNode.toString().replace("\"", "\"\"")).append("\",\n")
+                .append("BASE").append(WKTStandard.WKT2_2015.format(TPP_GEO_CRS)).append(",\n")
+                .append("    BASEGEODCRS[\"WGS 84\",\n")
+                .append("        DATUM[\"World Geodetic System 1984\",\n")
+                .append("            ELLIPSOID[\"WGS 84\", 6378137, 298.257223563,\n")
+                .append("                LENGTHUNIT[\"metre\",1]]],\n")
+                .append("        PRIMEM[\"Greenwich\", 0,\n")
+                .append("            ANGLEUNIT[\"degree\", 0.0174532925199433]],\n")
+                .append("        ID[\"EPSG\", 4326]],\n")
+                .append("    CONVERSION[\"Terra++ Wrapped GeographicProjection: ").append(selfRootNode.toString().replace("\"", "\"\"")).append("\",\n")
+                .append("        METHOD[\"Terra++ Internal Projection\"],\n")
+                .append("        PARAMETER[\"type\", \"").append(selfRootNode.fieldNames().next().replace("\"", "\"\"")).append("\"],\n")
+                .append("        PARAMETER[\"json_args\", \"").append(selfRootNode.elements().next().toString().replace("\"", "\"\"")).append("\"]],\n")
+                .append("    CS[Cartesian, 2],\n")
+                .append("        AXIS[\"X\", east,\n")
+                .append("            ORDER[1],\n")
+                .append("            LENGTHUNIT[\"metre\", 1]],\n")
+                .append("        AXIS[\"Y\", south,\n")
+                .append("            ORDER[2],\n")
+                .append("            LENGTHUNIT[\"metre\", 1]],\n")
+                .append("    SCOPE[\"Minecraft.\"],\n")
+                .append("    AREA[\"World.\"],\n")
+                .append("    BBOX[").append(boundsGeo[0]).append(", ").append(boundsGeo[1]).append(", ").append(boundsGeo[2]).append(", ").append(boundsGeo[3]).append("]]");
+        return (CoordinateReferenceSystem) WKTStandard.WKT2_2015.parse(wkt.toString());
+    }
+
     class Deserializer extends TypedDeserializer<GeographicProjection> {
         @Override
         protected Map<String, Class<? extends GeographicProjection>> registry() {
@@ -293,15 +331,21 @@ public interface GeographicProjection {
             String type = s.substring(0, colonIndex);
             String arg = s.substring(colonIndex + 1);
             switch (type) {
-                case "EPSG": //TODO
-                    /*switch (s) {
-                        case "EPSG:3785":
-                        case "EPSG:3857": //TODO: EPSG:3857 actually uses the WGS84 ellipsoid rather than a sphere
+                case "EPSG": { //TODO
+                    switch (arg) {
+                        case "3785":
+                        case "3857": //TODO: EPSG:3857 actually uses the WGS84 ellipsoid rather than a sphere
                             return new EPSG3785();
-                        case "EPSG:4326":
+                        case "4326":
                             return new EPSG4326();
-                    }*/
-                    throw new IllegalArgumentException("unsupported projection: " + s);
+                    }
+
+                    CharSequence wkt = EPSGProjection.registry(WKTStandard.WKT2_2015).get(Integer.parseInt(arg));
+                    if (wkt != null) {
+                        return new SISProjectionWrapper(WKTStandard.WKT2_2015, wkt.toString());
+                    }
+                    break;
+                }
                 case "WKT2":
                     if (arg.startsWith("2015:")) {
                         return new SISProjectionWrapper(WKTStandard.WKT2_2015, arg.substring("2015:".length()));

@@ -1,8 +1,12 @@
 package net.buildtheearth.terraplusplus.projection.mercator;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.AccessLevel;
+import lombok.Getter;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
+import net.buildtheearth.terraplusplus.projection.sis.WKTStandard;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
  * Implementation of the Mercator projection, normalized between -1 and 1.
@@ -15,7 +19,6 @@ import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException
  */
 @JsonDeserialize
 public class CenteredMercatorProjection implements GeographicProjection {
-
     @Override
     public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
         OutOfProjectionBoundsException.checkInRange(x, y, 1, 1);

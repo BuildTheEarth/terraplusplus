@@ -48,12 +48,6 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 @JsonDeserialize
 @Getter
 public final class SISProjectionWrapper implements GeographicProjection {
-    private final CoordinateReferenceSystem geoCRS = TPP_GEO_CRS;
-    private final CoordinateReferenceSystem projectedCRS;
-
-    private final MathTransform toGeo;
-    private final MathTransform fromGeo;
-
     private static boolean canInvokeNoArgsConstructor() {
         for (StackTraceElement element : new Throwable().getStackTrace()) {
             if (AdvancedEarthGui.class.getName().equals(element.getClassName())) {
@@ -62,6 +56,12 @@ public final class SISProjectionWrapper implements GeographicProjection {
         }
         return false;
     }
+
+    private final CoordinateReferenceSystem geoCRS = TPP_GEO_CRS;
+    private final CoordinateReferenceSystem projectedCRS;
+
+    private final MathTransform toGeo;
+    private final MathTransform fromGeo;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public SISProjectionWrapper(

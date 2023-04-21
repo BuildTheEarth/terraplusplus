@@ -12,6 +12,7 @@ import net.buildtheearth.terraplusplus.projection.epsg.EPSG3785;
 import net.buildtheearth.terraplusplus.projection.epsg.EPSG4326;
 import net.buildtheearth.terraplusplus.projection.mercator.CenteredMercatorProjection;
 import net.buildtheearth.terraplusplus.projection.mercator.TransverseMercatorProjection;
+import net.buildtheearth.terraplusplus.projection.mercator.WebMercatorProjection;
 import net.buildtheearth.terraplusplus.projection.sis.SISProjectionWrapper;
 import net.buildtheearth.terraplusplus.projection.sis.WKTStandard;
 import net.buildtheearth.terraplusplus.projection.transform.OffsetProjectionTransform;
@@ -25,6 +26,8 @@ import org.junit.Test;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.SplittableRandom;
+
+import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 
 /**
  * @author DaPorkchop_
@@ -390,6 +393,54 @@ public class TestSISProjections {
 
     @Test
     @SneakyThrows(ParseException.class)
+    public void testWebMercatorSameAs3857() {
+        testProjectionAccuracy(
+                new WebMercatorProjection(),
+                new SISProjectionWrapper(WKTStandard.WKT2_2015,
+                        "PROJCRS[\"WGS 84 / Terra++ Scaled Pseudo-Mercator (Web Mercator)\",\n"
+                        + "    BASEGEODCRS[\"WGS 84\",\n"
+                        + "        DATUM[\"World Geodetic System 1984\",\n"
+                        + "            ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n"
+                        + "                LENGTHUNIT[\"metre\",1]]],\n"
+                        + "        PRIMEM[\"Greenwich\",0,\n"
+                        + "            ANGLEUNIT[\"degree\",0.0174532925199433]]],\n"
+                        + "    CONVERSION[\"unnamed\",\n"
+                        + "        METHOD[\"Popular Visualisation Pseudo Mercator\",\n"
+                        + "            ID[\"EPSG\",1024]],\n"
+                        + "        PARAMETER[\"Latitude of natural origin\",0,\n"
+                        + "            ANGLEUNIT[\"degree\",0.0174532925199433],\n"
+                        + "            ID[\"EPSG\",8801]],\n"
+                        + "        PARAMETER[\"Longitude of natural origin\",0,\n"
+                        + "            ANGLEUNIT[\"degree\",0.0174532925199433],\n"
+                        + "            ID[\"EPSG\",8802]],\n"
+                        //porkman added this: begin
+                        + "        PARAMETER[\"Scale factor at natural origin\",6.388019798183263E-6,\n"
+                        + "            SCALEUNIT[\"unity\",1],\n"
+                        + "            ID[\"EPSG\",8805]],\n"
+                        //porkman added this: end
+                        //porkman changed these parameter values from 0 to 128: begin
+                        + "        PARAMETER[\"False easting\",128.0,\n"
+                        + "            LENGTHUNIT[\"metre\",1],\n"
+                        + "            ID[\"EPSG\",8806]],\n"
+                        + "        PARAMETER[\"False northing\",-128.0,\n"
+                        + "            LENGTHUNIT[\"metre\",1],\n"
+                        + "            ID[\"EPSG\",8807]]],\n"
+                        //porkman changed these parameter values from 0 to 128: end
+                        + "    CS[Cartesian,2],\n"
+                        + "        AXIS[\"easting (X)\",east,\n"
+                        + "            ORDER[1],\n"
+                        + "            LENGTHUNIT[\"metre\",1]],\n"
+                        + "        AXIS[\"southing (Y)\",south,\n"
+                        + "            ORDER[2],\n"
+                        + "            LENGTHUNIT[\"metre\",1]],\n"
+                        + "    SCOPE[\"Web mapping and visualisation.\"],\n"
+                        + "    AREA[\"World between 85.06°S and 85.06°N.\"],\n"
+                        + "    BBOX[-85.06,-180,85.06,180]]"),
+                1e-12d); //this is slightly less accurate
+    }
+
+    @Test
+    @SneakyThrows(ParseException.class)
     public void testEPSG4326AgainstReal() {
         testProjectionAccuracy(
                 new SwapAxesProjectionTransform(new EPSG4326()),
@@ -438,7 +489,7 @@ public class TestSISProjections {
 
         testProjectionAccuracy(
                 new EPSG4326(),
-                new SISProjectionWrapper(TerraConstants.TPP_GEO_CRS));
+                new SISProjectionWrapper(TPP_GEO_CRS));
     }
 
     @Test
@@ -463,6 +514,10 @@ public class TestSISProjections {
                         + "    SCOPE[\"Horizontal component of 3D system.\"],\n"
                         + "    AREA[\"World.\"],\n"
                         + "    BBOX[-90,-180,90,180]]"));
+
+        testProjectionAccuracy(
+                new EquirectangularProjection(),
+                new SISProjectionWrapper(TPP_GEO_CRS));
     }
 
     @Test
