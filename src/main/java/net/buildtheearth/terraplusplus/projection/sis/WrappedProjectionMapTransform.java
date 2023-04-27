@@ -7,6 +7,7 @@ import lombok.NonNull;
 import lombok.With;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
+import net.buildtheearth.terraplusplus.projection.GeographicProjectionHelper;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
 import org.apache.sis.geometry.Envelope2D;
@@ -73,7 +74,8 @@ public final class WrappedProjectionMapTransform extends AbstractMathTransform2D
     }
 
     private Matrix2 derivative(double x, double y) throws OutOfProjectionBoundsException {
-        return this.fromGeo ? this.projection.fromGeoDerivative(x, y) : this.projection.toGeoDerivative(x, y);
+        //return this.fromGeo ? this.projection.fromGeoDerivative(x, y) : this.projection.toGeoDerivative(x, y);
+        return GeographicProjectionHelper.defaultDerivative(projection, x, y, this.fromGeo);
     }
 
     @Override

@@ -7,6 +7,7 @@ import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.projection.sis.WKTStandard;
 import net.buildtheearth.terraplusplus.util.TerraUtils;
+import org.apache.sis.referencing.operation.matrix.Matrix2;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
@@ -74,10 +75,27 @@ public class WebMercatorProjection implements GeographicProjection {
         if (x < 0 || y < 0 || x > SCALE_FROM || y > SCALE_FROM) {
             throw OutOfProjectionBoundsException.get();
         }
+
         return new double[]{
                 Math.toDegrees(SCALE_TO * x * TerraUtils.TAU - Math.PI),
                 Math.toDegrees(Math.atan(Math.exp(Math.PI - SCALE_TO * y * TerraUtils.TAU)) * 2 - Math.PI / 2)
         };
+    }
+
+    @Override
+    public Matrix2 toGeoDerivative(double x, double y) throws OutOfProjectionBoundsException {
+        if (x < 0 || y < 0 || x > SCALE_FROM || y > SCALE_FROM) {
+            throw OutOfProjectionBoundsException.get();
+        }
+
+        double m00 = Math.toDegrees(SCALE_TO * TerraUtils.TAU);
+        double m01 = 0.0d;
+        double m10 = 0.0d;
+
+        //https://www.wolframalpha.com/input?i=deriv+%28atan%28exp%28pi+-+y+*+s+*+2+*+pi%29%29+*+2+-+pi%2F2%29+*+180+%2F+pi
+        double m11 = (-720.0d * SCALE_TO * Math.exp(TerraUtils.TAU * SCALE_TO * y + Math.PI)) / (Math.exp(4.0d * Math.PI * SCALE_TO * y) + Math.exp(2.0d * Math.PI));
+
+        return new Matrix2(m00, m01, m10, m11);
     }
 
     @Override
@@ -87,6 +105,20 @@ public class WebMercatorProjection implements GeographicProjection {
                 SCALE_FROM * (Math.toRadians(longitude) + Math.PI) / TerraUtils.TAU,
                 SCALE_FROM * (Math.PI - Math.log(Math.tan((Math.PI / 2 + Math.toRadians(latitude)) / 2))) / TerraUtils.TAU
         };
+    }
+
+    @Override
+    public Matrix2 fromGeoDerivative(double longitude, double latitude) throws OutOfProjectionBoundsException {
+        OutOfProjectionBoundsException.checkInRange(longitude, latitude, 180, LIMIT_LATITUDE);
+
+        double m00 = SCALE_FROM * Math.toRadians(1.0d) / TerraUtils.TAU;
+        double m01 = 0.0d;
+        double m10 = 0.0d;
+
+        //https://www.wolframalpha.com/input?i=d%2Fdl+s+*+%28pi+-+log%28tan%28%28pi+%2F+2+%2B+%28l+%2F180+*+pi%29%29+%2F+2%29%29%29+%2F+%282+*+pi%29
+        double m11 = -SCALE_FROM / (720.0d * Math.cos((90.0d + latitude) * Math.PI / 360.0d) * Math.sin((90.0d + latitude) * Math.PI / 360.0d));
+
+        return new Matrix2(m00, m01, m10, m11);
     }
 
     @Override

@@ -2,6 +2,7 @@ package net.buildtheearth.terraplusplus.projection;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
+import org.apache.sis.referencing.operation.matrix.Matrix2;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
@@ -23,6 +24,13 @@ public class EquirectangularProjection implements GeographicProjection {
         return new double[]{ x, y };
     }
 
+    @Override
+    public Matrix2 toGeoDerivative(double x, double y) throws OutOfProjectionBoundsException {
+        OutOfProjectionBoundsException.checkLongitudeLatitudeInRange(x, y);
+
+        return new Matrix2(1.0d, 0.0d, 0.0d, 1.0d);
+    }
+
     /**
      * Converts geographic coordinates to map coordinates
      *
@@ -34,6 +42,13 @@ public class EquirectangularProjection implements GeographicProjection {
     public double[] fromGeo(double longitude, double latitude) throws OutOfProjectionBoundsException {
         OutOfProjectionBoundsException.checkLongitudeLatitudeInRange(longitude, latitude);
         return new double[]{ longitude, latitude };
+    }
+
+    @Override
+    public Matrix2 fromGeoDerivative(double longitude, double latitude) throws OutOfProjectionBoundsException {
+        OutOfProjectionBoundsException.checkLongitudeLatitudeInRange(longitude, latitude);
+
+        return new Matrix2(1.0d, 0.0d, 0.0d, 1.0d);
     }
 
     @Override
