@@ -25,6 +25,7 @@ public class WebMercatorProjection implements GeographicProjection {
     public static final double SCALE_FROM = 256.0d;
     public static final double SCALE_TO = 1.0d / SCALE_FROM;
 
+    //TODO: figure out if this will break anything
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
     private static final CoordinateReferenceSystem PROJECTED_CRS = (CoordinateReferenceSystem) WKTStandard.WKT2_2015.parseUnchecked(
             //based on EPSG:3857

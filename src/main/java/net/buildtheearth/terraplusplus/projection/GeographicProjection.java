@@ -22,14 +22,13 @@ import net.buildtheearth.terraplusplus.util.geo.GeographicCoordinates;
 import net.buildtheearth.terraplusplus.util.geo.ProjectedCoordinates2d;
 import net.daporkchop.lib.common.math.PMath;
 import org.apache.sis.parameter.ParameterBuilder;
-import org.opengis.parameter.ParameterDescriptorGroup;
+import org.apache.sis.referencing.operation.matrix.Matrix2;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Map;
-import java.util.Properties;
 
 import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
@@ -95,6 +94,14 @@ public interface GeographicProjection {
     default ProjectedCoordinates2d fromGeo(@NonNull GeographicCoordinates coordinates) throws OutOfProjectionBoundsException {
         double[] map = this.fromGeo(coordinates.longitudeDegrees(), coordinates.latitudeDegrees());
         return ProjectedCoordinates2d.ofXY(map[0], map[1]);
+    }
+
+    default Matrix2 toGeoDerivative(double x, double y) throws OutOfProjectionBoundsException {
+        return GeographicProjectionHelper.defaultDerivative(this, x, y, false);
+    }
+
+    default Matrix2 fromGeoDerivative(double longitude, double latitude) throws OutOfProjectionBoundsException {
+        return GeographicProjectionHelper.defaultDerivative(this, longitude, latitude, true);
     }
 
     /**
@@ -299,12 +306,12 @@ public interface GeographicProjection {
                 .append("        AXIS[\"X\", east,\n")
                 .append("            ORDER[1],\n")
                 .append("            LENGTHUNIT[\"metre\", 1]],\n")
-                .append("        AXIS[\"Y\", south,\n")
+                .append("        AXIS[\"Y\", north,\n")
                 .append("            ORDER[2],\n")
                 .append("            LENGTHUNIT[\"metre\", 1]],\n")
                 .append("    SCOPE[\"Minecraft.\"],\n")
                 .append("    AREA[\"World.\"],\n")
-                .append("    BBOX[").append(boundsGeo[0]).append(", ").append(boundsGeo[1]).append(", ").append(boundsGeo[2]).append(", ").append(boundsGeo[3]).append("]]");
+                .append("    BBOX[").append(boundsGeo[1]).append(", ").append(boundsGeo[0]).append(", ").append(boundsGeo[3]).append(", ").append(boundsGeo[2]).append("]]");
         return (CoordinateReferenceSystem) WKTStandard.WKT2_2015.parse(wkt.toString());
     }
 

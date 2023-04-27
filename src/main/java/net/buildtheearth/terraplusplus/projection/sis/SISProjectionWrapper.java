@@ -11,12 +11,14 @@ import net.buildtheearth.terraplusplus.control.AdvancedEarthGui;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.daporkchop.lib.common.function.throwing.EConsumer;
+import org.apache.sis.geometry.DirectPosition2D;
 import org.apache.sis.geometry.Envelopes;
 import org.apache.sis.geometry.GeneralEnvelope;
 import org.apache.sis.internal.referencing.AxisDirections;
 import org.apache.sis.parameter.DefaultParameterValueGroup;
 import org.apache.sis.parameter.ParameterBuilder;
 import org.apache.sis.referencing.CRS;
+import org.apache.sis.referencing.operation.matrix.Matrix2;
 import org.apache.sis.referencing.operation.transform.AbstractMathTransform;
 import org.apache.sis.referencing.operation.transform.DomainDefinition;
 import org.opengis.geometry.Envelope;
@@ -104,6 +106,18 @@ public final class SISProjectionWrapper implements GeographicProjection {
         double[] point = { longitude, latitude };
         this.fromGeo.transform(point, 0, point, 0, 1);
         return point;
+    }
+
+    @Override
+    @SneakyThrows(TransformException.class)
+    public Matrix2 toGeoDerivative(double x, double y) throws OutOfProjectionBoundsException {
+        return Matrix2.castOrCopy(this.toGeo.derivative(new DirectPosition2D(x, y)));
+    }
+
+    @Override
+    @SneakyThrows(TransformException.class)
+    public Matrix2 fromGeoDerivative(double longitude, double latitude) throws OutOfProjectionBoundsException {
+        return Matrix2.castOrCopy(this.fromGeo.derivative(new DirectPosition2D(longitude, latitude)));
     }
 
     private Optional<double[]> tryExtractBoundsFromAxes(@NonNull CoordinateSystem cs, boolean allowInfinity) {

@@ -18,6 +18,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 public final class EPSG3785 extends EPSGProjection {
     private static final WebMercatorProjection WEB_MERCATOR_PROJECTION = new WebMercatorProjection();
 
+    //TODO: figure out if this will break anything
     @Getter(value = AccessLevel.PRIVATE, lazy = true)
     private static final CoordinateReferenceSystem PROJECTED_CRS = (CoordinateReferenceSystem) WKTStandard.WKT2_2015.parseUnchecked(
             //based on EPSG:3857

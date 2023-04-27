@@ -12,15 +12,14 @@ import net.buildtheearth.terraplusplus.util.TerraConstants;
 import org.apache.sis.geometry.Envelope2D;
 import org.apache.sis.parameter.DefaultParameterValueGroup;
 import org.apache.sis.referencing.operation.matrix.Matrix2;
-import org.apache.sis.referencing.operation.transform.AbstractMathTransform;
+import org.apache.sis.referencing.operation.transform.AbstractMathTransform2D;
 import org.apache.sis.referencing.operation.transform.DomainDefinition;
 import org.apache.sis.util.ComparisonMode;
 import org.opengis.geometry.Envelope;
 import org.opengis.parameter.InvalidParameterValueException;
 import org.opengis.parameter.ParameterDescriptorGroup;
 import org.opengis.parameter.ParameterValueGroup;
-import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.Matrix;
+import org.opengis.referencing.operation.MathTransform2D;
 import org.opengis.referencing.operation.TransformException;
 
 import java.util.Optional;
@@ -31,7 +30,7 @@ import static net.buildtheearth.terraplusplus.projection.sis.WrappedProjectionOp
  * @author DaPorkchop_
  */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public final class WrappedProjectionMapTransform extends AbstractMathTransform {
+public final class WrappedProjectionMapTransform extends AbstractMathTransform2D {
     private final GeographicProjection projection;
 
     private final DefaultParameterValueGroup params;
@@ -60,16 +59,6 @@ public final class WrappedProjectionMapTransform extends AbstractMathTransform {
     }
 
     @Override
-    public int getSourceDimensions() {
-        return 2;
-    }
-
-    @Override
-    public int getTargetDimensions() {
-        return 2;
-    }
-
-    @Override
     public Optional<Envelope> getDomain(@NonNull DomainDefinition criteria) throws TransformException {
         double[] bounds = this.fromGeo ? this.projection.boundsGeo() : this.projection.bounds();
 
@@ -83,53 +72,31 @@ public final class WrappedProjectionMapTransform extends AbstractMathTransform {
         return this.fromGeo ? this.projection.fromGeo(x, y) : this.projection.toGeo(x, y);
     }
 
+    private Matrix2 derivative(double x, double y) throws OutOfProjectionBoundsException {
+        return this.fromGeo ? this.projection.fromGeoDerivative(x, y) : this.projection.toGeoDerivative(x, y);
+    }
+
     @Override
-    public Matrix transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, boolean derivate) throws TransformException {
+    public Matrix2 transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, boolean derivate) throws TransformException {
         double srcX = srcPts[srcOff + 0];
         double srcY = srcPts[srcOff + 1];
 
-        double[] result00 = this.transform(srcX, srcY);
+        if (dstPts != null) { //may be null if only the derivative is requested
+            double[] result00 = this.transform(srcX, srcY);
 
-        dstPts[dstOff + 0] = result00[0];
-        dstPts[dstOff + 1] = result00[1];
+            dstPts[dstOff + 0] = result00[0];
+            dstPts[dstOff + 1] = result00[1];
+        }
 
         if (!derivate) {
             return null;
         }
 
-        final double d = 1e-7d;
-
-        double f01;
-        double[] result01;
-        try {
-            f01 = 1.0d;
-            result01 = this.transform(srcX, srcY + d);
-        } catch (OutOfProjectionBoundsException e) {
-            f01 = -1.0d;
-            result01 = this.transform(srcX, srcY - d);
-        }
-
-        double f10;
-        double[] result10;
-        try {
-            f10 = 1.0d;
-            result10 = this.transform(srcX + d, srcY);
-        } catch (OutOfProjectionBoundsException e) {
-            f10 = -1.0d;
-            result10 = this.transform(srcX - d, srcY);
-        }
-
-        Matrix2 mat = new Matrix2(
-                (result10[0] - result00[0]) * f10,
-                (result01[0] - result00[0]) * f01,
-                (result10[1] - result00[1]) * f10,
-                (result01[1] - result00[1]) * f01);
-        mat.normalizeColumns();
-        return mat;
+        return this.derivative(srcX, srcY);
     }
 
     @Override
-    public MathTransform inverse() {
+    public MathTransform2D inverse() {
         WrappedProjectionMapTransform inverse = this.inverse;
         if (inverse == null) {
             synchronized (this) {

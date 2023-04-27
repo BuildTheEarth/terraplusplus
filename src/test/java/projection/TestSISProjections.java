@@ -20,6 +20,7 @@ import net.buildtheearth.terraplusplus.projection.transform.ScaleProjectionTrans
 import net.buildtheearth.terraplusplus.projection.transform.SwapAxesProjectionTransform;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.minecraft.init.Bootstrap;
+import org.apache.sis.referencing.operation.matrix.Matrix2;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -42,6 +43,7 @@ public class TestSISProjections {
 
     protected static void testProjectionAccuracy(@NonNull GeographicProjection proj1, @NonNull GeographicProjection proj2) {
         testProjectionAccuracy(proj1, proj2, DEFAULT_D);
+        testProjectionAccuracy(proj1, new SISProjectionWrapper(proj2.projectedCRS()), DEFAULT_D);
     }
 
     @SneakyThrows(OutOfProjectionBoundsException.class)
@@ -95,6 +97,16 @@ public class TestSISProjections {
             result2 = proj2.toGeo(x, y);
             assert approxEquals(result1, result2, d)
                     : "toGeo #" + i + " (" + lat + "°N, " + lon + "°E) -> (" + x + ", " + y + "): " + Arrays.toString(result1) + " != " + Arrays.toString(result2);
+
+            Matrix2 deriv1 = proj1.fromGeoDerivative(lon, lat);
+            Matrix2 deriv2 = proj2.fromGeoDerivative(lon, lat);
+            assert veryApproximateEquals(deriv1, deriv2, 0.01d)
+                    : "fromGeoDerivative #" + i + " (" + lat + "°N, " + lon + "°E):\n" + deriv1 + "!=\n" + deriv2;
+
+            deriv1 = proj1.toGeoDerivative(x, y);
+            deriv2 = proj2.toGeoDerivative(x, y);
+            assert veryApproximateEquals(deriv1, deriv2, 0.01d)
+                    : "toGeoDerivative #" + i + " (" + lat + "°N, " + lon + "°E) -> (" + x + ", " + y + "):\n" + deriv1 + "!=\n" + deriv2;
         }
     }
 
@@ -658,6 +670,39 @@ public class TestSISProjections {
             }
         }
 
+        return true;
+    }
+
+    private static boolean approxEquals(Matrix2 a, Matrix2 b) {
+        return approxEquals(a, b, DEFAULT_D);
+    }
+
+    private static boolean approxEquals(Matrix2 a, Matrix2 b, double d) {
+        if (a == b) {
+            return true;
+        } else if (a == null || b == null) {
+            return false;
+        }
+
+        return approxEquals(a.getElements(), b.getElements(), d);
+    }
+
+    private static boolean veryApproximateEquals(Matrix2 a, Matrix2 b, double maxErrorInPercent) {
+        if (a == b) {
+            return true;
+        } else if (a == null || b == null) {
+            return false;
+        }
+
+        for (int row = 0; row < 2; row++) {
+            for (int col = 0; col < 2; col++) {
+                double da = a.getElement(row, col);
+                double db = b.getElement(row, col);
+                if (Math.abs(da - db) / Math.max(Math.abs(da), Math.abs(db)) >= maxErrorInPercent) {
+                    return false;
+                }
+            }
+        }
         return true;
     }
 
