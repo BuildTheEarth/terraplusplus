@@ -11,7 +11,8 @@ import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.sis.WKTStandard;
 import net.daporkchop.lib.common.function.io.IOSupplier;
-import net.daporkchop.lib.common.ref.Ref;
+import net.daporkchop.lib.common.reference.ReferenceStrength;
+import net.daporkchop.lib.common.reference.cache.Cached;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
@@ -28,16 +29,16 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 @RequiredArgsConstructor
 @JsonSerialize
 public abstract class EPSGProjection implements GeographicProjection {
-    private static volatile Ref<ImmutableMap<Integer, CharSequence>> REGISTRY;
+    private static volatile Cached<ImmutableMap<Integer, CharSequence>> REGISTRY;
 
     public static ImmutableMap<Integer, CharSequence> registry(@NonNull WKTStandard standard) {
         checkArg(standard == WKTStandard.WKT2_2015, standard);
 
-        Ref<ImmutableMap<Integer, CharSequence>> registry = REGISTRY;
+        Cached<ImmutableMap<Integer, CharSequence>> registry = REGISTRY;
         if (registry == null) {
             synchronized (EPSGProjection.class) {
                 if ((registry = REGISTRY) == null) {
-                    registry = REGISTRY = Ref.soft((IOSupplier<ImmutableMap<Integer, CharSequence>>) () -> {
+                    registry = REGISTRY = Cached.global((IOSupplier<ImmutableMap<Integer, CharSequence>>) () -> {
                         Properties properties = new Properties();
                         try (InputStream in = new BufferedInputStream(new LzmaInputStream(EPSGProjection.class.getResourceAsStream("epsg_database_wkt2_2015.properties.lzma")), 1 << 16)) {
                             properties.load(in);
@@ -48,7 +49,7 @@ public abstract class EPSGProjection implements GeographicProjection {
                             builder.put(Integer.parseInt(entry.getKey().toString()), new AsciiString(entry.getValue().toString()));
                         }
                         return builder.build();
-                    });
+                    }, ReferenceStrength.SOFT);
                 }
             }
         }

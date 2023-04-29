@@ -3,8 +3,8 @@ package net.buildtheearth.terraplusplus.util.bvh;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
-import net.daporkchop.lib.common.ref.Ref;
-import net.daporkchop.lib.common.ref.ThreadRef;
+import net.daporkchop.lib.common.reference.ReferenceStrength;
+import net.daporkchop.lib.common.reference.cache.Cached;
 
 import java.lang.reflect.Array;
 import java.util.ArrayDeque;
@@ -35,7 +35,7 @@ final class QuadtreeBVH<V extends Bounds2d> implements BVH<V> {
      */
     protected static final double MIN_LEAF_SIZE = 16.0d;
 
-    protected static final Ref<ArrayDeque<ArrayDeque<?>>> STACK_CACHE = ThreadRef.soft(ArrayDeque::new);
+    protected static final Cached<ArrayDeque<ArrayDeque<?>>> STACK_CACHE = Cached.threadLocal(ArrayDeque::new, ReferenceStrength.SOFT);
 
     @Getter(AccessLevel.NONE)
     protected final Node<V> root;

@@ -15,7 +15,8 @@ import net.buildtheearth.terraplusplus.projection.transform.ProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ScaleProjectionTransform;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.daporkchop.lib.common.function.io.IOSupplier;
-import net.daporkchop.lib.common.ref.Ref;
+import net.daporkchop.lib.common.reference.ReferenceStrength;
+import net.daporkchop.lib.common.reference.cache.Cached;
 import net.daporkchop.lib.common.util.PArrays;
 import net.daporkchop.lib.common.util.PorkUtil;
 import net.minecraft.client.Minecraft;
@@ -79,8 +80,9 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 public class AdvancedEarthGui extends GuiScreen {
     protected static final int SRC_W = 2048;
     protected static final int SRC_H = 1024;
-    protected static final Ref<int[]> SRC_CACHE = Ref.soft((IOSupplier<int[]>) () ->
-            ImageIO.read(AdvancedEarthGui.class.getResource("map.png")).getRGB(0, 0, SRC_W, SRC_H, null, 0, SRC_W));
+    protected static final Cached<int[]> SRC_CACHE = Cached.threadLocal((IOSupplier<int[]>) () ->
+            ImageIO.read(AdvancedEarthGui.class.getResource("map.png")).getRGB(0, 0, SRC_W, SRC_H, null, 0, SRC_W),
+            ReferenceStrength.SOFT);
 
     protected static final int VERTICAL_PADDING = 32;
 
@@ -669,7 +671,7 @@ public class AdvancedEarthGui extends GuiScreen {
 
             public RootEntry(GeographicProjection projection, AdvancedEarthGui gui, int x, int y, int width) {
                 String projectionName = GlobalParseRegistries.PROJECTIONS.inverse().get(projection.getClass());
-                this.initialIndex = this.index = PArrays.indexOf(PROJECTION_NAMES, projectionName);
+                this.initialIndex = this.index = PArrays.linearSearch(PROJECTION_NAMES, projectionName);
 
                 this.button = gui.addButton(new EntryButton(x, y, width, I18n.format(this.fieldName = TerraConstants.MODID + ".gui.projection." + projectionName)) {
                     @Override
@@ -721,7 +723,7 @@ public class AdvancedEarthGui extends GuiScreen {
                         this.textFields[i] = textField;
                     } else if (descriptor.getValidValues() != null || descriptor.getValueClass().isEnum()) {
                         Object[] values = descriptor.getValidValues() != null ? descriptor.getValidValues().toArray() : descriptor.getValueClass().getEnumConstants();
-                        int currentIndex = notNegative(PArrays.indexOf(values, entry.getValue()));
+                        int currentIndex = notNegative(PArrays.linearSearch(values, entry.getValue()));
 
                         this.buttons[i] = gui.addButton(new EntryButton(componentX, componentY, componentW, I18n.format(this.fieldName + '.' + entry.getKey() + '.' + entry.getValue())) {
                             @Override

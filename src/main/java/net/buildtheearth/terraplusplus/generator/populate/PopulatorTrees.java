@@ -9,8 +9,8 @@ import net.buildtheearth.terraplusplus.generator.CachedChunkData;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorPipelines;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
 import net.buildtheearth.terraplusplus.generator.data.DataBakerTreeCover;
-import net.daporkchop.lib.common.ref.Ref;
-import net.daporkchop.lib.common.ref.ThreadRef;
+import net.daporkchop.lib.common.reference.ReferenceStrength;
+import net.daporkchop.lib.common.reference.cache.Cached;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -34,7 +34,7 @@ public final class PopulatorTrees implements IEarthPopulator {
             Blocks.SNOW,
             Blocks.MYCELIUM);
 
-    protected static final Ref<byte[]> RNG_CACHE = ThreadRef.soft(() -> new byte[(ICube.SIZE >> 1) * (ICube.SIZE >> 1)]);
+    protected static final Cached<byte[]> RNG_CACHE = Cached.threadLocal(() -> new byte[(ICube.SIZE >> 1) * (ICube.SIZE >> 1)], ReferenceStrength.WEAK);
 
     @Override
     public void populate(World world, Random random, CubePos pos, Biome biome, CachedChunkData[] datas, EarthGeneratorSettings settings) {

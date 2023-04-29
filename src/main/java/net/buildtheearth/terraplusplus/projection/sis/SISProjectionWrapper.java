@@ -10,7 +10,7 @@ import lombok.SneakyThrows;
 import net.buildtheearth.terraplusplus.control.AdvancedEarthGui;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
-import net.daporkchop.lib.common.function.throwing.EConsumer;
+import net.daporkchop.lib.common.function.exception.EConsumer;
 import org.apache.sis.geometry.DirectPosition2D;
 import org.apache.sis.geometry.Envelopes;
 import org.apache.sis.geometry.GeneralEnvelope;
