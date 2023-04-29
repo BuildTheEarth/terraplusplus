@@ -88,10 +88,10 @@ public class EarthGeneratorSettings {
     static {
         try {
             try (InputStream in = EarthGeneratorSettings.class.getResourceAsStream("default_generator_settings.json5")) {
-                DEFAULT_SETTINGS = new String(StreamUtil.toByteArray(in));
+                DEFAULT_SETTINGS = new String(StreamUtil.toByteArray(in), StandardCharsets.UTF_8);
             }
             try (InputStream in = EarthGeneratorSettings.class.getResourceAsStream("bte_generator_settings.json5")) {
-                BTE_DEFAULT_SETTINGS = new String(StreamUtil.toByteArray(in));
+                BTE_DEFAULT_SETTINGS = new String(StreamUtil.toByteArray(in), StandardCharsets.UTF_8);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

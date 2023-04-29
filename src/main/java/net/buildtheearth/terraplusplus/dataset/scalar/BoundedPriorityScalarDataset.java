@@ -26,11 +26,6 @@ public class BoundedPriorityScalarDataset implements Bounds2d, IScalarDataset, C
     // IScalarDataset
 
     @Override
-    public CompletableFuture<Double> getAsync(@NonNull double[] point) throws OutOfProjectionBoundsException {
-        return this.delegate.getAsync(point);
-    }
-
-    @Override
     public CompletableFuture<Double> getAsync(double lon, double lat) throws OutOfProjectionBoundsException {
         return this.delegate.getAsync(lon, lat);
     }
@@ -38,6 +33,11 @@ public class BoundedPriorityScalarDataset implements Bounds2d, IScalarDataset, C
     @Override
     public CompletableFuture<double[]> getAsync(@NonNull CornerBoundingBox2d bounds, int sizeX, int sizeZ) throws OutOfProjectionBoundsException {
         return this.delegate.getAsync(bounds, sizeX, sizeZ);
+    }
+
+    @Override
+    public CompletableFuture<double[]> getAsync(@NonNull double[] points, int count) throws OutOfProjectionBoundsException {
+        return this.delegate.getAsync(points, count);
     }
 
     @Override

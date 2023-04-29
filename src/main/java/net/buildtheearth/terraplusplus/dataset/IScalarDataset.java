@@ -13,14 +13,6 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface IScalarDataset {
     /**
-     * @param point the point
-     * @see #getAsync(double, double)
-     */
-    default CompletableFuture<Double> getAsync(@NonNull double[] point) throws OutOfProjectionBoundsException {
-        return this.getAsync(point[0], point[1]);
-    }
-
-    /**
      * Asynchronously gets a single value at the given point.
      *
      * @param lon the longitude
@@ -37,6 +29,15 @@ public interface IScalarDataset {
      * @return a {@link CompletableFuture} which will be completed with the values
      */
     CompletableFuture<double[]> getAsync(@NonNull CornerBoundingBox2d bounds, int sizeX, int sizeZ) throws OutOfProjectionBoundsException;
+
+    /**
+     * Asynchronously gets a bunch of values at the given coordinates.
+     *
+     * @param points an array of points
+     * @param count  the number of points
+     * @return a {@link CompletableFuture} which will be completed with the values
+     */
+    CompletableFuture<double[]> getAsync(@NonNull double[] points, int count) throws OutOfProjectionBoundsException;
 
     /**
      * @return the number of meters between sample points (in geographic/unprojected coordinate space)

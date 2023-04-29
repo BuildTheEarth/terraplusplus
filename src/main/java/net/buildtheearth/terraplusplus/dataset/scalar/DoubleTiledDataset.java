@@ -129,6 +129,11 @@ public abstract class DoubleTiledDataset extends TiledHttpDataset<double[]> impl
         return new State(localBounds, paddedLocalBounds).future();
     }
 
+    @Override
+    public CompletableFuture<double[]> getAsync(@NonNull double[] points, int count) throws OutOfProjectionBoundsException {
+        return null;
+    }
+
     @RequiredArgsConstructor
     protected abstract class AbstractState<R> implements Function<Void, R>, IntToDoubleBiFunction {
         final Long2ObjectMap<double[]> loadedTiles = new Long2ObjectOpenHashMap<>();
