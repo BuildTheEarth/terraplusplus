@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.experimental.UtilityClass;
 import net.buildtheearth.terraplusplus.util.jackson.mixin.BiomeMixin;
 import net.buildtheearth.terraplusplus.util.jackson.mixin.BlockStateMixin;
+import net.daporkchop.lib.common.pool.array.ArrayAllocator;
+import net.daporkchop.lib.common.reference.ReferenceStrength;
+import net.daporkchop.lib.common.reference.cache.Cached;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.biome.Biome;
 import org.apache.sis.referencing.CommonCRS;
@@ -48,4 +51,6 @@ public class TerraConstants {
     public final double EARTH_POLAR_CIRCUMFERENCE = 40008000;
 
     public final double[] EMPTY_DOUBLE_ARRAY = new double[0];
+
+    public static final Cached<ArrayAllocator<double[]>> DOUBLE_ALLOC = Cached.threadLocal(() -> ArrayAllocator.pow2(double.class, ReferenceStrength.STRONG, 16), ReferenceStrength.SOFT);
 }
