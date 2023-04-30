@@ -65,7 +65,7 @@ public final class AxisAlignedGridPointArray2D extends AbstractPointArray2D {
 
     @Override
     public int points(@NonNull double[] dst, @NotNegative int dstOff) {
-        int totalValues = this.coordinatesSize();
+        int totalValues = this.totalValueSize();
         checkRangeLen(dst.length, dstOff, totalValues);
 
         for (int writerIndex = dstOff, x = 0; x < this.sizeX; x++) {
@@ -102,5 +102,10 @@ public final class AxisAlignedGridPointArray2D extends AbstractPointArray2D {
         }
 
         return new TransformedGridPointArray2D(this, crs, operation);
+    }
+
+    @Override
+    public double[] estimatedPointDensity() {
+        return new double[] { this.indexScaleX, this.indexScaleY };
     }
 }

@@ -4,13 +4,16 @@ import lombok.NonNull;
 import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
+import net.buildtheearth.terraplusplus.util.geo.pointarray.PointArray2D;
 
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.DoubleStream;
 
 import static java.lang.Math.*;
+import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
@@ -52,6 +55,18 @@ public class MultiresScalarDataset implements IScalarDataset {
         //fall back to max resolution dataset if none match (the query BB is higher-res than the best dataset)
         IScalarDataset dataset = entry != null ? entry.getValue() : this.maxResDataset;
         return dataset.getAsync(bounds, sizeX, sizeZ);
+    }
+
+    @Override
+    public CompletableFuture<double[]> getAsync(@NonNull PointArray2D points) throws OutOfProjectionBoundsException {
+        //calculate the degrees/sample of the query points
+        double dps = DoubleStream.of(points.convert(TPP_GEO_CRS, 0.1d).estimatedPointDensity()).average().getAsDouble();
+
+        //find the dataset whose resolution is closest (rounding up)
+        Map.Entry<Double, IScalarDataset> entry = this.datasetsByDegreesPerSample.floorEntry(dps);
+        //fall back to max resolution dataset if none match (the query BB is higher-res than the best dataset)
+        IScalarDataset dataset = entry != null ? entry.getValue() : this.maxResDataset;
+        return dataset.getAsync(points);
     }
 
     @Override

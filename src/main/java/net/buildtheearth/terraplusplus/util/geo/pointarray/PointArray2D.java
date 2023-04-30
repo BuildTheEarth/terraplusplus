@@ -16,7 +16,7 @@ public interface PointArray2D extends PointArray {
     }
 
     @Override
-    default @NotNegative int coordinatesSize() {
+    default @NotNegative int totalValueSize() {
         return Math.multiplyExact(this.size(), 2);
     }
 

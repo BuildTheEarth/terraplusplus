@@ -15,7 +15,11 @@ import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraplusplus.util.IntToDoubleBiFunction;
 import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
+import net.buildtheearth.terraplusplus.util.compat.sis.SISHelper;
+import net.buildtheearth.terraplusplus.util.geo.pointarray.PointArray2D;
 import net.daporkchop.lib.common.math.BinMath;
+import net.daporkchop.lib.common.pool.array.ArrayAllocator;
+import net.daporkchop.lib.common.util.PorkUtil;
 import net.minecraft.util.math.ChunkPos;
 
 import java.util.Arrays;
@@ -23,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 import static java.lang.Math.*;
+import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
@@ -85,7 +90,7 @@ public abstract class DoubleTiledDataset extends TiledHttpDataset<double[]> impl
     @Override
     public CompletableFuture<double[]> getAsync(@NonNull CornerBoundingBox2d bounds, int sizeX, int sizeZ) throws OutOfProjectionBoundsException {
         if (notNegative(sizeX, "sizeX") == 0 | notNegative(sizeZ, "sizeZ") == 0) { //no input points -> no output points, ez
-            return CompletableFuture.completedFuture(new double[0]);
+            return CompletableFuture.completedFuture(EMPTY_DOUBLE_ARRAY);
         }
 
         class State extends AbstractState<double[]> {
@@ -130,8 +135,45 @@ public abstract class DoubleTiledDataset extends TiledHttpDataset<double[]> impl
     }
 
     @Override
-    public CompletableFuture<double[]> getAsync(@NonNull double[] points, int count) throws OutOfProjectionBoundsException {
-        return null;
+    public CompletableFuture<double[]> getAsync(@NonNull PointArray2D points) throws OutOfProjectionBoundsException {
+        if (points.size() == 0) {
+            return CompletableFuture.completedFuture(EMPTY_DOUBLE_ARRAY);
+        }
+
+        class State extends AbstractState<double[]> {
+            protected final PointArray2D points;
+
+            public State(Bounds2d bounds, PointArray2D points) {
+                super(bounds);
+                this.points = points;
+            }
+
+            @Override
+            public double[] apply(Void unused) { //stage 2: actually compute the values now that the tiles have been fetched
+                BlendMode blend = DoubleTiledDataset.this.blend;
+
+                int size = this.points.size();
+
+                //read coordinate values into an array
+                ArrayAllocator<double[]> alloc = DOUBLE_ALLOC.get();
+                double[] pointsBuffer = alloc.atLeast(this.points.totalValueSize());
+                this.points.points(pointsBuffer, 0);
+
+                //sample the value at each point and write them into a new array
+                double[] out = new double[size];
+                for (int i = 0; i < size; i++) {
+                    out[i] = blend.get(pointsBuffer[i * 2], pointsBuffer[i * 2 + 1], this);
+                }
+
+                alloc.release(pointsBuffer);
+                return out;
+            }
+        }
+
+        PointArray2D projectedPoints = (PointArray2D) points.convert(this.projection.projectedCRS(), 0.1d);
+        Bounds2d paddedLocalBounds = SISHelper.toBounds(projectedPoints.envelope()).expand(this.blend.size).validate(this.projection, false);
+
+        return new State(paddedLocalBounds, projectedPoints).future();
     }
 
     @RequiredArgsConstructor

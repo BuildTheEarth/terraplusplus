@@ -6,11 +6,14 @@ import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraplusplus.util.bvh.BVH;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
+import net.buildtheearth.terraplusplus.util.compat.sis.SISHelper;
+import net.buildtheearth.terraplusplus.util.geo.pointarray.PointArray2D;
 
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
+import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
@@ -73,7 +76,7 @@ public class MultiScalarDataset implements IScalarDataset {
     @Override
     public CompletableFuture<double[]> getAsync(@NonNull CornerBoundingBox2d bounds, int sizeX, int sizeZ) throws OutOfProjectionBoundsException {
         if (notNegative(sizeX, "sizeX") == 0 | notNegative(sizeZ, "sizeZ") == 0) { //no input points -> no output points, ez
-            return CompletableFuture.completedFuture(new double[0]);
+            return CompletableFuture.completedFuture(EMPTY_DOUBLE_ARRAY);
         }
 
         BoundedPriorityScalarDataset[] datasets = this.bvh.getAllIntersecting(bounds).toArray(new BoundedPriorityScalarDataset[0]);
@@ -120,6 +123,71 @@ public class MultiScalarDataset implements IScalarDataset {
                 if (++this.i < datasets.length) {
                     try {
                         datasets[this.i].getAsync(bounds, sizeX, sizeZ).whenComplete(this);
+                    } catch (OutOfProjectionBoundsException e) {
+                        this.future.completeExceptionally(e);
+                    }
+                } else { //no datasets remain, complete the future successfully with whatever value we currently have
+                    this.future.complete(this.out);
+                }
+            }
+        }
+
+        State state = new State();
+        state.advance();
+        return state.future;
+    }
+
+    @Override
+    public CompletableFuture<double[]> getAsync(@NonNull PointArray2D points) throws OutOfProjectionBoundsException {
+        int size = points.size();
+        if (size == 0) { //no input points -> no output points, ez
+            return CompletableFuture.completedFuture(EMPTY_DOUBLE_ARRAY);
+        }
+
+        BoundedPriorityScalarDataset[] datasets = this.bvh.getAllIntersecting(SISHelper.toBounds(points.envelope())).toArray(new BoundedPriorityScalarDataset[0]);
+        if (datasets.length == 0) { //no matching datasets!
+            return CompletableFuture.completedFuture(null);
+        } else if (datasets.length == 1) { //only one dataset matches
+            return datasets[0].getAsync(points);
+        }
+        Arrays.sort(datasets); //ensure datasets are in priority order
+
+        class State implements BiConsumer<double[], Throwable> {
+            final CompletableFuture<double[]> future = new CompletableFuture<>();
+            double[] out;
+            int remaining = size;
+            int i = -1;
+
+            @Override
+            public void accept(double[] data, Throwable cause) {
+                if (cause != null) {
+                    this.future.completeExceptionally(cause);
+                } else if (data != null) { //if the array is null, it's as if it were an array of NaNs - nothing would be set, we simply skip it
+                    double[] out = this.out;
+                    if (out == null) { //ensure the destination array is set
+                        Arrays.fill(this.out = out = new double[size], Double.NaN);
+                    }
+
+                    for (int i = 0; i < size; i++) {
+                        if (Double.isNaN(out[i])) { //if value in output array is NaN, consider replacing it
+                            double v = data[i];
+                            if (!Double.isNaN(v)) { //if the value in the input array is accepted, use it as the output
+                                out[i] = v;
+                                if (--this.remaining == 0) { //if no samples are left to process, we're done!
+                                    this.future.complete(out);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+                this.advance();
+            }
+
+            private void advance() {
+                if (++this.i < datasets.length) {
+                    try {
+                        datasets[this.i].getAsync(points).whenComplete(this);
                     } catch (OutOfProjectionBoundsException e) {
                         this.future.completeExceptionally(e);
                     }

@@ -3,19 +3,27 @@ package net.buildtheearth.terraplusplus.util.compat.sis;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
+import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 import net.daporkchop.lib.common.pool.array.ArrayAllocator;
 import org.apache.sis.geometry.Envelopes;
 import org.apache.sis.geometry.GeneralEnvelope;
+import org.apache.sis.referencing.CRS;
+import org.apache.sis.referencing.cs.CoordinateSystems;
+import org.apache.sis.referencing.operation.matrix.Matrices;
+import org.apache.sis.referencing.operation.matrix.MatrixSIS;
 import org.apache.sis.referencing.operation.projection.ProjectionException;
 import org.apache.sis.referencing.operation.transform.IterationStrategy;
 import org.opengis.geometry.Envelope;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
+import org.opengis.util.FactoryException;
 
 import java.util.Arrays;
 
 import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
+import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * @author DaPorkchop_
@@ -54,7 +62,6 @@ public class SISHelper {
         Arrays.fill(dst, dstOff, dstOff + dstDim, Double.NaN);
     }
 
-    @SneakyThrows(TransformException.class)
     public static void transformManyPointsWithOutOfBoundsNaN(@NonNull MathTransform transform, double[] src, int srcOff, double[] dst, int dstOff, int count) {
         processWithIterationStrategy(
                 (src1, srcOff1, srcDim, dst1, dstOff1, dstDim) -> transformSinglePointWithOutOfBoundsNaN(transform, src1, srcOff1, dst1, dstOff1, dstDim),
@@ -120,5 +127,19 @@ public class SISHelper {
     //TODO: i'm fairly certain this'll need special handling for large envelopes on dymaxion-based projections
     public static GeneralEnvelope transform(CoordinateOperation operation, Envelope envelope) throws TransformException {
         return Envelopes.transform(operation, envelope);
+    }
+
+    public static Bounds2d toBounds(@NonNull Envelope envelope) {
+        checkArg(envelope.getDimension() == 2);
+        return Bounds2d.of(envelope.getMinimum(0), envelope.getMaximum(0), envelope.getMinimum(1), envelope.getMaximum(1));
+    }
+
+    public static MatrixSIS getAxisOrderMatrix(@NonNull CoordinateOperation operation) {
+        return Matrices.createTransform(CoordinateSystems.getAxisDirections(operation.getSourceCRS().getCoordinateSystem()), CoordinateSystems.getAxisDirections(operation.getTargetCRS().getCoordinateSystem()));
+    }
+
+    @SneakyThrows(FactoryException.class)
+    public static CoordinateOperation findOperation(CoordinateReferenceSystem source, CoordinateReferenceSystem target) {
+        return CRS.findOperation(source, target, null);
     }
 }

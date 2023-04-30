@@ -30,13 +30,13 @@ public abstract class AbstractPointArray2D extends AbstractPointArray implements
     }
 
     @Override
-    public @NotNegative int coordinatesSize() {
+    public @NotNegative int totalValueSize() {
         return Math.multiplyExact(this.size(), 2);
     }
 
     @Override
     public int points(@NonNull double[] dst, @NotNegative int dstOff) {
-        int totalValues = this.coordinatesSize();
+        int totalValues = this.totalValueSize();
         checkRangeLen(dst.length, dstOff, totalValues);
 
         double[] buf = new double[2];

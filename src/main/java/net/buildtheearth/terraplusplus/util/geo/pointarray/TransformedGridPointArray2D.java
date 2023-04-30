@@ -5,12 +5,11 @@ import lombok.SneakyThrows;
 import net.buildtheearth.terraplusplus.util.compat.sis.SISHelper;
 import net.daporkchop.lib.common.annotation.param.NotNegative;
 import org.apache.sis.geometry.Envelope2D;
-import org.apache.sis.referencing.CRS;
+import org.opengis.geometry.Envelope;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
-import org.opengis.util.FactoryException;
 
 import static net.daporkchop.lib.common.util.PValidation.*;
 
@@ -21,9 +20,8 @@ public final class TransformedGridPointArray2D extends AbstractPointArray2D {
     private final CoordinateOperation operation;
     private final MathTransform transform;
 
-    @SneakyThrows(FactoryException.class)
     public TransformedGridPointArray2D(@NonNull PointArray parent, @NonNull CoordinateReferenceSystem crs) {
-        this(parent, crs, CRS.findOperation(parent.crs(), crs, null));
+        this(parent, crs, SISHelper.findOperation(parent.crs(), crs));
     }
 
     TransformedGridPointArray2D(@NonNull PointArray parent, @NonNull CoordinateReferenceSystem crs, @NonNull CoordinateOperation operation) {
@@ -49,7 +47,7 @@ public final class TransformedGridPointArray2D extends AbstractPointArray2D {
     public int points(@NonNull double[] dst, @NotNegative int dstOff) {
         this.parent().points(dst, dstOff);
         SISHelper.transformManyPointsWithOutOfBoundsNaN(this.transform, dst, dstOff, dst, dstOff, this.size());
-        return this.coordinatesSize();
+        return this.totalValueSize();
     }
 
     @Override
@@ -66,5 +64,19 @@ public final class TransformedGridPointArray2D extends AbstractPointArray2D {
 
         //TODO: this could be optimized quite a bit
         return new TransformedGridPointArray2D(this, crs);
+    }
+
+    @Override
+    public double[] estimatedPointDensity() {
+        double[] parentDensity = this.parent().estimatedPointDensity();
+        Envelope parentEnvelope = this.parent().envelope();
+        Envelope selfEnvelope = this.envelope();
+
+        //TODO: this assumes axis order is consistent between the two!
+
+        return new double[]{
+                parentDensity[0] * parentEnvelope.getSpan(0) / selfEnvelope.getSpan(0),
+                parentDensity[1] * parentEnvelope.getSpan(1) / selfEnvelope.getSpan(1),
+        };
     }
 }

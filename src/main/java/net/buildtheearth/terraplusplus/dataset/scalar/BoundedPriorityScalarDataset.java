@@ -7,6 +7,7 @@ import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
+import net.buildtheearth.terraplusplus.util.geo.pointarray.PointArray2D;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.DoubleStream;
@@ -36,8 +37,8 @@ public class BoundedPriorityScalarDataset implements Bounds2d, IScalarDataset, C
     }
 
     @Override
-    public CompletableFuture<double[]> getAsync(@NonNull double[] points, int count) throws OutOfProjectionBoundsException {
-        return this.delegate.getAsync(points, count);
+    public CompletableFuture<double[]> getAsync(@NonNull PointArray2D points) throws OutOfProjectionBoundsException {
+        return this.delegate.getAsync(points);
     }
 
     @Override

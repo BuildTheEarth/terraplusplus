@@ -3,6 +3,7 @@ package net.buildtheearth.terraplusplus.dataset;
 import lombok.NonNull;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
+import net.buildtheearth.terraplusplus.util.geo.pointarray.PointArray2D;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -34,10 +35,9 @@ public interface IScalarDataset {
      * Asynchronously gets a bunch of values at the given coordinates.
      *
      * @param points an array of points
-     * @param count  the number of points
      * @return a {@link CompletableFuture} which will be completed with the values
      */
-    CompletableFuture<double[]> getAsync(@NonNull double[] points, int count) throws OutOfProjectionBoundsException;
+    CompletableFuture<double[]> getAsync(@NonNull PointArray2D points) throws OutOfProjectionBoundsException;
 
     /**
      * @return the number of meters between sample points (in geographic/unprojected coordinate space)

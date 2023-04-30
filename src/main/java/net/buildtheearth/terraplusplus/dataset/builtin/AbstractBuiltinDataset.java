@@ -4,9 +4,12 @@ import lombok.NonNull;
 import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
+import net.buildtheearth.terraplusplus.util.geo.pointarray.PointArray2D;
+import net.daporkchop.lib.common.pool.array.ArrayAllocator;
 
 import java.util.concurrent.CompletableFuture;
 
+import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
@@ -62,8 +65,8 @@ public abstract class AbstractBuiltinDataset implements IScalarDataset {
     }
 
     @Override
-    public CompletableFuture<double[]> getAsync(@NonNull double[] points, int count) throws OutOfProjectionBoundsException {
-        if (notNegative(count, "count") == 0) { //no input points -> no output points, ez
+    public CompletableFuture<double[]> getAsync(@NonNull PointArray2D points) throws OutOfProjectionBoundsException {
+        if (points.size() == 0) { //no input points -> no output points, ez
             return CompletableFuture.completedFuture(new double[0]);
         }
 
@@ -71,10 +74,20 @@ public abstract class AbstractBuiltinDataset implements IScalarDataset {
             double scaleX = this.scaleX;
             double scaleY = this.scaleY;
 
-            double[] out = new double[count];
-            for (int i = 0; i < count; i++) {
-                out[i] = this.get(points[i * 2] * scaleX, points[i * 2 + 1] * scaleY);
+            int size = points.size();
+
+            //read coordinate values into an array
+            ArrayAllocator<double[]> alloc = DOUBLE_ALLOC.get();
+            double[] pointsBuffer = alloc.atLeast(points.totalValueSize());
+            points.points(pointsBuffer, 0);
+
+            //sample the value at each point and write them into a new array
+            double[] out = new double[size];
+            for (int i = 0; i < size; i++) {
+                out[i] = this.get(pointsBuffer[i * 2] * scaleX, pointsBuffer[i * 2 + 1] * scaleY);
             }
+
+            alloc.release(pointsBuffer);
             return out;
         });
     }

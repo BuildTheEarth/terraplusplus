@@ -25,7 +25,7 @@ public interface PointArray {
     /**
      * @return the total number of coordinate values in this array, equal to the number of points times the {@link #pointDimensions() point dimensionality}
      */
-    default @NotNegative int coordinatesSize() {
+    default @NotNegative int totalValueSize() {
         return Math.multiplyExact(this.size(), this.pointDimensions());
     }
 
@@ -47,8 +47,8 @@ public interface PointArray {
      *
      * @param dst    a {@code double[]} to store the resulting point coordinates in
      * @param dstOff the starting index to begin writing into the given destination array
-     * @return the number of {@code double} values written into the given array, equal to {@link #coordinatesSize()}
-     * @throws IndexOutOfBoundsException if the given destination array has insufficient capacity for the coordinate values (i.e. less than {@link #coordinatesSize()})
+     * @return the number of {@code double} values written into the given array, equal to {@link #totalValueSize()}
+     * @throws IndexOutOfBoundsException if the given destination array has insufficient capacity for the coordinate values (i.e. less than {@link #totalValueSize()})
      */
     int points(@NonNull double[] dst, @NotNegative int dstOff);
 
@@ -80,4 +80,9 @@ public interface PointArray {
      * @return a {@link PointArray} containing this array's points after conversion to the given coordinate system
      */
     PointArray convert(@NonNull CoordinateReferenceSystem crs, double maxError);
+
+    /**
+     * @return a {@code double[]} with each element indicating the estimated expected number of units between samples along the corresponding axis
+     */
+    double[] estimatedPointDensity();
 }
