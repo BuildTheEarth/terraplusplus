@@ -143,7 +143,8 @@ public class TestSISProjections {
                         + "            LENGTHUNIT[\"metre\", 1]],\n"
                         + "    SCOPE[\"Minecraft.\"],\n"
                         + "    AREA[\"World.\"],\n"
-                        + "    BBOX[-90, -180, 90, 180]]"));
+                        + "    BBOX[-90, -180, 90, 180]]"),
+                1e-13d);
     }
 
     @Test

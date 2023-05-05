@@ -47,7 +47,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
 
     @Override
     protected double[] triangleTransform(double[] vec) {
-        double[] c = super.triangleTransform(vec);
+        double[] c = triangleTransformDymaxion(vec);
 
         double x = c[0];
         double y = c[1];

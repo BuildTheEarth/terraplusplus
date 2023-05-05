@@ -1,2 +1,4 @@
 net.buildtheearth.terraplusplus.projection.sis.WrappedProjectionOperationMethod
+
+net.buildtheearth.terraplusplus.projection.dymaxion.DymaxionProjection$OperationMethod
 net.buildtheearth.terraplusplus.projection.SinusoidalProjection$OperationMethod
