@@ -1,6 +1,7 @@
 package net.buildtheearth.terraplusplus.projection;
 
 import org.apache.sis.referencing.operation.projection.ProjectionException;
+import org.opengis.referencing.operation.MathTransform;
 
 public final class OutOfProjectionBoundsException extends ProjectionException {
     private static final OutOfProjectionBoundsException INSTANCE = new OutOfProjectionBoundsException();
@@ -43,5 +44,12 @@ public final class OutOfProjectionBoundsException extends ProjectionException {
             super.fillInStackTrace();
         }
         return this;
+    }
+
+    @Override
+    public void setLastCompletedTransform(MathTransform transform) {
+        if (this != INSTANCE) {
+            super.setLastCompletedTransform(transform);
+        }
     }
 }

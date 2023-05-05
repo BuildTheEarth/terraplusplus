@@ -12,6 +12,7 @@ import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
+import net.buildtheearth.terraplusplus.util.geo.pointarray.PointArray2D;
 import net.minecraft.world.biome.Biome;
 
 import java.util.Arrays;
@@ -34,7 +35,7 @@ public final class BiomeFilterConstant implements IEarthBiomeFilter<Void> {
     }
 
     @Override
-    public CompletableFuture<Void> requestData(TilePos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
+    public CompletableFuture<Void> requestData(TilePos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo, PointArray2D sampledPoints) throws OutOfProjectionBoundsException {
         return null;
     }
 

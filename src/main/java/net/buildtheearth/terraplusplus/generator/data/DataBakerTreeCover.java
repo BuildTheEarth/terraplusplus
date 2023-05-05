@@ -9,6 +9,7 @@ import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
+import net.buildtheearth.terraplusplus.util.geo.pointarray.PointArray2D;
 
 import java.util.concurrent.CompletableFuture;
 

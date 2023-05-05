@@ -12,6 +12,7 @@ import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
+import net.buildtheearth.terraplusplus.util.geo.pointarray.PointArray2D;
 import net.minecraft.init.Biomes;
 import net.minecraft.world.biome.Biome;
 
@@ -26,7 +27,7 @@ import java.util.concurrent.CompletableFuture;
 @JsonDeserialize
 public final class BiomeFilterTerra121 implements IEarthBiomeFilter<BiomeFilterTerra121.Data> {
     @Override
-    public CompletableFuture<BiomeFilterTerra121.Data> requestData(TilePos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
+    public CompletableFuture<BiomeFilterTerra121.Data> requestData(TilePos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo, PointArray2D sampledPoints) throws OutOfProjectionBoundsException {
         CompletableFuture<double[]> precipitationFuture = datasets.<IScalarDataset>getCustom(EarthGeneratorPipelines.KEY_DATASET_TERRA121_PRECIPITATION).getAsync(boundsGeo, 16, 16);
         CompletableFuture<double[]> soilFuture = datasets.<IScalarDataset>getCustom(EarthGeneratorPipelines.KEY_DATASET_TERRA121_SOIL).getAsync(boundsGeo, 16, 16);
         CompletableFuture<double[]> temperatureFuture = datasets.<IScalarDataset>getCustom(EarthGeneratorPipelines.KEY_DATASET_TERRA121_TEMPERATURE).getAsync(boundsGeo, 16, 16);

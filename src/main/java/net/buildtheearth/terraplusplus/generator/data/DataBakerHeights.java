@@ -9,6 +9,7 @@ import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
+import net.buildtheearth.terraplusplus.util.geo.pointarray.PointArray2D;
 
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
@@ -21,8 +22,8 @@ import static net.daporkchop.lib.common.math.PMath.*;
 @JsonDeserialize
 public final class DataBakerHeights implements IEarthDataBaker<double[]> {
     @Override
-    public CompletableFuture<double[]> requestData(TilePos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
-        return datasets.<IScalarDataset>getCustom(EarthGeneratorPipelines.KEY_DATASET_HEIGHTS).getAsync(boundsGeo, 16, 16);
+    public CompletableFuture<double[]> requestData(TilePos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo, PointArray2D sampledPoints) throws OutOfProjectionBoundsException {
+        return datasets.<IScalarDataset>getCustom(EarthGeneratorPipelines.KEY_DATASET_HEIGHTS).getAsync(sampledPoints);
     }
 
     @Override

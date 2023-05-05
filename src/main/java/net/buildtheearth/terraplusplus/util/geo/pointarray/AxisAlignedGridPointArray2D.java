@@ -69,9 +69,9 @@ public final class AxisAlignedGridPointArray2D extends AbstractPointArray2D {
         checkRangeLen(dst.length, dstOff, totalValues);
 
         for (int writerIndex = dstOff, x = 0; x < this.sizeX; x++) {
-            for (int y = 0; y < this.sizeY; y++, writerIndex++) {
-                dst[dstOff + 0] = this.x + x * this.indexScaleX;
-                dst[dstOff + 1] = this.y + y * this.indexScaleY;
+            for (int y = 0; y < this.sizeY; y++, writerIndex += 2) {
+                dst[writerIndex + 0] = this.x + x * this.indexScaleX;
+                dst[writerIndex + 1] = this.y + y * this.indexScaleY;
             }
         }
 

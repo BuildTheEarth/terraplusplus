@@ -15,6 +15,7 @@ import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.bvh.BVH;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
+import net.buildtheearth.terraplusplus.util.geo.pointarray.PointArray2D;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -38,7 +39,7 @@ public final class DataBakerOSM implements IEarthDataBaker<BVH<VectorGeometry>[]
     }
 
     @Override
-    public CompletableFuture<BVH<VectorGeometry>[]> requestData(TilePos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
+    public CompletableFuture<BVH<VectorGeometry>[]> requestData(TilePos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo, PointArray2D sampledPoints) throws OutOfProjectionBoundsException {
         return datasets.<IElementDataset<BVH<VectorGeometry>>>getCustom(EarthGeneratorPipelines.KEY_DATASET_OSM_PARSED)
                 .getAsync(bounds.expand(this.paddingRadius).toCornerBB(datasets.projection(), false).toGeo(), pos.zoom());
     }
