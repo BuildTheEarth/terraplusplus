@@ -11,13 +11,16 @@ import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 import net.daporkchop.lib.common.pool.array.ArrayAllocator;
 import org.apache.sis.geometry.Envelopes;
 import org.apache.sis.geometry.GeneralEnvelope;
+import org.apache.sis.metadata.iso.citation.Citations;
 import org.apache.sis.referencing.CRS;
+import org.apache.sis.referencing.ImmutableIdentifier;
 import org.apache.sis.referencing.cs.CoordinateSystems;
 import org.apache.sis.referencing.operation.matrix.Matrices;
 import org.apache.sis.referencing.operation.matrix.MatrixSIS;
 import org.apache.sis.referencing.operation.projection.ProjectionException;
 import org.apache.sis.referencing.operation.transform.IterationStrategy;
 import org.opengis.geometry.Envelope;
+import org.opengis.metadata.citation.Citation;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.MathTransform;
@@ -34,6 +37,16 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @UtilityClass
 public class SISHelper {
+    private static final Citation TPP_CITATION = Citations.fromName("Terra++");
+
+    public static Citation tppCitation() {
+        return TPP_CITATION;
+    }
+
+    public static ImmutableIdentifier tppOperationIdentifier(@NonNull String name) {
+        return new ImmutableIdentifier(TPP_CITATION, "Terra++", ("Terra++ " + name).intern());
+    }
+
     @SuppressWarnings("deprecation")
     private static final LoadingCache<GeographicProjection, CoordinateReferenceSystem> PROJECTION_TO_CRS_CACHE = CacheBuilder.newBuilder()
             .weakKeys().weakValues()

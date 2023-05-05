@@ -604,6 +604,31 @@ public class TestSISProjections {
                         + "        AREA[\"World.\"],\n"
                         + "        BBOX[-90,-180,90,180]]]"),
                 1e-10d); //this is slightly less accurate than some of the others
+
+        testProjectionAccuracy(
+                new SinusoidalProjection(),
+                new SISProjectionWrapper(WKTStandard.WKT2_2015,
+                        "PROJCRS[\"WGS 84 / Reversed Axis Order / Terra++ Sinusoidal\",\n"
+                        + "    BASEGEODCRS[\"WGS 84\",\n"
+                        + "        DATUM[\"World Geodetic System 1984\",\n"
+                        + "            ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n"
+                        + "                LENGTHUNIT[\"metre\",1]]],\n"
+                        + "        PRIMEM[\"Greenwich\",0,\n"
+                        + "            ANGLEUNIT[\"degree\",0.0174532925199433]]],\n"
+                        + "    CONVERSION[\"Terra++ Sinusoidal\",\n"
+                        + "        METHOD[\"Terra++ Sinusoidal\"]],\n"
+                        + "    CS[Cartesian,2],\n"
+                        + "        AXIS[\"easting (X)\",east,\n"
+                        + "            ORDER[1],\n"
+                        + "            LENGTHUNIT[\"metre\", 1]],\n"
+                        + "        AXIS[\"northing (Y)\",north,\n"
+                        + "            ORDER[2],\n"
+                        + "            LENGTHUNIT[\"metre\", 1]],\n"
+                        + "    SCOPE[\"Horizontal component of 3D system.\"],\n"
+                        + "    AREA[\"World.\"],\n"
+                        + "    BBOX[-90,-180,90,180]]"),
+                1e-10d); //this is slightly less accurate than some of the others
+
     }
 
     @Test
