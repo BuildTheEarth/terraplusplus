@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
+import org.apache.sis.referencing.operation.matrix.Matrices;
+import org.apache.sis.referencing.operation.matrix.MatrixSIS;
+import org.opengis.referencing.cs.CoordinateSystemAxis;
 
 /**
  * Inverses the warped projection such that x becomes y and y becomes x.
@@ -44,5 +47,20 @@ public class SwapAxesProjectionTransform extends ProjectionTransform {
     @Override
     public String toString() {
         return "Swap Axes(" + super.delegate + ')';
+    }
+
+    @Override
+    protected String toSimpleString() {
+        return "Swap Axes";
+    }
+
+    @Override
+    protected MatrixSIS affineMatrix() {
+        return Matrices.createDimensionSelect(3, new int[]{ 1, 0, 2 });
+    }
+
+    @Override
+    protected CoordinateSystemAxis[] transformAxes(CoordinateSystemAxis[] axes) {
+        return new CoordinateSystemAxis[] { axes[0], axes[1] };
     }
 }

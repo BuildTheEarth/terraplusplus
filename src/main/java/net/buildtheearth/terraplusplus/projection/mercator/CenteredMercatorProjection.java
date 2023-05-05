@@ -1,14 +1,28 @@
 package net.buildtheearth.terraplusplus.projection.mercator;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import lombok.AccessLevel;
-import lombok.Getter;
+import com.google.common.collect.ImmutableMap;
+import lombok.SneakyThrows;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
-import net.buildtheearth.terraplusplus.projection.sis.WKTStandard;
-import net.buildtheearth.terraplusplus.util.TerraUtils;
+import net.buildtheearth.terraplusplus.util.compat.sis.SISHelper;
+import org.apache.sis.internal.referencing.AxisDirections;
+import org.apache.sis.internal.referencing.ReferencingFactoryContainer;
+import org.apache.sis.internal.referencing.provider.Mercator1SP;
+import org.apache.sis.internal.referencing.provider.MercatorSpherical;
+import org.apache.sis.internal.simple.SimpleExtent;
+import org.apache.sis.measure.Units;
+import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
+import org.apache.sis.parameter.DefaultParameterValueGroup;
 import org.apache.sis.referencing.operation.matrix.Matrix2;
+import org.opengis.referencing.IdentifiedObject;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.cs.AxisDirection;
+import org.opengis.referencing.cs.CoordinateSystemAxis;
+import org.opengis.referencing.operation.CoordinateOperation;
+import org.opengis.util.FactoryException;
+
+import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 
 /**
  * Implementation of the Mercator projection, normalized between -1 and 1.
@@ -80,5 +94,33 @@ public class CenteredMercatorProjection implements GeographicProjection {
     @Override
     public String toString() {
         return "Mercator";
+    }
+
+    @Override
+    @SneakyThrows(FactoryException.class)
+    public CoordinateReferenceSystem projectedCRS() {
+        ReferencingFactoryContainer factories = SISHelper.factories();
+
+        CoordinateSystemAxis[] axes = {
+                factories.getCSFactory().createCoordinateSystemAxis(ImmutableMap.of(IdentifiedObject.NAME_KEY, "Easting"), "X", AxisDirection.EAST, Units.METRE),
+                factories.getCSFactory().createCoordinateSystemAxis(ImmutableMap.of(IdentifiedObject.NAME_KEY, "Southing"), "Y", AxisDirection.SOUTH, Units.METRE),
+        };
+
+        DefaultParameterValueGroup parameters = new DefaultParameterValueGroup(factories.getMathTransformFactory().getDefaultParameters("Popular Visualisation Pseudo Mercator"));
+        parameters.getOrCreate(Mercator1SP.SCALE_FACTOR).setValue(4.990640467330674E-8d, Units.UNITY);
+        parameters.getOrCreate(MercatorSpherical.FALSE_EASTING).setValue(0.0d, Units.METRE);
+        parameters.getOrCreate(MercatorSpherical.FALSE_NORTHING).setValue(0.0d, Units.METRE);
+
+        return factories.getCRSFactory().createProjectedCRS(
+                ImmutableMap.of(IdentifiedObject.NAME_KEY, "WGS 84 / Reversed Axis Order / Terra++ Centered Mercator",
+                        CoordinateOperation.DOMAIN_OF_VALIDITY_KEY, new SimpleExtent(new DefaultGeographicBoundingBox(-180d, 180d, -90d, 90d), null, null)),
+                TPP_GEO_CRS,
+                factories.getCoordinateOperationFactory().createDefiningConversion(
+                        ImmutableMap.of(IdentifiedObject.NAME_KEY, "Terra++ Centered Mercator"),
+                        factories.getCoordinateOperationFactory().getOperationMethod("Popular Visualisation Pseudo Mercator"),
+                        parameters),
+                factories.getCSFactory().createCartesianCS(
+                        ImmutableMap.of(IdentifiedObject.NAME_KEY, AxisDirections.appendTo(new StringBuilder("Cartesian CS"), axes)),
+                        axes[0], axes[1]));
     }
 }

@@ -8,6 +8,11 @@ import com.google.common.base.Preconditions;
 import lombok.Getter;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
+import org.apache.sis.referencing.operation.matrix.Matrices;
+import org.apache.sis.referencing.operation.matrix.Matrix2;
+import org.apache.sis.referencing.operation.matrix.Matrix3;
+import org.apache.sis.referencing.operation.matrix.MatrixSIS;
+import org.opengis.referencing.cs.CoordinateSystemAxis;
 
 /**
  * Scales the warps projection's projected space up or down.
@@ -69,5 +74,15 @@ public class ScaleProjectionTransform extends ProjectionTransform {
     @Override
     public String toString() {
         return "Scale (" + super.delegate + ") by " + this.x + ", " + this.y;
+    }
+
+    @Override
+    protected String toSimpleString() {
+        return "Scale by " + this.x + ", " + this.y;
+    }
+
+    @Override
+    protected MatrixSIS affineMatrix() {
+        return Matrices.createAffine(new Matrix2(this.x, 0.0d, 0.0d, this.y), null);
     }
 }

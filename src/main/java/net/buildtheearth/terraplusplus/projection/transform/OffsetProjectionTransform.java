@@ -8,6 +8,10 @@ import com.google.common.base.Preconditions;
 import lombok.Getter;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
+import org.apache.sis.geometry.DirectPosition2D;
+import org.apache.sis.referencing.operation.matrix.Matrices;
+import org.apache.sis.referencing.operation.matrix.MatrixSIS;
+import org.opengis.referencing.cs.CoordinateSystemAxis;
 
 /**
  * Applies a simple translation to the projected space, such that:
@@ -61,5 +65,15 @@ public class OffsetProjectionTransform extends ProjectionTransform {
     @Override
     public String toString() {
         return "Offset (" + super.delegate + ") by " + this.dx + ", " + this.dy;
+    }
+
+    @Override
+    protected String toSimpleString() {
+        return "Offset by " + this.dx + ", " + this.dy;
+    }
+
+    @Override
+    protected MatrixSIS affineMatrix() {
+        return Matrices.createAffine(null, new DirectPosition2D(this.dx, this.dy));
     }
 }

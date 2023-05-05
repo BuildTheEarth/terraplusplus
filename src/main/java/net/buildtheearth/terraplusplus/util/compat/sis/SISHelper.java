@@ -8,9 +8,11 @@ import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
+import net.daporkchop.lib.common.misc.threadlocal.TL;
 import net.daporkchop.lib.common.pool.array.ArrayAllocator;
 import org.apache.sis.geometry.Envelopes;
 import org.apache.sis.geometry.GeneralEnvelope;
+import org.apache.sis.internal.referencing.ReferencingFactoryContainer;
 import org.apache.sis.metadata.iso.citation.Citations;
 import org.apache.sis.referencing.CRS;
 import org.apache.sis.referencing.ImmutableIdentifier;
@@ -45,6 +47,12 @@ public class SISHelper {
 
     public static ImmutableIdentifier tppOperationIdentifier(@NonNull String name) {
         return new ImmutableIdentifier(TPP_CITATION, "Terra++", ("Terra++ " + name).intern());
+    }
+
+    private static final TL<ReferencingFactoryContainer> FACTORIES = TL.initializedWith(ReferencingFactoryContainer::new);
+
+    public static ReferencingFactoryContainer factories() {
+        return FACTORIES.get();
     }
 
     @SuppressWarnings("deprecation")

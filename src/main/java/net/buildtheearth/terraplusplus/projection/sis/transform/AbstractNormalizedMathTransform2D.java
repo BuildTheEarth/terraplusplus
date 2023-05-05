@@ -1,7 +1,6 @@
 package net.buildtheearth.terraplusplus.projection.sis.transform;
 
 import lombok.NonNull;
-import org.apache.sis.referencing.operation.matrix.Matrix3;
 import org.apache.sis.referencing.operation.matrix.MatrixSIS;
 import org.apache.sis.referencing.operation.transform.AbstractMathTransform2D;
 import org.apache.sis.referencing.operation.transform.ContextualParameters;
@@ -16,13 +15,6 @@ import org.opengis.util.FactoryException;
  * @author DaPorkchop_
  */
 public abstract class AbstractNormalizedMathTransform2D extends AbstractMathTransform2D {
-    /*private static final Map<Class<?>, ParameterDescriptorGroup> DESCRIPTORS = new ConcurrentHashMap<>();
-
-    protected static ParameterDescriptorGroup register(@NonNull Class<?> clazz, @NonNull ParameterDescriptorGroup descriptor) {
-        DESCRIPTORS.put(clazz, descriptor);
-        return descriptor;
-    }*/
-
     private final ContextualParameters contextualParameters;
 
     private boolean configuredMatrices;

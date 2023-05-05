@@ -5,7 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
+import org.apache.sis.referencing.operation.matrix.Matrices;
 import org.apache.sis.referencing.operation.matrix.Matrix2;
+import org.apache.sis.referencing.operation.matrix.MatrixSIS;
+import org.opengis.referencing.cs.CoordinateSystemAxis;
 
 /**
  * Mirrors the warped projection vertically.
@@ -48,5 +51,15 @@ public class FlipVerticalProjectionTransform extends ProjectionTransform {
     @Override
     public String toString() {
         return "Vertical Flip (" + super.delegate + ')';
+    }
+
+    @Override
+    protected String toSimpleString() {
+        return "Vertical Flip";
+    }
+
+    @Override
+    protected MatrixSIS affineMatrix() {
+        return Matrices.createAffine(new Matrix2(1.0d, 0.0d, 0.0d, -1.0d), null);
     }
 }

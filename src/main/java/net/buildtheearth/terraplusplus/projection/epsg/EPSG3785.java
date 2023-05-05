@@ -1,11 +1,26 @@
 package net.buildtheearth.terraplusplus.projection.epsg;
 
-import lombok.AccessLevel;
-import lombok.Getter;
+import com.google.common.collect.ImmutableMap;
+import lombok.SneakyThrows;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.projection.mercator.WebMercatorProjection;
-import net.buildtheearth.terraplusplus.projection.sis.WKTStandard;
+import net.buildtheearth.terraplusplus.util.compat.sis.SISHelper;
+import org.apache.sis.internal.referencing.AxisDirections;
+import org.apache.sis.internal.referencing.ReferencingFactoryContainer;
+import org.apache.sis.internal.referencing.provider.Mercator1SP;
+import org.apache.sis.internal.referencing.provider.MercatorSpherical;
+import org.apache.sis.internal.simple.SimpleExtent;
+import org.apache.sis.measure.Units;
+import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
+import org.apache.sis.parameter.DefaultParameterValueGroup;
+import org.opengis.referencing.IdentifiedObject;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.cs.AxisDirection;
+import org.opengis.referencing.cs.CoordinateSystemAxis;
+import org.opengis.referencing.operation.CoordinateOperation;
+import org.opengis.util.FactoryException;
+
+import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 
 /**
  * Implementation of the EPSG:3785 projection.
@@ -17,50 +32,6 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 @Deprecated
 public final class EPSG3785 extends EPSGProjection {
     private static final WebMercatorProjection WEB_MERCATOR_PROJECTION = new WebMercatorProjection();
-
-    //TODO: figure out if this will break anything
-    @Getter(value = AccessLevel.PRIVATE, lazy = true)
-    private static final CoordinateReferenceSystem PROJECTED_CRS = (CoordinateReferenceSystem) WKTStandard.WKT2_2015.parseUnchecked(
-            //based on EPSG:3857
-            "PROJCRS[\"WGS 84 / Terra++ Scaled Pseudo-Mercator\",\n"
-            + "    BASEGEODCRS[\"WGS 84\",\n"
-            + "        DATUM[\"World Geodetic System 1984\",\n"
-            + "            ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n"
-            + "                LENGTHUNIT[\"metre\",1]]],\n"
-            + "        PRIMEM[\"Greenwich\",0,\n"
-            + "            ANGLEUNIT[\"degree\",0.0174532925199433]]],\n"
-            + "    CONVERSION[\"unnamed\",\n"
-            + "        METHOD[\"Popular Visualisation Pseudo Mercator\",\n"
-            + "            ID[\"EPSG\",1024]],\n"
-            + "        PARAMETER[\"Latitude of natural origin\",0,\n"
-            + "            ANGLEUNIT[\"degree\",0.0174532925199433],\n"
-            + "            ID[\"EPSG\",8801]],\n"
-            + "        PARAMETER[\"Longitude of natural origin\",0,\n"
-            + "            ANGLEUNIT[\"degree\",0.0174532925199433],\n"
-            + "            ID[\"EPSG\",8802]],\n"
-            //porkman added this: begin
-            + "        PARAMETER[\"Scale factor at natural origin\",6.388019798183263E-6,\n"
-            + "            SCALEUNIT[\"unity\",1],\n"
-            + "            ID[\"EPSG\",8805]],\n"
-            //porkman added this: end
-            //porkman changed these parameter values from 0 to 128: begin
-            + "        PARAMETER[\"False easting\",128.0,\n"
-            + "            LENGTHUNIT[\"metre\",1],\n"
-            + "            ID[\"EPSG\",8806]],\n"
-            + "        PARAMETER[\"False northing\",128.0,\n"
-            + "            LENGTHUNIT[\"metre\",1],\n"
-            + "            ID[\"EPSG\",8807]]],\n"
-            //porkman changed these parameter values from 0 to 128: end
-            + "    CS[Cartesian,2],\n"
-            + "        AXIS[\"easting (X)\",east,\n"
-            + "            ORDER[1],\n"
-            + "            LENGTHUNIT[\"metre\",1]],\n"
-            + "        AXIS[\"northing (Y)\",north,\n"
-            + "            ORDER[2],\n"
-            + "            LENGTHUNIT[\"metre\",1]],\n"
-            + "    SCOPE[\"Web mapping and visualisation.\"],\n"
-            + "    AREA[\"World between 85.06°S and 85.06°N.\"],\n"
-            + "    BBOX[-85.06,-180,85.06,180]]");
 
     public EPSG3785() {
         super(3785);
@@ -87,7 +58,32 @@ public final class EPSG3785 extends EPSGProjection {
     }
 
     @Override
+    @SneakyThrows(FactoryException.class)
     public CoordinateReferenceSystem projectedCRS() {
-        return PROJECTED_CRS();
+        //same as WebMercatorProjection, except X axis is northing instead of southing abd false northing is +128 instead of -128
+
+        ReferencingFactoryContainer factories = SISHelper.factories();
+
+        CoordinateSystemAxis[] axes = {
+                factories.getCSFactory().createCoordinateSystemAxis(ImmutableMap.of(IdentifiedObject.NAME_KEY, "Easting"), "X", AxisDirection.EAST, Units.METRE),
+                factories.getCSFactory().createCoordinateSystemAxis(ImmutableMap.of(IdentifiedObject.NAME_KEY, "Northing"), "Y", AxisDirection.NORTH, Units.METRE),
+        };
+
+        DefaultParameterValueGroup parameters = new DefaultParameterValueGroup(factories.getMathTransformFactory().getDefaultParameters("Popular Visualisation Pseudo Mercator"));
+        parameters.getOrCreate(Mercator1SP.SCALE_FACTOR).setValue(6.388019798183263E-6d, Units.UNITY);
+        parameters.getOrCreate(MercatorSpherical.FALSE_EASTING).setValue(128.0d, Units.METRE);
+        parameters.getOrCreate(MercatorSpherical.FALSE_NORTHING).setValue(128.0d, Units.METRE);
+
+        return factories.getCRSFactory().createProjectedCRS(
+                ImmutableMap.of(IdentifiedObject.NAME_KEY, "WGS 84 / Reversed Axis Order / Terra++ Incorrect EPSG:3785",
+                        CoordinateOperation.DOMAIN_OF_VALIDITY_KEY, new SimpleExtent(new DefaultGeographicBoundingBox(-180d, 180d, -85.06, 85.06), null, null)),
+                TPP_GEO_CRS,
+                factories.getCoordinateOperationFactory().createDefiningConversion(
+                        ImmutableMap.of(IdentifiedObject.NAME_KEY, "Terra++ Incorrect EPSG:3785"),
+                        factories.getCoordinateOperationFactory().getOperationMethod("Popular Visualisation Pseudo Mercator"),
+                        parameters),
+                factories.getCSFactory().createCartesianCS(
+                        ImmutableMap.of(IdentifiedObject.NAME_KEY, AxisDirections.appendTo(new StringBuilder("Cartesian CS"), axes)),
+                        axes[0], axes[1]));
     }
 }

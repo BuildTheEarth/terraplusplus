@@ -11,14 +11,12 @@ import net.buildtheearth.terraplusplus.projection.dymaxion.DymaxionProjection;
 import net.buildtheearth.terraplusplus.projection.epsg.EPSG3785;
 import net.buildtheearth.terraplusplus.projection.epsg.EPSG4326;
 import net.buildtheearth.terraplusplus.projection.mercator.CenteredMercatorProjection;
-import net.buildtheearth.terraplusplus.projection.mercator.TransverseMercatorProjection;
 import net.buildtheearth.terraplusplus.projection.mercator.WebMercatorProjection;
 import net.buildtheearth.terraplusplus.projection.sis.SISProjectionWrapper;
 import net.buildtheearth.terraplusplus.projection.sis.WKTStandard;
 import net.buildtheearth.terraplusplus.projection.transform.OffsetProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ScaleProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.SwapAxesProjectionTransform;
-import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.minecraft.init.Bootstrap;
 import org.apache.sis.referencing.operation.matrix.Matrix2;
 import org.junit.BeforeClass;
@@ -43,11 +41,16 @@ public class TestSISProjections {
 
     protected static void testProjectionAccuracy(@NonNull GeographicProjection proj1, @NonNull GeographicProjection proj2) {
         testProjectionAccuracy(proj1, proj2, DEFAULT_D);
-        testProjectionAccuracy(proj1, new SISProjectionWrapper(proj2.projectedCRS()), DEFAULT_D);
+    }
+
+    protected static void testProjectionAccuracy(@NonNull GeographicProjection proj1, @NonNull GeographicProjection proj2, double d) {
+        testProjectionAccuracy0(proj1, proj2, d);
+        testProjectionAccuracy0(proj1, new SISProjectionWrapper(proj2.projectedCRS()), d);
+        testProjectionAccuracy0(new SISProjectionWrapper(proj1.projectedCRS()), proj2, d);
     }
 
     @SneakyThrows(OutOfProjectionBoundsException.class)
-    protected static void testProjectionAccuracy(@NonNull GeographicProjection proj1, @NonNull GeographicProjection proj2, double d) {
+    protected static void testProjectionAccuracy0(@NonNull GeographicProjection proj1, @NonNull GeographicProjection proj2, double d) {
         SplittableRandom r = new SplittableRandom(1337);
         for (int i = 0; i < 10000; i++) {
             double lon = r.nextDouble(-180.0d, 180.0d);
@@ -637,7 +640,7 @@ public class TestSISProjections {
         testProjectionAccuracy(
                 new CenteredMercatorProjection(),
                 new SISProjectionWrapper(WKTStandard.WKT2_2015,
-                        "PROJCRS[\"WGS 84 / Terra++ Scaled Centered Mercator (Pseudo-Mercator)\",\n"
+                        "PROJCRS[\"WGS 84 / Reversed Axis Order / Terra++ Scaled Centered Mercator (Pseudo-Mercator)\",\n"
                         + "    BASEGEODCRS[\"WGS 84\",\n"
                         + "        DATUM[\"World Geodetic System 1984\",\n"
                         + "            ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n"
@@ -723,7 +726,7 @@ public class TestSISProjections {
             for (int col = 0; col < 2; col++) {
                 double da = a.getElement(row, col);
                 double db = b.getElement(row, col);
-                if (Math.abs(da - db) / Math.max(Math.abs(da), Math.abs(db)) >= maxErrorInPercent) {
+                if (!approxEquals(da, db) && Math.abs(da - db) / Math.max(Math.abs(da), Math.abs(db)) >= maxErrorInPercent) {
                     return false;
                 }
             }
@@ -736,6 +739,6 @@ public class TestSISProjections {
     }
 
     private static boolean approxEquals(double a, double b, double d) {
-        return Math.abs(a - b) < d;
+        return Math.abs(a - b) < d || a == b;
     }
 }

@@ -13,6 +13,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.biome.Biome;
 import org.apache.sis.referencing.CommonCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.crs.GeographicCRS;
 
 @UtilityClass
 public class TerraConstants {
@@ -39,7 +40,7 @@ public class TerraConstants {
     /**
      * The {@link CoordinateReferenceSystem} used by Terra++ for geographic coordinates.
      */
-    public static final CoordinateReferenceSystem TPP_GEO_CRS = CommonCRS.WGS84.normalizedGeographic();
+    public static final GeographicCRS TPP_GEO_CRS = CommonCRS.WGS84.normalizedGeographic();
 
     /**
      * Earth's circumference around the equator, in meters.

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableMap;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
@@ -16,16 +17,28 @@ import net.buildtheearth.terraplusplus.projection.epsg.EPSG4326;
 import net.buildtheearth.terraplusplus.projection.epsg.EPSGProjection;
 import net.buildtheearth.terraplusplus.projection.sis.SISProjectionWrapper;
 import net.buildtheearth.terraplusplus.projection.sis.WKTStandard;
+import net.buildtheearth.terraplusplus.projection.sis.WrappedProjectionOperationMethod;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.buildtheearth.terraplusplus.util.compat.sis.SISHelper;
 import net.buildtheearth.terraplusplus.util.geo.GeographicCoordinates;
 import net.buildtheearth.terraplusplus.util.geo.ProjectedCoordinates2d;
 import net.daporkchop.lib.common.math.PMath;
+import org.apache.sis.internal.referencing.AxisDirections;
+import org.apache.sis.internal.referencing.ReferencingFactoryContainer;
+import org.apache.sis.internal.simple.SimpleExtent;
+import org.apache.sis.measure.Units;
+import org.apache.sis.metadata.iso.extent.DefaultGeographicBoundingBox;
+import org.apache.sis.parameter.DefaultParameterValueGroup;
 import org.apache.sis.parameter.ParameterBuilder;
 import org.apache.sis.referencing.operation.matrix.Matrix2;
 import org.opengis.parameter.ParameterValueGroup;
+import org.opengis.referencing.IdentifiedObject;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.cs.AxisDirection;
+import org.opengis.referencing.cs.CoordinateSystemAxis;
+import org.opengis.referencing.operation.CoordinateOperation;
+import org.opengis.util.FactoryException;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -287,30 +300,34 @@ public interface GeographicProjection {
      * @deprecated use {@link SISHelper#projectedCRS(GeographicProjection)}
      */
     @Deprecated
-    @SneakyThrows(ParseException.class)
+    @SneakyThrows(FactoryException.class)
     default CoordinateReferenceSystem projectedCRS() {
         ObjectNode selfRootNode = TerraConstants.JSON_MAPPER.valueToTree(this);
 
         double[] boundsGeo = this.boundsGeo();
 
-        StringBuilder wkt = new StringBuilder();
-        wkt.append("PROJCRS[\"WGS 84 / Reversed Axis Order / Terra++ Wrapped GeographicProjection: ").append(selfRootNode.toString().replace("\"", "\"\"")).append("\",\n")
-                .append("BASE").append(WKTStandard.WKT2_2015.format(TPP_GEO_CRS)).append(",\n")
-                .append("    CONVERSION[\"Terra++ Wrapped GeographicProjection: ").append(selfRootNode.toString().replace("\"", "\"\"")).append("\",\n")
-                .append("        METHOD[\"Terra++ Internal Projection\"],\n")
-                .append("        PARAMETER[\"type\", \"").append(selfRootNode.fieldNames().next().replace("\"", "\"\"")).append("\"],\n")
-                .append("        PARAMETER[\"json_args\", \"").append(selfRootNode.elements().next().toString().replace("\"", "\"\"")).append("\"]],\n")
-                .append("    CS[Cartesian, 2],\n")
-                .append("        AXIS[\"X\", east,\n")
-                .append("            ORDER[1],\n")
-                .append("            LENGTHUNIT[\"metre\", 1]],\n")
-                .append("        AXIS[\"Y\", north,\n")
-                .append("            ORDER[2],\n")
-                .append("            LENGTHUNIT[\"metre\", 1]],\n")
-                .append("    SCOPE[\"Minecraft.\"],\n")
-                .append("    AREA[\"World.\"],\n")
-                .append("    BBOX[").append(boundsGeo[1]).append(", ").append(boundsGeo[0]).append(", ").append(boundsGeo[3]).append(", ").append(boundsGeo[2]).append("]]");
-        return (CoordinateReferenceSystem) WKTStandard.WKT2_2015.parse(wkt.toString());
+        ReferencingFactoryContainer factories = SISHelper.factories();
+
+        CoordinateSystemAxis[] axes = {
+                factories.getCSFactory().createCoordinateSystemAxis(ImmutableMap.of(IdentifiedObject.NAME_KEY, "Easting"), "X", AxisDirection.EAST, Units.METRE),
+                factories.getCSFactory().createCoordinateSystemAxis(ImmutableMap.of(IdentifiedObject.NAME_KEY, "Northing"), "Y", AxisDirection.NORTH, Units.METRE),
+        };
+
+        DefaultParameterValueGroup parameters = new DefaultParameterValueGroup(factories.getMathTransformFactory().getDefaultParameters("Terra++ Internal Projection"));
+        parameters.getOrCreate(WrappedProjectionOperationMethod.PARAMETER_TYPE).setValue(selfRootNode.fieldNames().next());
+        parameters.getOrCreate(WrappedProjectionOperationMethod.PARAMETER_JSON_ARGS).setValue(selfRootNode.elements().next().toString());
+
+        return factories.getCRSFactory().createProjectedCRS(
+                ImmutableMap.of(IdentifiedObject.NAME_KEY, "WGS 84 / Reversed Axis Order / Terra++ Wrapped GeographicProjection: " + selfRootNode,
+                        CoordinateOperation.DOMAIN_OF_VALIDITY_KEY, new SimpleExtent(new DefaultGeographicBoundingBox(boundsGeo[0], boundsGeo[2], boundsGeo[1], boundsGeo[3]), null, null)),
+                TPP_GEO_CRS,
+                factories.getCoordinateOperationFactory().createDefiningConversion(
+                        ImmutableMap.of(IdentifiedObject.NAME_KEY, "Terra++ Wrapped GeographicProjection: " + selfRootNode),
+                        factories.getCoordinateOperationFactory().getOperationMethod("Terra++ Internal Projection"),
+                        parameters),
+                factories.getCSFactory().createCartesianCS(
+                        ImmutableMap.of(IdentifiedObject.NAME_KEY, AxisDirections.appendTo(new StringBuilder("Cartesian CS"), axes)),
+                        axes[0], axes[1]));
     }
 
     class Deserializer extends TypedDeserializer<GeographicProjection> {

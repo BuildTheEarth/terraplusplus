@@ -26,12 +26,12 @@ public final class WrappedProjectionOperationMethod extends DefaultOperationMeth
     private static final Map<String, ?> PROPERTIES = ImmutableMap.of(
             NAME_KEY, new ImmutableIdentifier(Citations.fromName("Terra++"), "Terra++", "Terra++ Internal Projection"));
 
-    static final ParameterDescriptor<String> PARAMETER_TYPE = new ParameterBuilder()
+    public static final ParameterDescriptor<String> PARAMETER_TYPE = new ParameterBuilder()
             .addName("type")
             .setRequired(true)
             .create(String.class, null);
 
-    static final ParameterDescriptor<String> PARAMETER_JSON_ARGS = new ParameterBuilder()
+    public static final ParameterDescriptor<String> PARAMETER_JSON_ARGS = new ParameterBuilder()
             .addName("json_args")
             .setRequired(false)
             .create(String.class, "{}");
