@@ -6,8 +6,6 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
@@ -20,6 +18,7 @@ import net.buildtheearth.terraplusplus.projection.sis.SISProjectionWrapper;
 import net.buildtheearth.terraplusplus.projection.sis.WKTStandard;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
 import net.buildtheearth.terraplusplus.util.TerraUtils;
+import net.buildtheearth.terraplusplus.util.compat.sis.SISHelper;
 import net.buildtheearth.terraplusplus.util.geo.GeographicCoordinates;
 import net.buildtheearth.terraplusplus.util.geo.ProjectedCoordinates2d;
 import net.daporkchop.lib.common.math.PMath;
@@ -31,7 +30,6 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
@@ -119,7 +117,7 @@ public interface GeographicProjection {
             //get max in by using extreme coordinates
             double[] bounds = null;
 
-            double[] blendFactors = {0.0d, 0.5d, 1.0d};
+            double[] blendFactors = { 0.0d, 0.5d, 1.0d };
             for (double flon : blendFactors) {
                 for (double flat : blendFactors) {
                     double[] point = this.fromGeo(PMath.lerp(boundsGeo[0], boundsGeo[2], flon), PMath.lerp(boundsGeo[1], boundsGeo[3], flat));
@@ -285,46 +283,37 @@ public interface GeographicProjection {
         return new ParameterBuilder().addName("empty").createGroup().createValue();
     }
 
-    @SneakyThrows(ExecutionException.class)
+    /**
+     * @deprecated use {@link SISHelper#projectedCRS(GeographicProjection)}
+     */
+    @Deprecated
+    @SneakyThrows(ParseException.class)
     default CoordinateReferenceSystem projectedCRS() {
-        return Deserializer.DEFAULT_CRS_INSTANCE_CACHE.get(this, () -> {
-            ObjectNode selfRootNode = TerraConstants.JSON_MAPPER.valueToTree(this);
+        ObjectNode selfRootNode = TerraConstants.JSON_MAPPER.valueToTree(this);
 
-            double[] boundsGeo = this.boundsGeo();
+        double[] boundsGeo = this.boundsGeo();
 
-            StringBuilder wkt = new StringBuilder();
-            wkt.append("PROJCRS[\"WGS 84 / Reversed Axis Order / Terra++ Wrapped GeographicProjection: ").append(selfRootNode.toString().replace("\"", "\"\"")).append("\",\n")
-                    .append("BASE").append(WKTStandard.WKT2_2015.format(TPP_GEO_CRS)).append(",\n")
-                    .append("    BASEGEODCRS[\"WGS 84\",\n")
-                    .append("        DATUM[\"World Geodetic System 1984\",\n")
-                    .append("            ELLIPSOID[\"WGS 84\", 6378137, 298.257223563,\n")
-                    .append("                LENGTHUNIT[\"metre\",1]]],\n")
-                    .append("        PRIMEM[\"Greenwich\", 0,\n")
-                    .append("            ANGLEUNIT[\"degree\", 0.0174532925199433]],\n")
-                    .append("        ID[\"EPSG\", 4326]],\n")
-                    .append("    CONVERSION[\"Terra++ Wrapped GeographicProjection: ").append(selfRootNode.toString().replace("\"", "\"\"")).append("\",\n")
-                    .append("        METHOD[\"Terra++ Internal Projection\"],\n")
-                    .append("        PARAMETER[\"type\", \"").append(selfRootNode.fieldNames().next().replace("\"", "\"\"")).append("\"],\n")
-                    .append("        PARAMETER[\"json_args\", \"").append(selfRootNode.elements().next().toString().replace("\"", "\"\"")).append("\"]],\n")
-                    .append("    CS[Cartesian, 2],\n")
-                    .append("        AXIS[\"X\", east,\n")
-                    .append("            ORDER[1],\n")
-                    .append("            LENGTHUNIT[\"metre\", 1]],\n")
-                    .append("        AXIS[\"Y\", north,\n")
-                    .append("            ORDER[2],\n")
-                    .append("            LENGTHUNIT[\"metre\", 1]],\n")
-                    .append("    SCOPE[\"Minecraft.\"],\n")
-                    .append("    AREA[\"World.\"],\n")
-                    .append("    BBOX[").append(boundsGeo[1]).append(", ").append(boundsGeo[0]).append(", ").append(boundsGeo[3]).append(", ").append(boundsGeo[2]).append("]]");
-            return (CoordinateReferenceSystem) WKTStandard.WKT2_2015.parse(wkt.toString());
-        });
+        StringBuilder wkt = new StringBuilder();
+        wkt.append("PROJCRS[\"WGS 84 / Reversed Axis Order / Terra++ Wrapped GeographicProjection: ").append(selfRootNode.toString().replace("\"", "\"\"")).append("\",\n")
+                .append("BASE").append(WKTStandard.WKT2_2015.format(TPP_GEO_CRS)).append(",\n")
+                .append("    CONVERSION[\"Terra++ Wrapped GeographicProjection: ").append(selfRootNode.toString().replace("\"", "\"\"")).append("\",\n")
+                .append("        METHOD[\"Terra++ Internal Projection\"],\n")
+                .append("        PARAMETER[\"type\", \"").append(selfRootNode.fieldNames().next().replace("\"", "\"\"")).append("\"],\n")
+                .append("        PARAMETER[\"json_args\", \"").append(selfRootNode.elements().next().toString().replace("\"", "\"\"")).append("\"]],\n")
+                .append("    CS[Cartesian, 2],\n")
+                .append("        AXIS[\"X\", east,\n")
+                .append("            ORDER[1],\n")
+                .append("            LENGTHUNIT[\"metre\", 1]],\n")
+                .append("        AXIS[\"Y\", north,\n")
+                .append("            ORDER[2],\n")
+                .append("            LENGTHUNIT[\"metre\", 1]],\n")
+                .append("    SCOPE[\"Minecraft.\"],\n")
+                .append("    AREA[\"World.\"],\n")
+                .append("    BBOX[").append(boundsGeo[1]).append(", ").append(boundsGeo[0]).append(", ").append(boundsGeo[3]).append(", ").append(boundsGeo[2]).append("]]");
+        return (CoordinateReferenceSystem) WKTStandard.WKT2_2015.parse(wkt.toString());
     }
 
     class Deserializer extends TypedDeserializer<GeographicProjection> {
-        private static final Cache<GeographicProjection, CoordinateReferenceSystem> DEFAULT_CRS_INSTANCE_CACHE = CacheBuilder.newBuilder()
-                .weakKeys()
-                .build();
-
         @Override
         protected Map<String, Class<? extends GeographicProjection>> registry() {
             return GlobalParseRegistries.PROJECTIONS;

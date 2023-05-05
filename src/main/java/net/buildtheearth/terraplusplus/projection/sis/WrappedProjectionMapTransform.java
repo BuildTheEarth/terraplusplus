@@ -75,7 +75,7 @@ public final class WrappedProjectionMapTransform extends AbstractMathTransform2D
 
     private Matrix2 derivative(double x, double y) throws OutOfProjectionBoundsException {
         //return this.fromGeo ? this.projection.fromGeoDerivative(x, y) : this.projection.toGeoDerivative(x, y);
-        return GeographicProjectionHelper.defaultDerivative(projection, x, y, this.fromGeo);
+        return GeographicProjectionHelper.defaultDerivative(this.projection, x, y, this.fromGeo);
     }
 
     @Override

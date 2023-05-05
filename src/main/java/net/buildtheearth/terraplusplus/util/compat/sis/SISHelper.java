@@ -1,8 +1,12 @@
 package net.buildtheearth.terraplusplus.util.compat.sis;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
+import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
 import net.daporkchop.lib.common.pool.array.ArrayAllocator;
 import org.apache.sis.geometry.Envelopes;
@@ -30,6 +34,20 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @UtilityClass
 public class SISHelper {
+    @SuppressWarnings("deprecation")
+    private static final LoadingCache<GeographicProjection, CoordinateReferenceSystem> PROJECTION_TO_CRS_CACHE = CacheBuilder.newBuilder()
+            .weakKeys().weakValues()
+            .build(CacheLoader.from(GeographicProjection::projectedCRS));
+
+    public static CoordinateReferenceSystem projectedCRS(@NonNull GeographicProjection projection) {
+        return PROJECTION_TO_CRS_CACHE.getUnchecked(projection);
+    }
+
+    @SneakyThrows(FactoryException.class)
+    public static CoordinateOperation findOperation(CoordinateReferenceSystem source, CoordinateReferenceSystem target) {
+        return CRS.findOperation(source, target, null);
+    }
+
     public static boolean isPossibleOutOfBoundsValue(double value) {
         return Double.isInfinite(value) || Double.isNaN(value);
     }
@@ -136,10 +154,5 @@ public class SISHelper {
 
     public static MatrixSIS getAxisOrderMatrix(@NonNull CoordinateOperation operation) {
         return Matrices.createTransform(CoordinateSystems.getAxisDirections(operation.getSourceCRS().getCoordinateSystem()), CoordinateSystems.getAxisDirections(operation.getTargetCRS().getCoordinateSystem()));
-    }
-
-    @SneakyThrows(FactoryException.class)
-    public static CoordinateOperation findOperation(CoordinateReferenceSystem source, CoordinateReferenceSystem target) {
-        return CRS.findOperation(source, target, null);
     }
 }

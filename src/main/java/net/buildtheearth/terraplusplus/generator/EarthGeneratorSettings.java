@@ -52,6 +52,7 @@ import net.buildtheearth.terraplusplus.projection.transform.ProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ScaleProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.SwapAxesProjectionTransform;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
+import net.buildtheearth.terraplusplus.util.compat.sis.SISHelper;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.reference.ReferenceStrength;
 import net.daporkchop.lib.common.reference.cache.Cached;
@@ -172,7 +173,7 @@ public class EarthGeneratorSettings {
     protected final GeographicProjection projection;
 
     @Getter(lazy = true)
-    private final CoordinateReferenceSystem crs = this.projection.projectedCRS();
+    private final CoordinateReferenceSystem crs = SISHelper.projectedCRS(this.projection);
 
     @NonNull
     @Getter(onMethod_ = { @JsonGetter })

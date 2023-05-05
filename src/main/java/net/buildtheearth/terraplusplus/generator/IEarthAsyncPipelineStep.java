@@ -5,6 +5,7 @@ import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException
 import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraplusplus.util.TilePos;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
+import net.buildtheearth.terraplusplus.util.compat.sis.SISHelper;
 import net.buildtheearth.terraplusplus.util.geo.pointarray.AxisAlignedGridPointArray2D;
 import net.buildtheearth.terraplusplus.util.geo.pointarray.PointArray2D;
 
@@ -30,7 +31,7 @@ public interface IEarthAsyncPipelineStep<D, V, B extends IEarthAsyncDataBuilder<
             Bounds2d chunkBounds = Bounds2d.of(baseX, baseX + sizeBlocks, baseZ, baseZ + sizeBlocks);
             CornerBoundingBox2d chunkBoundsGeo = chunkBounds.toCornerBB(datasets.projection(), false).toGeo();
 
-            PointArray2D sampledPoints = new AxisAlignedGridPointArray2D(null, datasets.projection().projectedCRS(), 16, 16,
+            PointArray2D sampledPoints = new AxisAlignedGridPointArray2D(null, SISHelper.projectedCRS(datasets.projection()), 16, 16,
                     baseX, baseZ, sizeBlocks, sizeBlocks);
 
             //TODO: don't do this

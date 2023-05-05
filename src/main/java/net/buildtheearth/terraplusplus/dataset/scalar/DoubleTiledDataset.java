@@ -170,7 +170,7 @@ public abstract class DoubleTiledDataset extends TiledHttpDataset<double[]> impl
             }
         }
 
-        PointArray2D projectedPoints = (PointArray2D) points.convert(this.projection.projectedCRS(), 0.1d);
+        PointArray2D projectedPoints = (PointArray2D) points.convert(SISHelper.projectedCRS(this.projection), 0.1d);
         Bounds2d paddedLocalBounds = SISHelper.toBounds(projectedPoints.envelope()).expand(this.blend.size).validate(this.projection, false);
 
         return new State(paddedLocalBounds, projectedPoints).future();
