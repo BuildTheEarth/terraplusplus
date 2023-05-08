@@ -11,7 +11,7 @@ import org.apache.sis.referencing.operation.matrix.Matrix2;
  */
 @UtilityClass
 public class GeographicProjectionHelper {
-    public static final double DEFAULT_DERIVATIVE_DELTA = 1e-7d;
+    public static final double DEFAULT_DERIVATIVE_DELTA = 1e-9d;
 
     public static Matrix2 defaultDerivative(@NonNull GeographicProjection projection, double x, double y, boolean fromGeo) throws OutOfProjectionBoundsException {
         return defaultDerivative(projection, x, y, fromGeo, DEFAULT_DERIVATIVE_DELTA);

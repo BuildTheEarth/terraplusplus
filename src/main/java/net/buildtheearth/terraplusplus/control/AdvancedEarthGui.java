@@ -10,6 +10,7 @@ import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
+import net.buildtheearth.terraplusplus.projection.GeographicProjectionHelper;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.projection.transform.OffsetProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ProjectionTransform;
@@ -1244,6 +1245,13 @@ public class AdvancedEarthGui extends GuiScreen {
 
                         drawLine(mouseX, mouseY, (int) (mouseX + deriv.m00), (int) (mouseY + deriv.m10), 0xFF00FF00);
                         drawLine(mouseX, mouseY, (int) (mouseX + deriv.m01), (int) (mouseY + deriv.m11), 0xFFFF0000);
+
+                        deriv = GeographicProjectionHelper.defaultDerivative(this.projection, geo[0], geo[1], true);
+                        deriv.normalizeColumns();
+                        TMatrices.scaleFast(deriv, 10.0d, deriv);
+
+                        drawLine(mouseX, mouseY, (int) (mouseX + deriv.m00), (int) (mouseY + deriv.m10), 0x8800FF00);
+                        drawLine(mouseX, mouseY, (int) (mouseX + deriv.m01), (int) (mouseY + deriv.m11), 0x88FF0000);
                     } catch (TransformException e) {
                         int i = 0;
                     }

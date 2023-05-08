@@ -141,6 +141,18 @@ public class TerraUtils {
         return mat;
     }
 
+    public static MatrixSIS matrixToSIS(double[][] matrix) {
+        int rows = matrix.length;
+        int cols = matrix[0].length;
+        MatrixSIS result = TMatrices.createZero(rows, cols);
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                result.setElement(row, col, matrix[row][col]);
+            }
+        }
+        return result;
+    }
+
     /**
      * Multiples the given matrix with the given vector.
      * The matrix is assumed to be square and the vector is assumed to be of the same dimension as the matrix.
@@ -179,6 +191,16 @@ public class TerraUtils {
         for (int i = 0; i < arr.length; i++) {
             arr[i] = Math.toDegrees(arr[i]);
         }
+    }
+
+    /**
+     * Squares the given value.
+     *
+     * @param d the value to square
+     * @return d²
+     */
+    public static double sq(double d) {
+        return d * d;
     }
 
     /**
