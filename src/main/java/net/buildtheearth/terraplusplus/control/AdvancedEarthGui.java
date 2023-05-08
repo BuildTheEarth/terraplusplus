@@ -10,15 +10,18 @@ import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.config.GlobalParseRegistries;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
+import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.projection.transform.OffsetProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.ScaleProjectionTransform;
+import net.buildtheearth.terraplusplus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
+import net.buildtheearth.terraplusplus.util.compat.sis.SISHelper;
+import net.buildtheearth.terraplusplus.util.math.matrix.TMatrices;
 import net.daporkchop.lib.common.function.io.IOSupplier;
 import net.daporkchop.lib.common.reference.ReferenceStrength;
 import net.daporkchop.lib.common.reference.cache.Cached;
 import net.daporkchop.lib.common.util.PArrays;
-import net.daporkchop.lib.common.util.PorkUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
@@ -27,8 +30,11 @@ import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
@@ -38,13 +44,16 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.DecorateBiomeEvent;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import org.apache.sis.geometry.DirectPosition2D;
 import org.apache.sis.parameter.DefaultParameterDescriptorGroup;
 import org.apache.sis.parameter.DefaultParameterValueGroup;
+import org.apache.sis.referencing.operation.matrix.Matrix2;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.opengis.parameter.GeneralParameterDescriptor;
 import org.opengis.parameter.ParameterDescriptor;
+import org.opengis.referencing.operation.TransformException;
 
 import javax.imageio.ImageIO;
 import java.io.IOException;
@@ -56,7 +65,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
@@ -214,7 +222,7 @@ public class AdvancedEarthGui extends GuiScreen {
         this.drawDefaultBackground();
         this.drawCenteredString(this.fontRenderer, I18n.format(TerraConstants.MODID + ".gui.header"), this.width >> 1, VERTICAL_PADDING >> 1, 0xFFFFFFFF);
 
-        this.preview.draw();
+        this.preview.draw(mouseX, mouseY);
 
         { //render list
             int y = VERTICAL_PADDING;
@@ -263,6 +271,29 @@ public class AdvancedEarthGui extends GuiScreen {
         for (GuiButton button : this.nonTranslatedButtons) {
             button.drawButton(this.mc, mouseX, mouseY, partialTicks);
         }
+    }
+
+    /**
+     * Draws a solid color line with the specified coordinates and color.
+     */
+    public static void drawLine(int x0, int y0, int x1, int y1, int color)  {
+        float f3 = (float)(color >> 24 & 255) / 255.0F;
+        float f = (float)(color >> 16 & 255) / 255.0F;
+        float f1 = (float)(color >> 8 & 255) / 255.0F;
+        float f2 = (float)(color & 255) / 255.0F;
+
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder bufferbuilder = tessellator.getBuffer();
+        GlStateManager.enableBlend();
+        GlStateManager.disableTexture2D();
+        GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+        GlStateManager.color(f, f1, f2, f3);
+        bufferbuilder.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
+        bufferbuilder.pos(x0, y0, 0.0D).endVertex();
+        bufferbuilder.pos(x1, y1, 0.0D).endVertex();
+        tessellator.draw();
+        GlStateManager.enableTexture2D();
+        GlStateManager.disableBlend();
     }
 
     @Override
@@ -1011,6 +1042,13 @@ public class AdvancedEarthGui extends GuiScreen {
 
     protected class ProjectionPreview {
         private int previewX, previewY, previewWidth, previewHeight, scaling;
+
+        private double minX;
+        private double maxX;
+        private double minY;
+        private double maxY;
+        private double projScale;
+
         private volatile boolean finish;
         private volatile boolean reset;
         private DynamicTexture previewTexture;
@@ -1114,13 +1152,13 @@ public class AdvancedEarthGui extends GuiScreen {
             // Scale should be able to fit whole earth inside texture
             double[] bounds = projection.bounds();
 
-            double minX = min(bounds[0], bounds[2]);
-            double maxX = max(bounds[0], bounds[2]);
-            double minY = min(bounds[1], bounds[3]);
-            double maxY = max(bounds[1], bounds[3]);
+            double minX = this.minX = min(bounds[0], bounds[2]);
+            double maxX = this.maxX = max(bounds[0], bounds[2]);
+            double minY = this.minY = min(bounds[1], bounds[3]);
+            double maxY = this.maxY = max(bounds[1], bounds[3]);
             double dx = maxX - minX;
             double dy = maxY - minY;
-            double scale = max(dx, dy) / (double) Math.min(width, height);
+            double scale = this.projScale = max(dx, dy) / (double) Math.min(width, height);
 
             // Actually set map data
             for (int yi = 0; yi < height && !this.reset; yi++) {
@@ -1176,7 +1214,7 @@ public class AdvancedEarthGui extends GuiScreen {
             }
         }
 
-        public void draw() {
+        public void draw(int mouseX, int mouseY) {
             synchronized (this.textureNeedsUpdate) {
                 if (this.textureNeedsUpdate.get()) {
                     this.previewTexture.updateDynamicTexture();
@@ -1187,7 +1225,33 @@ public class AdvancedEarthGui extends GuiScreen {
             }
             Minecraft.getMinecraft().getTextureManager().bindTexture(DIRECTIONS_TEXTURE);
             drawScaledCustomSizeModalRect(this.previewX + this.previewWidth - 64, this.previewY, 0, 0, 64, 64, 64, 64, 64, 64);
-        }
 
+            int relativeMouseX = (mouseX - this.previewX) * this.scaling;
+            int relativeMouseY = (mouseY - this.previewY) * this.scaling;
+            if (relativeMouseX >= 0 && relativeMouseY >= 0 && relativeMouseX < this.previewWidth * this.scaling && relativeMouseY < this.previewHeight * this.scaling) {
+                double projX = relativeMouseX * this.projScale + this.minX;
+                double projY = relativeMouseY * this.projScale + this.minY;
+
+                try {
+                    double[] geo = this.projection.toGeo(projX, projY);
+
+                    try {
+                        Matrix2 deriv = this.projection.fromGeoDerivative(geo[0], geo[1]);
+                        deriv = Matrix2.castOrCopy(SISHelper.findOperation(TerraConstants.TPP_GEO_CRS, SISHelper.projectedCRS(this.projection)).getMathTransform().derivative(new DirectPosition2D(geo[0], geo[1])));
+
+                        deriv.normalizeColumns();
+                        TMatrices.scaleFast(deriv, 10.0d, deriv);
+
+                        drawLine(mouseX, mouseY, (int) (mouseX + deriv.m00), (int) (mouseY + deriv.m10), 0xFF00FF00);
+                        drawLine(mouseX, mouseY, (int) (mouseX + deriv.m01), (int) (mouseY + deriv.m11), 0xFFFF0000);
+                    } catch (TransformException e) {
+                        int i = 0;
+                    }
+                } catch (OutOfProjectionBoundsException e) {
+                    int i = 0;
+                    //ignored
+                }
+            }
+        }
     }
 }
