@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.util.compat.sis.SISHelper;
+import net.daporkchop.lib.common.util.PorkUtil;
 import org.apache.sis.internal.referencing.ReferencingFactoryContainer;
 import org.apache.sis.internal.referencing.provider.Affine;
 import org.apache.sis.measure.Units;
@@ -15,7 +16,10 @@ import org.apache.sis.referencing.operation.matrix.MatrixSIS;
 import org.opengis.referencing.IdentifiedObject;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.cs.AxisDirection;
+import org.opengis.referencing.cs.CartesianCS;
+import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
+import org.opengis.referencing.cs.EllipsoidalCS;
 import org.opengis.util.FactoryException;
 
 import java.util.stream.IntStream;
@@ -64,9 +68,13 @@ public abstract class ProjectionTransform implements GeographicProjection {
             affineMatrix.multiply(((ProjectionTransform) proj).affineMatrix());
         } while ((proj = ((ProjectionTransform) proj).delegate()) instanceof ProjectionTransform);*/
 
+        CoordinateReferenceSystem baseCRS = SISHelper.projectedCRS(this.delegate());
+
         String simpleString = "Terra++ " + this.toSimpleString();
         MatrixSIS affineMatrix = this.affineMatrix();
-        CoordinateReferenceSystem baseCRS = SISHelper.projectedCRS(this.delegate());
+        if (affineMatrix.isIdentity()) {
+            return baseCRS;
+        }
 
         ReferencingFactoryContainer factories = SISHelper.factories();
 
@@ -75,6 +83,19 @@ public abstract class ProjectionTransform implements GeographicProjection {
 
         factories.getMathTransformFactory().createAffineTransform(affineMatrix);
 
+        CoordinateSystem cs;
+        if (baseCRS.getCoordinateSystem() instanceof CartesianCS) {
+            cs = factories.getCSFactory().createCartesianCS(
+                    ImmutableMap.of(IdentifiedObject.NAME_KEY, baseCRS.getCoordinateSystem().getName().getCode() + " / " + simpleString),
+                    transformedAxes[0], transformedAxes[1]);
+        } else if (baseCRS.getCoordinateSystem() instanceof EllipsoidalCS) {
+            cs = factories.getCSFactory().createEllipsoidalCS(
+                    ImmutableMap.of(IdentifiedObject.NAME_KEY, baseCRS.getCoordinateSystem().getName().getCode() + " / " + simpleString),
+                    transformedAxes[0], transformedAxes[1]);
+        } else {
+            throw new IllegalArgumentException(PorkUtil.className(baseCRS.getCoordinateSystem()));
+        }
+
         return factories.getCRSFactory().createDerivedCRS(
                 ImmutableMap.of(IdentifiedObject.NAME_KEY, baseCRS.getName().getCode() + " / " + simpleString),
                 baseCRS,
@@ -82,8 +103,6 @@ public abstract class ProjectionTransform implements GeographicProjection {
                         ImmutableMap.of(IdentifiedObject.NAME_KEY, simpleString),
                         Affine.getProvider(2, 2, true),
                         Affine.parameters(affineMatrix)),
-                factories.getCSFactory().createCartesianCS(
-                        ImmutableMap.of(IdentifiedObject.NAME_KEY, baseCRS.getCoordinateSystem().getName().getCode() + " / " + simpleString),
-                        transformedAxes[0], transformedAxes[1]));
+                cs);
     }
 }

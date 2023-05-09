@@ -54,6 +54,7 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.opengis.parameter.GeneralParameterDescriptor;
 import org.opengis.parameter.ParameterDescriptor;
+import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
 
 import javax.imageio.ImageIO;
@@ -1238,7 +1239,9 @@ public class AdvancedEarthGui extends GuiScreen {
 
                     try {
                         Matrix2 deriv = this.projection.fromGeoDerivative(geo[0], geo[1]);
-                        deriv = Matrix2.castOrCopy(SISHelper.findOperation(TerraConstants.TPP_GEO_CRS, SISHelper.projectedCRS(this.projection)).getMathTransform().derivative(new DirectPosition2D(geo[0], geo[1])));
+
+                        MathTransform transform = SISHelper.findOperation(TerraConstants.TPP_GEO_CRS, SISHelper.projectedCRS(this.projection)).getMathTransform();
+                        deriv = Matrix2.castOrCopy(transform.derivative(new DirectPosition2D(geo[0], geo[1])));
 
                         deriv.normalizeColumns();
                         TMatrices.scaleFast(deriv, 10.0d, deriv);

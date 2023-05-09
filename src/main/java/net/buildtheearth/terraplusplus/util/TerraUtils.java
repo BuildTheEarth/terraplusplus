@@ -108,6 +108,37 @@ public class TerraUtils {
         return new double[]{ lambda, phi };
     }
 
+    public static Matrix3x2 spherical2CartesianDerivative(double longitude, double colatitude) {
+        Matrix3x2 result = Matrix3x2.createZero();
+        spherical2CartesianDerivative(longitude, colatitude, result);
+        return result;
+    }
+
+    public static void spherical2CartesianDerivative(double longitude, double colatitude, Matrix3x2 dst) {
+        double sinlon = Math.sin(longitude);
+        double coslon = Math.cos(longitude);
+        double sinlat = Math.sin(colatitude);
+        double coslat = Math.cos(colatitude);
+
+        // https://www.wolframalpha.com/input?i=d%2Fdl+sin%28c%29+*+cos%28l%29
+        dst.m00 = -sinlat * sinlon;
+
+        // https://www.wolframalpha.com/input?i=d%2Fdc+sin%28c%29+*+cos%28l%29
+        dst.m01 = coslat * coslon;
+
+        // https://www.wolframalpha.com/input?i=d%2Fdl+sin%28c%29+*+sin%28l%29
+        dst.m10 = sinlat * coslon;
+
+        // https://www.wolframalpha.com/input?i=d%2Fdc+sin%28c%29+*+sin%28l%29
+        dst.m11 = coslat * sinlon;
+
+        // https://www.wolframalpha.com/input?i=d%2Fdl+cos%28c%29
+        dst.m20 = 0.0d;
+
+        // https://www.wolframalpha.com/input?i=d%2Fdc+cos%28c%29
+        dst.m21 = -sinlat;
+    }
+
     /**
      * TODO produceZYZRotationMatrix javadoc
      *
