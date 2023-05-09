@@ -659,9 +659,9 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
         return "Dymaxion";
     }
 
-    protected static final Cached<TransformResourceCache> TRANSFORM_RESOURCE_CACHE = Cached.threadLocal(TransformResourceCache::new);
+    private static final Cached<TransformResourceCache> TRANSFORM_RESOURCE_CACHE = Cached.threadLocal(TransformResourceCache::new);
 
-    protected static final class TransformResourceCache {
+    protected static class TransformResourceCache {
         public final Vector2d geo = new Vector2d();
         public final Vector2d spherical = new Vector2d();
         public final Vector3d cartesian = new Vector3d();
@@ -681,22 +681,26 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
 
         @Override
         protected AbstractFromGeoMathTransform2D createBaseTransform(ParameterValueGroup parameters) throws InvalidParameterNameException, ParameterNotFoundException, InvalidParameterValueException {
-            return new FromGeo(parameters, new ToGeo(parameters));
+            return new FromGeo<>(parameters, new ToGeo<>(parameters, TRANSFORM_RESOURCE_CACHE), TRANSFORM_RESOURCE_CACHE);
         }
     }
 
-    protected static class FromGeo extends AbstractFromGeoMathTransform2D {
+    protected static class FromGeo<CACHE extends TransformResourceCache> extends AbstractFromGeoMathTransform2D {
         protected static final Matrix2 SPECIAL_FACTOR = new Matrix2(0.5d, -0.5d * ROOT3, 0.5d * ROOT3, 0.5d);
 
-        public FromGeo(@NonNull ParameterValueGroup parameters, @NonNull ToGeo toGeo) {
+        protected final Cached<CACHE> cacheCache;
+
+        public FromGeo(@NonNull ParameterValueGroup parameters, @NonNull ToGeo<CACHE> toGeo, @NonNull Cached<CACHE> cacheCache) {
             super(parameters, toGeo);
+
+            this.cacheCache = cacheCache;
         }
 
         protected void triangleTransform(Vector3d rotated, Vector2d dst) {
             triangleTransformDymaxion(rotated, dst);
         }
 
-        protected void triangleTransformDerivative(Vector3d rotated, Matrix2x3 dst) {
+        protected void triangleTransformDerivative(CACHE cache, Vector3d rotated, Matrix2x3 dst) {
             triangleTransformDymaxionDerivative(rotated, dst);
         }
 
@@ -710,7 +714,7 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
 
         @Override
         public Matrix transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, boolean derivate) throws TransformException {
-            TransformResourceCache cache = TRANSFORM_RESOURCE_CACHE.get();
+            CACHE cache = this.cacheCache.get();
 
             Vector3d cartesian = cache.cartesian;
             Vector3d rotated = cache.rotated;
@@ -758,7 +762,7 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
 
             TerraUtils.spherical2CartesianDerivative(origLon, origLat, cartesianDerivative);
             TMatrices.multiplyFast(ROTATION_MATRICES[origFace], cartesianDerivative, rotatedDerivative);
-            this.triangleTransformDerivative(rotated, projectedDerivative);
+            this.triangleTransformDerivative(cache, rotated, projectedDerivative);
             TMatrices.multiplyFast(projectedDerivative, rotatedDerivative, totalDerivative);
 
             //flip triangle to correct orientation
@@ -773,9 +777,13 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
         }
     }
 
-    protected static class ToGeo extends AbstractToGeoMathTransform2D {
-        public ToGeo(@NonNull ParameterValueGroup parameters) {
+    protected static class ToGeo<CACHE extends TransformResourceCache> extends AbstractToGeoMathTransform2D {
+        protected final Cached<CACHE> cacheCache;
+
+        public ToGeo(@NonNull ParameterValueGroup parameters, @NonNull Cached<CACHE> cacheCache) {
             super(parameters);
+
+            this.cacheCache = cacheCache;
         }
 
         protected void inverseTriangleTransform(double x, double y, Vector3d dst) {

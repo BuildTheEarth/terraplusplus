@@ -1238,20 +1238,20 @@ public class AdvancedEarthGui extends GuiScreen {
                     double[] geo = this.projection.toGeo(projX, projY);
 
                     try {
-                        Matrix2 deriv = this.projection.fromGeoDerivative(geo[0], geo[1]);
+                        final double lineLength = 32.0d;
 
                         MathTransform transform = SISHelper.findOperation(TerraConstants.TPP_GEO_CRS, SISHelper.projectedCRS(this.projection)).getMathTransform();
-                        deriv = Matrix2.castOrCopy(transform.derivative(new DirectPosition2D(geo[0], geo[1])));
+                        Matrix2 deriv = Matrix2.castOrCopy(transform.derivative(new DirectPosition2D(geo[0], geo[1])));
 
                         deriv.normalizeColumns();
-                        TMatrices.scaleFast(deriv, 10.0d, deriv);
+                        TMatrices.scaleFast(deriv, lineLength, deriv);
 
                         drawLine(mouseX, mouseY, (int) (mouseX + deriv.m00), (int) (mouseY + deriv.m10), 0xFF00FF00);
                         drawLine(mouseX, mouseY, (int) (mouseX + deriv.m01), (int) (mouseY + deriv.m11), 0xFFFF0000);
 
                         deriv = GeographicProjectionHelper.defaultDerivative(this.projection, geo[0], geo[1], true);
                         deriv.normalizeColumns();
-                        TMatrices.scaleFast(deriv, 10.0d, deriv);
+                        TMatrices.scaleFast(deriv, lineLength, deriv);
 
                         drawLine(mouseX, mouseY, (int) (mouseX + deriv.m00), (int) (mouseY + deriv.m10), 0x8800FF00);
                         drawLine(mouseX, mouseY, (int) (mouseX + deriv.m01), (int) (mouseY + deriv.m11), 0x88FF0000);

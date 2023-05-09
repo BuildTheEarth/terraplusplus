@@ -59,7 +59,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
 
     protected final InvertableVectorField inverse = INVERSE_CACHE.get();
 
-    /*@Override
+    @Override
     protected void triangleTransform(double x, double y, double z, Vector2d dst) {
         triangleTransformDymaxion(x, y, z, dst);
 
@@ -89,7 +89,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
         InvertableVectorField.Result result = InvertableVectorField.RESULT_CACHE.get();
         this.inverse.getInterpolatedVector(x, y, result);
         super.inverseTriangleTransform(result.f, result.g, dst);
-    }*/
+    }
 
     @Override
     public String toString() {
@@ -209,13 +209,11 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
             dst.y = yest;
 
             if (derivativeDst != null) {
-                Matrix2 origDeriv = new Matrix2();
-                origDeriv.m00 = result.dfdx;
-                origDeriv.m10 = result.dfdy;
-                origDeriv.m01 = result.dgdx;
-                origDeriv.m11 = result.dgdy;
-                derivativeDst.setMatrix(origDeriv);
-                //TMatrices.invertFast(origDeriv, derivativeDst);
+                derivativeDst.m00 = result.dfdx;
+                derivativeDst.m01 = result.dfdy;
+                derivativeDst.m10 = result.dgdx;
+                derivativeDst.m11 = result.dgdy;
+                TMatrices.invertFast(derivativeDst, derivativeDst);
             }
         }
 
@@ -229,6 +227,14 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
         }
     }
 
+    private static final Cached<TransformResourceCache> TRANSFORM_RESOURCE_CACHE = Cached.threadLocal(TransformResourceCache::new);
+
+    private static final class TransformResourceCache extends DymaxionProjection.TransformResourceCache {
+        public final Matrix2x3 conformal_superTriangleTransformDerivative = Matrix2x3.createZero();
+        public final Vector2d conformal_superTriangleTransform = new Vector2d();
+        public final Matrix2 conformal_newtonDerivative = new Matrix2();
+    }
+
     public static final class OperationMethod extends AbstractOperationMethod.ForLegacyProjection {
         public OperationMethod() {
             super("Conformal Dymaxion");
@@ -236,15 +242,15 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
 
         @Override
         protected AbstractFromGeoMathTransform2D createBaseTransform(ParameterValueGroup parameters) throws InvalidParameterNameException, ParameterNotFoundException, InvalidParameterValueException {
-            return new FromGeo(parameters, new ToGeo(parameters));
+            return new FromGeo<>(parameters, new ToGeo<>(parameters, TRANSFORM_RESOURCE_CACHE), TRANSFORM_RESOURCE_CACHE);
         }
     }
 
-    private static class FromGeo extends DymaxionProjection.FromGeo {
+    private static class FromGeo<CACHE extends TransformResourceCache> extends DymaxionProjection.FromGeo<CACHE> {
         private final InvertableVectorField field = INVERSE_CACHE.get();
 
-        public FromGeo(@NonNull ParameterValueGroup parameters, @NonNull ToGeo toGeo) {
-            super(parameters, toGeo);
+        public FromGeo(@NonNull ParameterValueGroup parameters, @NonNull ToGeo<CACHE> toGeo, @NonNull Cached<CACHE> cacheCache) {
+            super(parameters, toGeo, cacheCache);
         }
 
         @Override
@@ -267,56 +273,29 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
         }
 
         @Override
-        protected void triangleTransformDerivative(Vector3d rotated, Matrix2x3 dst) {
-            /*Vector2d superTransform = new Vector2d();
+        protected void triangleTransformDerivative(CACHE cache, Vector3d rotated, Matrix2x3 dst) {
+            Matrix2x3 superDerivative = cache.conformal_superTriangleTransformDerivative;
+            Vector2d superTransform = cache.conformal_superTriangleTransform;
+            Matrix2 newtonDeriv = cache.conformal_newtonDerivative;
+
+            super.triangleTransformDerivative(cache, rotated, superDerivative);
             super.triangleTransform(rotated, superTransform);
-
-            Matrix2x3 superDeriv = Matrix2x3.createZero();
-            super.triangleTransformDerivative(rotated, superDeriv);
-
-            this.field.applyNewtonsMethod(superTransform.x, superTransform.y, superTransform.x / ARC + 0.5d, superTransform.y / ARC + (ROOT3 / 6.0d), 5, superTransform, null);
-
-            InvertableVectorField.Result result = InvertableVectorField.RESULT_CACHE.get();
-            this.field.getInterpolatedVector(superTransform.x, superTransform.y, result);
-
-            Matrix2 newtonDeriv = new Matrix2();
-            newtonDeriv.m00 = result.dfdx;
-            newtonDeriv.m01 = result.dfdy;
-            newtonDeriv.m10 = result.dgdx;
-            newtonDeriv.m11 = result.dgdy;
-            newtonDeriv.transpose();
-            if (false) newtonDeriv = Matrix2.castOrCopy(newtonDeriv.inverse());
-
-            TMatrices.multiplyFast(newtonDeriv, superDeriv, dst);
-            TMatrices.scaleFast(dst, ARC, dst);*/
-
-            Matrix2x3 superDeriv = Matrix2x3.createZero();
-            super.triangleTransformDerivative(rotated, superDeriv);
-
-            Vector2d superTransform = new Vector2d();
-            super.triangleTransform(rotated, superTransform);
-
-            Matrix2 newtonDeriv = new Matrix2();
 
             this.field.applyNewtonsMethod(superTransform.x, superTransform.y, 5, superTransform, newtonDeriv);
+            TMatrices.scaleFast(newtonDeriv, ARC, newtonDeriv);
 
-            TMatrices.multiplyFast(newtonDeriv, superDeriv, dst);
-            TMatrices.scaleFast(dst, ARC, dst);
-
-            //super.triangleTransformDerivative(rotated, dst);
-
-            //TODO
+            TMatrices.multiplyFast(newtonDeriv, superDerivative, dst);
         }
     }
 
-    private static class ToGeo extends DymaxionProjection.ToGeo {
+    private static class ToGeo<CACHE extends TransformResourceCache> extends DymaxionProjection.ToGeo<CACHE> {
         private final InvertableVectorField field = INVERSE_CACHE.get();
 
-        public ToGeo(@NonNull ParameterValueGroup parameters) {
-            super(parameters);
+        public ToGeo(@NonNull ParameterValueGroup parameters, @NonNull Cached<CACHE> cacheCache) {
+            super(parameters, cacheCache);
         }
 
-        /*@Override
+        @Override
         protected void inverseTriangleTransform(double x, double y, Vector3d dst) {
             x /= ARC;
             y /= ARC;
@@ -350,6 +329,8 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
             super.inverseTriangleTransformDerivative(result.f, result.g, dst);
 
             TMatrices.multiplyFast(superDeriv, interpolatedVectorDeriv, dst);
-        }*/
+
+            //TODO
+        }
     }
 }
