@@ -22,7 +22,6 @@ import org.opengis.parameter.InvalidParameterNameException;
 import org.opengis.parameter.InvalidParameterValueException;
 import org.opengis.parameter.ParameterNotFoundException;
 import org.opengis.parameter.ParameterValueGroup;
-import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.TransformException;
 
 import javax.vecmath.Vector2d;
@@ -713,7 +712,7 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
         }
 
         @Override
-        public Matrix transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, boolean derivate) throws TransformException {
+        public Matrix2 transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, boolean derivate) throws TransformException {
             CACHE cache = this.cacheCache.get();
 
             Vector3d cartesian = cache.cartesian;
@@ -795,7 +794,7 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
         }
 
         @Override
-        public Matrix transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, boolean derivate) throws TransformException {
+        public Matrix2 transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, boolean derivate) throws TransformException {
             final double origX = srcPts[srcOff + 0];
             final double origY = srcPts[srcOff + 1];
 

@@ -1246,6 +1246,7 @@ public class AdvancedEarthGui extends GuiScreen {
                         deriv.normalizeColumns();
                         TMatrices.scaleFast(deriv, lineLength, deriv);
 
+                        GlStateManager.glLineWidth(2.0f);
                         drawLine(mouseX, mouseY, (int) (mouseX + deriv.m00), (int) (mouseY + deriv.m10), 0xFF00FF00);
                         drawLine(mouseX, mouseY, (int) (mouseX + deriv.m01), (int) (mouseY + deriv.m11), 0xFFFF0000);
 
@@ -1253,6 +1254,7 @@ public class AdvancedEarthGui extends GuiScreen {
                         deriv.normalizeColumns();
                         TMatrices.scaleFast(deriv, lineLength, deriv);
 
+                        GlStateManager.glLineWidth(5.0f);
                         drawLine(mouseX, mouseY, (int) (mouseX + deriv.m00), (int) (mouseY + deriv.m10), 0x8800FF00);
                         drawLine(mouseX, mouseY, (int) (mouseX + deriv.m01), (int) (mouseY + deriv.m11), 0x88FF0000);
                     } catch (TransformException e) {

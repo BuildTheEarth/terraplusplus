@@ -13,7 +13,6 @@ import org.opengis.parameter.InvalidParameterNameException;
 import org.opengis.parameter.InvalidParameterValueException;
 import org.opengis.parameter.ParameterNotFoundException;
 import org.opengis.parameter.ParameterValueGroup;
-import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.TransformException;
 
 /**
@@ -96,7 +95,7 @@ public class SinusoidalProjection extends AbstractSISMigratedGeographicProjectio
         }
 
         @Override
-        public Matrix transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, boolean derivate) throws TransformException {
+        public Matrix2 transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, boolean derivate) throws TransformException {
             double lon = srcPts[srcOff + 0];
             double lat = srcPts[srcOff + 1];
 
@@ -126,7 +125,7 @@ public class SinusoidalProjection extends AbstractSISMigratedGeographicProjectio
         }
 
         @Override
-        public Matrix transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, boolean derivate) throws TransformException {
+        public Matrix2 transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, boolean derivate) throws TransformException {
             double x = srcPts[srcOff + 0];
             double y = srcPts[srcOff + 1];
 

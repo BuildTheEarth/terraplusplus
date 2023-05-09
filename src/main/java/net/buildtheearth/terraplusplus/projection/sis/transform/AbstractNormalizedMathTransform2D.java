@@ -1,6 +1,7 @@
 package net.buildtheearth.terraplusplus.projection.sis.transform;
 
 import lombok.NonNull;
+import org.apache.sis.referencing.operation.matrix.Matrix2;
 import org.apache.sis.referencing.operation.matrix.MatrixSIS;
 import org.apache.sis.referencing.operation.transform.AbstractMathTransform2D;
 import org.apache.sis.referencing.operation.transform.ContextualParameters;
@@ -9,6 +10,8 @@ import org.opengis.parameter.ParameterValue;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.MathTransformFactory;
+import org.opengis.referencing.operation.Matrix;
+import org.opengis.referencing.operation.TransformException;
 import org.opengis.util.FactoryException;
 
 /**
@@ -50,4 +53,7 @@ public abstract class AbstractNormalizedMathTransform2D extends AbstractMathTran
     protected ContextualParameters getContextualParameters() {
         return this.contextualParameters;
     }
+
+    @Override
+    public abstract Matrix2 transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, boolean derivate) throws TransformException;
 }

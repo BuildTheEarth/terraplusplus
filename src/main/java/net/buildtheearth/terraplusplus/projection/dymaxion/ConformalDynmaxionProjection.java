@@ -227,9 +227,9 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
         }
     }
 
-    private static final Cached<TransformResourceCache> TRANSFORM_RESOURCE_CACHE = Cached.threadLocal(TransformResourceCache::new);
+    protected static final Cached<TransformResourceCache> TRANSFORM_RESOURCE_CACHE = Cached.threadLocal(TransformResourceCache::new);
 
-    private static final class TransformResourceCache extends DymaxionProjection.TransformResourceCache {
+    protected static class TransformResourceCache extends DymaxionProjection.TransformResourceCache {
         public final Matrix2x3 conformal_superTriangleTransformDerivative = Matrix2x3.createZero();
         public final Vector2d conformal_superTriangleTransform = new Vector2d();
         public final Matrix2 conformal_newtonDerivative = new Matrix2();
@@ -246,7 +246,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
         }
     }
 
-    private static class FromGeo<CACHE extends TransformResourceCache> extends DymaxionProjection.FromGeo<CACHE> {
+    protected static class FromGeo<CACHE extends TransformResourceCache> extends DymaxionProjection.FromGeo<CACHE> {
         private final InvertableVectorField field = INVERSE_CACHE.get();
 
         public FromGeo(@NonNull ParameterValueGroup parameters, @NonNull ToGeo<CACHE> toGeo, @NonNull Cached<CACHE> cacheCache) {
@@ -288,7 +288,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
         }
     }
 
-    private static class ToGeo<CACHE extends TransformResourceCache> extends DymaxionProjection.ToGeo<CACHE> {
+    protected static class ToGeo<CACHE extends TransformResourceCache> extends DymaxionProjection.ToGeo<CACHE> {
         private final InvertableVectorField field = INVERSE_CACHE.get();
 
         public ToGeo(@NonNull ParameterValueGroup parameters, @NonNull Cached<CACHE> cacheCache) {
