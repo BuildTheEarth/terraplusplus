@@ -61,7 +61,7 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
      *
      * @see <a href="https://en.wikipedia.org/wiki/Regular_icosahedron#Spherical_coordinates">Wikipedia</a>
      */
-    protected static final double[][] VERTICES = {
+    private static final double[][] VERTICES = {
             { 10.536199, 64.700000 },
             { -5.245390, 2.300882 },
             { 58.157706, 10.447378 },
@@ -80,7 +80,7 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
      * Indicates the vertices forming each face of the icosahedron.
      * Each entry refers to the index of a vertex in {@link #VERTICES}
      */
-    protected static final int[][] ISO = {
+    private static final int[][] ISO = {
             { 2, 1, 6 },
             { 1, 0, 2 },
             { 0, 1, 5 },
@@ -105,35 +105,35 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
             { 3, 7, 8 } //child of 15
     };
 
-    protected static final double[][] CENTER_MAP = {
-            { -3, 7 },
-            { -2, 5 },
-            { -1, 7 },
-            { 2, 5 },
-            { 4, 5 },
-            { -4, 1 },
-            { -3, -1 },
-            { -2, 1 },
-            { -1, -1 },
-            { 0, 1 },
-            { 1, -1 },
-            { 2, 1 },
-            { 3, -1 },
-            { 4, 1 },
-            { 5, -1 }, //14, left side, right to be cut
-            { -3, -5 },
-            { -1, -5 },
-            { 1, -5 },
-            { 2, -7 },
-            { -4, -7 },
-            { -5, -5 }, //20, pseudo triangle, child of 14
-            { -2, -7 } //21 , pseudo triangle, child of 15
+    private static final Vector2d[] CENTER_MAP = {
+            new Vector2d(-3, 7),
+            new Vector2d(-2, 5),
+            new Vector2d(-1, 7),
+            new Vector2d(2, 5),
+            new Vector2d(4, 5),
+            new Vector2d(-4, 1),
+            new Vector2d(-3, -1),
+            new Vector2d(-2, 1),
+            new Vector2d(-1, -1),
+            new Vector2d(0, 1),
+            new Vector2d(1, -1),
+            new Vector2d(2, 1),
+            new Vector2d(3, -1),
+            new Vector2d(4, 1),
+            new Vector2d(5, -1), //14, left side, right to be cut
+            new Vector2d(-3, -5),
+            new Vector2d(-1, -5),
+            new Vector2d(1, -5),
+            new Vector2d(2, -7),
+            new Vector2d(-4, -7),
+            new Vector2d(-5, -5), //20, pseudo triangle, child of 14
+            new Vector2d(-2, -7), //21 , pseudo triangle, child of 15
     };
 
     /**
      * Indicates for each face if it needs to be flipped after projecting
      */
-    protected static final boolean[] FLIP_TRIANGLE = {
+    private static final boolean[] FLIP_TRIANGLE = {
             true, false, true, false, false,
             true, false, true, false, true, false, true, false, true, false,
             true, true, true, false, false,
@@ -145,13 +145,13 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
      * <p>
      * Each element is {@code -1.0d} if the corresponding element in {@link #FLIP_TRIANGLE} is {@code true}, and {@code 1.0d} otherwise.
      */
-    protected static final double[] FLIP_TRIANGLE_FACTOR;
+    private static final double[] FLIP_TRIANGLE_FACTOR;
 
     /**
      * This contains the Cartesian coordinates the centroid
      * of each face of the icosahedron.
      */
-    protected static final double[][] CENTROIDS = new double[22][3];
+    protected static final Vector3d[] CENTROIDS = new Vector3d[22];
 
     /**
      * Rotation matrices to move the triangles to the reference coordinates from the original positions.
@@ -173,8 +173,8 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
 
     static {
         for (int i = 0; i < 22; i++) {
-            CENTER_MAP[i][0] *= 0.5 * ARC;
-            CENTER_MAP[i][1] *= ARC * TerraUtils.ROOT3 / 12;
+            CENTER_MAP[i].x *= 0.5d * ARC;
+            CENTER_MAP[i].y *= ARC * ROOT3 / 12.0d;
         }
 
         // Will contain the list of vertices in Cartesian coordinates
@@ -199,11 +199,11 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
             double ysum = vec1[1] + vec2[1] + vec3[1];
             double zsum = vec1[2] + vec2[2] + vec3[2];
             double mag = Math.sqrt(xsum * xsum + ysum * ysum + zsum * zsum);
-            CENTROIDS[i] = new double[]{ xsum / mag, ysum / mag, zsum / mag };
+            CENTROIDS[i] = new Vector3d(xsum / mag, ysum / mag, zsum / mag);
 
-            double[] centroidSpherical = TerraUtils.cartesian2Spherical(CENTROIDS[i]);
-            double centroidLambda = centroidSpherical[0];
-            double centroidPhi = centroidSpherical[1];
+            Vector2d centroidSpherical = TerraUtils.cartesian2Spherical(CENTROIDS[i]);
+            double centroidLambda = centroidSpherical.x;
+            double centroidPhi = centroidSpherical.y;
 
             double[] vertex = VERTICES[ISO[i][0]];
             double[] v = { vertex[0] - centroidLambda, vertex[1] };
@@ -294,9 +294,9 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
         int face = 0;
 
         for (int i = 0; i < 20; i++) {
-            double xd = CENTROIDS[i][0] - x;
-            double yd = CENTROIDS[i][1] - y;
-            double zd = CENTROIDS[i][2] - z;
+            double xd = CENTROIDS[i].x - x;
+            double yd = CENTROIDS[i].y - y;
+            double zd = CENTROIDS[i].z - z;
 
             double dissq = xd * xd + yd * yd + zd * zd;
             if (dissq < min) {
@@ -580,8 +580,8 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
         }
 
         return new double[]{
-                effectiveProjectedX + CENTER_MAP[face][0],
-                effectiveProjectedY + CENTER_MAP[face][1],
+                effectiveProjectedX + CENTER_MAP[face].x,
+                effectiveProjectedY + CENTER_MAP[face].y,
         };
     }
 
@@ -593,8 +593,8 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
             throw OutOfProjectionBoundsException.get();
         }
 
-        x -= CENTER_MAP[face][0];
-        y -= CENTER_MAP[face][1];
+        x -= CENTER_MAP[face].x;
+        y -= CENTER_MAP[face].y;
 
         //deal with bounds of special snowflakes
         switch (face) {
@@ -685,7 +685,7 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
     }
 
     protected static class FromGeo<CACHE extends TransformResourceCache> extends AbstractFromGeoMathTransform2D {
-        protected static final Matrix2 SPECIAL_FACTOR = new Matrix2(0.5d, -0.5d * ROOT3, 0.5d * ROOT3, 0.5d);
+        private static final Matrix2 SPECIAL_FACTOR = new Matrix2(0.5d, -0.5d * ROOT3, 0.5d * ROOT3, 0.5d);
 
         protected final Cached<CACHE> cacheCache;
 
@@ -735,20 +735,20 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
             final double origProjectedX = projected.x * FLIP_TRIANGLE_FACTOR[origFace];
             final double origProjectedY = projected.y * FLIP_TRIANGLE_FACTOR[origFace];
 
-            double effectiveProjectedX = origProjectedX;
-            double effectiveProjectedY = origProjectedY;
-            int effectiveOffsetFace = origFace;
-
-            //deal with special snowflakes (child faces 20, 21)
-            if (((origFace == 15 && origProjectedX > ROOT3 * origProjectedY) || origFace == 14) && origProjectedX > 0) {
-                effectiveProjectedX = 0.5d * origProjectedX - 0.5d * ROOT3 * origProjectedY;
-                effectiveProjectedY = 0.5d * ROOT3 * origProjectedX + 0.5d * origProjectedY;
-                effectiveOffsetFace += 6; //shift 14->20 & 15->21
-            }
-
             if (dstPts != null) {
-                dstPts[dstOff + 0] = effectiveProjectedX + CENTER_MAP[effectiveOffsetFace][0];
-                dstPts[dstOff + 1] = effectiveProjectedY + CENTER_MAP[effectiveOffsetFace][1];
+                double effectiveProjectedX = origProjectedX;
+                double effectiveProjectedY = origProjectedY;
+                int effectiveOffsetFace = origFace;
+
+                //deal with special snowflakes (child faces 20, 21)
+                if (((origFace == 15 && origProjectedX > ROOT3 * origProjectedY) || origFace == 14) && origProjectedX > 0) {
+                    effectiveProjectedX = 0.5d * origProjectedX - 0.5d * ROOT3 * origProjectedY;
+                    effectiveProjectedY = 0.5d * ROOT3 * origProjectedX + 0.5d * origProjectedY;
+                    effectiveOffsetFace += 6; //shift 14->20 & 15->21
+                }
+
+                dstPts[dstOff + 0] = effectiveProjectedX + CENTER_MAP[effectiveOffsetFace].x;
+                dstPts[dstOff + 1] = effectiveProjectedY + CENTER_MAP[effectiveOffsetFace].y;
             }
             if (!derivate) {
                 return null;
@@ -805,8 +805,8 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
             if (face < 0) {
                 throw OutOfProjectionBoundsException.get();
             }
-            x -= CENTER_MAP[face][0];
-            y -= CENTER_MAP[face][1];
+            x -= CENTER_MAP[face].x;
+            y -= CENTER_MAP[face].y;
 
             //deal with bounds of special snowflakes
             switch (face) {

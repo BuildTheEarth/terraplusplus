@@ -176,6 +176,12 @@ public class TerraUtils {
         return new double[]{ lambda, phi };
     }
 
+    public static Vector2d cartesian2Spherical(Vector3d cartesian) {
+        Vector2d result = new Vector2d();
+        cartesian2Spherical(cartesian.x, cartesian.y, cartesian.z, result);
+        return result;
+    }
+
     public static void cartesian2Spherical(double x, double y, double z, Vector2d dst) {
         double lambda = Math.atan2(y, x);
         double phi = Math.atan2(Math.sqrt(x * x + y * y), z);
