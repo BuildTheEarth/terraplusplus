@@ -13,6 +13,8 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
+import javax.vecmath.Vector2d;
+import javax.vecmath.Vector3d;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -70,6 +72,15 @@ public class TerraUtils {
         return new double[]{ lambda, phi };
     }
 
+    public static void geo2Spherical(Vector2d geo, Vector2d dst) {
+        geo2Spherical(geo.x, geo.y, dst);
+    }
+
+    public static void geo2Spherical(double longitude, double latitude, Vector2d dst) {
+        dst.x = Math.toRadians(longitude);
+        dst.y = Math.toRadians(90.0d - latitude);
+    }
+
     /**
      * Converts spherical coordinates to geographic coordinates on a sphere of radius 1.
      *
@@ -80,6 +91,15 @@ public class TerraUtils {
         double lon = Math.toDegrees(spherical[0]);
         double lat = 90 - Math.toDegrees(spherical[1]);
         return new double[]{ lon, lat };
+    }
+
+    public static void spherical2Geo(Vector2d spherical, Vector2d dst) {
+        spherical2Geo(spherical.x, spherical.y, dst);
+    }
+
+    public static void spherical2Geo(double longitude, double colatitude, Vector2d dst) {
+        dst.x = Math.toDegrees(longitude);
+        dst.y = 90.0d - Math.toDegrees(colatitude);
     }
 
     /**
@@ -96,16 +116,21 @@ public class TerraUtils {
         return new double[]{ x, y, z };
     }
 
+    public static void spherical2Cartesian(Vector2d spherical, Vector3d dst) {
+        spherical2Cartesian(spherical.x, spherical.y, dst);
+    }
+
     /**
-     * Converts Cartesian coordinates to spherical coordinates on a sphere of radius 1.
+     * Converts spherical coordinates to Cartesian coordinates on a sphere of radius 1.
      *
-     * @param cartesian - Cartesian coordinates as double array of length 3: {x, y, z}
-     * @return the spherical coordinates of the corresponding normalized vector
+     * @param longitude longitude in radians
+     * @param colatitude colatitude in radians
      */
-    public static double[] cartesian2Spherical(double[] cartesian) {
-        double lambda = Math.atan2(cartesian[1], cartesian[0]);
-        double phi = Math.atan2(Math.sqrt(cartesian[0] * cartesian[0] + cartesian[1] * cartesian[1]), cartesian[2]);
-        return new double[]{ lambda, phi };
+    public static void spherical2Cartesian(double longitude, double colatitude, Vector3d dst) {
+        double sinphi = Math.sin(colatitude);
+        dst.x = sinphi * Math.cos(longitude);
+        dst.y = sinphi * Math.sin(longitude);
+        dst.z = Math.cos(colatitude);
     }
 
     public static Matrix3x2 spherical2CartesianDerivative(double longitude, double colatitude) {
@@ -140,6 +165,25 @@ public class TerraUtils {
     }
 
     /**
+     * Converts Cartesian coordinates to spherical coordinates on a sphere of radius 1.
+     *
+     * @param cartesian - Cartesian coordinates as double array of length 3: {x, y, z}
+     * @return the spherical coordinates of the corresponding normalized vector
+     */
+    public static double[] cartesian2Spherical(double[] cartesian) {
+        double lambda = Math.atan2(cartesian[1], cartesian[0]);
+        double phi = Math.atan2(Math.sqrt(cartesian[0] * cartesian[0] + cartesian[1] * cartesian[1]), cartesian[2]);
+        return new double[]{ lambda, phi };
+    }
+
+    public static void cartesian2Spherical(double x, double y, double z, Vector2d dst) {
+        double lambda = Math.atan2(y, x);
+        double phi = Math.atan2(Math.sqrt(x * x + y * y), z);
+        dst.x = lambda;
+        dst.y = phi;
+    }
+
+    /**
      * TODO produceZYZRotationMatrix javadoc
      *
      * @param a
@@ -147,7 +191,7 @@ public class TerraUtils {
      * @param c
      * @return
      */
-    public static double[][] produceZYZRotationMatrix(double a, double b, double c) {
+    public static Matrix3 produceZYZRotationMatrix(double a, double b, double c) {
 
         double sina = Math.sin(a);
         double cosa = Math.cos(a);
@@ -156,18 +200,18 @@ public class TerraUtils {
         double sinc = Math.sin(c);
         double cosc = Math.cos(c);
 
-        double[][] mat = new double[3][3];
-        mat[0][0] = cosa * cosb * cosc - sinc * sina;
-        mat[0][1] = -sina * cosb * cosc - sinc * cosa;
-        mat[0][2] = cosc * sinb;
+        Matrix3 mat = new Matrix3();
+        mat.m00 = cosa * cosb * cosc - sinc * sina;
+        mat.m01 = -sina * cosb * cosc - sinc * cosa;
+        mat.m02 = cosc * sinb;
 
-        mat[1][0] = sinc * cosb * cosa + cosc * sina;
-        mat[1][1] = cosc * cosa - sinc * cosb * sina;
-        mat[1][2] = sinc * sinb;
+        mat.m10 = sinc * cosb * cosa + cosc * sina;
+        mat.m11 = cosc * cosa - sinc * cosb * sina;
+        mat.m12 = sinc * sinb;
 
-        mat[2][0] = -sinb * cosa;
-        mat[2][1] = sinb * sina;
-        mat[2][2] = cosb;
+        mat.m20 = -sinb * cosa;
+        mat.m21 = sinb * sina;
+        mat.m22 = cosb;
 
         return mat;
     }

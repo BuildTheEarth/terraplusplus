@@ -59,7 +59,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
 
     protected final InvertableVectorField inverse = INVERSE_CACHE.get();
 
-    @Override
+    /*@Override
     protected void triangleTransform(double x, double y, double z, Vector2d dst) {
         triangleTransformDymaxion(x, y, z, dst);
 
@@ -89,7 +89,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
         InvertableVectorField.Result result = InvertableVectorField.RESULT_CACHE.get();
         this.inverse.getInterpolatedVector(x, y, result);
         super.inverseTriangleTransform(result.f, result.g, dst);
-    }
+    }*/
 
     @Override
     public String toString() {
@@ -316,7 +316,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
             super(parameters);
         }
 
-        @Override
+        /*@Override
         protected void inverseTriangleTransform(double x, double y, Vector3d dst) {
             x /= ARC;
             y /= ARC;
@@ -350,6 +350,6 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
             super.inverseTriangleTransformDerivative(result.f, result.g, dst);
 
             TMatrices.multiplyFast(superDeriv, interpolatedVectorDeriv, dst);
-        }
+        }*/
     }
 }
