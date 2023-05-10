@@ -3,12 +3,14 @@ package net.buildtheearth.terraplusplus.util;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.experimental.UtilityClass;
+import net.buildtheearth.terraplusplus.util.compat.sis.SISHelper;
 import net.buildtheearth.terraplusplus.util.jackson.mixin.BiomeMixin;
 import net.buildtheearth.terraplusplus.util.jackson.mixin.BlockStateMixin;
 import net.daporkchop.lib.common.pool.array.ArrayAllocator;
 import net.daporkchop.lib.common.reference.ReferenceStrength;
 import net.daporkchop.lib.common.reference.cache.Cached;
 import net.daporkchop.lib.common.util.PorkUtil;
+import net.daporkchop.lib.unsafe.PUnsafe;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.world.biome.Biome;
 import org.apache.sis.referencing.CommonCRS;
@@ -39,8 +41,10 @@ public class TerraConstants {
 
     /**
      * The {@link CoordinateReferenceSystem} used by Terra++ for geographic coordinates.
+     *
+     * @see SISHelper#tppGeoCrs()
      */
-    public static final GeographicCRS TPP_GEO_CRS = CommonCRS.WGS84.normalizedGeographic();
+    public static final GeographicCRS TPP_GEO_CRS = SISHelper.tppGeoCrs();
 
     /**
      * Earth's circumference around the equator, in meters.

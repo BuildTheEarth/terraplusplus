@@ -16,6 +16,7 @@ import org.apache.sis.internal.referencing.ReferencingFactoryContainer;
 import org.apache.sis.internal.system.DataDirectory;
 import org.apache.sis.metadata.iso.citation.Citations;
 import org.apache.sis.referencing.CRS;
+import org.apache.sis.referencing.CommonCRS;
 import org.apache.sis.referencing.ImmutableIdentifier;
 import org.apache.sis.referencing.cs.CoordinateSystems;
 import org.apache.sis.referencing.operation.matrix.Matrices;
@@ -25,6 +26,7 @@ import org.apache.sis.referencing.operation.transform.IterationStrategy;
 import org.opengis.geometry.Envelope;
 import org.opengis.metadata.citation.Citation;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.operation.CoordinateOperation;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
@@ -43,6 +45,15 @@ public class SISHelper {
     static {
         //suppress 'The “SIS_DATA” environment variable is not set.' warnings in the log
         DataDirectory.quiet();
+    }
+
+    private static final GeographicCRS TPP_GEO_CRS = CommonCRS.WGS84.normalizedGeographic();
+
+    /**
+     * The {@link CoordinateReferenceSystem} used by Terra++ for geographic coordinates.
+     */
+    public static GeographicCRS tppGeoCrs() {
+        return TPP_GEO_CRS;
     }
 
     private static final Citation TPP_CITATION = Citations.fromName("Terra++");
