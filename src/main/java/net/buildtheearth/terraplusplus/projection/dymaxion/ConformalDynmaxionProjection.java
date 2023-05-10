@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraplusplus.projection.sis.AbstractOperationMethod;
 import net.buildtheearth.terraplusplus.projection.sis.transform.AbstractFromGeoMathTransform2D;
 import net.buildtheearth.terraplusplus.util.math.matrix.Matrix2x3;
@@ -39,8 +40,7 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
     protected static final int SIDE_LENGTH = 256;
 
     protected static final Cached<InvertableVectorField> INVERSE_CACHE = Cached.global((IOSupplier<InvertableVectorField>) () -> {
-        double[][] vx = PArrays.filledBy(SIDE_LENGTH + 1, double[][]::new, i -> new double[SIDE_LENGTH + 1 - i]);
-        double[][] vy = PArrays.filledBy(SIDE_LENGTH + 1, double[][]::new, i -> new double[SIDE_LENGTH + 1 - i]);
+        Vector2d[][] vecs = PArrays.filledBy(SIDE_LENGTH + 1, Vector2d[][]::new, i -> new Vector2d[SIDE_LENGTH + 1 - i]);
 
         ByteBuf buf;
         try (InputStream in = new LzmaInputStream(ConformalDynmaxionProjection.class.getResourceAsStream("conformal.lzma"))) {
@@ -49,12 +49,11 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
 
         for (int v = 0; v < SIDE_LENGTH + 1; v++) {
             for (int u = 0; u < SIDE_LENGTH + 1 - v; u++) {
-                vx[u][v] = buf.readDouble() * VECTOR_SCALE_FACTOR;
-                vy[u][v] = buf.readDouble() * VECTOR_SCALE_FACTOR;
+                vecs[u][v] = new Vector2d(buf.readDouble() * VECTOR_SCALE_FACTOR, buf.readDouble() * VECTOR_SCALE_FACTOR);
             }
         }
 
-        return new InvertableVectorField(vx, vy);
+        return new InvertableVectorField(vecs);
     }, ReferenceStrength.SOFT);
 
     protected final InvertableVectorField inverse = INVERSE_CACHE.get();
@@ -96,16 +95,11 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
         return "Conformal Dymaxion";
     }
 
+    @RequiredArgsConstructor
     protected static final class InvertableVectorField {
         private static final Cached<Result> RESULT_CACHE = Cached.threadLocal(Result::new);
 
-        private final double[][] vx;
-        private final double[][] vy;
-
-        public InvertableVectorField(double[][] vx, double[][] vy) {
-            this.vx = vx;
-            this.vy = vy;
-        }
+        private final Vector2d[][] vecs;
 
         public void getInterpolatedVector(double x, double y, Result dst) {
             //scale up triangle to be triangleSize across
@@ -143,24 +137,32 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
             double flip;
 
             if (y < -ROOT3 * (x - u1 - v1 - 1) || v1 == SIDE_LENGTH - u1 - 1) {
-                valx1 = this.vx[u1][v1];
-                valy1 = this.vy[u1][v1];
-                valx2 = this.vx[u1][v1 + 1];
-                valy2 = this.vy[u1][v1 + 1];
-                valx3 = this.vx[u1 + 1][v1];
-                valy3 = this.vy[u1 + 1][v1];
+                Vector2d vec1 = this.vecs[u1][v1];
+                Vector2d vec2 = this.vecs[u1][v1 + 1];
+                Vector2d vec3 = this.vecs[u1 + 1][v1];
+
+                valx1 = vec1.x;
+                valy1 = vec1.y;
+                valx2 = vec2.x;
+                valy2 = vec2.y;
+                valx3 = vec3.x;
+                valy3 = vec3.y;
 
                 flip = 1;
 
                 y3 = 0.5 * ROOT3 * v1;
                 x3 = (u1 + 1) + 0.5 * v1;
             } else {
-                valx1 = this.vx[u1][v1 + 1];
-                valy1 = this.vy[u1][v1 + 1];
-                valx2 = this.vx[u1 + 1][v1];
-                valy2 = this.vy[u1 + 1][v1];
-                valx3 = this.vx[u1 + 1][v1 + 1];
-                valy3 = this.vy[u1 + 1][v1 + 1];
+                Vector2d vec1 = this.vecs[u1][v1 + 1];
+                Vector2d vec2 = this.vecs[u1 + 1][v1];
+                Vector2d vec3 = this.vecs[u1 + 1][v1 + 1];
+
+                valx1 = vec1.x;
+                valy1 = vec1.y;
+                valx2 = vec2.x;
+                valy2 = vec2.y;
+                valx3 = vec3.x;
+                valy3 = vec3.y;
 
                 flip = -1;
                 y = -y;
