@@ -108,7 +108,7 @@ public class TestSISProjections {
 
             deriv1 = proj1.toGeoDerivative(x, y);
             deriv2 = proj2.toGeoDerivative(x, y);
-            assert true || veryApproximateEquals(deriv1, deriv2, 0.01d, 1e-1d)
+            assert veryApproximateEquals(deriv1, deriv2, 0.01d, 1e-1d)
                     : "toGeoDerivative #" + i + " (" + lat + "°N, " + lon + "°E) -> (" + x + ", " + y + "):\n" + deriv1 + "!=\n" + deriv2;
         }
     }

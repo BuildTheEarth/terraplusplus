@@ -10,6 +10,7 @@ import lombok.SneakyThrows;
 import net.buildtheearth.terraplusplus.control.AdvancedEarthGui;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
+import net.buildtheearth.terraplusplus.util.compat.sis.SISHelper;
 import net.daporkchop.lib.common.function.exception.EConsumer;
 import org.apache.sis.geometry.DirectPosition2D;
 import org.apache.sis.geometry.Envelopes;
@@ -17,7 +18,6 @@ import org.apache.sis.geometry.GeneralEnvelope;
 import org.apache.sis.internal.referencing.AxisDirections;
 import org.apache.sis.parameter.DefaultParameterValueGroup;
 import org.apache.sis.parameter.ParameterBuilder;
-import org.apache.sis.referencing.CRS;
 import org.apache.sis.referencing.operation.matrix.Matrix2;
 import org.apache.sis.referencing.operation.transform.AbstractMathTransform;
 import org.apache.sis.referencing.operation.transform.DomainDefinition;
@@ -34,7 +34,6 @@ import org.opengis.referencing.cs.CoordinateSystem;
 import org.opengis.referencing.cs.CoordinateSystemAxis;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
-import org.opengis.util.FactoryException;
 
 import java.text.ParseException;
 import java.util.Collection;
@@ -74,12 +73,11 @@ public final class SISProjectionWrapper implements GeographicProjection {
                 : TPP_GEO_CRS);
     }
 
-    @SneakyThrows(FactoryException.class)
     public SISProjectionWrapper(@NonNull CoordinateReferenceSystem projectedCRS) {
         this.projectedCRS = projectedCRS;
 
-        this.toGeo = CRS.findOperation(this.projectedCRS, this.geoCRS, null).getMathTransform();
-        this.fromGeo = CRS.findOperation(this.geoCRS, this.projectedCRS, null).getMathTransform();
+        this.toGeo = SISHelper.findOperation(this.projectedCRS, this.geoCRS).getMathTransform();
+        this.fromGeo = SISHelper.findOperation(this.geoCRS, this.projectedCRS).getMathTransform();
     }
 
     @JsonGetter("standard")

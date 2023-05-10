@@ -13,6 +13,7 @@ import net.daporkchop.lib.common.pool.array.ArrayAllocator;
 import org.apache.sis.geometry.Envelopes;
 import org.apache.sis.geometry.GeneralEnvelope;
 import org.apache.sis.internal.referencing.ReferencingFactoryContainer;
+import org.apache.sis.internal.system.DataDirectory;
 import org.apache.sis.metadata.iso.citation.Citations;
 import org.apache.sis.referencing.CRS;
 import org.apache.sis.referencing.ImmutableIdentifier;
@@ -39,6 +40,11 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @UtilityClass
 public class SISHelper {
+    static {
+        //suppress 'The “SIS_DATA” environment variable is not set.' warnings in the log
+        DataDirectory.quiet();
+    }
+
     private static final Citation TPP_CITATION = Citations.fromName("Terra++");
 
     public static Citation tppCitation() {
