@@ -7,6 +7,7 @@ import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.util.bvh.Bounds2d;
+import net.daporkchop.lib.common.annotation.param.NotNegative;
 import net.daporkchop.lib.common.misc.threadlocal.TL;
 import net.daporkchop.lib.common.pool.array.ArrayAllocator;
 import org.apache.sis.geometry.Envelopes;
@@ -22,6 +23,7 @@ import org.apache.sis.referencing.operation.matrix.Matrices;
 import org.apache.sis.referencing.operation.matrix.MatrixSIS;
 import org.apache.sis.referencing.operation.projection.ProjectionException;
 import org.apache.sis.referencing.operation.transform.IterationStrategy;
+import org.apache.sis.referencing.operation.transform.MathTransforms;
 import org.opengis.geometry.Envelope;
 import org.opengis.metadata.citation.Citation;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -32,6 +34,7 @@ import org.opengis.referencing.operation.TransformException;
 import org.opengis.util.FactoryException;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
@@ -118,7 +121,6 @@ public class SISHelper {
         transformSinglePointWithOutOfBoundsNaN(transform, src, srcOff, dst, dstOff, transform.getTargetDimensions());
     }
 
-    @SneakyThrows(TransformException.class)
     private static void transformSinglePointWithOutOfBoundsNaN(MathTransform transform, double[] src, int srcOff, double[] dst, int dstOff, int dstDim) {
         try {
             transform.transform(src, srcOff, dst, dstOff, 1);
@@ -126,17 +128,81 @@ public class SISHelper {
             if (!isAnyPossibleOutOfBoundsValue(dst, dstOff, dstOff + dstDim)) {
                 return;
             }
-        } catch (ProjectionException e) {
+        } catch (TransformException e) {
             //silently swallow exception, we'll fill dst with NaN values instead
         }
 
         Arrays.fill(dst, dstOff, dstOff + dstDim, Double.NaN);
     }
 
+    private static boolean rangesOverlap(@NotNegative int off0, @NotNegative int len0, @NotNegative int off1, @NotNegative int len1) {
+        return off0 < off1 + len1 && off1 < off0 + len0;
+    }
+
     public static void transformManyPointsWithOutOfBoundsNaN(@NonNull MathTransform transform, double[] src, int srcOff, double[] dst, int dstOff, int count) {
-        processWithIterationStrategy(
-                (src1, srcOff1, srcDim, dst1, dstOff1, dstDim) -> transformSinglePointWithOutOfBoundsNaN(transform, src1, srcOff1, dst1, dstOff1, dstDim),
-                src, srcOff, transform.getSourceDimensions(), dst, dstOff, transform.getTargetDimensions(), count);
+        final int srcDim = transform.getSourceDimensions();
+        final int dstDim = transform.getTargetDimensions();
+
+        ArrayAllocator<double[]> alloc = null;
+        double[] tempArray = null;
+
+        //noinspection ArrayEquality
+        if (src == dst && rangesOverlap(srcOff, count * srcDim, dstOff, count * dstDim)) {
+            //the source and destination ranges overlap, back up all the source values to a temporary array so we can restore them if one of the transform steps
+            //  fails without setting NaNs
+            alloc = DOUBLE_ALLOC.get();
+            tempArray = alloc.atLeast(count * srcDim);
+            System.arraycopy(src, srcOff, tempArray, 0, count * srcDim);
+        }
+
+        TRANSFORM_COMPLETE:
+        {
+            try {
+                //try to transform everything, assuming there won't be any failures
+                transform.transform(src, srcOff, dst, dstOff, count);
+            } catch (TransformException e) {
+                SLOW_FALLBACK:
+                {
+                    MathTransform lastCompletedTransform = e.getLastCompletedTransform();
+                    if (lastCompletedTransform == null) { //the transform didn't try to transform every point and set failed ones to NaN, no way to continue without going element-by-element
+                        break SLOW_FALLBACK;
+                    }
+
+                    List<MathTransform> steps = MathTransforms.getSteps(transform);
+                    int i = steps.indexOf(lastCompletedTransform); //find the index of the last completed step in the list of all steps
+                    checkState(i >= 0, "transform step '%s' isn't present in transform '%s'!", lastCompletedTransform, transform);
+                    checkState(steps.lastIndexOf(lastCompletedTransform) == i, "transform step '%s' is present in transform '%s' more than once!", lastCompletedTransform, transform);
+
+                    //try to execute all remaining transform steps
+                    for (i++; i < steps.size(); i++) {
+                        try {
+                            steps.get(i).transform(dst, dstOff, dst, dstOff, count);
+                        } catch (TransformException e1) {
+                            if (e1.getLastCompletedTransform() != steps.get(i)) { //the transform didn't try to transform every point and set failed ones to NaN, no way to continue
+                                break SLOW_FALLBACK;
+                            }
+                        }
+                    }
+                    break TRANSFORM_COMPLETE;
+                }
+
+                //one of the transforms failed without setting the last completed transform, so the destination array contains unknown data.
+                //  we'll fall back to transforming one element at a time, restoring the original source values from the backup made at the start if necessary
+                if (tempArray != null) { //restore source from backup
+                    src = tempArray;
+                    srcOff = 0;
+                }
+
+                //transform one element at a time
+                processWithIterationStrategy(
+                        (src1, srcOff1, srcDim1, dst1, dstOff1, dstDim1) -> transformSinglePointWithOutOfBoundsNaN(transform, src1, srcOff1, dst1, dstOff1, dstDim1),
+                        src, srcOff, srcDim, dst, dstOff, dstDim, count);
+            }
+        }
+
+        if (tempArray != null) { //we allocated a temporary array, so we should release it again
+            alloc.release(tempArray);
+        }
     }
 
     private static void processWithIterationStrategy(TransformElementProcessor action, double[] src, int srcOff, int srcDim, double[] dst, int dstOff, int dstDim, int count) {

@@ -12,11 +12,18 @@ import org.apache.sis.referencing.operation.matrix.Matrices;
 import org.apache.sis.referencing.operation.matrix.Matrix2;
 import org.apache.sis.referencing.operation.matrix.MatrixSIS;
 import org.apache.sis.referencing.operation.transform.ContextualParameters;
+import org.apache.sis.referencing.operation.transform.IterationStrategy;
 import org.opengis.parameter.InvalidParameterNameException;
 import org.opengis.parameter.InvalidParameterValueException;
 import org.opengis.parameter.ParameterNotFoundException;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.referencing.operation.TransformException;
+
+import javax.vecmath.Vector2d;
+import javax.vecmath.Vector3d;
+import java.util.Arrays;
+
+import static net.buildtheearth.terraplusplus.util.TerraUtils.*;
 
 /**
  * Implementation of the BTE modified Dynmaxion projection.
@@ -212,6 +219,52 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
 
             return derivative;
         }
+
+        @Override
+        public void transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, int numPts) throws TransformException {
+            try {
+                //do the main transform first, we'll transform the results afterwards
+                super.transform(srcPts, srcOff, dstPts, dstOff, numPts);
+            } finally {
+                //do the final transformation, leaving any invalid points as-is.
+                //  (if there are invalid points in the output, we assume an exception has already been thrown and will be rethrown
+                //  once the finally block ends)
+                transformPostProcess(dstPts, dstOff, numPts);
+            }
+        }
+
+        private static void transformPostProcess(double[] dstPts, int dstOff, int numPts) {
+            for (; --numPts >= 0; dstOff += 2) {
+                double x = dstPts[dstOff + 0];
+                double y = dstPts[dstOff + 1];
+
+                if (isInvalidCoordinates(x, y)) { //this point is already invalid, we can assume an exception is already being thrown
+                    continue;
+                }
+
+                //
+                // the following is the same algorithm as above, but copied here for performance
+                //
+
+                boolean eurasia = isEurasianPart(x, y);
+
+                y -= 0.75d * ARC * TerraUtils.ROOT3;
+
+                if (eurasia) {
+                    double x0 = x + ARC;
+                    double y0 = y;
+                    x = COS_THETA * x0 - SIN_THETA * y0;
+                    y = SIN_THETA * x0 + COS_THETA * y0;
+                } else {
+                    x -= ARC;
+
+                    //all the offsets are by a constant factor, so the derivative isn't affected
+                }
+
+                dstPts[dstOff + 0] = x;
+                dstPts[dstOff + 1] = y;
+            }
+        }
     }
 
     protected static class ToGeo<CACHE extends ConformalDynmaxionProjection.TransformResourceCache> extends ConformalDynmaxionProjection.ToGeo<CACHE> {
@@ -225,6 +278,10 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
         public Matrix2 transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, boolean derivate) throws TransformException {
             double x = srcPts[srcOff + 0];
             double y = srcPts[srcOff + 1];
+
+            if (isInvalidCoordinates(x, y)) { //propagate NaN coordinates immediately
+                throw this.getSingleExceptionForSelf();
+            }
 
             boolean eurasia;
             if (x > 0.0d) {
@@ -248,7 +305,7 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
 
             //check to make sure still in right part
             if (eurasia != isEurasianPart(x, y)) {
-                throw OutOfProjectionBoundsException.get();
+                throw this.getSingleExceptionForSelf();
             }
 
             srcPts = TMP_LENGTH2_ARRAY_CACHE.get();
@@ -264,6 +321,88 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
             }
 
             return derivative;
+        }
+
+        @Override
+        public void transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, int numPts) throws TransformException {
+            //pre-transform the points, storing the results in the destination array
+            transformPreProcess(srcPts, srcOff, dstPts, dstOff, numPts);
+
+            //do the actual dymaxion transformation on the points in-place. if any points were out-of-bounds before, they're now NaN values in the
+            //  array and will cause this to throw an exception.
+            super.transform(dstPts, dstOff, dstPts, dstOff, numPts);
+        }
+
+        private static void transformPreProcess(double[] srcPts, int srcOff, double[] dstPts, int dstOff, int numPts) {
+            int srcInc = 2;
+            int dstInc = 2;
+
+            //noinspection ArrayEquality
+            if (srcPts == dstPts) {
+                switch (IterationStrategy.suggest(srcOff, 2, dstOff, 2, numPts)) {
+                    case ASCENDING: {
+                        break;
+                    }
+                    case DESCENDING: {
+                        srcOff += 2 * (numPts - 1);
+                        dstOff += 2 * (numPts - 1);
+                        srcInc -= 4;
+                        dstInc -= 4;
+                        break;
+                    }
+                    default: {
+                        //TODO: use array allocator for this
+                        srcPts = Arrays.copyOfRange(srcPts, srcOff, srcOff + numPts * 2);
+                        srcOff = 0;
+                        break;
+                    }
+                }
+            }
+
+            for (; --numPts >= 0; srcOff += srcInc, dstOff += dstInc) {
+                double x = srcPts[srcOff + 0];
+                double y = srcPts[srcOff + 1];
+
+                if (isInvalidCoordinates(x, y)) { //the point is invalid, write NaN values into the destination array
+                    //  we assume that the exception will be thrown later when calling super.transform() when it detects NaN values
+                    fillNaN(dstPts, dstOff);
+                    continue;
+                }
+
+                //
+                // the following is the same algorithm as above, but copied here for performance
+                //
+
+                boolean eurasia;
+                if (x > 0.0d) {
+                    eurasia = y > 0.0d;
+                } else if (x < -ARC / 2.0d) {
+                    eurasia = y > -TerraUtils.ROOT3 * ARC / 2.0d;
+                } else {
+                    eurasia = x * TerraUtils.ROOT3 < y;
+                }
+
+                if (eurasia) {
+                    double x0 = x;
+                    double y0 = y;
+                    x = SIN_THETA * y0 + COS_THETA * x0 - ARC;
+                    y = COS_THETA * y0 - SIN_THETA * x0;
+                } else {
+                    x += ARC;
+                }
+
+                y += 0.75d * ARC * TerraUtils.ROOT3;
+
+                //check to make sure still in right part
+                if (eurasia != isEurasianPart(x, y)) {
+                    //the point is invalid, write NaN values into the destination array
+                    //  we assume that the exception will be thrown later when calling super.transform() when it detects NaN values
+                    x = y = Double.NaN;
+                }
+
+                dstPts[dstOff + 0] = x;
+                dstPts[dstOff + 1] = y;
+            }
         }
     }
 }

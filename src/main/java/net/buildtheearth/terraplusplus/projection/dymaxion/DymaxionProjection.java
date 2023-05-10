@@ -17,6 +17,7 @@ import org.apache.sis.referencing.operation.matrix.Matrix2;
 import org.apache.sis.referencing.operation.matrix.Matrix3;
 import org.apache.sis.referencing.operation.matrix.MatrixSIS;
 import org.apache.sis.referencing.operation.transform.ContextualParameters;
+import org.apache.sis.referencing.operation.transform.IterationStrategy;
 import org.opengis.parameter.InvalidParameterNameException;
 import org.opengis.parameter.InvalidParameterValueException;
 import org.opengis.parameter.ParameterNotFoundException;
@@ -25,9 +26,7 @@ import org.opengis.referencing.operation.TransformException;
 
 import javax.vecmath.Vector2d;
 import javax.vecmath.Vector3d;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Arrays;
 
 import static net.buildtheearth.terraplusplus.util.TerraUtils.*;
 
@@ -720,16 +719,18 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
 
         @Override
         public Matrix2 transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, boolean derivate) throws TransformException {
+            final double origLon = srcPts[srcOff + 0];
+            final double origLat = srcPts[srcOff + 1];
+
+            if (!isLongitudeLatitudeInRange(origLon, origLat) || isInvalidCoordinates(origLon, origLat)) { //propagate NaN coordinates immediately
+                throw this.getSingleExceptionForSelf();
+            }
+
             CACHE cache = this.cacheCache.get();
 
             Vector3d cartesian = cache.cartesian;
             Vector3d rotated = cache.rotated;
             Vector2d projected = cache.projected;
-
-            //there is no bounds checking here!
-
-            final double origLon = srcPts[srcOff + 0];
-            final double origLat = srcPts[srcOff + 1];
 
             TerraUtils.spherical2Cartesian(origLon, origLat, cartesian);
             final int origFace = findTriangle(cartesian);
@@ -781,6 +782,86 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
                 return totalDerivative.clone();
             }
         }
+
+        @Override
+        public void transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, int numPts) throws TransformException {
+            int srcInc = 2;
+            int dstInc = 2;
+
+            //noinspection ArrayEquality
+            if (srcPts == dstPts) {
+                switch (IterationStrategy.suggest(srcOff, 2, dstOff, 2, numPts)) {
+                    case ASCENDING: {
+                        break;
+                    }
+                    case DESCENDING: {
+                        srcOff += 2 * (numPts - 1);
+                        dstOff += 2 * (numPts - 1);
+                        srcInc -= 4;
+                        dstInc -= 4;
+                        break;
+                    }
+                    default: {
+                        //TODO: use array allocator for this
+                        srcPts = Arrays.copyOfRange(srcPts, srcOff, srcOff + numPts * 2);
+                        srcOff = 0;
+                        break;
+                    }
+                }
+            }
+
+            CACHE cache = this.cacheCache.get();
+
+            Vector3d cartesian = cache.cartesian;
+            Vector3d rotated = cache.rotated;
+            Vector2d projected = cache.projected;
+
+            boolean anyFailed = false;
+            for (; --numPts >= 0; srcOff += srcInc, dstOff += dstInc) {
+                final double origLon = srcPts[srcOff + 0];
+                final double origLat = srcPts[srcOff + 1];
+
+                if (!isLongitudeLatitudeInRange(origLon, origLat) || isInvalidCoordinates(origLon, origLat)) {
+                    //out of bounds/invalid, fill destination buffer with NaN values and keep going
+                    fillNaN(dstPts, dstOff);
+                    anyFailed = true;
+                    continue;
+                }
+                
+                //
+                // the following is the same algorithm as above, but copied here for performance
+                //
+
+                TerraUtils.spherical2Cartesian(origLon, origLat, cartesian);
+                final int origFace = findTriangle(cartesian);
+
+                //apply rotation matrix (move triangle onto template triangle)
+                TMatrices.multiplyFast(ROTATION_MATRICES[origFace], cartesian, rotated);
+                this.triangleTransform(rotated, projected);
+
+                //flip triangle to correct orientation
+                final double origProjectedX = projected.x * FLIP_TRIANGLE_FACTOR[origFace];
+                final double origProjectedY = projected.y * FLIP_TRIANGLE_FACTOR[origFace];
+
+                double effectiveProjectedX = origProjectedX;
+                double effectiveProjectedY = origProjectedY;
+                int effectiveOffsetFace = origFace;
+
+                //deal with special snowflakes (child faces 20, 21)
+                if (((origFace == 15 && origProjectedX > ROOT3 * origProjectedY) || origFace == 14) && origProjectedX > 0) {
+                    effectiveProjectedX = 0.5d * origProjectedX - 0.5d * ROOT3 * origProjectedY;
+                    effectiveProjectedY = 0.5d * ROOT3 * origProjectedX + 0.5d * origProjectedY;
+                    effectiveOffsetFace += 6; //shift 14->20 & 15->21
+                }
+
+                dstPts[dstOff + 0] = effectiveProjectedX + CENTER_MAP[effectiveOffsetFace].x;
+                dstPts[dstOff + 1] = effectiveProjectedY + CENTER_MAP[effectiveOffsetFace].y;
+            }
+
+            if (anyFailed) {
+                throw this.getBulkExceptionForSelf();
+            }
+        }
     }
 
     protected static class ToGeo<CACHE extends TransformResourceCache> extends AbstractToGeoMathTransform2D {
@@ -805,36 +886,40 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
             final double origX = srcPts[srcOff + 0];
             final double origY = srcPts[srcOff + 1];
 
+            if (isInvalidCoordinates(origX, origY)) { //propagate NaN coordinates immediately
+                throw this.getSingleExceptionForSelf();
+            }
+
             double x = origX;
             double y = origY;
 
             final int face = findTriangleGrid(x, y);
             if (face < 0) {
-                throw OutOfProjectionBoundsException.get();
+                throw this.getSingleExceptionForSelf();
             }
             x -= CENTER_MAP[face].x;
             y -= CENTER_MAP[face].y;
 
             //deal with bounds of special snowflakes
             switch (face) {
-                case 14:
+                case 15: // if (x > 0 && x > y * TerraUtils.ROOT3) throw ...;
+                    if (x <= y * TerraUtils.ROOT3) {
+                        break;
+                    }
+                    //fallthrough
+                case 14: // if (x > 0) throw ...;
                     if (x > 0) {
-                        throw OutOfProjectionBoundsException.get();
+                        throw this.getSingleExceptionForSelf();
                     }
                     break;
-                case 20:
+                case 21: // if (x < 0 || -y * TerraUtils.ROOT3 > x) throw ...;
+                    if (x < 0) {
+                        throw this.getSingleExceptionForSelf();
+                    }
+                    //fallthrough
+                case 20: // if (-y * TerraUtils.ROOT3 > x) throw ...;
                     if (-y * TerraUtils.ROOT3 > x) {
-                        throw OutOfProjectionBoundsException.get();
-                    }
-                    break;
-                case 15:
-                    if (x > 0 && x > y * TerraUtils.ROOT3) {
-                        throw OutOfProjectionBoundsException.get();
-                    }
-                    break;
-                case 21:
-                    if (x < 0 || -y * TerraUtils.ROOT3 > x) {
-                        throw OutOfProjectionBoundsException.get();
+                        throw this.getSingleExceptionForSelf();
                     }
                     break;
             }
@@ -881,6 +966,113 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
             TMatrices.scaleFast(totalDerivative, FLIP_TRIANGLE_FACTOR[face], totalDerivative);
 
             return totalDerivative.clone();
+        }
+
+        @Override
+        public void transform(double[] srcPts, int srcOff, double[] dstPts, int dstOff, int numPts) throws TransformException {
+            int srcInc = 2;
+            int dstInc = 2;
+
+            //noinspection ArrayEquality
+            if (srcPts == dstPts) {
+                switch (IterationStrategy.suggest(srcOff, 2, dstOff, 2, numPts)) {
+                    case ASCENDING: {
+                        break;
+                    }
+                    case DESCENDING: {
+                        srcOff += 2 * (numPts - 1);
+                        dstOff += 2 * (numPts - 1);
+                        srcInc -= 4;
+                        dstInc -= 4;
+                        break;
+                    }
+                    default: {
+                        //TODO: use array allocator for this
+                        srcPts = Arrays.copyOfRange(srcPts, srcOff, srcOff + numPts * 2);
+                        srcOff = 0;
+                        break;
+                    }
+                }
+            }
+
+            CACHE cache = this.cacheCache.get();
+
+            Vector2d spherical = cache.spherical;
+            Vector3d cartesian = cache.cartesian;
+            Vector3d rotated = cache.rotated;
+
+            boolean anyFailed = false;
+            for (; --numPts >= 0; srcOff += srcInc, dstOff += dstInc) {
+                double x = srcPts[srcOff + 0];
+                double y = srcPts[srcOff + 1];
+
+                int face;
+
+                if (isInvalidCoordinates(x, y) || (face = findTriangleGrid(x, y)) < 0) {
+                    //out of bounds/invalid, fill destination buffer with NaN values and keep going
+                    fillNaN(dstPts, dstOff);
+                    anyFailed = true;
+                    continue;
+                }
+
+                //
+                // the following is the same algorithm as above, but copied here for performance
+                //
+
+                x -= CENTER_MAP[face].x;
+                y -= CENTER_MAP[face].y;
+
+                //deal with bounds of special snowflakes
+                switch (face) {
+                    case 15: // if (x > 0 && x > y * TerraUtils.ROOT3) throw ...;
+                        if (x <= y * TerraUtils.ROOT3) {
+                            break;
+                        }
+                        //fallthrough
+                    case 14: // if (x > 0) throw ...;
+                        if (x > 0) {
+                            fillNaN(dstPts, dstOff);
+                            anyFailed = true;
+                            continue;
+                        }
+                        break;
+                    case 21: // if (x < 0 || -y * TerraUtils.ROOT3 > x) throw ...;
+                        if (x < 0) {
+                            fillNaN(dstPts, dstOff);
+                            anyFailed = true;
+                            continue;
+                        }
+                        //fallthrough
+                    case 20: // if (-y * TerraUtils.ROOT3 > x) throw ...;
+                        if (-y * TerraUtils.ROOT3 > x) {
+                            fillNaN(dstPts, dstOff);
+                            anyFailed = true;
+                            continue;
+                        }
+                        break;
+                }
+
+                //flip triangle to upright orientation (if not already)
+                x *= FLIP_TRIANGLE_FACTOR[face];
+                y *= FLIP_TRIANGLE_FACTOR[face];
+
+                //invert triangle transform
+                this.inverseTriangleTransform(x, y, rotated);
+
+                //apply inverse rotation matrix (move triangle from template triangle to correct position on globe)
+                TMatrices.multiplyFast(INVERSE_ROTATION_MATRICES[face], rotated, cartesian);
+
+                //convert back to geo coordinates
+                TerraUtils.cartesian2Spherical(cartesian.x, cartesian.y, cartesian.z, spherical);
+
+                //spherical -> geographic conversion is handled afterwards by the affine transform
+                dstPts[dstOff + 0] = spherical.x;
+                dstPts[dstOff + 1] = spherical.y;
+            }
+
+            if (anyFailed) {
+                throw this.getBulkExceptionForSelf();
+            }
         }
     }
 }

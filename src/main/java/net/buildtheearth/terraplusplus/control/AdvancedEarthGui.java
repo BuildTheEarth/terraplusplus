@@ -1162,6 +1162,9 @@ public class AdvancedEarthGui extends GuiScreen {
             double dy = maxY - minY;
             double scale = this.projScale = max(dx, dy) / (double) Math.min(width, height);
 
+            double[] buffer = new double[width * 2];
+            MathTransform transform = SISHelper.findOperation(SISHelper.projectedCRS(this.projection), SISHelper.tppGeoCrs()).getMathTransform();
+
             // Actually set map data
             for (int yi = 0; yi < height && !this.reset; yi++) {
                 double y = yi * scale + minY;
@@ -1169,25 +1172,42 @@ public class AdvancedEarthGui extends GuiScreen {
                     continue;
                 }
 
+                int bufferedCount = 0;
                 for (int xi = 0; xi < width; xi++) {
                     double x = xi * scale + minX;
                     if (x <= minX || x >= maxX) { //sample out of bounds, skip it
                         continue;
                     }
 
-                    try {
-                        double[] projected = projection.toGeo(x, y);
-                        int xPixel = (int) (((projected[0] + 180.0d) * (SRC_W / 360.0d)));
-                        int yPixel = (int) (((projected[1] + 90.0d) * (SRC_H / 180.0d)));
-                        if (xPixel < 0 || xPixel >= SRC_W || yPixel < 0 || yPixel >= SRC_H) { //projected sample is out of bounds
-                            continue;
-                        }
+                    buffer[bufferedCount * 2 + 0] = x;
+                    buffer[bufferedCount * 2 + 1] = y;
+                    bufferedCount++;
+                }
 
-                        dst[yi * width + xi] = this.src[(SRC_H - yPixel - 1) * SRC_W + xPixel];
-                    } catch (Exception ignored) { //TODO: fix exceptions here
-                        //sample out of bounds, skip it
-                        int i = 0;
+                SISHelper.transformManyPointsWithOutOfBoundsNaN(transform, buffer, 0, buffer, 0, bufferedCount);
+
+                for (int xi = 0, bufferIndex = 0; xi < width; xi++) {
+                    double x = xi * scale + minX;
+                    if (x <= minX || x >= maxX) { //sample out of bounds, skip it
+                        continue;
                     }
+
+                    double projectedX = buffer[bufferIndex * 2 + 0];
+                    double projectedY = buffer[bufferIndex * 2 + 1];
+                    bufferIndex++;
+
+                    if (Double.isNaN(projectedX) || Double.isNaN(projectedY)) {
+                        continue;
+                    }
+
+                    int xPixel = (int) (((projectedX + 180.0d) * (SRC_W / 360.0d)));
+                    int yPixel = (int) (((projectedY + 90.0d) * (SRC_H / 180.0d)));
+
+                    if (xPixel < 0 || xPixel >= SRC_W || yPixel < 0 || yPixel >= SRC_H) { //projected sample is out of bounds
+                        continue;
+                    }
+
+                    dst[yi * width + xi] = this.src[(SRC_H - yPixel - 1) * SRC_W + xPixel];
                 }
                 synchronized (this.textureNeedsUpdate) {
                     this.textureNeedsUpdate.set(true);

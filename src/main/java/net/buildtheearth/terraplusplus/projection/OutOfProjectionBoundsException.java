@@ -6,7 +6,7 @@ import org.opengis.referencing.operation.MathTransform;
 public final class OutOfProjectionBoundsException extends ProjectionException {
     private static final OutOfProjectionBoundsException INSTANCE = new OutOfProjectionBoundsException();
 
-    private static final boolean FAST = Boolean.parseBoolean(System.getProperty("terraplusplus.fastExcept", "true"));
+    public static final boolean FAST = Boolean.parseBoolean(System.getProperty("terraplusplus.fastExcept", "true"));
 
     public static OutOfProjectionBoundsException get() {
         if (FAST) {
