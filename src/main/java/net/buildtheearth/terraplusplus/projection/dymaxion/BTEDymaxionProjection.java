@@ -7,7 +7,6 @@ import net.buildtheearth.terraplusplus.projection.sis.AbstractOperationMethod;
 import net.buildtheearth.terraplusplus.projection.sis.transform.AbstractFromGeoMathTransform2D;
 import net.buildtheearth.terraplusplus.util.TerraUtils;
 import net.buildtheearth.terraplusplus.util.math.matrix.TMatrices;
-import net.daporkchop.lib.common.pool.array.ArrayAllocator;
 import net.daporkchop.lib.common.reference.cache.Cached;
 import org.apache.sis.referencing.operation.matrix.Matrices;
 import org.apache.sis.referencing.operation.matrix.Matrix2;
@@ -17,10 +16,7 @@ import org.opengis.parameter.InvalidParameterNameException;
 import org.opengis.parameter.InvalidParameterValueException;
 import org.opengis.parameter.ParameterNotFoundException;
 import org.opengis.parameter.ParameterValueGroup;
-import org.opengis.referencing.operation.Matrix;
 import org.opengis.referencing.operation.TransformException;
-
-import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 
 /**
  * Implementation of the BTE modified Dynmaxion projection.
@@ -75,18 +71,18 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
 
     @Override
     public double[] toGeo(double x, double y) throws OutOfProjectionBoundsException {
-        boolean easia;
-        if (y < 0) {
-            easia = x > 0;
-        } else if (y > ARC / 2) {
-            easia = x > -TerraUtils.ROOT3 * ARC / 2;
-        } else {
-            easia = y * -TerraUtils.ROOT3 < x;
-        }
-
         double t = x;
         x = -y;
         y = t;
+
+        boolean easia;
+        if (-x < 0) {
+            easia = y > 0;
+        } else if (-x > ARC / 2) {
+            easia = y > -TerraUtils.ROOT3 * ARC / 2;
+        } else {
+            easia = -x * -TerraUtils.ROOT3 < y;
+        }
 
         if (easia) {
             t = x;
@@ -231,27 +227,19 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
             double y = srcPts[srcOff + 1];
 
             boolean easia;
-            if (y < 0) {
-                easia = x > 0.0d;
-            } else if (y > ARC / 2.0d) {
-                easia = x > -TerraUtils.ROOT3 * ARC / 2.0d;
+            if (-x < 0) {
+                easia = y > 0;
+            } else if (-x > ARC / 2) {
+                easia = y > -TerraUtils.ROOT3 * ARC / 2;
             } else {
-                easia = y * -TerraUtils.ROOT3 < x;
+                easia = -x * -TerraUtils.ROOT3 < y;
             }
-
-            double t = x;
-            x = -y;
-            y = t;
-
-            Matrix2 preRotateMatrix = null;
 
             if (easia) {
                 double x0 = x;
                 double y0 = y;
                 x = SIN_THETA * y0 + COS_THETA * x0 - ARC;
                 y = COS_THETA * y0 - SIN_THETA * x0;
-
-                preRotateMatrix = EURASIA_ROTATE_MATRIX;
             } else {
                 x += ARC;
             }
@@ -271,8 +259,9 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
 
             Matrix2 derivative = super.transform(srcPts, srcOff, dstPts, dstOff, derivate);
 
-            if (preRotateMatrix != null && derivative != null) {
-                TMatrices.multiplyFast(derivative.clone(), EURASIA_ROTATE_MATRIX, derivative); //TODO: operand order?
+            if (easia && derivative != null) {
+                //TODO: avoid clone here
+                TMatrices.multiplyFast(derivative.clone(), EURASIA_ROTATE_MATRIX, derivative);
             }
 
             return derivative;

@@ -186,7 +186,6 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
             //porkman's notes from trying to reverse-engineer this:
             //  - we're trying to solve for (xest, yest) such that
             //        getInterpolatedVector((xest, yest)) - (expectedf, expectedg) = (0, 0)
-            //  -
 
             double xest = expectedf / ARC + 0.5d;
             double yest = expectedg / ARC + (ROOT3 / 6.0d);
@@ -319,18 +318,18 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
             InvertableVectorField.Result result = InvertableVectorField.RESULT_CACHE.get();
             this.field.getInterpolatedVector(x, y, result);
 
+            //TODO: cache these objects somewhere
             Matrix2 interpolatedVectorDeriv = new Matrix2();
             interpolatedVectorDeriv.m00 = result.dfdx;
             interpolatedVectorDeriv.m01 = result.dfdy;
             interpolatedVectorDeriv.m10 = result.dgdx;
             interpolatedVectorDeriv.m11 = result.dgdy;
+            TMatrices.scaleFast(interpolatedVectorDeriv, 1.0d / ARC, interpolatedVectorDeriv);
 
             Matrix3x2 superDeriv = Matrix3x2.createZero();
-            super.inverseTriangleTransformDerivative(result.f, result.g, dst);
+            super.inverseTriangleTransformDerivative(result.f, result.g, superDeriv);
 
             TMatrices.multiplyFast(superDeriv, interpolatedVectorDeriv, dst);
-
-            //TODO
         }
     }
 }

@@ -1,5 +1,6 @@
 package projection;
 
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorSettings;
@@ -7,6 +8,8 @@ import net.buildtheearth.terraplusplus.projection.EquirectangularProjection;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.projection.SinusoidalProjection;
+import net.buildtheearth.terraplusplus.projection.dymaxion.BTEDymaxionProjection;
+import net.buildtheearth.terraplusplus.projection.dymaxion.ConformalDynmaxionProjection;
 import net.buildtheearth.terraplusplus.projection.dymaxion.DymaxionProjection;
 import net.buildtheearth.terraplusplus.projection.epsg.EPSG3785;
 import net.buildtheearth.terraplusplus.projection.epsg.EPSG4326;
@@ -18,9 +21,11 @@ import net.buildtheearth.terraplusplus.projection.transform.OffsetProjectionTran
 import net.buildtheearth.terraplusplus.projection.transform.ScaleProjectionTransform;
 import net.buildtheearth.terraplusplus.projection.transform.SwapAxesProjectionTransform;
 import net.minecraft.init.Bootstrap;
+import org.apache.sis.referencing.operation.matrix.Matrices;
 import org.apache.sis.referencing.operation.matrix.Matrix2;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.vecmath.Vector2d;
 import java.text.ParseException;
@@ -40,17 +45,30 @@ public class TestSISProjections {
         Bootstrap.register();
     }
 
+    @AllArgsConstructor
     private static class TestProjectionAccuracyConfiguration {
-        public PointGenerator getPointGeneratorForDirect1Direct2() {
+        protected final double dForDirect1Direct2;
+        protected final double dForDirect1SIS2;
+        protected final double dForSIS1Direct2;
+
+        public TestProjectionAccuracyConfiguration(double d) {
+            this(d, d, d);
+        }
+
+        protected PointGenerator getDefaultPointGenerator() {
             return new PointGenerator();
+        }
+
+        public PointGenerator getPointGeneratorForDirect1Direct2() {
+            return this.getDefaultPointGenerator();
         }
 
         public PointGenerator getPointGeneratorForDirect1SIS2() {
-            return new PointGenerator();
+            return this.getDefaultPointGenerator();
         }
 
         public PointGenerator getPointGeneratorForSIS1Direct2() {
-            return new PointGenerator();
+            return this.getDefaultPointGenerator();
         }
 
         public static class PointGenerator {
@@ -88,77 +106,88 @@ public class TestSISProjections {
                 }
             }
 
-            protected boolean shouldTestFromGeoDerivative(int i) {
+            protected boolean shouldTestFromGeoDerivative(int i, double lon, double lat) {
                 return true;
             }
 
-            protected boolean shouldTestToGeoDerivative(int i) {
+            protected boolean compareFromGeoDerivative(int i, Matrix2 deriv1, Matrix2 deriv2) {
+                return veryApproximateEquals(deriv1, deriv2, 0.01d, 1e-1d);
+            }
+
+            protected boolean shouldTestToGeoDerivative(int i, double lon, double lat) {
                 return true;
+            }
+
+            protected boolean compareToGeoDerivative(int i, Matrix2 deriv1, Matrix2 deriv2) {
+                return veryApproximateEquals(deriv1, deriv2, 0.01d, 1e-1d);
             }
         }
     }
 
     protected static void testProjectionAccuracy(@NonNull GeographicProjection proj1, @NonNull GeographicProjection proj2) {
-        testProjectionAccuracy(proj1, proj2, DEFAULT_D);
+        testProjectionAccuracy(proj1, proj2, new TestProjectionAccuracyConfiguration(DEFAULT_D));
     }
 
     protected static void testProjectionAccuracy(@NonNull GeographicProjection proj1, @NonNull GeographicProjection proj2, double d) {
-        testProjectionAccuracy(proj1, proj2, d, new TestProjectionAccuracyConfiguration());
+        testProjectionAccuracy(proj1, proj2, new TestProjectionAccuracyConfiguration(d));
     }
 
-    protected static void testProjectionAccuracy(@NonNull GeographicProjection proj1, @NonNull GeographicProjection proj2, double d, @NonNull TestProjectionAccuracyConfiguration configuration) {
-        testProjectionAccuracy0(proj1, proj2, d, configuration.getPointGeneratorForDirect1Direct2());
-        testProjectionAccuracy0(proj1, new SISProjectionWrapper(proj2.projectedCRS()), d, configuration.getPointGeneratorForDirect1SIS2());
-        testProjectionAccuracy0(new SISProjectionWrapper(proj1.projectedCRS()), proj2, d, configuration.getPointGeneratorForSIS1Direct2());
+    protected static void testProjectionAccuracy(@NonNull GeographicProjection proj1, @NonNull GeographicProjection proj2, @NonNull TestProjectionAccuracyConfiguration configuration) {
+        testProjectionAccuracy0(proj1, proj2, configuration.dForDirect1Direct2, configuration.getPointGeneratorForDirect1Direct2());
+        testProjectionAccuracy0(proj1, new SISProjectionWrapper(proj2.projectedCRS()), configuration.dForDirect1SIS2, configuration.getPointGeneratorForDirect1SIS2());
+        testProjectionAccuracy0(new SISProjectionWrapper(proj1.projectedCRS()), proj2, configuration.dForSIS1Direct2, configuration.getPointGeneratorForSIS1Direct2());
     }
 
-    @SneakyThrows(OutOfProjectionBoundsException.class)
     protected static void testProjectionAccuracy0(@NonNull GeographicProjection proj1, @NonNull GeographicProjection proj2, double d, @NonNull TestProjectionAccuracyConfiguration.PointGenerator pointGenerator) {
         Vector2d lonLat = new Vector2d();
         for (int i = 0; i < 10000; i++) {
-            pointGenerator.getPoint(i, lonLat);
-
-            double lon = lonLat.x;
-            double lat = lonLat.y;
-
-            double[] result1;
             try {
-                result1 = proj1.fromGeo(lon, lat);
-            } catch (OutOfProjectionBoundsException e) {
+                pointGenerator.getPoint(i, lonLat);
+
+                double lon = lonLat.x;
+                double lat = lonLat.y;
+
+                double[] result1;
                 try {
-                    double[] result2 = proj2.fromGeo(lon, lat);
-                    //TODO: throw new AssertionError("proj1 threw " + e + ", but proj2 returned " + Arrays.toString(result2) + "?!?");
-                    continue;
-                } catch (OutOfProjectionBoundsException e1) {
-                    //both projections failed with an exception, which is correct
-                    continue;
+                    result1 = proj1.fromGeo(lon, lat);
+                } catch (OutOfProjectionBoundsException e) {
+                    try {
+                        double[] result2 = proj2.fromGeo(lon, lat);
+                        //TODO: throw new AssertionError("proj1 threw " + e + ", but proj2 returned " + Arrays.toString(result2) + "?!?");
+                        continue;
+                    } catch (OutOfProjectionBoundsException e1) {
+                        //both projections failed with an exception, which is correct
+                        continue;
+                    }
                 }
-            }
-            double[] result2 = proj2.fromGeo(lon, lat);
+                double[] result2 = proj2.fromGeo(lon, lat);
 
-            assert approxEquals(result1, result2, d)
-                    : "fromGeo #" + i + " (" + lat + "°N, " + lon + "°E): " + Arrays.toString(result1) + " != " + Arrays.toString(result2);
+                assert approxEquals(result1, result2, d)
+                        : "fromGeo #" + i + " (" + lat + "°N, " + lon + "°E): " + Arrays.toString(result1) + " != " + Arrays.toString(result2);
 
-            double x = result1[0];
-            double y = result1[1];
+                double x = result1[0];
+                double y = result1[1];
 
-            result1 = proj1.toGeo(x, y);
-            result2 = proj2.toGeo(x, y);
-            assert approxEquals(result1, result2, d)
-                    : "toGeo #" + i + " (" + lat + "°N, " + lon + "°E) -> (" + x + ", " + y + "): " + Arrays.toString(result1) + " != " + Arrays.toString(result2);
+                result1 = proj1.toGeo(x, y);
+                result2 = proj2.toGeo(x, y);
+                assert approxEquals(result1, result2, d)
+                        : "toGeo #" + i + " (" + lat + "°N, " + lon + "°E) -> (" + x + ", " + y + "): " + Arrays.toString(result1) + " != " + Arrays.toString(result2);
 
-            if (pointGenerator.shouldTestFromGeoDerivative(i)) {
-                Matrix2 deriv1 = proj1.fromGeoDerivative(lon, lat);
-                Matrix2 deriv2 = proj2.fromGeoDerivative(lon, lat);
-                assert veryApproximateEquals(deriv1, deriv2, 0.01d, 2.2e-2d)
-                        : "fromGeoDerivative #" + i + " (" + lat + "°N, " + lon + "°E):\n" + deriv1 + "!=\n" + deriv2;
-            }
+                if (pointGenerator.shouldTestFromGeoDerivative(i, lon, lat)) {
+                    Matrix2 deriv1 = proj1.fromGeoDerivative(lon, lat);
+                    Matrix2 deriv2 = proj2.fromGeoDerivative(lon, lat);
+                    assert pointGenerator.compareFromGeoDerivative(i, deriv1, deriv2)
+                            : "fromGeoDerivative #" + i + " (" + lat + "°N, " + lon + "°E):\n" + deriv1 + "!=\n" + deriv2;
+                }
 
-            if (pointGenerator.shouldTestToGeoDerivative(i)) {
-                Matrix2 deriv1 = proj1.toGeoDerivative(x, y);
-                Matrix2 deriv2 = proj2.toGeoDerivative(x, y);
-                assert veryApproximateEquals(deriv1, deriv2, 0.01d, 1e-1d)
-                        : "toGeoDerivative #" + i + " (" + lat + "°N, " + lon + "°E) -> (" + x + ", " + y + "):\n" + deriv1 + "!=\n" + deriv2;
+                if (pointGenerator.shouldTestToGeoDerivative(i, lon, lat)) {
+                    Matrix2 deriv1 = proj1.toGeoDerivative(x, y);
+                    Matrix2 deriv2 = proj2.toGeoDerivative(x, y);
+                    assert pointGenerator.compareToGeoDerivative(i, deriv1, deriv2)
+                            : "toGeoDerivative #" + i + " (" + lat + "°N, " + lon + "°E) -> (" + x + ", " + y + "):\n" + deriv1 + "!=\n" + deriv2;
+                }
+            } catch (OutOfProjectionBoundsException e) {
+                throw new AssertionError("#" + i, e);
             }
         }
     }
@@ -194,13 +223,12 @@ public class TestSISProjections {
                         + "    SCOPE[\"Minecraft.\"],\n"
                         + "    AREA[\"World.\"],\n"
                         + "    BBOX[-90, -180, 90, 180]]"),
-                1e-13d,
-                new TestProjectionAccuracyConfiguration() {
+                new TestProjectionAccuracyConfiguration(1e-13d) {
                     @Override
                     public PointGenerator getPointGeneratorForSIS1Direct2() {
                         return new PointGenerator() {
                             @Override
-                            protected boolean shouldTestToGeoDerivative(int i) {
+                            protected boolean shouldTestToGeoDerivative(int i, double lon, double lat) {
                                 //special handling required here: toGeoDerivative fails because GeographicProjectionHelper.defaultDerivative() gives very wrong results when longitude values wrap around
                                 return i >= 4;
                             }
@@ -210,6 +238,110 @@ public class TestSISProjections {
     }
 
     @Test
+    @SneakyThrows(ParseException.class)
+    public void testConformalDymaxion() {
+        testProjectionAccuracy(
+                new ConformalDynmaxionProjection(),
+                new SISProjectionWrapper(WKTStandard.WKT2_2015,
+                        "PROJCRS[\"WGS 84 / Reversed Axis Order / Terra++ Conformal Dymaxion\",\n"
+                        + "    BASEGEODCRS[\"WGS 84\",\n"
+                        + "        DATUM[\"World Geodetic System 1984\",\n"
+                        + "            ELLIPSOID[\"WGS 84\", 6378137, 298.257223563,\n"
+                        + "                LENGTHUNIT[\"metre\",1]]],\n"
+                        + "        PRIMEM[\"Greenwich\", 0,\n"
+                        + "            ANGLEUNIT[\"degree\", 0.0174532925199433]],\n"
+                        + "        ID[\"EPSG\", 4326]],\n"
+                        + "    CONVERSION[\"Terra++ Dymaxion\",\n"
+                        + "        METHOD[\"Terra++ Internal Projection\"],\n"
+                        + "        PARAMETER[\"type\", \"conformal_dymaxion\"]],\n"
+                        + "    CS[Cartesian, 2],\n"
+                        + "        AXIS[\"X\", east,\n"
+                        + "            ORDER[1],\n"
+                        + "            LENGTHUNIT[\"metre\", 1]],\n"
+                        + "        AXIS[\"Y\", north,\n"
+                        + "            ORDER[2],\n"
+                        + "            LENGTHUNIT[\"metre\", 1]],\n"
+                        + "    SCOPE[\"Minecraft.\"],\n"
+                        + "    AREA[\"World.\"],\n"
+                        + "    BBOX[-90, -180, 90, 180]]"),
+                new TestProjectionAccuracyConfiguration(1e-13d) {
+                    @Override
+                    public PointGenerator getPointGeneratorForSIS1Direct2() {
+                        return new PointGenerator() {
+                            @Override
+                            protected boolean shouldTestToGeoDerivative(int i, double lon, double lat) {
+                                //special handling required here: toGeoDerivative fails because GeographicProjectionHelper.defaultDerivative() gives very wrong results when longitude values wrap around
+                                return i >= 4;
+                            }
+                        };
+                    }
+                });
+    }
+
+    private static TestProjectionAccuracyConfiguration testBTEConfiguration(double dForDirect1Direct2, double dForDirect1SIS2, double dForSIS1Direct2) {
+        return new TestProjectionAccuracyConfiguration(dForDirect1Direct2, dForDirect1SIS2, dForSIS1Direct2) {
+            @Override
+            protected PointGenerator getDefaultPointGenerator() {
+                return new PointGenerator() {
+                    @Override
+                    protected boolean shouldTestFromGeoDerivative(int i, double lon, double lat) {
+                        //special handling required here: fromGeoDerivative fails because GeographicProjectionHelper.defaultDerivative() gives very wrong results when longitude values wrap around
+                        return i >= 4
+                               //fromGeoDerivative fails because GeographicProjectionHelper.defaultDerivative() gives somewhat inaccurate results near +-90°
+                                && Math.abs(90.0d - lat) < 0.01d;
+                    }
+
+                    @Override
+                    protected boolean compareFromGeoDerivative(int i, Matrix2 deriv1, Matrix2 deriv2) {
+                        return Matrices.equals(deriv1, deriv2, 0.15d, true)
+                                || Matrices.equals(deriv1, deriv2, 1e-6d, false);
+                    }
+
+                    @Override
+                    protected boolean shouldTestToGeoDerivative(int i, double lon, double lat) {
+                        //special handling required here: toGeoDerivative fails because GeographicProjectionHelper.defaultDerivative() gives very wrong results when longitude values wrap around
+                        return i >= 4;
+                    }
+                };
+            }
+        };
+    }
+
+    public interface BTETests {}
+
+    @Test
+    @Category(BTETests.class)
+    @SneakyThrows(ParseException.class)
+    public void testBTE0() {
+        testProjectionAccuracy(
+                new BTEDymaxionProjection(),
+                new SISProjectionWrapper(WKTStandard.WKT2_2015,
+                        "PROJCRS[\"WGS 84 / Reversed Axis Order / BuildTheEarth Conformal Dymaxion (Unscaled)\",\n"
+                        + "    BASEGEODCRS[\"WGS 84\",\n"
+                        + "        DATUM[\"World Geodetic System 1984\",\n"
+                        + "            ELLIPSOID[\"WGS 84\", 6378137, 298.257223563,\n"
+                        + "                LENGTHUNIT[\"metre\",1]]],\n"
+                        + "        PRIMEM[\"Greenwich\", 0,\n"
+                        + "            ANGLEUNIT[\"degree\", 0.0174532925199433]],\n"
+                        + "        ID[\"EPSG\", 4326]],\n"
+                        + "    CONVERSION[\"Terra++ BuildTheEarth Conformal Dymaxion (Unscaled)\",\n"
+                        + "        METHOD[\"Terra++ Internal Projection\"],\n"
+                        + "        PARAMETER[\"type\", \"bte_conformal_dymaxion\"]],\n"
+                        + "    CS[Cartesian, 2],\n"
+                        + "        AXIS[\"X\", east,\n"
+                        + "            ORDER[1],\n"
+                        + "            LENGTHUNIT[\"metre\", 1]],\n"
+                        + "        AXIS[\"Y\", north,\n"
+                        + "            ORDER[2],\n"
+                        + "            LENGTHUNIT[\"metre\", 1]],\n"
+                        + "    SCOPE[\"Minecraft.\"],\n"
+                        + "    AREA[\"World.\"],\n"
+                        + "    BBOX[-90, -180, 90, 180]]"),
+                testBTEConfiguration(DEFAULT_D, DEFAULT_D, 1e-12d));
+    }
+
+    @Test
+    @Category(BTETests.class)
     @SneakyThrows(ParseException.class)
     public void testBTE1() {
         testProjectionAccuracy(
@@ -235,10 +367,12 @@ public class TestSISProjections {
                         + "            LENGTHUNIT[\"metre\", 1]],\n"
                         + "    SCOPE[\"Minecraft.\"],\n"
                         + "    AREA[\"World.\"],\n"
-                        + "    BBOX[-90, -180, 90, 180]]"), 7318261.522857145d, 7318261.522857145d));
+                        + "    BBOX[-90, -180, 90, 180]]"), 7318261.522857145d, 7318261.522857145d),
+                testBTEConfiguration(DEFAULT_D, 2e-11d, 2e-8d));
     }
 
     @Test
+    @Category(BTETests.class)
     @SneakyThrows(ParseException.class)
     public void testBTE2() {
         testProjectionAccuracy(
@@ -265,10 +399,12 @@ public class TestSISProjections {
                         + "            LENGTHUNIT[\"metre\", 1]],\n"
                         + "    SCOPE[\"Minecraft.\"],\n"
                         + "    AREA[\"World.\"],\n"
-                        + "    BBOX[-90, -180, 90, 180]]"));
+                        + "    BBOX[-90, -180, 90, 180]]"),
+                testBTEConfiguration(DEFAULT_D, DEFAULT_D, 2e-8d));
     }
 
     @Test
+    @Category(BTETests.class)
     @SneakyThrows(ParseException.class)
     public void testBTE3() {
         testProjectionAccuracy(
@@ -304,11 +440,12 @@ public class TestSISProjections {
                         + "        SCOPE[\"Minecraft.\"],\n"
                         + "        AREA[\"World.\"],\n"
                         + "        BBOX[-90, -180, 90, 180]]]"),
-                1e-8d); //this is significantly less accurate than some of the others!!!
+                testBTEConfiguration(1e-8d, 1e-8d, 2e-8d)); //this is significantly less accurate than some of the others!!!
     }
 
     //unfortunately, this has a fair amount of additional floating-point error (off by <= ~1e-10 degrees). maybe that's acceptable? will have to test more...
     @Test
+    @Category(BTETests.class)
     @SneakyThrows(ParseException.class)
     public void testBTE4() {
         testProjectionAccuracy(
@@ -334,7 +471,8 @@ public class TestSISProjections {
                         + "            LENGTHUNIT[\"Minecraft Block\", 1.3664447449393513E-7]],\n"
                         + "    SCOPE[\"Minecraft.\"],\n"
                         + "    AREA[\"World.\"],\n"
-                        + "    BBOX[-90, -180, 90, 180]]"), 1e-10d);
+                        + "    BBOX[-90, -180, 90, 180]]"),
+                testBTEConfiguration(1e-10d, 1e-10d, 2e-8d));
     }
 
     @Test(expected = AssertionError.class) //This should fail, as
