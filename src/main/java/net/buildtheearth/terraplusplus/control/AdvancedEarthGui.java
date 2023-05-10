@@ -1234,37 +1234,50 @@ public class AdvancedEarthGui extends GuiScreen {
                 double projX = relativeMouseX * this.projScale + this.minX;
                 double projY = relativeMouseY * this.projScale + this.minY;
 
+                MathTransform transform = SISHelper.findOperation(TerraConstants.TPP_GEO_CRS, SISHelper.projectedCRS(this.projection)).getMathTransform();
+
                 try {
-                    double[] geo = this.projection.toGeo(projX, projY);
+                    if (true) {
+                        double[] geo = this.projection.toGeo(projX, projY);
 
-                    try {
-                        final double lineLength = 32.0d;
-
-                        MathTransform transform = SISHelper.findOperation(TerraConstants.TPP_GEO_CRS, SISHelper.projectedCRS(this.projection)).getMathTransform();
-                        Matrix2 deriv = Matrix2.castOrCopy(transform.derivative(new DirectPosition2D(geo[0], geo[1])));
-
-                        deriv.normalizeColumns();
-                        TMatrices.scaleFast(deriv, lineLength, deriv);
-
-                        GlStateManager.glLineWidth(2.0f);
-                        drawLine(mouseX, mouseY, (int) (mouseX + deriv.m00), (int) (mouseY + deriv.m10), 0xFF00FF00);
-                        drawLine(mouseX, mouseY, (int) (mouseX + deriv.m01), (int) (mouseY + deriv.m11), 0xFFFF0000);
-
-                        deriv = GeographicProjectionHelper.defaultDerivative(this.projection, geo[0], geo[1], true);
-                        deriv.normalizeColumns();
-                        TMatrices.scaleFast(deriv, lineLength, deriv);
-
-                        GlStateManager.glLineWidth(5.0f);
-                        drawLine(mouseX, mouseY, (int) (mouseX + deriv.m00), (int) (mouseY + deriv.m10), 0x8800FF00);
-                        drawLine(mouseX, mouseY, (int) (mouseX + deriv.m01), (int) (mouseY + deriv.m11), 0x88FF0000);
-                    } catch (TransformException e) {
-                        int i = 0;
+                        this.drawDerivativeLines(
+                                Matrix2.castOrCopy(transform.derivative(new DirectPosition2D(geo[0], geo[1]))),
+                                GeographicProjectionHelper.defaultDerivative(this.projection, geo[0], geo[1], true),
+                                mouseX, mouseY, false);
+                    } else {
+                        this.drawDerivativeLines(
+                                Matrix2.castOrCopy(transform.inverse().derivative(new DirectPosition2D(projX, projY))),
+                                GeographicProjectionHelper.defaultDerivative(this.projection, projX, projY, false),
+                                mouseX, mouseY, true);
                     }
-                } catch (OutOfProjectionBoundsException e) {
+                } catch (TransformException e) {
                     int i = 0;
                     //ignored
                 }
             }
+        }
+
+        private void drawDerivativeLines(Matrix2 transformDerivative, Matrix2 defaultDerivative, int mouseX, int mouseY, boolean invert) {
+            if (invert) {
+                TMatrices.invertFast(defaultDerivative, defaultDerivative);
+                TMatrices.invertFast(transformDerivative, transformDerivative);
+            }
+
+            final double lineLength = 32.0d;
+
+            defaultDerivative.normalizeColumns();
+            TMatrices.scaleFast(defaultDerivative, lineLength, defaultDerivative);
+
+            GlStateManager.glLineWidth(5.0f);
+            drawLine(mouseX, mouseY, (int) (mouseX + defaultDerivative.m00), (int) (mouseY + defaultDerivative.m10), 0x8800FF00);
+            drawLine(mouseX, mouseY, (int) (mouseX + defaultDerivative.m01), (int) (mouseY + defaultDerivative.m11), 0x88FF0000);
+
+            transformDerivative.normalizeColumns();
+            TMatrices.scaleFast(transformDerivative, lineLength, transformDerivative);
+
+            GlStateManager.glLineWidth(2.0f);
+            drawLine(mouseX, mouseY, (int) (mouseX + transformDerivative.m00), (int) (mouseY + transformDerivative.m10), 0xFF00FF00);
+            drawLine(mouseX, mouseY, (int) (mouseX + transformDerivative.m01), (int) (mouseY + transformDerivative.m11), 0xFFFF0000);
         }
     }
 }

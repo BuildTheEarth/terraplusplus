@@ -226,16 +226,16 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
             double x = srcPts[srcOff + 0];
             double y = srcPts[srcOff + 1];
 
-            boolean easia;
-            if (-x < 0) {
-                easia = y > 0;
-            } else if (-x > ARC / 2) {
-                easia = y > -TerraUtils.ROOT3 * ARC / 2;
+            boolean eurasia;
+            if (x > 0.0d) {
+                eurasia = y > 0.0d;
+            } else if (x < -ARC / 2.0d) {
+                eurasia = y > -TerraUtils.ROOT3 * ARC / 2.0d;
             } else {
-                easia = -x * -TerraUtils.ROOT3 < y;
+                eurasia = x * TerraUtils.ROOT3 < y;
             }
 
-            if (easia) {
+            if (eurasia) {
                 double x0 = x;
                 double y0 = y;
                 x = SIN_THETA * y0 + COS_THETA * x0 - ARC;
@@ -247,7 +247,7 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
             y += 0.75d * ARC * TerraUtils.ROOT3;
 
             //check to make sure still in right part
-            if (easia != isEurasianPart(x, y)) {
+            if (eurasia != isEurasianPart(x, y)) {
                 throw OutOfProjectionBoundsException.get();
             }
 
@@ -259,9 +259,8 @@ public class BTEDymaxionProjection extends ConformalDynmaxionProjection {
 
             Matrix2 derivative = super.transform(srcPts, srcOff, dstPts, dstOff, derivate);
 
-            if (easia && derivative != null) {
-                //TODO: avoid clone here
-                TMatrices.multiplyFast(derivative.clone(), EURASIA_ROTATE_MATRIX, derivative);
+            if (eurasia && derivative != null) {
+                TMatrices.multiplyFast(derivative, EURASIA_ROTATE_MATRIX, derivative);
             }
 
             return derivative;

@@ -393,7 +393,7 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
         triangleTransformDymaxionDerivative(rotated.x, rotated.y, rotated.z, dst);
     }
 
-    public static String mathematicaFullFormToJava(String fullForm) {
+    /*public static String mathematicaFullFormToJava(String fullForm) {
         fullForm = fullForm.trim();
 
         try {
@@ -482,7 +482,7 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
         }
 
         throw new IllegalArgumentException(fullForm);
-    }
+    }*/
 
     protected void triangleTransform(double x, double y, double z, Vector2d dst) {
         triangleTransformDymaxion(x, y, z, dst);
@@ -537,14 +537,12 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
         dst.z = z;
     }
 
-    protected static void inverseTriangleTransformNewtonDerivative(double xpp, double ypp, Matrix3x2 dst) {
-        //TODO: cache these objects somewhere
-        Vector3d vec = new Vector3d();
+    protected static void inverseTriangleTransformNewtonDerivative(TransformResourceCache cache, double xpp, double ypp, Matrix3x2 dst) {
+        Vector3d vec = cache.inverseTriangleTransformNewton_temporaryVector;
+        Matrix2x3 matrix = cache.inverseTriangleTransformNewton_temporaryMatrix;
+
         inverseTriangleTransformNewton(xpp, ypp, vec);
-
-        Matrix2x3 matrix = Matrix2x3.createZero();
         triangleTransformDymaxionDerivative(vec.x, vec.y, vec.z, matrix);
-
         TMatrices.pseudoInvertFast(matrix, dst);
     }
 
@@ -677,6 +675,9 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
         public final Matrix3x2 rotatedDerivative = Matrix3x2.createZero();
         public final Matrix2x3 projectedDerivative = Matrix2x3.createZero();
         public final Matrix2 totalDerivative = new Matrix2();
+
+        public final Vector3d inverseTriangleTransformNewton_temporaryVector = new Vector3d();
+        public final Matrix2x3 inverseTriangleTransformNewton_temporaryMatrix = Matrix2x3.createZero();
     }
 
     public static final class OperationMethod extends AbstractOperationMethod.ForLegacyProjection {
@@ -795,8 +796,8 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
             inverseTriangleTransformNewton(x, y, dst);
         }
 
-        protected void inverseTriangleTransformDerivative(double x, double y, Matrix3x2 dst) {
-            inverseTriangleTransformNewtonDerivative(x, y, dst);
+        protected void inverseTriangleTransformDerivative(CACHE cache, double x, double y, Matrix3x2 dst) {
+            inverseTriangleTransformNewtonDerivative(cache, x, y, dst);
         }
 
         @Override
@@ -842,7 +843,7 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
             x *= FLIP_TRIANGLE_FACTOR[face];
             y *= FLIP_TRIANGLE_FACTOR[face];
 
-            TransformResourceCache cache = TRANSFORM_RESOURCE_CACHE.get();
+            CACHE cache = this.cacheCache.get();
 
             Vector2d spherical = cache.spherical;
             Vector3d cartesian = cache.cartesian;
@@ -854,12 +855,11 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
             //apply inverse rotation matrix (move triangle from template triangle to correct position on globe)
             TMatrices.multiplyFast(INVERSE_ROTATION_MATRICES[face], rotated, cartesian);
 
-            //convert back to geo coordinates
-            TerraUtils.cartesian2Spherical(cartesian.x, cartesian.y, cartesian.z, spherical);
-
-            //spherical -> geographic conversion is handled afterwards by the affine transform
-
             if (dstPts != null) {
+                //convert back to geo coordinates
+                TerraUtils.cartesian2Spherical(cartesian.x, cartesian.y, cartesian.z, spherical);
+
+                //spherical -> geographic conversion is handled afterwards by the affine transform
                 dstPts[dstOff + 0] = spherical.x;
                 dstPts[dstOff + 1] = spherical.y;
             }
@@ -872,7 +872,7 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
             Matrix2x3 sphericalDerivative = cache.projectedDerivative;
             Matrix2 totalDerivative = cache.totalDerivative;
 
-            this.inverseTriangleTransformDerivative(x, y, rotatedDerivative);
+            this.inverseTriangleTransformDerivative(cache, x, y, rotatedDerivative);
             TMatrices.multiplyFast(INVERSE_ROTATION_MATRICES[face], rotatedDerivative, cartesianDerivative);
             TerraUtils.cartesian2SphericalDerivative(cartesian.x, cartesian.y, cartesian.z, sphericalDerivative);
             TMatrices.multiplyFast(sphericalDerivative, cartesianDerivative, totalDerivative);

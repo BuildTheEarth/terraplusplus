@@ -63,11 +63,21 @@ public class TMatrices {
     }
 
     public static void multiplyFast(Matrix2 m1, Matrix2 m2, Matrix2 dst) {
-        assert m1 != dst && m2 != dst;
-        dst.m00 = m1.m00 * m2.m00 + m1.m01 * m2.m10;
-        dst.m01 = m1.m00 * m2.m01 + m1.m01 * m2.m11;
-        dst.m10 = m1.m10 * m2.m00 + m1.m11 * m2.m10;
-        dst.m11 = m1.m10 * m2.m01 + m1.m11 * m2.m11;
+        //preload all fields into variables to improve optimization and allow in-place calculation
+        double m1m00 = m1.m00;
+        double m1m01 = m1.m01;
+        double m1m10 = m1.m10;
+        double m1m11 = m1.m11;
+        
+        double m2m00 = m2.m00;
+        double m2m01 = m2.m01;
+        double m2m10 = m2.m10;
+        double m2m11 = m2.m11;
+        
+        dst.m00 = m1m00 * m2m00 + m1m01 * m2m10;
+        dst.m01 = m1m00 * m2m01 + m1m01 * m2m11;
+        dst.m10 = m1m10 * m2m00 + m1m11 * m2m10;
+        dst.m11 = m1m10 * m2m01 + m1m11 * m2m11;
     }
 
     public static Matrix2 multiplyFast(Matrix2x3 m1, Matrix3x2 m2) {
@@ -84,42 +94,78 @@ public class TMatrices {
     }
 
     public static void multiplyFast(Matrix2 m1, Matrix2x3 m2, Matrix2x3 dst) {
-        assert m2 != dst;
-        dst.m00 = m1.m00 * m2.m00 + m1.m01 * m2.m10;
-        dst.m01 = m1.m00 * m2.m01 + m1.m01 * m2.m11;
-        dst.m02 = m1.m00 * m2.m02 + m1.m01 * m2.m12;
-        dst.m10 = m1.m10 * m2.m00 + m1.m11 * m2.m10;
-        dst.m11 = m1.m10 * m2.m01 + m1.m11 * m2.m11;
-        dst.m12 = m1.m10 * m2.m02 + m1.m11 * m2.m12;
+        //preload all fields into variables to improve optimization and allow in-place calculation
+        double m1m00 = m1.m00;
+        double m1m01 = m1.m01;
+        double m1m10 = m1.m10;
+        double m1m11 = m1.m11;
+        
+        double m2m00 = m2.m00;
+        double m2m01 = m2.m01;
+        double m2m02 = m2.m02;
+        double m2m10 = m2.m10;
+        double m2m11 = m2.m11;
+        double m2m12 = m2.m12;
+        
+        dst.m00 = m1m00 * m2m00 + m1m01 * m2m10;
+        dst.m01 = m1m00 * m2m01 + m1m01 * m2m11;
+        dst.m02 = m1m00 * m2m02 + m1m01 * m2m12;
+        dst.m10 = m1m10 * m2m00 + m1m11 * m2m10;
+        dst.m11 = m1m10 * m2m01 + m1m11 * m2m11;
+        dst.m12 = m1m10 * m2m02 + m1m11 * m2m12;
     }
 
     public static void multiplyFast(Matrix3 m1, Matrix3x2 m2, Matrix3x2 dst) {
-        assert m2 != dst;
-        dst.m00 = m1.m00 * m2.m00 + m1.m01 * m2.m10 + m1.m02 * m2.m20;
-        dst.m01 = m1.m00 * m2.m01 + m1.m01 * m2.m11 + m1.m02 * m2.m21;
-        dst.m10 = m1.m10 * m2.m00 + m1.m11 * m2.m10 + m1.m12 * m2.m20;
-        dst.m11 = m1.m10 * m2.m01 + m1.m11 * m2.m11 + m1.m12 * m2.m21;
-        dst.m20 = m1.m20 * m2.m00 + m1.m21 * m2.m10 + m1.m22 * m2.m20;
-        dst.m21 = m1.m20 * m2.m01 + m1.m21 * m2.m11 + m1.m22 * m2.m21;
+        //preload all fields into variables to improve optimization and allow in-place calculation
+        double m1m00 = m1.m00;
+        double m1m01 = m1.m01;
+        double m1m02 = m1.m02;
+        double m1m10 = m1.m10;
+        double m1m11 = m1.m11;
+        double m1m12 = m1.m12;
+        double m1m20 = m1.m20;
+        double m1m21 = m1.m21;
+        double m1m22 = m1.m22;
+        
+        double m2m00 = m2.m00;
+        double m2m01 = m2.m01;
+        double m2m10 = m2.m10;
+        double m2m11 = m2.m11;
+        double m2m20 = m2.m20;
+        double m2m21 = m2.m21;
+        
+        dst.m00 = m1m00 * m2m00 + m1m01 * m2m10 + m1m02 * m2m20;
+        dst.m01 = m1m00 * m2m01 + m1m01 * m2m11 + m1m02 * m2m21;
+        dst.m10 = m1m10 * m2m00 + m1m11 * m2m10 + m1m12 * m2m20;
+        dst.m11 = m1m10 * m2m01 + m1m11 * m2m11 + m1m12 * m2m21;
+        dst.m20 = m1m20 * m2m00 + m1m21 * m2m10 + m1m22 * m2m20;
+        dst.m21 = m1m20 * m2m01 + m1m21 * m2m11 + m1m22 * m2m21;
     }
 
     public static void multiplyFast(Matrix3x2 m1, Matrix2 m2, Matrix3x2 dst) {
-        assert m1 != dst;
-        dst.m00 = m1.m00 * m2.m00 + m1.m01 * m2.m10;
-        dst.m01 = m1.m00 * m2.m01 + m1.m01 * m2.m11;
-        dst.m10 = m1.m10 * m2.m00 + m1.m11 * m2.m10;
-        dst.m11 = m1.m10 * m2.m01 + m1.m11 * m2.m11;
-        dst.m20 = m1.m20 * m2.m00 + m1.m21 * m2.m10;
-        dst.m21 = m1.m20 * m2.m01 + m1.m21 * m2.m11;
-    }
+        //preload all fields into variables to improve optimization and allow in-place calculation
+        double m1m00 = m1.m00;
+        double m1m01 = m1.m01;
+        double m1m10 = m1.m10;
+        double m1m11 = m1.m11;
+        double m1m20 = m1.m20;
+        double m1m21 = m1.m21;
 
-    public static Vector3d multiplyFast(Matrix3 m1, Vector3d v2) {
-        Vector3d result = new Vector3d();
-        multiplyFast(m1, v2.x, v2.y, v2.z, result);
-        return result;
+        double m2m00 = m2.m00;
+        double m2m01 = m2.m01;
+        double m2m10 = m2.m10;
+        double m2m11 = m2.m11;
+        
+        dst.m00 = m1m00 * m2m00 + m1m01 * m2m10;
+        dst.m01 = m1m00 * m2m01 + m1m01 * m2m11;
+        dst.m10 = m1m10 * m2m00 + m1m11 * m2m10;
+        dst.m11 = m1m10 * m2m01 + m1m11 * m2m11;
+        dst.m20 = m1m20 * m2m00 + m1m21 * m2m10;
+        dst.m21 = m1m20 * m2m01 + m1m21 * m2m11;
     }
 
     public static void multiplyFast(Matrix3 m1, Vector3d v2, Vector3d dst) {
+        //preload all fields into variables to improve optimization and allow in-place calculation
         multiplyFast(m1, v2.x, v2.y, v2.z, dst);
     }
 
@@ -127,12 +173,6 @@ public class TMatrices {
         dst.x = m1.m00 * x2 + m1.m01 * y2 + m1.m02 * z2;
         dst.y = m1.m10 * x2 + m1.m11 * y2 + m1.m12 * z2;
         dst.z = m1.m20 * x2 + m1.m21 * y2 + m1.m22 * z2;
-    }
-
-    public static MatrixSIS scaleFast(Matrix m, double f) {
-        MatrixSIS dst = m instanceof MatrixSIS ? ((MatrixSIS) m).clone() : createZero(m.getNumRow(), m.getNumCol());
-        scaleFast(dst, f, dst);
-        return dst;
     }
 
     public static void scaleFast(Matrix m, double f, Matrix dst) {
@@ -149,12 +189,6 @@ public class TMatrices {
 
     // scaleFast overloads
 
-    public static Matrix2 scaleFast(Matrix2 m, double f) {
-        return new Matrix2(
-                m.m00 * f, m.m01 * f,
-                m.m10 * f, m.m11 * f);
-    }
-
     public static void scaleFast(Matrix2 m, double f, Matrix2 dst) {
         dst.m00 = m.m00 * f;
         dst.m01 = m.m01 * f;
@@ -164,12 +198,6 @@ public class TMatrices {
 
     public static double detFast(Matrix2 m) {
         return m.m00 * m.m11 - m.m01 * m.m10;
-    }
-
-    public static Matrix2 invertFast(Matrix2 m) {
-        Matrix2 result = new Matrix2();
-        invertFast(m, result);
-        return result;
     }
 
     public static void invertFast(Matrix2 m, Matrix2 dst) {

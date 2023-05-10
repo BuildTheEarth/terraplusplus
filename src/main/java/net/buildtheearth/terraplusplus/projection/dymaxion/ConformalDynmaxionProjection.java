@@ -229,7 +229,6 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
     protected static final Cached<TransformResourceCache> TRANSFORM_RESOURCE_CACHE = Cached.threadLocal(TransformResourceCache::new);
 
     protected static class TransformResourceCache extends DymaxionProjection.TransformResourceCache {
-        public final Matrix2x3 conformal_superTriangleTransformDerivative = Matrix2x3.createZero();
         public final Vector2d conformal_superTriangleTransform = new Vector2d();
         public final Matrix2 conformal_newtonDerivative = new Matrix2();
     }
@@ -273,17 +272,16 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
 
         @Override
         protected void triangleTransformDerivative(CACHE cache, Vector3d rotated, Matrix2x3 dst) {
-            Matrix2x3 superDerivative = cache.conformal_superTriangleTransformDerivative;
             Vector2d superTransform = cache.conformal_superTriangleTransform;
-            Matrix2 newtonDeriv = cache.conformal_newtonDerivative;
+            Matrix2 newtonDerivative = cache.conformal_newtonDerivative;
 
-            super.triangleTransformDerivative(cache, rotated, superDerivative);
+            super.triangleTransformDerivative(cache, rotated, dst);
             super.triangleTransform(rotated, superTransform);
 
-            this.field.applyNewtonsMethod(superTransform.x, superTransform.y, 5, superTransform, newtonDeriv);
-            TMatrices.scaleFast(newtonDeriv, ARC, newtonDeriv);
+            this.field.applyNewtonsMethod(superTransform.x, superTransform.y, 5, superTransform, newtonDerivative);
+            TMatrices.scaleFast(newtonDerivative, ARC, newtonDerivative);
 
-            TMatrices.multiplyFast(newtonDeriv, superDerivative, dst);
+            TMatrices.multiplyFast(newtonDerivative, dst, dst);
         }
     }
 
@@ -299,8 +297,8 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
             x /= ARC;
             y /= ARC;
 
-            x += 0.5;
-            y += ROOT3 / 6;
+            x += 0.5d;
+            y += ROOT3 / 6.0d;
 
             InvertableVectorField.Result result = InvertableVectorField.RESULT_CACHE.get();
             this.field.getInterpolatedVector(x, y, result);
@@ -308,28 +306,27 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
         }
 
         @Override
-        protected void inverseTriangleTransformDerivative(double x, double y, Matrix3x2 dst) {
+        protected void inverseTriangleTransformDerivative(CACHE cache, double x, double y, Matrix3x2 dst) {
+            Matrix2 newtonDerivative = cache.conformal_newtonDerivative;
+
             x /= ARC;
             y /= ARC;
 
-            x += 0.5;
-            y += ROOT3 / 6;
+            x += 0.5d;
+            y += ROOT3 / 6.0d;
 
             InvertableVectorField.Result result = InvertableVectorField.RESULT_CACHE.get();
             this.field.getInterpolatedVector(x, y, result);
 
-            //TODO: cache these objects somewhere
-            Matrix2 interpolatedVectorDeriv = new Matrix2();
-            interpolatedVectorDeriv.m00 = result.dfdx;
-            interpolatedVectorDeriv.m01 = result.dfdy;
-            interpolatedVectorDeriv.m10 = result.dgdx;
-            interpolatedVectorDeriv.m11 = result.dgdy;
-            TMatrices.scaleFast(interpolatedVectorDeriv, 1.0d / ARC, interpolatedVectorDeriv);
+            newtonDerivative.m00 = result.dfdx;
+            newtonDerivative.m01 = result.dfdy;
+            newtonDerivative.m10 = result.dgdx;
+            newtonDerivative.m11 = result.dgdy;
+            TMatrices.scaleFast(newtonDerivative, 1.0d / ARC, newtonDerivative);
 
-            Matrix3x2 superDeriv = Matrix3x2.createZero();
-            super.inverseTriangleTransformDerivative(result.f, result.g, superDeriv);
+            super.inverseTriangleTransformDerivative(cache, result.f, result.g, dst);
 
-            TMatrices.multiplyFast(superDeriv, interpolatedVectorDeriv, dst);
+            TMatrices.multiplyFast(dst, newtonDerivative, dst);
         }
     }
 }
