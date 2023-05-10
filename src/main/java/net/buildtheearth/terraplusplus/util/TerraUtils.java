@@ -133,12 +133,6 @@ public class TerraUtils {
         dst.z = Math.cos(colatitude);
     }
 
-    public static Matrix3x2 spherical2CartesianDerivative(double longitude, double colatitude) {
-        Matrix3x2 result = Matrix3x2.createZero();
-        spherical2CartesianDerivative(longitude, colatitude, result);
-        return result;
-    }
-
     public static void spherical2CartesianDerivative(double longitude, double colatitude, Matrix3x2 dst) {
         double sinlon = Math.sin(longitude);
         double coslon = Math.cos(longitude);
@@ -183,10 +177,33 @@ public class TerraUtils {
     }
 
     public static void cartesian2Spherical(double x, double y, double z, Vector2d dst) {
-        double lambda = Math.atan2(y, x);
-        double phi = Math.atan2(Math.sqrt(x * x + y * y), z);
-        dst.x = lambda;
-        dst.y = phi;
+        dst.x = Math.atan2(y, x);
+        dst.y = Math.atan2(Math.sqrt(x * x + y * y), z);
+    }
+
+    public static void cartesian2SphericalDerivative(double x, double y, double z, Matrix2x3 dst) {
+        double xyLengthSq = x * x + y * y;
+        double xyzLengthSq = xyLengthSq + z * z;
+
+        double xyLength = Math.sqrt(xyLengthSq);
+
+        // https://www.wolframalpha.com/input?i=d%2Fdx+atan2%28y%2C+x%29
+        dst.m00 = -y / xyLengthSq;
+
+        // https://www.wolframalpha.com/input?i=d%2Fdy+atan2%28y%2C+x%29
+        dst.m01 = x / xyLengthSq;
+
+        // https://www.wolframalpha.com/input?i=d%2Fdz+atan2%28y%2C+x%29
+        dst.m02 = 0.0d;
+
+        // https://www.wolframalpha.com/input?i=d%2Fdx+atan2%28sqrt%28x%5E2%2By%5E2%29%2C+z%29
+        dst.m10 = (x * z) / (xyLength * xyzLengthSq);
+
+        // https://www.wolframalpha.com/input?i=d%2Fdy+atan2%28sqrt%28x%5E2%2By%5E2%29%2C+z%29
+        dst.m11 = (y * z) / (xyLength * xyzLengthSq);
+
+        // https://www.wolframalpha.com/input?i=d%2Fdz+atan2%28sqrt%28x%5E2%2By%5E2%29%2C+z%29
+        dst.m12 = -xyLength / xyzLengthSq;
     }
 
     /**

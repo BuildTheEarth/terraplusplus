@@ -2,7 +2,6 @@ package net.buildtheearth.terraplusplus.projection.dymaxion;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.NonNull;
-import net.buildtheearth.terraplusplus.projection.GeographicProjectionHelper;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.projection.sis.AbstractOperationMethod;
 import net.buildtheearth.terraplusplus.projection.sis.AbstractSISMigratedGeographicProjection;
@@ -539,7 +538,14 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
     }
 
     protected static void inverseTriangleTransformNewtonDerivative(double xpp, double ypp, Matrix3x2 dst) {
-        throw new UnsupportedOperationException(); //TODO
+        //TODO: cache these objects somewhere
+        Vector3d vec = new Vector3d();
+        inverseTriangleTransformNewton(xpp, ypp, vec);
+
+        Matrix2x3 matrix = Matrix2x3.createZero();
+        triangleTransformDymaxionDerivative(vec.x, vec.y, vec.z, matrix);
+
+        TMatrices.pseudoInvertFast(matrix, dst);
     }
 
     protected void inverseTriangleTransform(double x, double y, Vector3d dst) {
@@ -801,7 +807,7 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
             double x = origX;
             double y = origY;
 
-            int face = findTriangleGrid(x, y);
+            final int face = findTriangleGrid(x, y);
             if (face < 0) {
                 throw OutOfProjectionBoundsException.get();
             }
@@ -861,8 +867,20 @@ public class DymaxionProjection extends AbstractSISMigratedGeographicProjection 
                 return null;
             }
 
-            //TODO: compute this accurately
-            return GeographicProjectionHelper.defaultDerivative(new DymaxionProjection(), origX, origY, false);
+            Matrix3x2 rotatedDerivative = cache.rotatedDerivative;
+            Matrix3x2 cartesianDerivative = cache.cartesianDerivative;
+            Matrix2x3 sphericalDerivative = cache.projectedDerivative;
+            Matrix2 totalDerivative = cache.totalDerivative;
+
+            this.inverseTriangleTransformDerivative(x, y, rotatedDerivative);
+            TMatrices.multiplyFast(INVERSE_ROTATION_MATRICES[face], rotatedDerivative, cartesianDerivative);
+            TerraUtils.cartesian2SphericalDerivative(cartesian.x, cartesian.y, cartesian.z, sphericalDerivative);
+            TMatrices.multiplyFast(sphericalDerivative, cartesianDerivative, totalDerivative);
+
+            //flip triangle to correct orientation
+            TMatrices.scaleFast(totalDerivative, FLIP_TRIANGLE_FACTOR[face], totalDerivative);
+
+            return totalDerivative.clone();
         }
     }
 }

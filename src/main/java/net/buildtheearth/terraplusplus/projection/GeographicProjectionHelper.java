@@ -19,6 +19,9 @@ public class GeographicProjectionHelper {
 
     public static Matrix2 defaultDerivative(@NonNull GeographicProjection projection, double x, double y, boolean fromGeo, double d) throws OutOfProjectionBoundsException {
         double[] result00 = project(projection, x, y, fromGeo);
+        
+        double x00 = result00[0];
+        double y00 = result00[1];
 
         double inverseD = 1.0d / d;
 
@@ -32,6 +35,9 @@ public class GeographicProjectionHelper {
             result01 = project(projection, x, y - d, fromGeo);
         }
 
+        double x01 = result01[0];
+        double y01 = result01[1];
+
         double f10;
         double[] result10;
         try {
@@ -42,11 +48,14 @@ public class GeographicProjectionHelper {
             result10 = project(projection, x - d, y, fromGeo);
         }
 
+        double x10 = result10[0];
+        double y10 = result10[1];
+
         return new Matrix2(
-                (result10[0] - result00[0]) * f10,
-                (result01[0] - result00[0]) * f01,
-                (result10[1] - result00[1]) * f10,
-                (result01[1] - result00[1]) * f01);
+                (x10 - x00) * f10,
+                (x01 - x00) * f01,
+                (y10 - y00) * f10,
+                (y01 - y00) * f01);
     }
 
     public static double[] project(@NonNull GeographicProjection projection, double x, double y, boolean fromGeo) throws OutOfProjectionBoundsException {

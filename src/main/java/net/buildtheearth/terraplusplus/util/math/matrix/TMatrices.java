@@ -13,6 +13,8 @@ import org.opengis.referencing.operation.Matrix;
 
 import javax.vecmath.Vector3d;
 
+import static net.buildtheearth.terraplusplus.util.TerraUtils.*;
+
 /**
  * Like {@link Matrices}, but better :)
  *
@@ -180,5 +182,42 @@ public class TMatrices {
         dst.m01 = -b / det;
         dst.m10 = -c / det;
         dst.m11 = a / det;
+    }
+
+    public static void pseudoInvertFast(Matrix2x3 m, Matrix3x2 dst) {
+        double a = m.m00;
+        double b = m.m01;
+        double c = m.m02;
+        double d = m.m10;
+        double e = m.m11;
+        double f = m.m12;
+        
+        // haha yes:
+        // https://www.wolframalpha.com/input?i=pseudoinverse+of+%28%28a%2C+b%2C+c%29%2C%28d%2C+e%2C+f%29%29
+        // Simplify[Simplify[Simplify[Simplify[Simplify[Simplify[
+        //   {
+        //     {
+        //       ((d Conjugate[a]+e Conjugate[b]+f Conjugate[c]) Conjugate[d])/(-(b d Conjugate[b d])+a e Conjugate[b d]-c d Conjugate[c d]+a f Conjugate[c d]+b d Conjugate[a e]-a e Conjugate[a e]-c e Conjugate[c e]+b f Conjugate[c e]+c d Conjugate[a f]-a f Conjugate[a f]+c e Conjugate[b f]-b f Conjugate[b f])+(Conjugate[a] (d Conjugate[d]+e Conjugate[e]+f Conjugate[f]))/(b d Conjugate[b d]-a e Conjugate[b d]+c d Conjugate[c d]-a f Conjugate[c d]-b d Conjugate[a e]+a e Conjugate[a e]+c e Conjugate[c e]-b f Conjugate[c e]-c d Conjugate[a f]+a f Conjugate[a f]-c e Conjugate[b f]+b f Conjugate[b f]),
+        //       (Conjugate[a] (a Conjugate[d]+b Conjugate[e]+c Conjugate[f]))/(-(b d Conjugate[b d])+a e Conjugate[b d]-c d Conjugate[c d]+a f Conjugate[c d]+b d Conjugate[a e]-a e Conjugate[a e]-c e Conjugate[c e]+b f Conjugate[c e]+c d Conjugate[a f]-a f Conjugate[a f]+c e Conjugate[b f]-b f Conjugate[b f])+((a Conjugate[a]+b Conjugate[b]+c Conjugate[c]) Conjugate[d])/(b d Conjugate[b d]-a e Conjugate[b d]+c d Conjugate[c d]-a f Conjugate[c d]-b d Conjugate[a e]+a e Conjugate[a e]+c e Conjugate[c e]-b f Conjugate[c e]-c d Conjugate[a f]+a f Conjugate[a f]-c e Conjugate[b f]+b f Conjugate[b f])
+        //     },
+        //     {
+        //       ((d Conjugate[a]+e Conjugate[b]+f Conjugate[c]) Conjugate[e])/(-(b d Conjugate[b d])+a e Conjugate[b d]-c d Conjugate[c d]+a f Conjugate[c d]+b d Conjugate[a e]-a e Conjugate[a e]-c e Conjugate[c e]+b f Conjugate[c e]+c d Conjugate[a f]-a f Conjugate[a f]+c e Conjugate[b f]-b f Conjugate[b f])+(Conjugate[b] (d Conjugate[d]+e Conjugate[e]+f Conjugate[f]))/(b d Conjugate[b d]-a e Conjugate[b d]+c d Conjugate[c d]-a f Conjugate[c d]-b d Conjugate[a e]+a e Conjugate[a e]+c e Conjugate[c e]-b f Conjugate[c e]-c d Conjugate[a f]+a f Conjugate[a f]-c e Conjugate[b f]+b f Conjugate[b f]),
+        //       (Conjugate[b] (a Conjugate[d]+b Conjugate[e]+c Conjugate[f]))/(-(b d Conjugate[b d])+a e Conjugate[b d]-c d Conjugate[c d]+a f Conjugate[c d]+b d Conjugate[a e]-a e Conjugate[a e]-c e Conjugate[c e]+b f Conjugate[c e]+c d Conjugate[a f]-a f Conjugate[a f]+c e Conjugate[b f]-b f Conjugate[b f])+((a Conjugate[a]+b Conjugate[b]+c Conjugate[c]) Conjugate[e])/(b d Conjugate[b d]-a e Conjugate[b d]+c d Conjugate[c d]-a f Conjugate[c d]-b d Conjugate[a e]+a e Conjugate[a e]+c e Conjugate[c e]-b f Conjugate[c e]-c d Conjugate[a f]+a f Conjugate[a f]-c e Conjugate[b f]+b f Conjugate[b f])
+        //     },
+        //     {
+        //       ((d Conjugate[a]+e Conjugate[b]+f Conjugate[c]) Conjugate[f])/(-(b d Conjugate[b d])+a e Conjugate[b d]-c d Conjugate[c d]+a f Conjugate[c d]+b d Conjugate[a e]-a e Conjugate[a e]-c e Conjugate[c e]+b f Conjugate[c e]+c d Conjugate[a f]-a f Conjugate[a f]+c e Conjugate[b f]-b f Conjugate[b f])+(Conjugate[c] (d Conjugate[d]+e Conjugate[e]+f Conjugate[f]))/(b d Conjugate[b d]-a e Conjugate[b d]+c d Conjugate[c d]-a f Conjugate[c d]-b d Conjugate[a e]+a e Conjugate[a e]+c e Conjugate[c e]-b f Conjugate[c e]-c d Conjugate[a f]+a f Conjugate[a f]-c e Conjugate[b f]+b f Conjugate[b f]),
+        //       (Conjugate[c] (a Conjugate[d]+b Conjugate[e]+c Conjugate[f]))/(-(b d Conjugate[b d])+a e Conjugate[b d]-c d Conjugate[c d]+a f Conjugate[c d]+b d Conjugate[a e]-a e Conjugate[a e]-c e Conjugate[c e]+b f Conjugate[c e]+c d Conjugate[a f]-a f Conjugate[a f]+c e Conjugate[b f]-b f Conjugate[b f])+((a Conjugate[a]+b Conjugate[b]+c Conjugate[c]) Conjugate[f])/(b d Conjugate[b d]-a e Conjugate[b d]+c d Conjugate[c d]-a f Conjugate[c d]-b d Conjugate[a e]+a e Conjugate[a e]+c e Conjugate[c e]-b f Conjugate[c e]-c d Conjugate[a f]+a f Conjugate[a f]-c e Conjugate[b f]+b f Conjugate[b f])
+        //     }
+        //   },
+        //   Element[a, Reals]],Element[b, Reals]],Element[c, Reals]],Element[d, Reals]],Element[e, Reals]],Element[f, Reals]]
+
+        double factor = 1.0d / (sq(c) * (sq(d) + sq(e)) - 2.0d * a * c * d * f - 2.0d * b * e * (a * d + c * f) + sq(b) * (sq(d) + sq(f)) + sq(a) * (sq(e) + sq(f)));
+
+        dst.m00 = (a * (e * e + f * f) - b * d * e - c * d * f) * factor;
+        dst.m01 = (c * (c * d - a * f) + b * b * d - a * b * e) * factor;
+        dst.m10 = (b * (d * d + f * f) - e * a * d - e * c * f) * factor;
+        dst.m11 = (c * (c * e - b * f) - a * b * d + a * a * e) * factor;
+        dst.m20 = (c * (d * d + e * e) - a * d * f - b * e * f) * factor;
+        dst.m21 = (b * (b * f - c * e) - a * c * d + a * a * f) * factor;
     }
 }
