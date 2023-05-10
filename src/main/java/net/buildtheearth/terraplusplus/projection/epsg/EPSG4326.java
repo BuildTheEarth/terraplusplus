@@ -1,5 +1,6 @@
 package net.buildtheearth.terraplusplus.projection.epsg;
 
+import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraplusplus.util.TerraConstants;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -10,7 +11,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
  * @author DaPorkchop_
  * @see <a href="https://epsg.io/4326>https://epsg.io/4326</a>
  */
-public final class EPSG4326 extends EPSGProjection {
+public final class EPSG4326 extends EPSGProjection implements GeographicProjection.FastProjectedCRS {
     public EPSG4326() {
         super(4326);
     }

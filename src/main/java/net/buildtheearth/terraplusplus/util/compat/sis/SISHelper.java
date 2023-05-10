@@ -1,8 +1,7 @@
 package net.buildtheearth.terraplusplus.util.compat.sis;
 
+import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
@@ -33,6 +32,8 @@ import org.opengis.referencing.operation.TransformException;
 import org.opengis.util.FactoryException;
 
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
 import static net.buildtheearth.terraplusplus.util.TerraConstants.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
@@ -72,13 +73,27 @@ public class SISHelper {
         return FACTORIES.get();
     }
 
-    @SuppressWarnings("deprecation")
-    private static final LoadingCache<GeographicProjection, CoordinateReferenceSystem> PROJECTION_TO_CRS_CACHE = CacheBuilder.newBuilder()
+    private static final Cache<GeographicProjection, CoordinateReferenceSystem> PROJECTION_TO_CRS_CACHE = CacheBuilder.newBuilder()
             .weakKeys().weakValues()
-            .build(CacheLoader.from(GeographicProjection::projectedCRS));
+            .build();
 
+    @SuppressWarnings("deprecation")
+    @SneakyThrows(ExecutionException.class)
     public static CoordinateReferenceSystem projectedCRS(@NonNull GeographicProjection projection) {
-        return PROJECTION_TO_CRS_CACHE.getUnchecked(projection);
+        if (projection instanceof GeographicProjection.FastProjectedCRS) { //projectedCRS() is fast, we can bypass the cache
+            return projection.projectedCRS();
+        }
+
+        CoordinateReferenceSystem crs = PROJECTION_TO_CRS_CACHE.getIfPresent(projection);
+        if (crs != null) { //corresponding CRS instance was already cached
+            return crs;
+        }
+
+        //get the CRS instance, store it in the cache and return it.
+        //  because calling projection.projectedCRS() might cause recursive calls to this function, and i'm not sure if guava caches supports reentrant loaders,
+        //  we get the projected CRS outside of the cache and then try to insert it, returning any existing values if another thread beats us to it.
+        CoordinateReferenceSystem realCrs = Objects.requireNonNull(projection.projectedCRS());
+        return PROJECTION_TO_CRS_CACHE.get(projection, () -> realCrs);
     }
 
     @SneakyThrows(FactoryException.class)

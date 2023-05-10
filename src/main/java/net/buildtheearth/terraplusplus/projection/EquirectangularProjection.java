@@ -10,7 +10,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
  * x and y are therefore the same as longitude and latitude (in degrees).
  */
 @JsonDeserialize
-public class EquirectangularProjection implements GeographicProjection {
+public class EquirectangularProjection implements GeographicProjection, GeographicProjection.FastProjectedCRS {
     /**
      * Converts map coordinates to geographic coordinates
      *

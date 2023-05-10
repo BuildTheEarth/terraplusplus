@@ -1251,7 +1251,6 @@ public class AdvancedEarthGui extends GuiScreen {
                                 mouseX, mouseY, true);
                     }
                 } catch (TransformException e) {
-                    int i = 0;
                     //ignored
                 }
             }

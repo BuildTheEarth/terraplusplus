@@ -330,6 +330,14 @@ public interface GeographicProjection {
                         axes[0], axes[1]));
     }
 
+    /**
+     * Marker interface for {@link GeographicProjection} implementations which indicates that {@link #projectedCRS()} is fast and its result does not need to be cached.
+     *
+     * @author DaPorkchop_
+     */
+    interface FastProjectedCRS {
+    }
+
     class Deserializer extends TypedDeserializer<GeographicProjection> {
         @Override
         protected Map<String, Class<? extends GeographicProjection>> registry() {

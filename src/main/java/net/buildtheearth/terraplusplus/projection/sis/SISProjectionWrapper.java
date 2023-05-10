@@ -48,7 +48,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @JsonDeserialize
 @Getter
-public final class SISProjectionWrapper implements GeographicProjection {
+public final class SISProjectionWrapper implements GeographicProjection, GeographicProjection.FastProjectedCRS {
     private static boolean canInvokeNoArgsConstructor() {
         for (StackTraceElement element : new Throwable().getStackTrace()) {
             if (AdvancedEarthGui.class.getName().equals(element.getClassName())) {
