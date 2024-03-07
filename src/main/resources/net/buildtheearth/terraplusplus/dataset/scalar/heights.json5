@@ -465,62 +465,17 @@
     // http://centrodedescargas.cnig.es/CentroDescargas/index.jsp
     //
 
-    { //15 (MDT05)
-        "dataset": {
-            "urls": [
-                "https://cloud.daporkchop.net/gis/dem/earth/es/15/${x}/${z}.tiff"
-            ],
-            "projection": {
-                "web_mercator": {
-                    "zoom": 15
-                }
-            },
-            "resolution": 256,
-            "blend": "LINEAR",
-            "parse": {
-                "parse_tiff_auto": {}
-            }
-        },
-        "bounds": {
-            "minX": -18.166270531442596,
-            "maxX": 4.498121069634237,
-            "minZ": 27.632614140421087,
-            "maxZ": 43.847530656640664
-        },
-        "zooms": {
-            "min": 0,
-            "max": 1
-        },
-        "priority": 100.0
-    },
-    { //16 (MDT02)
-        "dataset": {
-            "urls": [
-                "https://cloud.daporkchop.net/gis/dem/earth/es/16/${x}/${z}.tiff"
-            ],
-            "projection": {
-                "web_mercator": {
-                    "zoom": 16
-                }
-            },
-            "resolution": 256,
-            "blend": "LINEAR",
-            "parse": {
-                "parse_tiff_auto": {}
-            }
-        },
-        "bounds": {
-            "minX": -18.211312242927647,
-            "maxX": 3.3135744775048472,
-            "minZ": 27.604251218142423,
-            "maxZ": 43.835844258215864
-        },
-        "zooms": {
-            "min": 0,
-            "max": 1
-        },
-        "priority": 101.0 //slightly higher priority than MDT05, because this is higher resolution
-    },
+    // MDT05
+    {"dataset":{"urls":["https://cloud.daporkchop.net/gis/dem/earth/es/MDT05/ETRS89_UTM_zone_29N/15/${x}/${z}.tiff"],"projection":{"web_mercator":{"zoom":15}},"resolution":256,"blend":"LINEAR","parse":{"parse_tiff_auto":{ }}},"bounds":{"minX":-9.360792945235218,"maxX":-5.474842859514672,"minZ":35.999435740068996,"maxZ":43.84342323674799},"zooms":{"min":0,"max":1},"priority":100.0},
+    {"dataset":{"urls":["https://cloud.daporkchop.net/gis/dem/earth/es/MDT05/ETRS89_UTM_zone_30N/15/${x}/${z}.tiff"],"projection":{"web_mercator":{"zoom":15}},"resolution":256,"blend":"LINEAR","parse":{"parse_tiff_auto":{ }}},"bounds":{"minX":-9.452694681139109,"maxX":4.941616800246395,"minZ":35.05026484737799,"maxZ":43.94426082348035},"zooms":{"min":0,"max":1},"priority":100.0},
+    {"dataset":{"urls":["https://cloud.daporkchop.net/gis/dem/earth/es/MDT05/ETRS89_UTM_zone_31N/15/${x}/${z}.tiff"],"projection":{"web_mercator":{"zoom":15}},"resolution":256,"blend":"LINEAR","parse":{"parse_tiff_auto":{ }}},"bounds":{"minX":-0.4051101423164977,"maxX":4.551852321790936,"minZ":38.49500691596158,"maxZ":42.94495704211418},"zooms":{"min":0,"max":1},"priority":100.0},
+    {"dataset":{"urls":["https://cloud.daporkchop.net/gis/dem/earth/es/MDT05/REGCAN95_UTM_zone_28N/15/${x}/${z}.tiff"],"projection":{"web_mercator":{"zoom":15}},"resolution":256,"blend":"LINEAR","parse":{"parse_tiff_auto":{ }}},"bounds":{"minX":-18.212408197893556,"maxX":-13.330132023002498,"minZ":27.63261221740392,"maxZ":29.42526169526058},"zooms":{"min":0,"max":1},"priority":100.0},
+
+    // MDT02
+    {"dataset":{"urls":["https://cloud.daporkchop.net/gis/dem/earth/es/MDT02/ETRS89_UTM_zone_28N/17/${x}/${z}.tiff"],"projection":{"web_mercator":{"zoom":17}},"resolution":256,"blend":"LINEAR","parse":{"parse_tiff_auto":{ }}},"bounds":{"minX":-18.260694727756338,"maxX":-13.391696393125178,"minZ":27.601477595221265,"maxZ":29.426728647554008},"zooms":{"min":0,"max":1},"priority":117.0},
+    {"dataset":{"urls":["https://cloud.daporkchop.net/gis/dem/earth/es/MDT02/ETRS89_UTM_zone_30N_(N-E)/16/${x}/${z}.tiff"],"projection":{"web_mercator":{"zoom":16}},"resolution":256,"blend":"LINEAR","parse":{"parse_tiff_auto":{ }}},"bounds":{"minX":-6.9068578455196885,"maxX":0.2233058790026501,"minZ":35.2000669758808,"maxZ":43.716066475382206},"zooms":{"min":0,"max":1},"priority":116.0},
+    {"dataset":{"urls":["https://cloud.daporkchop.net/gis/dem/earth/es/MDT02/ETRS89_UTM_zone_31N_(N-E)/16/${x}/${z}.tiff"],"projection":{"web_mercator":{"zoom":16}},"resolution":256,"blend":"LINEAR","parse":{"parse_tiff_auto":{ }}},"bounds":{"minX":-0.4058464040040698,"maxX":4.5521930059264655,"minZ":38.49506093691504,"maxZ":42.95912070405866},"zooms":{"min":0,"max":1},"priority":116.0},
+    {"dataset":{"urls":["https://cloud.daporkchop.net/gis/dem/earth/es/MDT02/Transverse_Mercator_(ETRS89-TM29)/16/${x}/${z}.tiff"],"projection":{"web_mercator":{"zoom":16}},"resolution":256,"blend":"LINEAR","parse":{"parse_tiff_auto":{ }}},"bounds":{"minX":-9.360773987084196,"maxX":-5.478666115480513,"minZ":36.07857898799501,"maxZ":43.843373684783366},"zooms":{"min":0,"max":1},"priority":116.0},
 
     //
     // Germany

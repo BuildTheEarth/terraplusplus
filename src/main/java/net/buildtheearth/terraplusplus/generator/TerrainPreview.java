@@ -218,6 +218,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         //proj = state.projection.fromGeo(16.5922, 38.9069); //catanzaro, italy
         //proj = state.projection.fromGeo(-3.7070, 40.4168); //madrid, spain
         //proj = state.projection.fromGeo(-5.57589, 37.47938); //middle of nowhere, spain
+        //proj = state.projection.fromGeo(-5.34232, 36.12544); //gibraltar, not spain
         //proj = state.projection.fromGeo(13.37156, 52.52360); //berlin, germany
         //proj = state.projection.fromGeo(11.63779, 52.11903); //magdeburg, germany
         //proj = state.projection.fromGeo(7.206603551122279, 50.66019804133367); //röhndorf, germany
