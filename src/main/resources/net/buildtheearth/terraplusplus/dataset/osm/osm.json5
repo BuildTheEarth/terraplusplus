@@ -431,15 +431,19 @@
                                 }
                             },
                             "maxDist": 4
+                            
                         },
-                        //draw building outline normally
-                        "convert": {
-                            "line": {
-                                "sharp": {
-                                    "draw": {
-                                        "block": {
-                                            "id": "minecraft:brick_block"
-                                        }
+                        "distance": {
+                            "draw": {
+                                "structure": {
+                                    "id": "minecolonies:townhall"
+                                }
+                            },
+                            "layer": {
+                                "tag": {
+                                    "key": "layer",
+                                    "fallback": 0
+                                }
                                     },
                                     "layer": {
                                         "tag": {
