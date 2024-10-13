@@ -6,7 +6,6 @@ plugins {
 
 compileJava {
     sourceCompatibility = targetCompatibility = "17"
-    options.compilerArgs << '--add-exports=java.desktop/sun.awt.image=ALL-UNNAMED'
 }
 
 version = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim().replace("/", "-") + "-SNAPSHOT"

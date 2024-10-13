@@ -18,9 +18,9 @@ import org.apache.commons.imaging.formats.tiff.constants.GdalLibraryTagConstants
 import org.apache.commons.imaging.formats.tiff.constants.TiffConstants;
 import org.apache.commons.imaging.formats.tiff.constants.TiffTagConstants;
 import org.apache.commons.imaging.formats.tiff.photometricinterpreters.PhotometricInterpreter;
-import sun.awt.image.IntegerComponentRaster;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
 import java.io.IOException;
 import java.util.Collections;
 
@@ -144,7 +144,7 @@ public class ParseTiffAutoDSP implements DoubleScalarParser {
                 throw new IllegalArgumentException("unsupported sample format: " + sampleFormat);
         }
 
-        int[] src = ((IntegerComponentRaster) img.getRaster()).getDataStorage();
+        int[] src = ((DataBufferInt)img.getRaster().getDataBuffer()).getData();
         checkArg(src.length == dst.length, "data length invalid?!?");
         for (int i = 0; i < dst.length; i++) {
             dst[i] = (src[i] & mask) << shift >> shift;
