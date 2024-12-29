@@ -213,15 +213,23 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         //proj = state.projection.fromGeo(16.5922, 38.9069); //catanzaro, italy
         //proj = state.projection.fromGeo(-3.7070, 40.4168); //madrid, spain
         //proj = state.projection.fromGeo(-5.57589, 37.47938); //middle of nowhere, spain
+        //proj = state.projection.fromGeo(-5.34232, 36.12544); //gibraltar, not spain
         //proj = state.projection.fromGeo(13.37156, 52.52360); //berlin, germany
         //proj = state.projection.fromGeo(11.63779, 52.11903); //magdeburg, germany
         //proj = state.projection.fromGeo(7.206603551122279, 50.66019804133367); //röhndorf, germany
         //proj = state.projection.fromGeo(12.35027, 51.33524); //leipzig, germany
+        //proj = state.projection.fromGeo(14.80963, 50.88887); //zittau, germany
+        //proj = state.projection.fromGeo(9.60552, 50.79986); //niederaula, germany
         proj = state.projection.fromGeo(14.80963, 50.88887); //zittau, germany
         //proj = state.projection.fromGeo(-6.25900, 53.34702); //dublin, ireland
         //proj = state.projection.fromGeo(5.33831, 50.22487); //marche-en-famenne, belgium
         //proj = state.projection.fromGeo(6.14179, 49.61317); //luxembourg, luxembourg
         //proj = state.projection.fromGeo(-123.02556, 49.30506); //vancouver, canada
+        //proj = state.projection.fromGeo(4.34115, 50.85378); //brussels, belgium
+        //proj = state.projection.fromGeo(4.90607, 52.38375); //amsterdam, netherlands
+        //proj = state.projection.fromGeo(-77.03627, 38.89729); //washington d.c., united states
+        //proj = state.projection.fromGeo(-119.6442, 39.3121); //virginia city, nevada, united states
+        //proj = state.projection.fromGeo(-112.94600, 37.28508); //zion canyon, utah, united states
         state.setView(floorI(proj[0]) >> 4, floorI(proj[1]) >> 4, 0);
 
         state.update();

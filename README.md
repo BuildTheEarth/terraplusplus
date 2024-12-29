@@ -1,4 +1,6 @@
-# TerraMinusMinus
+<div align="center">
+<h1>TerraMinusMinus</h1>
+</div>
 
 [![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?style=flat-square)](https://github.com/BuildTheEarth/terraplusplus/blob/master/LICENSE.MD)
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/SmylerMC/terraminusminus/Java%20CI%20with%20Gradle?style=flat-square)
