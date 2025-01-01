@@ -1,9 +1,10 @@
 <div align="center">
-<h1>TerraMinusMinus</h1>
+    <h1>TerraMinusMinus</h1>
+    <img alt="GitHub License" src="https://img.shields.io/github/license/SmylerMC/terraminusminus?style=flat-square">
+    <img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/SmylerMC/terraminusminus/test.yml?style=flat-square">
 </div>
 
-[![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?style=flat-square)](https://github.com/BuildTheEarth/terraplusplus/blob/master/LICENSE.MD)
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/SmylerMC/terraminusminus/Java%20CI%20with%20Gradle?style=flat-square)
+
 
 ## What is it?
 
@@ -13,16 +14,22 @@ Terra-- is a fork of Terra++ intended to strip down dependencies to Minecraft an
 
 ### :warning: This project is still experimental
 
-Just add Jitpack as a maven repository to your `build.gradle`, as well as the repositories needed for Terra--'s dependencies, and declare this repository as a dependency to your own project.
+Just add the required maven repositories to your `build.gradle`, and declare Terraminusminus as a dependency.
 
-E.g. :
-```
+I.e.:
+```groovy
 repositories {
+
+    // Smyler's repository has the Terraminusminus builds
+    maven {
+        name = "Smyler Snapshots"
+        url = "https://maven.smyler.net/snapshots/"
+    }
     
     // Classic JCenter repository that has most of what we need
     jcenter()
     
-    // JitPack will build this repo and provide it as a dependency
+    // JitPack is required to build some dependencies
     maven {
         name = "JitPack"
         url = "https://jitpack.io/"
@@ -44,16 +51,19 @@ repositories {
 
 dependencies {
 
-    // Include this repository as a dependency through Jitpack
-    // master-SNAPSHOT indicates to use the latest commit on master,
-    // you can replace this with a commit hash or a reference to anoter branch 
-    compile 'com.github.SmylerMC:terraminusminus:master-SNAPSHOT'
+    // Include this repository as a dependency.
+    // master-SNAPSHOT indicates to use the last commit built from master,
+    // you can replace this with  a reference to another branch 
+    compile 'net.buildtheart:terraminusminus:master-SNAPSHOT'
     
-    
-    // Your other depencencies would go down there...
-    
+    // Your other dependencies would go down there...
 }
 ```
+
+### Release channels
+
+At this point, only branch snapshots are available.
+You can browse the available builds at [maven.smyler.net](https://maven.smyler.net/#/snapshots/net/buildtheearth/terraminusminus).
 
 ## APIs:
 

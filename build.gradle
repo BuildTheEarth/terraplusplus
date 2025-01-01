@@ -9,7 +9,7 @@ compileJava {
     options.compilerArgs << '--add-exports=java.desktop/sun.awt.image=ALL-UNNAMED'
 }
 
-version = ("0.0.1-" + ('git rev-parse --abbrev-ref HEAD'.execute().text.trim()) + "-" + ('git rev-parse --short HEAD'.execute().text.trim())).replace("/", "-")
+version = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim().replace("/", "-") + "-SNAPSHOT"
 group = "net.buildtheearth"
 
 repositories {
@@ -74,14 +74,22 @@ dependencies {
 }
 
 publishing {
+    repositories {
+        maven {
+            name = "smylerSnapshots"
+            url = uri("https://maven.smyler.net/snapshots")
+            credentials {
+                username System.getenv("MAVEN_NAME")
+                password System.getenv("MAVEN_SECRET")
+            }
+        }
+    }
     publications {
-        maven(MavenPublication) {
+        terraminusminus(MavenPublication) {
             groupId = project.group
-            artifactId = 'terraminusminus'
+            artifactId = "terraminusminus"
             version = project.version
-
-            from components.java
+            from(components["java"])
         }
     }
 }
-
