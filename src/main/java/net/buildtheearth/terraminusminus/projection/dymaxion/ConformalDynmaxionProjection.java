@@ -1,6 +1,5 @@
 package net.buildtheearth.terraminusminus.projection.dymaxion;
 
-import LZMA.LzmaInputStream;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -12,6 +11,9 @@ import net.daporkchop.lib.common.reference.cache.Cached;
 import net.daporkchop.lib.common.util.PArrays;
 
 import java.io.InputStream;
+import java.util.zip.GZIPInputStream;
+
+import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
  * Implementation of the Dynmaxion like conformal projection.
@@ -24,13 +26,17 @@ public class ConformalDynmaxionProjection extends DymaxionProjection {
     protected static final double VECTOR_SCALE_FACTOR = 1.0d / 1.1473979730192934d;
     protected static final int SIDE_LENGTH = 256;
 
+    private static final String RESOURCE_PATH = "conformal.gz";
+
     protected static final Cached<InvertableVectorField> INVERSE_CACHE = Cached.global((IOSupplier<InvertableVectorField>) () -> {
         double[][] vx = PArrays.filledBy(SIDE_LENGTH + 1, double[][]::new, i -> new double[SIDE_LENGTH + 1 - i]);
         double[][] vy = PArrays.filledBy(SIDE_LENGTH + 1, double[][]::new, i -> new double[SIDE_LENGTH + 1 - i]);
 
         ByteBuf buf;
-        try (InputStream in = new LzmaInputStream(ConformalDynmaxionProjection.class.getResourceAsStream("conformal.lzma"))) {
-            buf = Unpooled.wrappedBuffer(StreamUtil.toByteArray(in));
+        try (InputStream compressedStream = ConformalDynmaxionProjection.class.getResourceAsStream(RESOURCE_PATH)) {
+            checkState(compressedStream != null, "Missing builtin resource: " + RESOURCE_PATH);
+            InputStream stream = new GZIPInputStream(compressedStream);
+            buf = Unpooled.wrappedBuffer(StreamUtil.toByteArray(stream));
         }
 
         for (int v = 0; v < SIDE_LENGTH + 1; v++) {

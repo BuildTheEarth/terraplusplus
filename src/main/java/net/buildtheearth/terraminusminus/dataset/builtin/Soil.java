@@ -3,8 +3,8 @@ package net.buildtheearth.terraminusminus.dataset.builtin;
 import static net.daporkchop.lib.common.math.PMath.floorI;
 
 import java.io.InputStream;
+import java.util.zip.GZIPInputStream;
 
-import LZMA.LzmaInputStream;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.buildtheearth.terraminusminus.util.RLEByteArray;
@@ -12,14 +12,19 @@ import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.function.io.IOSupplier;
 import net.daporkchop.lib.common.reference.ReferenceStrength;
 import net.daporkchop.lib.common.reference.cache.Cached;
+import net.daporkchop.lib.common.util.PValidation;
 
 public class Soil extends AbstractBuiltinDataset {
     protected static final int COLS = 10800;
     protected static final int ROWS = 5400;
 
+    private static final String RESOURCE_PATH = "soil.gz";
+
     private static final Cached<RLEByteArray> DATA_CACHE = Cached.global((IOSupplier<RLEByteArray>) () -> {
         ByteBuf buf;
-        try (InputStream in = new LzmaInputStream(Climate.class.getResourceAsStream("soil.lzma"))) {
+        try (InputStream inCompressed = Climate.class.getResourceAsStream(RESOURCE_PATH)) {
+            PValidation.checkState(inCompressed != null, "Missing builtin dataset resource: " + RESOURCE_PATH);
+            InputStream in = new GZIPInputStream(inCompressed);
             buf = Unpooled.wrappedBuffer(StreamUtil.toByteArray(in));
         }
 

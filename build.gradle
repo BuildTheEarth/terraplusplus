@@ -26,10 +26,6 @@ repositories {
         name = "OpenCollab Snapshots"
         url = "https://repo.opencollab.dev/snapshot/"
     }
-    maven { // Required for LZMA
-        name = "Sponge"
-        url = "https://repo.spongepowered.org/maven"
-    }
     maven { // For bukkit api bindings
         name = "SpigotMC"
         url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
@@ -57,9 +53,6 @@ dependencies {
     implementation "io.netty:netty-all:4.1.72.Final"
     implementation "org.apache.logging.log4j:log4j-api:2.17.1"
     implementation "org.apache.logging.log4j:log4j-core:2.17.1"
-
-    // Mixin dependencies
-    implementation 'lzma:lzma:0.0.1'
 
     // Tests
     testImplementation "junit:junit:4.13.2"
