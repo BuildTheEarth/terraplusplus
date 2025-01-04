@@ -10,7 +10,7 @@ import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import lombok.NonNull;
 import net.buildtheearth.terraminusminus.config.scalarparse.d.DoubleScalarParser;
-import net.buildtheearth.terraplusplus.dataset.BlendMode;
+import net.buildtheearth.terraminusminus.dataset.BlendMode;
 import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 
 /**

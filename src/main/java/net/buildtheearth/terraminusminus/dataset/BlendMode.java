@@ -1,4 +1,4 @@
-package net.buildtheearth.terraplusplus.dataset;
+package net.buildtheearth.terraminusminus.dataset;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AllArgsConstructor;

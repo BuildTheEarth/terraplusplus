@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 import net.buildtheearth.terraminusminus.dataset.IScalarDataset;
 import net.buildtheearth.terraminusminus.dataset.TiledDataset;
 import net.buildtheearth.terraminusminus.dataset.TiledHttpDataset;
-import net.buildtheearth.terraplusplus.dataset.BlendMode;
+import net.buildtheearth.terraminusminus.dataset.BlendMode;
 import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraminusminus.substitutes.ChunkPos;

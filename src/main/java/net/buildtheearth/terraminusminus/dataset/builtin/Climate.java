@@ -6,7 +6,7 @@ import LZMA.LzmaInputStream;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import net.buildtheearth.terraminusminus.util.IntToDoubleBiFunction;
-import net.buildtheearth.terraplusplus.dataset.BlendMode;
+import net.buildtheearth.terraminusminus.dataset.BlendMode;
 import net.daporkchop.lib.binary.oio.StreamUtil;
 import net.daporkchop.lib.common.function.io.IOSupplier;
 import net.daporkchop.lib.common.reference.ReferenceStrength;
