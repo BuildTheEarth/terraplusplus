@@ -41,12 +41,6 @@ repositories {
         url = "https://maven.daporkchop.net/"
     }
     
-    // This is for leveldb
-    maven {
-        name = "OpenCollab Snapshots"
-        url = "https://repo.opencollab.dev/snapshot/"
-    }
-    
 }
 
 dependencies {

@@ -21,10 +21,6 @@ repositories {
         name = "DaPorkchop_"
         url = "https://maven.daporkchop.net/"
     }
-    maven { // Required for leveldb
-        name = "OpenCollab Snapshots"
-        url = "https://repo.opencollab.dev/snapshot/"
-    }
     maven { // For bukkit api bindings
         name = "SpigotMC"
         url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
