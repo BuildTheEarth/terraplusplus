@@ -39,7 +39,7 @@ dependencies {
 
     // Terra++ dependencies
     implementation "com.github.DaMatrix:commons-imaging:4c6c5dfe6401a884cb4cf53fb838c99e1dfb104c"
-    implementation "com.fasterxml.jackson.core:jackson-databind:2.13.1"
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
     implementation("net.daporkchop.lib:binary:0.5.7-SNAPSHOT")  {
         exclude group: "io.netty"
     }
