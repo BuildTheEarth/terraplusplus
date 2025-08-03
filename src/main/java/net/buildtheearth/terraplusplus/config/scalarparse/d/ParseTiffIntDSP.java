@@ -1,19 +1,21 @@
 package net.buildtheearth.terraplusplus.config.scalarparse.d;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import lombok.NonNull;
-import org.apache.commons.imaging.ImageReadException;
-import org.apache.commons.imaging.formats.tiff.TiffDirectory;
-
-import java.io.IOException;
+import net.buildtheearth.terraplusplus.TerraMod;
 
 /**
- * @author DaPorkchop_
+ * Parses int scalar data from TIFF files.
+ *
+ * @deprecated floating point and integer specific TIFF implementations were made irrelevant
+ * by Apache Commons imaging supporting them both ina unified way.
+ * Use {@link ParseTiffDSP} instead, this class may be removed in future releases.
  */
 @JsonDeserialize
+@Deprecated
 public class ParseTiffIntDSP extends ParseTiffAutoDSP {
-    @Override
-    protected boolean parseFloatingPoint(int resolution, @NonNull TiffDirectory directory, @NonNull double[] dst) throws ImageReadException, IOException {
-        return false;
+
+    public ParseTiffIntDSP() {
+        TerraMod.LOGGER.warn("parse_tiff_int and ParseTiffIntDSP are deprecated. Use parse_tiff and ParseTiffDSP instead");
     }
+
 }
