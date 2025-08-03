@@ -1,19 +1,22 @@
 package net.buildtheearth.terraminusminus.config.scalarparse.d;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import lombok.NonNull;
-import org.apache.commons.imaging.ImageReadException;
-import org.apache.commons.imaging.formats.tiff.TiffDirectory;
+import net.buildtheearth.terraminusminus.TerraMinusMinus;
 
-import java.io.IOException;
 
 /**
- * @author DaPorkchop_
+ * Parses floating point scalar data from TIFF files.
+ *
+ * @deprecated floating point and integer specific TIFF implementations were made irrelevant
+ * by Apache commons imaging supporting them both ina unified way. Use {@link ParseTiffDSP} instead,
+ * this class may be removed in future releases.
  */
 @JsonDeserialize
-public class ParseTiffFloatingPointDSP extends ParseTiffAutoDSP {
-    @Override
-    protected boolean parseInteger(int resolution, @NonNull TiffDirectory directory, @NonNull double[] dst) throws ImageReadException, IOException {
-        return false;
+@Deprecated
+public class ParseTiffFloatingPointDSP extends ParseTiffDSP {
+
+    public ParseTiffFloatingPointDSP() {
+        TerraMinusMinus.LOGGER.warn("parse_tiff_fp and ParseTiffFloatingPointDSP are deprecated. Use parse_tiff and ParseTiffDSP instead");
     }
+
 }

@@ -20,6 +20,7 @@ import net.buildtheearth.terraminusminus.config.scalarparse.d.FlipZDSP;
 import net.buildtheearth.terraminusminus.config.scalarparse.d.FromIntDSP;
 import net.buildtheearth.terraminusminus.config.scalarparse.d.MultiplyDSP;
 import net.buildtheearth.terraminusminus.config.scalarparse.d.ParseTiffAutoDSP;
+import net.buildtheearth.terraminusminus.config.scalarparse.d.ParseTiffDSP;
 import net.buildtheearth.terraminusminus.config.scalarparse.d.ParseTiffFloatingPointDSP;
 import net.buildtheearth.terraminusminus.config.scalarparse.d.ParseTerrariumPngDSP;
 import net.buildtheearth.terraminusminus.config.scalarparse.d.ParseTiffIntDSP;
@@ -111,8 +112,9 @@ public class GlobalParseRegistries {
             .put("flip_z", FlipZDSP.class)
             .put("from_int", FromIntDSP.class)
             .put("swap_axes", SwapAxesDSP.class)
-            //parse operators
+            //parse operators (including deprecated ParseTiffXXXXDSPs)
             .put("parse_png_terrarium", ParseTerrariumPngDSP.class)
+            .put("parse_tiff", ParseTiffDSP.class)
             .put("parse_tiff_auto", ParseTiffAutoDSP.class)
             .put("parse_tiff_fp", ParseTiffFloatingPointDSP.class)
             .put("parse_tiff_int", ParseTiffIntDSP.class)

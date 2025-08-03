@@ -29,13 +29,7 @@ repositories {
     // Classic JCenter repository that has most of what we need
     jcenter()
     
-    // JitPack is required to build some dependencies
-    maven {
-        name = "JitPack"
-        url = "https://jitpack.io/"
-    }
-    
-    // DaPorchop's repo for PorkLib
+    // DaPorkchop's repo for PorkLib
     maven {
         name = "DaPorkchop_"
         url = "https://maven.daporkchop.net/"

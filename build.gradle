@@ -13,10 +13,6 @@ group = "net.buildtheearth"
 
 repositories {
     mavenCentral()
-    maven {
-        name = "JitPack"
-        url = "https://jitpack.io/"
-    }
     maven { // Required for leveldb
         name = "DaPorkchop_"
         url = "https://maven.daporkchop.net/"
@@ -33,7 +29,7 @@ dependencies {
     // If they are needed here, it's because Terra++ ultimately needs them as well.
 
     // Terra++ dependencies
-    implementation "com.github.DaMatrix:commons-imaging:4c6c5dfe6401a884cb4cf53fb838c99e1dfb104c"
+    implementation "org.apache.commons:commons-imaging:1.0-alpha3"
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
     implementation("net.daporkchop.lib:binary:0.5.7-SNAPSHOT")  {
         exclude group: "io.netty"
