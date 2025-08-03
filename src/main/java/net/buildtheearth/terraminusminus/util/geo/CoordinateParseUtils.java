@@ -9,11 +9,10 @@ import java.util.regex.Pattern;
 
 import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
 import net.daporkchop.lib.common.util.PArrays;
-import org.apache.commons.lang3.StringUtils;
 
-import com.google.common.base.Strings;
 
 import static net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException.*;
+import static net.buildtheearth.terraminusminus.util.Strings.*;
 
 /**
  * Utilities for assisting in the parsing of latitude and longitude strings into Decimals.
@@ -77,7 +76,7 @@ public final class CoordinateParseUtils {
      * @return the parsed coordinates
      */
     public static LatLng parseVerbatimCoordinates(final String coordinates) {
-        if (Strings.isNullOrEmpty(coordinates)) {
+        if (isNullOrEmpty(coordinates)) {
             return null;
         }
         try {
@@ -197,10 +196,10 @@ public final class CoordinateParseUtils {
 
         // Look for a potential delimiter that only appears once and is not at the start or end of the string
         for (final char delimiter : PART_DELIMITERS) {
-            int count = StringUtils.countMatches(coordinates, String.valueOf(delimiter));
+            int count = countMatches(coordinates, String.valueOf(delimiter));
             int delimiterIndex;
             if (count == 1 && (delimiterIndex = coordinates.indexOf(delimiter)) > 0 && delimiterIndex < coordinates.length() - 1) {
-                return StringUtils.split(coordinates, delimiter);
+                return split(coordinates, delimiter);
             }
         }
 
