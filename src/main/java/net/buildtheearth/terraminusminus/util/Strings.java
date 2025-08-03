@@ -2,8 +2,7 @@ package net.buildtheearth.terraminusminus.util;
 
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
-
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * String related utility functions.

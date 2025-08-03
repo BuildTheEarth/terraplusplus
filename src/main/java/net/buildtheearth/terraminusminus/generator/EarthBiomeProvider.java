@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
-import javax.annotation.Nullable;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -17,6 +15,7 @@ import net.buildtheearth.terraminusminus.substitutes.BlockPos;
 import net.buildtheearth.terraminusminus.substitutes.ChunkPos;
 import net.buildtheearth.terraminusminus.substitutes.Biome;
 import net.buildtheearth.terraminusminus.util.ImmutableCompactArray;
+import org.jetbrains.annotations.Nullable;
 
 @RequiredArgsConstructor
 public class EarthBiomeProvider {
