@@ -4,10 +4,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import org.apache.commons.imaging.FormatCompliance;
-import org.apache.commons.imaging.ImageReadException;
-import org.apache.commons.imaging.common.bytesource.ByteSourceInputStream;
+import org.apache.commons.imaging.ImagingException;
+import org.apache.commons.imaging.bytesource.ByteSource;
 import org.apache.commons.imaging.formats.tiff.*;
 import org.apache.commons.imaging.formats.tiff.constants.GdalLibraryTagConstants;
 
@@ -29,10 +28,9 @@ import static org.apache.commons.imaging.formats.tiff.constants.TiffTagConstants
 public class ParseTiffDSP implements DoubleScalarParser {
 
     @Override
-    @SneakyThrows(ImageReadException.class)
     public double[] parse(int resolution, @NonNull ByteBuf buffer) throws IOException {
-        TiffContents contents = new TiffReader(false)
-                .readDirectories(new ByteSourceInputStream(new ByteBufInputStream(buffer), ""), true, FormatCompliance.getDefault());
+        ByteSource source = ByteSource.inputStream(new ByteBufInputStream(buffer), "");
+        TiffContents contents = new TiffReader(false).readDirectories(source, true, FormatCompliance.getDefault());
 
         double[] dst = new double[resolution * resolution];
         TiffDirectory directory = this.parse(resolution, contents, dst);
@@ -40,7 +38,7 @@ public class ParseTiffDSP implements DoubleScalarParser {
         return dst;
     }
 
-    protected void postProcess(int resolution, @NonNull TiffDirectory directory, double @NonNull [] dst) throws ImageReadException, IOException {
+    protected void postProcess(int resolution, @NonNull TiffDirectory directory, double @NonNull [] dst) throws IOException {
         TiffField nodataField = directory.findField(GdalLibraryTagConstants.EXIF_TAG_GDAL_NO_DATA);
         if (nodataField != null) { //nodata value is set, replace all nodata values
             double nodata = Double.parseDouble(nodataField.getStringValue());
@@ -52,7 +50,7 @@ public class ParseTiffDSP implements DoubleScalarParser {
         }
     }
 
-    protected TiffDirectory parse(int resolution, @NonNull TiffContents contents, double @NonNull [] dst) throws ImageReadException, IOException {
+    protected TiffDirectory parse(int resolution, @NonNull TiffContents contents, double @NonNull [] dst) throws IOException {
         for (TiffDirectory directory : contents.directories) {
             if (this.parse(resolution, directory, dst)) {
                 return directory;
@@ -61,7 +59,7 @@ public class ParseTiffDSP implements DoubleScalarParser {
         throw new IllegalArgumentException("no supported TIFF directories could be found!");
     }
 
-    protected boolean parse(int resolution, @NonNull TiffDirectory directory, double @NonNull [] dst) throws ImageReadException, IOException {
+    protected boolean parse(int resolution, @NonNull TiffDirectory directory, double @NonNull [] dst) throws IOException {
         if (!this.isSupportedFormat(directory)) {
             return false;
         }
@@ -87,9 +85,9 @@ public class ParseTiffDSP implements DoubleScalarParser {
      * @param directory the TIFF directory to check
      * @return true if the directory can be safely processed, false otherwise
      *
-     * @throws ImageReadException if the directory is missing required fields
+     * @throws ImagingException if the directory is missing required fields
      */
-    protected boolean isSupportedFormat(TiffDirectory directory) throws ImageReadException {
+    protected boolean isSupportedFormat(TiffDirectory directory) throws ImagingException {
         switch (directory.getFieldValue(TIFF_TAG_PHOTOMETRIC_INTERPRETATION)) {
             case PHOTOMETRIC_INTERPRETATION_VALUE_WHITE_IS_ZERO:
             case PHOTOMETRIC_INTERPRETATION_VALUE_BLACK_IS_ZERO:

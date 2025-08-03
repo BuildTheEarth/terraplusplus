@@ -29,7 +29,7 @@ dependencies {
     // If they are needed here, it's because Terra++ ultimately needs them as well.
 
     // Terra++ dependencies
-    implementation "org.apache.commons:commons-imaging:1.0-alpha3"
+    implementation "org.apache.commons:commons-imaging:1.0.0-alpha5"
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
     implementation("net.daporkchop.lib:binary:0.5.7-SNAPSHOT")  {
         exclude group: "io.netty"
