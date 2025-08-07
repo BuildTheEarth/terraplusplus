@@ -1,0 +1,24 @@
+repositories {
+    maven { // For bukkit api bindings
+        name = "SpigotMC"
+        url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+    }
+}
+
+dependencies {
+
+    implementation project(':')  // Root project
+    compileOnly "org.spigotmc:spigot-api:1.18.1-R0.1-SNAPSHOT"
+
+}
+
+publishing {
+    publications {
+        terraminusminusBukkit(MavenPublication) {
+            groupId = project.group
+            artifactId = "terraminusminus-bukkit"
+            version = project.version
+            from(components["java"])
+        }
+    }
+}

@@ -1,27 +1,37 @@
-plugins {
-    id "java"
-    id "eclipse"
-    id "maven-publish"
-}
+allprojects {
+    apply plugin: "java"
+    apply plugin: "eclipse"
+    apply plugin: "maven-publish"
 
-compileJava {
-    sourceCompatibility = targetCompatibility = "17"
-}
-
-version = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim().replace("/", "-") + "-SNAPSHOT"
-group = "net.buildtheearth"
-
-repositories {
-    mavenCentral()
-    maven { // Required for leveldb
-        name = "DaPorkchop_"
-        url = "https://maven.daporkchop.net/"
+    compileJava {
+        sourceCompatibility = targetCompatibility = "17"
     }
-    maven { // For bukkit api bindings
-        name = "SpigotMC"
-        url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+
+    version = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim().replace("/", "-") + "-SNAPSHOT"
+    group = "net.buildtheearth"
+
+    repositories {
+        mavenCentral()
+        maven { // Required for leveldb
+            name = "DaPorkchop_"
+            url = "https://maven.daporkchop.net/"
+        }
+    }
+
+    publishing {
+        repositories {
+            maven {
+                name = "smylerSnapshots"
+                url = uri("https://maven.smyler.net/snapshots")
+                credentials {
+                    username System.getenv("MAVEN_NAME")
+                    password System.getenv("MAVEN_SECRET")
+                }
+            }
+        }
     }
 }
+
 
 dependencies {
 
@@ -51,22 +61,9 @@ dependencies {
     annotationProcessor "org.projectlombok:lombok:1.18.38"
     compileOnly 'org.jetbrains:annotations:26.0.2'
 
-    // Bindings to other projects
-    compileOnly "org.spigotmc:spigot-api:1.18.1-R0.1-SNAPSHOT"
-
 }
 
 publishing {
-    repositories {
-        maven {
-            name = "smylerSnapshots"
-            url = uri("https://maven.smyler.net/snapshots")
-            credentials {
-                username System.getenv("MAVEN_NAME")
-                password System.getenv("MAVEN_SECRET")
-            }
-        }
-    }
     publications {
         terraminusminus(MavenPublication) {
             groupId = project.group
