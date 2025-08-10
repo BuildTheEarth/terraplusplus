@@ -18,6 +18,16 @@ allprojects {
         }
     }
 
+    dependencies {
+        // Tests
+        testImplementation "junit:junit:4.13.2"
+
+        // Annotations
+        compileOnly "org.projectlombok:lombok:1.18.38"
+        annotationProcessor "org.projectlombok:lombok:1.18.38"
+        compileOnly 'org.jetbrains:annotations:26.0.2'
+    }
+
     publishing {
         repositories {
             maven {
@@ -30,36 +40,25 @@ allprojects {
             }
         }
     }
+
 }
 
 
 dependencies {
 
-    // The origins of the dependencies listed here correspond to the project that initially import them in Terra++.
-    // If they are needed here, it's because Terra++ ultimately needs them as well.
+    // Some dependencies are inherited from the top-level allprojects Gradle directive.
 
-    // Terra++ dependencies
     implementation "org.apache.commons:commons-imaging:1.0.0-alpha5"
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.2'
     implementation("net.daporkchop.lib:binary:0.5.7-SNAPSHOT")  {
         exclude group: "io.netty"
     }
-
-    // Minecraft dependencies
     implementation "it.unimi.dsi:fastutil:8.5.16"
     implementation "com.google.code.gson:gson:2.13.1"
     implementation "com.google.guava:guava:33.4.8-jre"
     implementation "io.netty:netty-all:4.1.123.Final"
     implementation "org.apache.logging.log4j:log4j-api:2.25.1"
     implementation "org.apache.logging.log4j:log4j-core:2.25.1"
-
-    // Tests
-    testImplementation "junit:junit:4.13.2"
-
-    // Annotations
-    compileOnly "org.projectlombok:lombok:1.18.38"
-    annotationProcessor "org.projectlombok:lombok:1.18.38"
-    compileOnly 'org.jetbrains:annotations:26.0.2'
 
 }
 
