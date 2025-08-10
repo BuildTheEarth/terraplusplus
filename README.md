@@ -42,7 +42,13 @@ dependencies {
     // Include this repository as a dependency.
     // master-SNAPSHOT indicates to use the last commit built from master,
     // you can replace this with  a reference to another branch 
-    compile 'net.buildtheart:terraminusminus:master-SNAPSHOT'
+    compile 'net.buildtheart.terraminusminus:terraminusminus-core:master-SNAPSHOT'
+
+    // Alternatively, if you want to include compatibility code to make Terra-- work with other projects,
+    // you can include the relevant module (or multiple of them).
+    // The terraminusminus-core module will be included as a transitive dependency.
+    // For example, to include Bukkit API compatibility code:
+    compile 'net.buildtheart.terraminusminus:terraminusminus-bukkit:master-SNAPSHOT'
     
     // Your other dependencies would go down there...
 }

@@ -8,7 +8,7 @@ allprojects {
     }
 
     version = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim().replace("/", "-") + "-SNAPSHOT"
-    group = "net.buildtheearth"
+    group = "net.buildtheearth.terraminusminus"
 
     repositories {
         mavenCentral()
@@ -67,7 +67,7 @@ publishing {
     publications {
         terraminusminus(MavenPublication) {
             groupId = project.group
-            artifactId = "terraminusminus"
+            artifactId = "terraminusminus-core"
             version = project.version
             from(components["java"])
         }
