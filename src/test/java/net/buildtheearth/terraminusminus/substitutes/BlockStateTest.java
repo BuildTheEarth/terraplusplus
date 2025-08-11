@@ -116,4 +116,59 @@ public class BlockStateTest {
         assertEquals(10, state.getProperty("power").getAsInt());
     }
 
+    @Test
+    void canParseBlockState() {
+
+        // No namespace, no properties
+        BlockState state = BlockState.parse("dirt");
+        assertEquals(new Identifier("minecraft", "dirt"), state.getBlock());
+        assertEquals(0, state.getProperties().size());
+
+        // Namespace, no properties
+        state = BlockState.parse("myplugin:myblock");
+        assertEquals(new Identifier("myplugin", "myblock"), state.getBlock());
+        assertEquals(0, state.getProperties().size());
+
+        // Namespace, no properties, but brackets
+        state = BlockState.parse("foo:bar[]");
+        assertEquals(new Identifier("foo", "bar"), state.getBlock());
+        assertEquals(0, state.getProperties().size());
+
+        // Namespace, single string property
+        state = BlockState.parse("minecraft:oak_log[facing=south]");
+        assertEquals(new Identifier("minecraft", "oak_log"), state.getBlock());
+        assertEquals(1, state.getProperties().size());
+        assertTrue(state.hasProperty("facing"));
+        assertEquals("south", state.getProperty("facing").getAsString());
+
+        // No namespace, string and boolean properties
+        state = BlockState.parse("end_portal_frame[facing=north,eye=true]");
+        assertEquals(new Identifier("minecraft", "end_portal_frame"), state.getBlock());
+        assertEquals(2, state.getProperties().size());
+        assertTrue(state.hasProperty("facing"));
+        assertEquals("north", state.getProperty("facing").getAsString());
+        assertTrue(state.hasProperty("eye"));
+        assertTrue(state.getProperty("eye").getAsBoolean());
+
+        // Namespace, boolean and power properties
+        state = BlockState.parse("minecraft:daylight_detector[inverted=false,power=7]");
+        assertEquals(new Identifier("minecraft", "daylight_detector"), state.getBlock());
+        assertEquals(2, state.getProperties().size());
+        assertTrue(state.hasProperty("inverted"));
+        assertFalse(state.getProperty("inverted").getAsBoolean());
+        assertTrue(state.hasProperty("power"));
+        assertEquals(7, state.getProperty("power").getAsInt());
+
+        assertThrows(IllegalArgumentException.class, () -> BlockState.parse(""));
+        assertThrows(IllegalArgumentException.class, () -> BlockState.parse("[]"));
+        assertThrows(IllegalArgumentException.class, () -> BlockState.parse("[]blah"));
+        assertThrows(IllegalArgumentException.class, () -> BlockState.parse("foo[]bar"));
+        assertThrows(IllegalArgumentException.class, () -> BlockState.parse("ns:[]"));
+        assertThrows(IllegalArgumentException.class, () -> BlockState.parse("foo[bar]"));
+        assertThrows(IllegalArgumentException.class, () -> BlockState.parse("foo[bar=]"));
+        assertThrows(IllegalArgumentException.class, () -> BlockState.parse("foo[bar=fizz,]"));
+        assertThrows(IllegalArgumentException.class, () -> BlockState.parse("foo[=fizz]"));
+        assertThrows(IllegalArgumentException.class, () -> BlockState.parse("foo[,bar=fizz]"));
+    }
+
 }

@@ -80,7 +80,7 @@ public class Strings {
      * @param delimiter the delimiter to split the string with
      * @return an array where each entry is a section of the origin string that was delimited by the given delimiter
      */
-    public @NonNull String[] split(@Nullable CharSequence str, char delimiter) {
+    public static @NonNull String[] split(@Nullable CharSequence str, char delimiter) {
         if (str == null) {
             return EMPTY_STRING_ARRAY;
         }

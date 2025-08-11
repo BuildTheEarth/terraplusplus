@@ -2,17 +2,27 @@ package net.buildtheearth.terraminusminus.substitutes;
 
 import net.daporkchop.lib.common.reference.ReferenceStrength;
 import net.daporkchop.lib.common.reference.cache.Cached;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import static java.lang.Integer.*;
 import static java.util.Collections.*;
+import static net.buildtheearth.terraminusminus.util.Strings.split;
 
 public final class BlockStateBuilder {
 
     private Identifier block;
     private Map<String, BlockPropertyValue> properties = new HashMap<>();
     private static final Cached<BlockStateBuilder> instances = Cached.threadLocal(BlockStateBuilder::new, ReferenceStrength.SOFT);
+    private static final Pattern SERIALIZED_REGEX = Pattern.compile(
+            "^(?<identifier>[a-z0-9_.-]+(:?:[a-z0-9/_.-]+)?)"
+            + "(?:\\[(?<properties>(?:[a-z0-9_]+=[a-z0-9_]+,?)*)])?$",
+            Pattern.CASE_INSENSITIVE
+    );
 
     public static BlockStateBuilder get() {
         return instances.get();
@@ -48,6 +58,66 @@ public final class BlockStateBuilder {
         return this;
     }
 
+    /**
+     * Sets values in this {@link BlockStateBuilder builder} by parsing a serialized {@link BlockState} string.
+     *
+     * @param serialized the serialized {@link BlockState}, in the Minecraft command syntax
+     * @return this {@link BlockStateBuilder builder}
+     *
+     * @throws IllegalArgumentException if the supplied string is not a valid serialized {@link BlockState}
+     */
+    public BlockStateBuilder setFromSerializedString(@NotNull String serialized) {
+        Matcher matcher = SERIALIZED_REGEX.matcher(serialized);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException("Invalid serialized block state: " + serialized);
+        }
+
+        Identifier identifier = new Identifier(matcher.group("identifier"));
+        String[] properties;
+        BlockPropertyValue[] propertyValues;
+
+        String propertyGroup = matcher.group("properties");
+        if (propertyGroup != null && propertyGroup.length() != 0) {
+            String[] propertiesParts = split(propertyGroup, ',');
+            properties = new String[propertiesParts.length];
+            propertyValues = new BlockPropertyValue[propertiesParts.length];
+            for (int i = 0; i < propertiesParts.length; i++) {
+                String[] parts = propertiesParts[i].split("=");
+                if (parts.length != 2) {
+                    throw new IllegalArgumentException("Invalid properties in serialized block state: " + serialized);
+                }
+                properties[i] = parts[0];
+                propertyValues[i] = parsePropertyValues(parts[1]);
+            }
+        } else {
+            properties = new  String[0];
+            propertyValues = new BlockPropertyValue[0];
+        }
+
+        this.setBlock(identifier);
+        for (int i = 0; i < properties.length; i++) {
+            String name = properties[i];
+            BlockPropertyValue value = propertyValues[i];
+            this.properties.put(name, value);
+        }
+
+        return this;
+    }
+
+    private static BlockPropertyValue parsePropertyValues(String valueString) {
+        try {
+            int value = parseInt(valueString);
+            return new IntPropertyValue(value);
+        } catch (NumberFormatException ignored) { }
+        if ("true".equalsIgnoreCase(valueString)) {
+            return new BoolPropertyValue(true);
+        }
+        if ("false".equalsIgnoreCase(valueString)) {
+            return new BoolPropertyValue(false);
+        }
+        return new StringPropertyValue(valueString);
+    }
+
     public BlockState build() {
         if (this.block == null) throw new IllegalStateException("Trying to build a block state, but no block is set!");
         BlockStateImplementation state = new BlockStateImplementation(this.block, unmodifiableMap(this.properties));
@@ -81,6 +151,11 @@ public final class BlockStateBuilder {
         @Override
         public BlockPropertyValue getProperty(String property) {
             return this.properties.get(property);
+        }
+
+        @Override
+        public boolean hasProperty(String property) {
+            return this.properties.containsKey(property);
         }
 
         @Override

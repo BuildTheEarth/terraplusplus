@@ -71,7 +71,8 @@ public enum Biome {
     MUTATED_SAVANNA_ROCK(58, "mutated_savanna_rock"),
     MUTATED_MESA(59, "mutated_mesa"),
     MUTATED_MESA_ROCK(60, "mutated_mesa_rock"),
-    MUTATED_MESA_CLEAR_ROCK(61, "mutated_mesa_clear_rock");
+    MUTATED_MESA_CLEAR_ROCK(61, "mutated_mesa_clear_rock"),
+    UNKNOWN(-1, "unknown");
     
     public final String biomeId;
     public final int numericId;
