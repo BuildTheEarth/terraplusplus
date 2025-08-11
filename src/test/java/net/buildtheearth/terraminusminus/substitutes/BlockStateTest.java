@@ -1,13 +1,14 @@
 package net.buildtheearth.terraminusminus.substitutes;
 
-import org.junit.Test;
 
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class BlockStateTest {
 
     @Test
-    public void testBuilder() {
+    void testBuilder() {
         Identifier dirt = new Identifier("dirt");
         BlockStateBuilder builder = BlockStateBuilder.get();
         assertThrows(IllegalStateException.class, builder::build);
@@ -54,7 +55,7 @@ public class BlockStateTest {
     }
 
     @Test
-    public void testStringProperty() {
+    void testStringProperty() {
         BlockStateBuilder builder = BlockStateBuilder.get();
         BlockState state = builder.setProperty("name", "value").setBlock(new Identifier("minecraft", "dirt")).build();
         BlockPropertyValue value = state.getProperty("name");
@@ -66,7 +67,7 @@ public class BlockStateTest {
     }
 
     @Test
-    public void testIntProperty() {
+    void testIntProperty() {
         BlockStateBuilder builder = BlockStateBuilder.get();
         BlockState state = builder.setProperty("name", 42).setBlock(new Identifier("minecraft", "dirt")).build();
         BlockPropertyValue value = state.getProperty("name");
@@ -78,7 +79,7 @@ public class BlockStateTest {
     }
 
     @Test
-    public void testBoolProperty() {
+    void testBoolProperty() {
         BlockStateBuilder builder = BlockStateBuilder.get();
         BlockState state = builder.setProperty("name", true).setBlock(new Identifier("minecraft", "dirt")).build();
         BlockPropertyValue value = state.getProperty("name");
@@ -90,7 +91,7 @@ public class BlockStateTest {
     }
 
     @Test
-    public void testBlockState() {
+    void testBlockState() {
         BlockStateBuilder builder = BlockStateBuilder.get();
         BlockState state = builder.setBlock(new Identifier("minecraft", "dirt")).build();
         assertEquals(0, state.getProperties().size());

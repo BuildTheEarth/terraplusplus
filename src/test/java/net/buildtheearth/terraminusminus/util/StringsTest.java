@@ -1,9 +1,10 @@
 package net.buildtheearth.terraminusminus.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static net.buildtheearth.terraminusminus.util.Strings.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 public class StringsTest {
 

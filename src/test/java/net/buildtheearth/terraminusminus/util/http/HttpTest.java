@@ -6,11 +6,13 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.concurrent.CompletableFuture;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import io.netty.buffer.ByteBuf;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+
+import static java.util.concurrent.TimeUnit.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class HttpTest {
 	
@@ -22,13 +24,13 @@ public class HttpTest {
 	
 	private final byte[][] testContents = new byte[TEST_URLS.length][0];
 	
-	@Before
-	public void doReferenceRequests() throws IOException {
-		for(int i=0; i<TEST_URLS.length; i++) {
+	@BeforeEach
+	void doReferenceRequests() throws IOException {
+		for (int i = 0; i < TEST_URLS.length; i++) {
 			URL url = new URL(TEST_URLS[i]);
 			URLConnection con = url.openConnection();
 			con.addRequestProperty("User-agent", CI_USER_AGENT);
-			try(InputStream in = con.getInputStream()) {
+			try (InputStream in = con.getInputStream()) {
 				
 				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 				
@@ -44,10 +46,11 @@ public class HttpTest {
 			}
 		}
 	}
-	
-	@Test(timeout=5000)
-	public void testGetRequests() {
-		for(int i=0; i<TEST_URLS.length; i++) {
+
+	@Test
+    @Timeout(value = 5, unit = SECONDS)
+	void testGetRequests() {
+		for (int i = 0; i < TEST_URLS.length; i++) {
 			this.testUrl(TEST_URLS[i], testContents[i]);
 		}
 	}
@@ -59,7 +62,7 @@ public class HttpTest {
 		byte[] bytes = new byte[buffer.readableBytes()];
 		buffer.readBytes(bytes);
 		
-		Assert.assertArrayEquals(result, bytes);
+		assertArrayEquals(result, bytes);
 	}
 
 }

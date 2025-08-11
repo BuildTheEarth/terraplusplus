@@ -2,14 +2,15 @@ package net.buildtheearth.terraminusminus.projection;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import net.buildtheearth.terraminusminus.TerraConstants;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 public class ProjectionTest {
 
     @Test
-    public void testBteProjection() throws JsonProcessingException, OutOfProjectionBoundsException {
+    void testBteProjection() throws JsonProcessingException, OutOfProjectionBoundsException {
         final String bteProjectionJson = "{\n"
                                      + "        \"scale\": {\n"
                                      + "            \"delegate\": {\n"

@@ -2,18 +2,21 @@ package net.buildtheearth.terraminusminus.generator;
 
 import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 import net.buildtheearth.terraminusminus.substitutes.ChunkPos;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 
 import static java.lang.Math.*;
+import static java.util.concurrent.TimeUnit.*;
 import static net.buildtheearth.terraminusminus.generator.EarthGeneratorSettings.*;
 
 public class EarthGeneratorElevationTest {
 
     private final EarthGeneratorSettings BTE_SETTINGS = EarthGeneratorSettings.parse(BTE_DEFAULT_SETTINGS);
 
-    @Test(timeout = 600_000)
-    public void canGenerateChunksWithAccurateElevation() throws Exception {
+    @Test
+    @Timeout(value = 5, unit = MINUTES)
+    void canGenerateChunksWithAccurateElevation() throws Exception {
 
         // Oceans and seas
         this.assertSurfaceBetween(-3, 3, -36.022625, 54.192081);    // North Atlantic ocean
@@ -35,12 +38,12 @@ public class EarthGeneratorElevationTest {
 
     }
 
-    public void assertSurfaceBetween(int minAltitude, int maxAltitude, double longitude, double latitude) throws Exception {
+    private void assertSurfaceBetween(int minAltitude, int maxAltitude, double longitude, double latitude) throws Exception {
         CachedChunkData chunk = this.getChunkDataAtGeoPos(longitude, latitude);
         assertSurfaceBetween(minAltitude, maxAltitude, chunk);
     }
 
-    public static void assertSurfaceBetween(int minAltitude, int maxAltitude, CachedChunkData chunk) {
+    private static void assertSurfaceBetween(int minAltitude, int maxAltitude, CachedChunkData chunk) {
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
                 int surfaceHeight = chunk.surfaceHeight(x, z);

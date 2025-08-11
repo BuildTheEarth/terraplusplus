@@ -19,13 +19,15 @@ allprojects {
     }
 
     dependencies {
-        // Tests
-        testImplementation "junit:junit:4.13.2"
-
         // Annotations
         compileOnly "org.projectlombok:lombok:1.18.38"
         annotationProcessor "org.projectlombok:lombok:1.18.38"
         compileOnly 'org.jetbrains:annotations:26.0.2'
+
+        // Tests
+        testImplementation(platform('org.junit:junit-bom:5.13.4'))
+        testImplementation('org.junit.jupiter:junit-jupiter')
+        testRuntimeOnly('org.junit.platform:junit-platform-launcher')
     }
 
     publishing {
@@ -38,6 +40,13 @@ allprojects {
                     password System.getenv("MAVEN_SECRET")
                 }
             }
+        }
+    }
+
+    test {
+        useJUnitPlatform()
+        testLogging {
+            events "passed", "skipped", "failed"
         }
     }
 
