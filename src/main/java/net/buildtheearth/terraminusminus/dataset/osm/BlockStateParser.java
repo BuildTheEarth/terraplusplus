@@ -28,21 +28,31 @@ public final class BlockStateParser extends JsonParser<BlockState> {
         while (in.peek() != JsonToken.END_OBJECT) {
             String name = in.nextName();
             switch (name) {
-                case "id" -> builder.setBlock(new Identifier(in.nextString()));
-                case "properties" -> {
+                case "id":
+                    builder.setBlock(new Identifier(in.nextString()));
+                    break;
+                case "properties":
                     in.beginObject();
                     while (in.peek() != JsonToken.END_OBJECT) {
                         String propertyName = in.nextName();
                         switch (in.peek()) {
-                            case STRING -> builder.setProperty(propertyName, in.nextString());
-                            case NUMBER -> builder.setProperty(propertyName, in.nextInt());
-                            case BOOLEAN -> builder.setProperty(propertyName, in.nextBoolean());
-                            default -> throw new IllegalStateException("Invalid property type: " + in.peek());
+                            case STRING:
+                                builder.setProperty(propertyName, in.nextString());
+                                break;
+                            case NUMBER:
+                                builder.setProperty(propertyName, in.nextInt());
+                                break;
+                            case BOOLEAN:
+                                builder.setProperty(propertyName, in.nextBoolean());
+                                break;
+                            default:
+                                throw new IllegalStateException("Invalid property type: " + in.peek());
                         }
                     }
                     in.endObject();
-                }
-                default -> throw new IllegalStateException("Invalid block state: " + name);
+                    break;
+                default:
+                    throw new IllegalStateException("Invalid block state: " + name);
             }
         }
         in.endObject();

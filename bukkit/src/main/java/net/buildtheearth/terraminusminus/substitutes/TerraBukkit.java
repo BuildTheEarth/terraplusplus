@@ -50,7 +50,8 @@ public final class TerraBukkit {
     public static @Nullable BlockData toBukkitBlockData(@Nullable BlockState state) {
         if (state == null) return null;
         BlockStateBuilder.BlockStateImplementation implementation = null;
-        if (state instanceof BlockStateBuilder.BlockStateImplementation imp) {
+        if (state instanceof BlockStateBuilder.BlockStateImplementation) {
+            BlockStateBuilder.BlockStateImplementation imp = (BlockStateBuilder.BlockStateImplementation) state;
             if (imp.bukkitBlockData != null) return (BlockData) imp.bukkitBlockData;
             implementation = imp;
         }

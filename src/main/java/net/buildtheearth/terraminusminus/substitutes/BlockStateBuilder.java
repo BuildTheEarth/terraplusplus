@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,20 +35,20 @@ public final class BlockStateBuilder {
     }
 
     public BlockStateBuilder setProperty(String property, String value) {
-        if (property == null || property.length() == 0) throw new IllegalArgumentException("Property name cannot be null or empty.");
-        if (value == null || value.length() == 0) throw new IllegalArgumentException("Property value cannot be null or empty.");
+        if (property == null || property.isEmpty()) throw new IllegalArgumentException("Property name cannot be null or empty.");
+        if (value == null || value.isEmpty()) throw new IllegalArgumentException("Property value cannot be null or empty.");
         this.properties.put(property, new StringPropertyValue(value));
         return this;
     }
 
     public BlockStateBuilder setProperty(String property, int value) {
-        if (property == null || property.length() == 0) throw new IllegalArgumentException("Property name cannot be null or empty.");
+        if (property == null || property.isEmpty()) throw new IllegalArgumentException("Property name cannot be null or empty.");
         this.properties.put(property, new IntPropertyValue(value));
         return this;
     }
 
     public BlockStateBuilder setProperty(String property, boolean value) {
-        if (property == null || property.length() == 0) throw new IllegalArgumentException("Property name cannot be null or empty.");
+        if (property == null || property.isEmpty()) throw new IllegalArgumentException("Property name cannot be null or empty.");
         this.properties.put(property, new BoolPropertyValue(value));
         return this;
     }
@@ -77,7 +78,7 @@ public final class BlockStateBuilder {
         BlockPropertyValue[] propertyValues;
 
         String propertyGroup = matcher.group("properties");
-        if (propertyGroup != null && propertyGroup.length() != 0) {
+        if (propertyGroup != null && !propertyGroup.isEmpty()) {
             String[] propertiesParts = split(propertyGroup, ',');
             properties = new String[propertiesParts.length];
             propertyValues = new BlockPropertyValue[propertiesParts.length];
@@ -201,16 +202,39 @@ public final class BlockStateBuilder {
 
     }
 
-    private record StringPropertyValue(String value) implements BlockPropertyValue {
+    private static final class StringPropertyValue implements BlockPropertyValue {
+        public final String value;
+
+        public StringPropertyValue(String value) {
+            this.value = value;
+        }
 
         @Override
         public String getAsString() {
             return this.value;
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass())
+                return false;
+            StringPropertyValue that = (StringPropertyValue) o;
+            return Objects.equals(this.value, that.value);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(this.value);
+        }
+
     }
 
-    private record IntPropertyValue(int value) implements BlockPropertyValue {
+    private static final class IntPropertyValue implements BlockPropertyValue {
+        public final int value;
+
+        public IntPropertyValue(int value) {
+            this.value = value;
+        }
 
         @Override
         public String getAsString() {
@@ -227,9 +251,26 @@ public final class BlockStateBuilder {
             return this.value;
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass())
+                return false;
+            IntPropertyValue that = (IntPropertyValue) o;
+            return this.value == that.value;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(this.value);
+        }
     }
 
-    private record BoolPropertyValue(boolean value) implements BlockPropertyValue {
+    private static final class BoolPropertyValue implements BlockPropertyValue {
+        public final boolean value;
+
+        public BoolPropertyValue(boolean value) {
+            this.value = value;
+        }
 
         @Override
         public String getAsString() {
@@ -246,6 +287,18 @@ public final class BlockStateBuilder {
             return this.value;
         }
 
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass())
+                return false;
+            BoolPropertyValue that = (BoolPropertyValue) o;
+            return this.value == that.value;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(this.value);
+        }
     }
 
 }
