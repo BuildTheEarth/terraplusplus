@@ -48,6 +48,14 @@ allprojects {
                     password System.getenv("MAVEN_SECRET")
                 }
             }
+            maven {
+                name = "smylerReleases"
+                url = uri("https://maven.smyler.net/releases")
+                credentials {
+                    username System.getenv("MAVEN_NAME")
+                    password System.getenv("MAVEN_SECRET")
+                }
+            }
         }
     }
 
