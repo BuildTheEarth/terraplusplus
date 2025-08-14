@@ -8,7 +8,14 @@ allprojects {
         targetCompatibility = "17"
     }
 
-    version = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim().replace("/", "-") + "-SNAPSHOT"
+    var git_tag = 'git describe --tags --exact-match'.execute().text.trim().replace('/', '-')
+    var git_branch = 'git symbolic-ref -q --short HEAD'.execute().text.trim().replace('/', '-')
+    var git_commit = 'git rev-parse --short HEAD'.execute().text.trim().replace('/', '-')
+    var git_version = git_tag ?: git_branch ?: git_commit
+
+    var version_suffix = System.getenv("TMM_RELEASE") == 'true' ? "": System.getenv("TMM_VERSION_SUFFIX") ?: "-SNAPSHOT"
+
+    version = git_version + version_suffix
     group = "net.buildtheearth.terraminusminus"
 
     repositories {
