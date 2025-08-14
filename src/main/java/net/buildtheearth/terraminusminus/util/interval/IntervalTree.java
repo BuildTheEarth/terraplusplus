@@ -27,7 +27,7 @@ public class IntervalTree<V extends Interval> {
     /**
      * The number of values that must be present in a node in order for it to become eligible for splitting.
      */
-    protected static final int NODE_SPLIT_CAPACITY = Integer.parseUnsignedInt(System.getProperty("terraplusplus.interval_tree_split_capacity", "8"));
+    protected static final int NODE_SPLIT_CAPACITY = Integer.parseUnsignedInt(System.getProperty("terraminusminus.interval_tree_split_capacity", "8"));
 
     @SuppressWarnings("unchecked")
     protected static <V extends Interval> Node<V>[] createNodeArray(int length) {

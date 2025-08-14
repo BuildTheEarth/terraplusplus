@@ -3,7 +3,7 @@ package net.buildtheearth.terraminusminus.projection;
 public final class OutOfProjectionBoundsException extends Exception {
     private static final OutOfProjectionBoundsException INSTANCE = new OutOfProjectionBoundsException(false);
 
-    private static final boolean FAST = Boolean.parseBoolean(System.getProperty("terraplusplus.fastExcept", "true"));
+    private static final boolean FAST = Boolean.parseBoolean(System.getProperty("terraminusminus.fastExcept", "true"));
 
     public static OutOfProjectionBoundsException get() {
         if (FAST) {

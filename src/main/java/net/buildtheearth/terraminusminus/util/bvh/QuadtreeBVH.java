@@ -28,7 +28,7 @@ final class QuadtreeBVH<V extends Bounds2d> implements BVH<V> {
     /**
      * The number of values that must be present in a node in order for it to become eligible for splitting.
      */
-    protected static final int NODE_SPLIT_CAPACITY = Integer.parseUnsignedInt(System.getProperty("terraplusplus.quadtree_split_capacity", "8"));
+    protected static final int NODE_SPLIT_CAPACITY = Integer.parseUnsignedInt(System.getProperty("terraminusminus.quadtree_split_capacity", "8"));
 
     /**
      * The minimum size of a leaf node along a single axis.
