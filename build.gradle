@@ -72,6 +72,17 @@ dependencies {
 
 }
 
+processResources {
+    // This will ensure that this task is redone when the versions change.
+    inputs.property "version", project.version
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+
+    // Replace stuff in terraminusminus.properties, nothing else
+    filesMatching("**/terraminusminus.properties") {
+        expand 'version': project.version
+    }
+}
+
 publishing {
     publications {
         terraminusminus(MavenPublication) {
