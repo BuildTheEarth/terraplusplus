@@ -21,9 +21,12 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SupportedCipherSuiteFilter;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.ReferenceCountUtil;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.experimental.UtilityClass;
 import net.buildtheearth.terraminusminus.TerraConfig;
+import net.buildtheearth.terraminusminus.TerraConstants;
 import net.buildtheearth.terraminusminus.TerraMinusMinus;
 import net.daporkchop.lib.common.function.throwing.EFunction;
 import net.daporkchop.lib.common.misc.threadfactory.PThreadFactories;
@@ -45,6 +48,7 @@ import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static net.daporkchop.lib.common.misc.string.PStrings.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
@@ -86,6 +90,9 @@ public class Http {
             throw new RuntimeException("unable to create ssl context", e);
         }
     }
+
+    @Getter @Setter
+    private static String userAgent = fastFormat("%s/%s", TerraConstants.LIB_NAME, TerraConstants.LIB_VERSION);
 
     private HostManager managerFor(@NonNull URL url) {
         return MANAGERS.computeIfAbsent(new Host(url), HostManager::new);

@@ -12,14 +12,8 @@ import net.buildtheearth.terraminusminus.substitutes.Biome;
 import net.buildtheearth.terraminusminus.util.BiomeDeserializeMixin;
 
 public class TerraConstants {
-    public static final String MODID = "terraplusplus";
-    public static final String VERSION = "(development_snapshot)";
-
-    public static String CC_VERSION = "unknown";
-
-    public static final String CHAT_PREFIX = "&2&lT++ &8&l> ";
-    public static final String defaultCommandNode = MODID + ".command.";
-    public static final String othersCommandNode = MODID + ".others";
+    public static final String LIB_NAME = "terraminusminus";
+    public static final String LIB_VERSION = "(development_snapshot)";
 
     public static final Gson GSON = new GsonBuilder()
     		.registerTypeAdapter(BlockState.class, BlockStateParser.INSTANCE)
