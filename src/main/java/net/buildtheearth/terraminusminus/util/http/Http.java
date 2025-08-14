@@ -60,7 +60,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 public class Http {
     protected static final long TIMEOUT = 20L;
 
-    private final ThreadFactory NETWORK_THREAD_FACTORY = PThreadFactories.builder().daemon().minPriority().name("terra++ HTTP network thread").build();
+    private final ThreadFactory NETWORK_THREAD_FACTORY = PThreadFactories.builder().daemon().minPriority().name("terra-- HTTP network thread").build();
 
     protected final EventLoop NETWORK_EVENT_LOOP = (Epoll.isAvailable()
             ? new EpollEventLoopGroup(1, NETWORK_THREAD_FACTORY) //use epoll on linux systems wherever possible

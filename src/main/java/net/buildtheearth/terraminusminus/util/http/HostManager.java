@@ -45,7 +45,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  * @author DaPorkchop_
  */
 final class HostManager extends Host {
-    private static final AttributeKey<Request> ATTR_REQUEST = AttributeKey.valueOf(Request.class, "terra++");
+    private static final AttributeKey<Request> ATTR_REQUEST = AttributeKey.valueOf(Request.class, "terra--");
 
     private final Deque<Request> pendingRequests = new ArrayDeque<>();
     private final Bootstrap bootstrap;

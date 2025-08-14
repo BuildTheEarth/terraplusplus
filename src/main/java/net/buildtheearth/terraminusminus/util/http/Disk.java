@@ -44,7 +44,7 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @UtilityClass
 public class Disk {
-    private final EventLoop DISK_EXECUTOR = new DefaultEventLoop(PThreadFactories.builder().daemon().minPriority().name("terra++ disk I/O thread").build());
+    private final EventLoop DISK_EXECUTOR = new DefaultEventLoop(PThreadFactories.builder().daemon().minPriority().name("terra-- disk I/O thread").build());
 
     private Path cacheRoot;
     private Path tmpFile;
