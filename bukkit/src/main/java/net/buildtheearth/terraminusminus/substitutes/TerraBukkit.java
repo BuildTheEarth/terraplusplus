@@ -1,6 +1,7 @@
 package net.buildtheearth.terraminusminus.substitutes;
 
 import lombok.experimental.UtilityClass;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.data.BlockData;
@@ -37,6 +38,28 @@ public final class TerraBukkit {
     public static @Nullable Identifier fromBukkitNamespacedKey(NamespacedKey namespacedKey) {
         if (namespacedKey == null) return null;
         return new Identifier(namespacedKey.getNamespace(), namespacedKey.getKey());
+    }
+
+    /**
+     * Translates an internal Terra-- {@link BlockPos} to Bukkit API's {@link Location}.
+     *
+     * @param blockPos the Terra-- {@link BlockPos}
+     * @return the Bukkit API {@link Location}
+     */
+    public static @Nullable Location toBukkitLocation(@Nullable BlockPos blockPos) {
+        if (blockPos == null) return null;
+        return new Location(null, blockPos.x, blockPos.y, blockPos.z);
+    }
+
+    /**
+     * Translate a Bukkit API {@link Location} to an internal Terra-- {@link BlockPos}.
+     *
+     * @param location the Bukkit API {@link Location}
+     * @return the internal Terra-- {@link BlockPos}
+     */
+    public static @Nullable BlockPos fromBukkitLocation(@Nullable Location location) {
+        if (location == null) return null;
+        return new BlockPos(location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 
     /**
