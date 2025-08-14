@@ -44,10 +44,7 @@
                                 "weight_greater_than": {
                                     "delegate": {
                                         "block": {
-                                            "id": "minecraft:concrete",
-                                            "properties": {
-                                                "color": "gray"
-                                            }
+                                            "id": "minecraft:gray_concrete"
                                         }
                                     },
                                     "value": 3
@@ -97,10 +94,7 @@
                                 "weight_greater_than": {
                                     "delegate": {
                                         "block": {
-                                            "id": "minecraft:concrete",
-                                            "properties": {
-                                                "color": "gray"
-                                            }
+                                            "id": "minecraft:gray_concrete"
                                         }
                                     },
                                     "value": 3
@@ -153,10 +147,7 @@
                                 "weight_greater_than": {
                                     "delegate": {
                                         "block": {
-                                            "id": "minecraft:concrete",
-                                            "properties": {
-                                                "color": "gray"
-                                            }
+                                            "id": "minecraft:gray_concrete"
                                         }
                                     },
                                     "value": 3
@@ -203,10 +194,7 @@
                                 "weight_greater_than": {
                                     "delegate": {
                                         "block": {
-                                            "id": "minecraft:concrete",
-                                            "properties": {
-                                                "color": "gray"
-                                            }
+                                            "id": "minecraft:gray_concrete"
                                         }
                                     },
                                     "value": 3
@@ -255,10 +243,7 @@
                                 "weight_greater_than": {
                                     "delegate": {
                                         "block": {
-                                            "id": "minecraft:concrete",
-                                            "properties": {
-                                                "color": "gray"
-                                            }
+                                            "id": "minecraft:gray_concrete"
                                         }
                                     },
                                     "value": 3
@@ -304,7 +289,7 @@
                     "narrow": {
                         "draw": {
                             "block": {
-                                "id": "minecraft:grass_path"
+                                "id": "minecraft:dirt_path"
                             }
                         },
                         "layer": {
@@ -328,7 +313,7 @@
                     "sharp": {
                         "draw": {
                             "block": {
-                                "id": "minecraft:brick_block"
+                                "id": "minecraft:bricks"
                             }
                         },
                         "layer": {
@@ -438,7 +423,7 @@
                                 "sharp": {
                                     "draw": {
                                         "block": {
-                                            "id": "minecraft:brick_block"
+                                            "id": "minecraft:bricks"
                                         }
                                     },
                                     "layer": {

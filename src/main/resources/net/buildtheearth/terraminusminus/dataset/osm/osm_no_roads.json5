@@ -21,7 +21,7 @@
                     "sharp": {
                         "draw": {
                             "block": {
-                                "id": "minecraft:brick_block"
+                                "id": "minecraft:bricks"
                             }
                         },
                         "layer": {
@@ -131,7 +131,7 @@
                                 "sharp": {
                                     "draw": {
                                         "block": {
-                                            "id": "minecraft:brick_block"
+                                            "id": "minecraft:bricks"
                                         }
                                     },
                                     "layer": {
