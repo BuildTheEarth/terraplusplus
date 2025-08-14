@@ -16,6 +16,7 @@ import net.daporkchop.lib.common.function.io.IOPredicate;
 import net.daporkchop.lib.common.function.io.IORunnable;
 import net.daporkchop.lib.common.misc.file.PFiles;
 import net.daporkchop.lib.common.misc.threadfactory.PThreadFactories;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,18 +46,77 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 public class Disk {
     private final EventLoop DISK_EXECUTOR = new DefaultEventLoop(PThreadFactories.builder().daemon().minPriority().name("terra++ disk I/O thread").build());
 
-    private final Path CACHE_ROOT;
-    private final Path TMP_FILE;
+    private Path cacheRoot;
+    private Path tmpFile;
+    private Path configRoot;
 
-    static {
-        File mcRoot = new File(".");
-        CACHE_ROOT = PFiles.ensureDirectoryExists(new File(mcRoot, "terraplusplus/cache")).toPath();
+    private @NotNull Path cacheRoot() {
+        if (cacheRoot == null) {
+            TerraMinusMinus.LOGGER.debug("Setting default cache root");
+            setCacheRoot(new File("./terraminusminus/cache"));
+        }
+        return cacheRoot;
+    }
 
-        TMP_FILE = CACHE_ROOT.resolve("tmp");
-        PFiles.rm(TMP_FILE.toFile()); //delete temp file if it exists
+    private @NotNull Path tmpFile() {
+        if (tmpFile == null) {
+            Path ignored = cacheRoot(); // This will force the creation of cacheRoot and tmpFile
+        }
+        return tmpFile;
+    }
 
-        //periodically prune the cache
+    private @NotNull Path configRoot() {
+        if (configRoot == null) {
+            TerraMinusMinus.LOGGER.debug("Setting default config root");
+            setConfigRoot(new File("./terraminusminus/config"));
+        }
+        return configRoot;
+    }
+
+    /**
+     * Set the directory where Terra-- should store its HTTP cache files.
+     * <br>
+     * The cache root can only be set once.
+     * As a consequence, calling this methode multiple times will result in an {@link IllegalStateException} being thrown.
+     * <br>
+     * If this is not manually called before using any method that makes use of the cache,
+     * the cache root will be automatically set to <code>$CWD/terraminusminus/cache</code>,
+     * and further attempts to call this method will result in an {@link IllegalStateException} being thrown.
+     *
+     * @param cacheDir the root of the cache
+     *
+     * @apiNote This method and its implementation are unique to Terra--,
+     * as Terra++ is hardcoded to use <code>.minecraft/terraplusplus/cache</code>.
+     */
+    public void setCacheRoot(@NonNull File cacheDir) throws IllegalStateException {
+        checkState(cacheRoot == null, "cache root is already set");
+        cacheRoot = PFiles.ensureDirectoryExists(cacheDir).toPath();
+        tmpFile = cacheRoot.resolve("tmp");
+        PFiles.rm(tmpFile.toFile()); // Delete temp file if it exists
+
+        // Periodically prune the cache
+        TerraMinusMinus.LOGGER.info("Starting cache pruning schedule");
         DISK_EXECUTOR.scheduleWithFixedDelay((IORunnable) Disk::pruneCache, 1L, 60L, TimeUnit.MINUTES);
+    }
+
+    /**
+     * Set the directory where Terra-- should look for configuration files like <code>osm.json5</code> or <code>heights.json5</code>.
+     * <br>
+     * The config root can only be set once.
+     * As a consequence, calling this methode multiple times will result in an {@link IllegalStateException} being thrown.
+     * <br>
+     * If this is not manually called before Terra-- needs to load a configuration file,
+     * the config root will be automatically set to <code>$CWD/terraminusminus/config</code>,
+     * and further attempts to call this method will result in an {@link IllegalStateException} being thrown.
+     *
+     * @param configDir the root of the cache
+     *
+     * @apiNote This method and its implementation are unique to Terra--,
+     * as Terra++ is hardcoded to use <code>.minecraft/terraplusplus/config</code>.
+     */
+    public void setConfigRoot(@NonNull File configDir) {
+        checkState(configRoot == null, "config root is already set");
+        configRoot = PFiles.ensureDirectoryExists(configDir).toPath();
     }
 
     /**
@@ -97,13 +157,13 @@ public class Disk {
     public void write(@NonNull Path file, @NonNull ByteBuf data) {
         DISK_EXECUTOR.submit(() -> {
             try {
-                try (FileChannel channel = FileChannel.open(TMP_FILE, StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+                try (FileChannel channel = FileChannel.open(tmpFile(), StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
                     while (data.isReadable()) {
                         data.readBytes(channel, data.readableBytes());
                     }
                 }
 
-                Files.move(TMP_FILE, file, StandardCopyOption.REPLACE_EXISTING);
+                Files.move(tmpFile(), file, StandardCopyOption.REPLACE_EXISTING);
                 Files.setLastModifiedTime(file, FileTime.fromMillis(System.currentTimeMillis()));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
@@ -121,7 +181,7 @@ public class Disk {
      */
     public Path cacheFileFor(@NonNull String url) {
         try {
-            return CACHE_ROOT.resolve(Hex.encodeHexString(MessageDigest.getInstance("SHA-256").digest(url.getBytes(StandardCharsets.UTF_8))));
+            return cacheRoot().resolve(Hex.encodeHexString(MessageDigest.getInstance("SHA-256").digest(url.getBytes(StandardCharsets.UTF_8))));
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 not supported", e);
         }
@@ -134,7 +194,7 @@ public class Disk {
      * @return the path to the configuration file
      */
     public Path configFile(@NonNull String name) {
-        return CACHE_ROOT.resolveSibling("config").resolve(name);
+        return configRoot().resolve(name);
     }
 
     private void pruneCache() throws IOException {
@@ -147,7 +207,7 @@ public class Disk {
 
         long now = System.currentTimeMillis();
 
-        try (Stream<Path> stream = Files.list(CACHE_ROOT)) {
+        try (Stream<Path> stream = Files.list(cacheRoot())) {
             stream.filter(Files::isRegularFile)
                     .filter((IOPredicate<Path>) p -> {
                         try (FileChannel channel = FileChannel.open(p, StandardOpenOption.READ)) {
