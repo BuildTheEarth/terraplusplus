@@ -50,11 +50,11 @@ public class EarthGeneratorBteTest {
     @DisplayName("Biome correctness test (Terra121 biome filter)")
     void canGenerateChunksWithProperBiomes() throws Exception {
         // Paris, France
-        this.assertBiomeAtExactLocation(SWAMPLAND, 2.3547370724689443, 48.8525735128455);
+        this.assertBiomeAtExactLocation(SWAMP, 2.3547370724689443, 48.8525735128455);
         this.assertBiomeAtExactLocation(RIVER, 2.359191681092456, 48.852107789198286);
 
         // Monument valley, USA
-        this.assertBiomeAtExactLocation(MESA, -112.15281699494163, 36.10248423941173);
+        this.assertBiomeAtExactLocation(BADLANDS, -112.15281699494163, 36.10248423941173);
 
         // Agadir, Morocco
         this.assertBiomeAtExactLocation(FOREST, -9.551536999999998, 30.393133000000006);
@@ -69,7 +69,7 @@ public class EarthGeneratorBteTest {
         this.assertBiomeAtExactLocation(PLAINS, 142.64390200000003, -35.964308999999986);
 
         // Iceland
-        this.assertBiomeAtExactLocation(ICE_MOUNTAINS, -16.720414000000005, 64.432562);
+        this.assertBiomeAtExactLocation(FROZEN_PEAKS, -16.720414000000005, 64.432562);
 
         // Indian ocean
         this.assertBiomeAtExactLocation(DEEP_OCEAN, 80.310835, -9.427295);
@@ -124,11 +124,11 @@ public class EarthGeneratorBteTest {
             PLAINS = Biome.parse("plains"),
             DESERT = Biome.parse("desert"),
             FOREST = Biome.parse("forest"),
-            SWAMPLAND = Biome.parse("swampland"),
+            SWAMP = Biome.parse("swamp"),
             RIVER = Biome.parse("river"),
-            ICE_MOUNTAINS = Biome.parse("ice_mountains"),
+            FROZEN_PEAKS = Biome.parse("frozen_peaks"),
             JUNGLE = Biome.parse("jungle"),
             DEEP_OCEAN = Biome.parse("deep_ocean"),
-            MESA = Biome.parse("mesa");
+            BADLANDS = Biome.parse("badlands");
 
 }

@@ -43,5 +43,5 @@ public interface Biome {
     static Biome parse(String serializedBiome) {
         return byId(Identifier.parse(serializedBiome));
     }
-    
+
 }
