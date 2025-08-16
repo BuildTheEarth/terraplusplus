@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 
 import static java.lang.Integer.*;
 import static java.util.Collections.*;
+import static java.util.stream.Collectors.*;
 import static net.buildtheearth.terraminusminus.util.Strings.split;
 
 public final class BlockStateBuilder {
@@ -177,6 +178,27 @@ public final class BlockStateBuilder {
         @Override
         public Map<String, BlockPropertyValue> getProperties() {
             return this.properties;
+        }
+
+        static String formatProperty(Map.Entry<String, BlockPropertyValue> property) {
+            return property.getKey() + "=" + property.getValue().getAsString();
+        }
+
+        static String formatProperties(BlockState blockState) {
+            return '['
+                   + blockState.getProperties().entrySet().stream()
+                           .map(BlockStateImplementation::formatProperty)
+                           .collect(joining(","))
+                   + ']';
+        }
+
+        public static String toString(BlockState blockState) {
+            return blockState.getBlock().toString() + formatProperties(blockState);
+        }
+
+        @Override
+        public String toString() {
+            return toString(this);
         }
 
         @Override

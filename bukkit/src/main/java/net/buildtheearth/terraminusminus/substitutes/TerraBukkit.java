@@ -7,8 +7,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.data.BlockData;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.stream.Collectors;
-
 
 /**
  * Compatibility methods to translate between Terra-- internal Minecraft objects into Bukkit API objects.
@@ -80,7 +78,7 @@ public final class TerraBukkit {
         }
         Material material = Material.matchMaterial(state.getBlock().toString());
         if (material == null) return null;
-        BlockData data = material.createBlockData(getPropertiesString(state));
+        BlockData data = material.createBlockData(BlockStateBuilder.BlockStateImplementation.formatProperties(state));
         if (implementation != null) implementation.bukkitBlockData = data;
         return data;
     }
@@ -95,12 +93,6 @@ public final class TerraBukkit {
         if (data == null) return null;
         String serializedData = data.getAsString();
         return BlockState.parse(serializedData);
-    }
-
-    private static String getPropertiesString(BlockState state) {
-        return "[" + state.getProperties().entrySet().stream().map(
-                    entry -> entry.getKey() + "=" + entry.getValue().getAsString()
-                ).collect(Collectors.joining(",")) + ']';
     }
 
     /**
