@@ -22,7 +22,6 @@ import net.buildtheearth.terraminusminus.util.CustomAttributeContainer;
 import net.buildtheearth.terraminusminus.util.ImmutableCompactArray;
 import net.daporkchop.lib.common.reference.ReferenceStrength;
 import net.daporkchop.lib.common.reference.cache.Cached;
-import net.daporkchop.lib.common.util.PorkUtil;
 
 /**
  * A collection of data cached per-column by earth generators.
@@ -55,9 +54,7 @@ public class CachedChunkData extends CustomAttributeContainer {
     private final int[] surfaceHeight;
     private final int[] groundHeight;
 
-    @Getter
-    private final byte[] biomes;
-
+    private final ImmutableCompactArray<Biome> biomes;
     private final ImmutableCompactArray<BlockState> surfaceBlocks;
 
     private final int surfaceMinCube;
@@ -99,11 +96,7 @@ public class CachedChunkData extends CustomAttributeContainer {
             }
         }
 
-        this.biomes = new byte[16 * 16];
-        for (int i = 0; i < 16 * 16; i++) {
-            this.biomes[i] = (byte) PorkUtil.fallbackIfNull(builder.biomes[i], Biome.DEEP_OCEAN).numericId;
-        }
-
+        this.biomes = new ImmutableCompactArray<>(builder.biomes);
         this.surfaceBlocks = new ImmutableCompactArray<>(builder.surfaceBlocks);
 
         int min = Integer.MAX_VALUE;
@@ -148,8 +141,8 @@ public class CachedChunkData extends CustomAttributeContainer {
         return this.surfaceBlocks.get(x * 16 + z);
     }
 
-    public int biome(int x, int z) {
-        return this.biomes[z * 16 + x];
+    public Biome biome(int x, int z) {
+        return this.biomes.get(z * 16 + x);
     }
 
     /**
