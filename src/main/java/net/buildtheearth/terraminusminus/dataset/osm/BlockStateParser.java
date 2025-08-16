@@ -29,7 +29,7 @@ public final class BlockStateParser extends JsonParser<BlockState> {
             String name = in.nextName();
             switch (name) {
                 case "id":
-                    builder.setBlock(new Identifier(in.nextString()));
+                    builder.setBlock(Identifier.parse(in.nextString()));
                     break;
                 case "properties":
                     in.beginObject();

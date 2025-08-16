@@ -73,7 +73,7 @@ public final class BlockStateBuilder {
             throw new IllegalArgumentException("Invalid serialized block state: " + serialized);
         }
 
-        Identifier identifier = new Identifier(matcher.group("identifier"));
+        Identifier identifier = Identifier.parse(matcher.group("identifier"));
         String[] properties;
         BlockPropertyValue[] propertyValues;
 
