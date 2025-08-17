@@ -2,11 +2,9 @@ package net.buildtheearth.terraminusminus;
 
 import net.buildtheearth.terraminusminus.substitutes.Biome;
 
-//TODO Cleanup unnecessary things
 public class TerraConfig {
 
-	public static boolean reducedConsoleMessages;
-	public static boolean threeWater;
+	public static boolean reducedConsoleMessages = false;
 
 	public static OSMOpts openstreetmap = new OSMOpts();
 
