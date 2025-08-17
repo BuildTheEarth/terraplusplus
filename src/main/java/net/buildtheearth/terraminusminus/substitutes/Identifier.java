@@ -3,6 +3,7 @@ package net.buildtheearth.terraminusminus.substitutes;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.With;
+import net.buildtheearth.terraminusminus.substitutes.exceptions.SubstituteParseException;
 import org.jetbrains.annotations.NotNull;
 
 import static java.util.Objects.*;
@@ -77,7 +78,7 @@ public final class Identifier implements Comparable<Identifier> {
 
     public static @NotNull Identifier parse(@NonNull String identifier) {
         if (identifier.isEmpty()) {
-            throw new IllegalArgumentException("Identifier cannot be empty");
+            throw new SubstituteParseException(identifier, Identifier.class, "identifier cannot be empty");
         }
         final int separatorIndex = identifier.indexOf(':');
         if (separatorIndex < 0) {
@@ -91,7 +92,7 @@ public final class Identifier implements Comparable<Identifier> {
 
     private static String checkNamespaceString(@NonNull String namespace) {
         if (namespace.isEmpty()) {
-            throw new IllegalArgumentException("Identifier namespace cannot be empty");
+            throw new SubstituteParseException(namespace, Identifier.class, "identifier namespace cannot be empty");
         }
         for (int i = 0; i < namespace.length(); i++) {
             char ch = namespace.charAt(i);
@@ -102,7 +103,7 @@ public final class Identifier implements Comparable<Identifier> {
                     || (ch >= '0' && ch <= '9')
                     || (ch >= 'a' && ch <= 'z');
             if (!isValidChar) {
-                throw new IllegalArgumentException("Invalid identifier namespace character '" + ch + "' at index " + i + " in string \"" + namespace + "\"");
+                throw new SubstituteParseException(namespace, Identifier.class, "invalid identifier namespace character '" + ch + "' at index " + i + " in string \"" + namespace + "\"");
             }
         }
         return namespace;
@@ -110,7 +111,7 @@ public final class Identifier implements Comparable<Identifier> {
 
     private static String checkPathString(@NonNull String path) {
         if (path.isEmpty()) {
-            throw new IllegalArgumentException("Identifier path cannot be empty");
+            throw new SubstituteParseException(path, Identifier.class, "identifier path cannot be empty");
         }
         for (int i = 0; i < path.length(); i++) {
             char ch = path.charAt(i);
@@ -122,7 +123,7 @@ public final class Identifier implements Comparable<Identifier> {
                     || (ch >= '0' && ch <= '9')
                     || (ch >= 'a' && ch <= 'z');
             if (!isValidChar) {
-                throw new IllegalArgumentException("Invalid identifier path character '" + ch + "' at index " + i + " in string \"" + path + "\"");
+                throw new SubstituteParseException(path, Identifier.class, "invalid identifier path character '" + ch + "' at index " + i + " in string \"" + path + "\"");
             }
         }
         return path;

@@ -1,5 +1,6 @@
 package net.buildtheearth.terraminusminus.substitutes;
 
+import net.buildtheearth.terraminusminus.substitutes.exceptions.SubstituteParseException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,14 +24,14 @@ public class IdentifierTest {
         identifier = Identifier.parse("minecraft:textures/villager.png");
         assertIdentifier("minecraft", "textures/villager.png", identifier);
 
-        assertThrows(IllegalArgumentException.class, () -> Identifier.parse("minecraft:"));
-        assertThrows(IllegalArgumentException.class, () -> Identifier.parse(":dirt"));
-        assertThrows(IllegalArgumentException.class, () -> Identifier.parse(":"));
-        assertThrows(IllegalArgumentException.class, () -> Identifier.parse(""));
-        assertThrows(IllegalArgumentException.class, () -> Identifier.parse("foo/bar:coal"));
-        assertThrows(IllegalArgumentException.class, () -> Identifier.parse("mymap:schrödingers_var"));
-        assertThrows(IllegalArgumentException.class, () -> Identifier.parse("custom_pack:Capital"));
-        assertThrows(IllegalArgumentException.class, () -> Identifier.parse("cusTom_pack:capital"));
+        assertThrows(SubstituteParseException.class, () -> Identifier.parse("minecraft:"));
+        assertThrows(SubstituteParseException.class, () -> Identifier.parse(":dirt"));
+        assertThrows(SubstituteParseException.class, () -> Identifier.parse(":"));
+        assertThrows(SubstituteParseException.class, () -> Identifier.parse(""));
+        assertThrows(SubstituteParseException.class, () -> Identifier.parse("foo/bar:coal"));
+        assertThrows(SubstituteParseException.class, () -> Identifier.parse("mymap:schrödingers_var"));
+        assertThrows(SubstituteParseException.class, () -> Identifier.parse("custom_pack:Capital"));
+        assertThrows(SubstituteParseException.class, () -> Identifier.parse("cusTom_pack:capital"));
     }
 
     @Test
