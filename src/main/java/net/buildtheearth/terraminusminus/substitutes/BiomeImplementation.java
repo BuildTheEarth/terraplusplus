@@ -17,6 +17,8 @@ final class BiomeImplementation implements Biome {
     @Getter
     private final @NonNull Identifier identifier;
 
+    Object bukkitBiome = null;
+
     private static final LoadingCache<@NotNull Identifier, @NotNull Biome> cache = CacheBuilder.newBuilder()
             .initialCapacity(100)  // Minecraft 1.21.4 has 65 biomes
             .maximumSize(4096)     // This should be high enough to accommodate almost any realistic scenario while remaining a good safeguard

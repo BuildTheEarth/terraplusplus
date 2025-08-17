@@ -114,7 +114,7 @@ public final class TerraBukkit {
         BlockStateBuilder.BlockStateImplementation implementation = null;
         if (state instanceof BlockStateBuilder.BlockStateImplementation) {
             BlockStateBuilder.BlockStateImplementation imp = (BlockStateBuilder.BlockStateImplementation) state;
-            if (imp.bukkitBlockData != null) return (BlockData) imp.bukkitBlockData;
+            if (imp.bukkitBlockData instanceof BlockData) return (BlockData) imp.bukkitBlockData;
             implementation = imp;
         }
         Material material = Material.matchMaterial(state.getBlock().toString());
@@ -156,7 +156,8 @@ public final class TerraBukkit {
      * Translates Terra-- internal {@link Biome} into Bukkit API {@link org.bukkit.block.Biome}.
      * Conserves nullness.
      * <br>
-     * This method has no form of caching and may create a new instance of {@link org.bukkit.block.Biome} for each call.
+     * If {@link Biome} implementation is the canonical Terra--,
+     * this methods makes use of an internal cache to avoid allocating a new object and speed things up.
      *
      * @param biome the Terra-- {@link Biome}
      * @return the Bukkit API {@link org.bukkit.block.Biome}
@@ -167,11 +168,21 @@ public final class TerraBukkit {
     @Contract("!null -> !null; null -> null")
     public static @Nullable org.bukkit.block.Biome toBukkitBiome(@Nullable Biome biome) {
         if (biome == null) return null;
+        BiomeImplementation implementation = null;
+        if (biome instanceof BiomeImplementation) {
+            implementation = (BiomeImplementation) biome;
+            if (implementation.bukkitBiome instanceof org.bukkit.block.Biome) {
+                return (org.bukkit.block.Biome) implementation.bukkitBiome;
+            }
+        }
         org.bukkit.block.Biome bukkitBiome = Registry.BIOME.get(toBukkitNamespacedKey(biome.identifier()));
         if (bukkitBiome == null) {
             throw new TranslateToForeignObjectException(
                     biome, org.bukkit.block.Biome.class, "biome is unknown to server"
             );
+        }
+        if (implementation != null) {
+            implementation.bukkitBiome = bukkitBiome;
         }
         return bukkitBiome;
     }
