@@ -19,6 +19,7 @@ import net.buildtheearth.terraminusminus.generator.biome.IEarthBiomeFilter;
 import net.buildtheearth.terraminusminus.generator.biome.Terra121BiomeFilter;
 import net.buildtheearth.terraminusminus.generator.data.HeightsBaker;
 import net.buildtheearth.terraminusminus.generator.data.IEarthDataBaker;
+import net.buildtheearth.terraminusminus.generator.data.InitialBiomesBaker;
 import net.buildtheearth.terraminusminus.generator.data.NullIslandBaker;
 import net.buildtheearth.terraminusminus.generator.data.OSMBaker;
 import net.buildtheearth.terraminusminus.generator.data.TreeCoverBaker;
@@ -62,11 +63,12 @@ public class EarthGeneratorPipelines {
     }
 
     public IEarthDataBaker<?>[] dataBakers(@NonNull EarthGeneratorSettings settings) {
-    	return new IEarthDataBaker<?>[] {
-    		new TreeCoverBaker(),
-    		new HeightsBaker(),
-    		new OSMBaker(),
-    		new NullIslandBaker()
-    	};
+        return new IEarthDataBaker<?>[] {
+            new InitialBiomesBaker(settings.biomeProvider()),
+            new TreeCoverBaker(),
+            new HeightsBaker(),
+            new OSMBaker(),
+            new NullIslandBaker()
+        };
     }
 }
