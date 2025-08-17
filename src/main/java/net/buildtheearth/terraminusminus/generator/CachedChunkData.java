@@ -15,6 +15,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import net.buildtheearth.terraminusminus.TerraConfig;
 import net.buildtheearth.terraminusminus.substitutes.BlockState;
 import net.buildtheearth.terraminusminus.substitutes.ChunkPos;
 import net.buildtheearth.terraminusminus.substitutes.Biome;
@@ -77,7 +78,7 @@ public class CachedChunkData extends CustomAttributeContainer {
                 case WATERDEPTH_TYPE_WATER: //water - lake/river/pond
                     if (d + WATER_DEPTH_OFFSET >= 0) {
                         this.groundHeight[i] -= d + WATER_DEPTH_OFFSET;
-                        builder.biomes[(i >>> 4) | ((i & 0xF) << 4)] = Biome.RIVER;
+                        builder.biomes[(i >>> 4) | ((i & 0xF) << 4)] = TerraConfig.biomes.waterInlandBiome;
                     }
                     break;
                 case WATERDEPTH_TYPE_OCEAN:
@@ -88,7 +89,7 @@ public class CachedChunkData extends CustomAttributeContainer {
                     } else {
                         this.surfaceHeight[i] = 0;
                         this.groundHeight[i] = min(this.groundHeight[i], -2);
-                        builder.biomes[(i >>> 4) | ((i & 0xF) << 4)] = Biome.DEEP_OCEAN;
+                        builder.biomes[(i >>> 4) | ((i & 0xF) << 4)] = TerraConfig.biomes.waterOceanBiome;
                     }
                     break;
                 default:

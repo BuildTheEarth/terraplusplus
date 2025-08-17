@@ -5,12 +5,12 @@ import static java.lang.Math.max;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
+import net.buildtheearth.terraminusminus.TerraConfig;
 import net.buildtheearth.terraminusminus.generator.CachedChunkData;
 import net.buildtheearth.terraminusminus.generator.EarthGeneratorPipelines;
 import net.buildtheearth.terraminusminus.generator.GeneratorDatasets;
 import net.buildtheearth.terraminusminus.projection.OutOfProjectionBoundsException;
 import net.buildtheearth.terraminusminus.substitutes.ChunkPos;
-import net.buildtheearth.terraminusminus.substitutes.Biome;
 import net.buildtheearth.terraminusminus.util.CornerBoundingBox2d;
 import net.buildtheearth.terraminusminus.util.bvh.Bounds2d;
 
@@ -36,15 +36,15 @@ public class NullIslandBaker implements IEarthDataBaker<Void> {
             }
 
             if (((pos.x() ^ (pos.x() >> 31)) | (pos.z() ^ (pos.z() >> 31))) == 0) {
-                Arrays.fill(builder.biomes(), Biome.FOREST);
+                Arrays.fill(builder.biomes(), TerraConfig.biomes.nullIslandInnerBiome);
             } else {
-                Arrays.fill(builder.biomes(), Biome.PLAINS);
+                Arrays.fill(builder.biomes(), TerraConfig.biomes.nullIslandOuterBiome);
             }
 
             Arrays.fill(builder.waterDepth(), (byte) CachedChunkData.WATERDEPTH_DEFAULT);
         }
     }
-    
+
     public static boolean isNullIsland(int chunkX, int chunkZ) {
         return max(chunkX ^ (chunkX >> 31), chunkZ ^ (chunkZ >> 31)) < 3;
     }

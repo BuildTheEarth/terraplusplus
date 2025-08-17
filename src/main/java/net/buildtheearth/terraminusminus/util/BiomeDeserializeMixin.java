@@ -16,7 +16,7 @@ public abstract class BiomeDeserializeMixin {
     protected static class Converter extends StdConverter<String, Biome> {
         @Override
         public Biome convert(@NonNull String value) {
-            Biome biome = Biome.byId(value);
+            Biome biome = Biome.parse(value);
             checkArg(biome != null, "unknown biome id: %s", value);
             return biome;
         }

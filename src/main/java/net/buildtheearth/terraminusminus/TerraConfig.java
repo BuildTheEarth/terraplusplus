@@ -1,5 +1,7 @@
 package net.buildtheearth.terraminusminus;
 
+import net.buildtheearth.terraminusminus.substitutes.Biome;
+
 //TODO Cleanup unnecessary things
 public class TerraConfig {
 
@@ -9,6 +11,8 @@ public class TerraConfig {
 	public static OSMOpts openstreetmap = new OSMOpts();
 
 	public static HttpOpts http = new HttpOpts();
+
+    public static BiomeOpts biomes = new BiomeOpts();
 
 	public static class OSMOpts {
 		public String[] servers = {
@@ -30,4 +34,13 @@ public class TerraConfig {
 
 		public int cacheTTL = 1440;
 	}
+
+    public static class BiomeOpts {
+        public Biome defaultBiome = Biome.parse("ocean");
+        public Biome waterInlandBiome = Biome.parse("river");
+        public Biome waterOceanBiome = Biome.parse("deep_ocean");
+        public Biome nullIslandInnerBiome = Biome.parse("forest");
+        public Biome nullIslandOuterBiome = Biome.parse("plains");
+    }
+
 }

@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import net.buildtheearth.terraminusminus.TerraConfig;
 import net.buildtheearth.terraminusminus.dataset.IScalarDataset;
 import net.buildtheearth.terraminusminus.generator.ChunkBiomesBuilder;
 import net.buildtheearth.terraminusminus.generator.EarthBiomeProvider;
@@ -22,6 +23,22 @@ import net.buildtheearth.terraminusminus.util.bvh.Bounds2d;
  * @author DaPorkchop_
  */
 public class Terra121BiomeFilter implements IEarthBiomeFilter<Terra121BiomeFilter.Data> {
+
+    // Biomes used by this filter
+    private static final Biome
+            OCEAN = Biome.parse("ocean"),
+            PLAINS = Biome.parse("plains"),
+            DESERT = Biome.parse("desert"),
+            FOREST = Biome.parse("forest"),
+            TAIGA = Biome.parse("taiga"),
+            SWAMPLAND = Biome.parse("swampland"),
+            ICE_PLAINS = Biome.parse("ice_flats"),
+            ICE_MOUNTAINS = Biome.parse("ice_mountains"),
+            JUNGLE = Biome.parse("jungle"),
+            COLD_TAIGA = Biome.parse("taiga_cold"),
+            SAVANNA = Biome.parse("savanna"),
+            MESA = Biome.parse("mesa");
+
     @Override
     public CompletableFuture<Terra121BiomeFilter.Data> requestData(ChunkPos pos, GeneratorDatasets datasets, Bounds2d bounds, CornerBoundingBox2d boundsGeo) throws OutOfProjectionBoundsException {
         CompletableFuture<double[]> precipitationFuture = datasets.<IScalarDataset>getCustom(EarthGeneratorPipelines.KEY_DATASET_TERRA121_PRECIPITATION).getAsync(boundsGeo, 16, 16);
@@ -37,7 +54,7 @@ public class Terra121BiomeFilter implements IEarthBiomeFilter<Terra121BiomeFilte
         Biome[] biome = builder.state();
 
         if (data == null) {
-            Arrays.fill(biome, Biome.getDefault());
+            Arrays.fill(biome, TerraConfig.biomes.defaultBiome);
             return;
         }
 
@@ -56,85 +73,85 @@ public class Terra121BiomeFilter implements IEarthBiomeFilter<Terra121BiomeFilte
     protected Biome classify(double precipitation, double soil, double temperature) {
         switch ((int) soil) {
             case 0: //Ocean
-                return Biome.OCEAN;
+                return OCEAN;
             case 1: //Shifting Sand
-                return Biome.DESERT;
+                return DESERT;
             case 2: //Rock
-                return Biome.DESERT; //cant find it (rock mountians)
+                return DESERT; //cant find it (rock mountians)
             case 3: //Ice
-                return Biome.ICE_MOUNTAINS;
+                return ICE_MOUNTAINS;
             case 5:
             case 6:
             case 7: //Permafrost
-                return Biome.ICE_PLAINS;
+                return ICE_PLAINS;
             case 10:
-                return Biome.JUNGLE;
+                return JUNGLE;
             case 11:
             case 12:
-                return Biome.PLAINS;
+                return PLAINS;
             case 15:
                 if (temperature < 5) {
-                    return Biome.COLD_TAIGA;
+                    return COLD_TAIGA;
                 } else if (temperature > 15) {
-                    return Biome.SWAMPLAND;
+                    return SWAMPLAND;
                 }
-                return Biome.FOREST;
+                return FOREST;
             case 16:
             case 17:
             case 18:
             case 19:
                 if (temperature < 15) {
                     if (temperature < 0) {
-                        return Biome.COLD_TAIGA;
+                        return COLD_TAIGA;
                     }
-                    return Biome.SWAMPLAND;
+                    return SWAMPLAND;
                 }
                 if (temperature > 20) {
-                    return Biome.SWAMPLAND;
+                    return SWAMPLAND;
                 }
-                return Biome.FOREST;
+                return FOREST;
             case 29:
             case 30:
             case 31:
             case 32:
             case 33:
-                return Biome.SAVANNA;
+                return SAVANNA;
             case 34:
-                return Biome.JUNGLE;
+                return JUNGLE;
             case 41:
             case 42:
             case 43:
             case 44:
             case 45:
-                return Biome.PLAINS;
+                return PLAINS;
             case 50:
-                return Biome.COLD_TAIGA;
+                return COLD_TAIGA;
             case 51: //salt flats always desert
-                return Biome.DESERT;
+                return DESERT;
             case 52:
             case 53:
             case 55:
             case 99: //hot and dry
                 if (temperature < 2) {
-                    return Biome.COLD_TAIGA;
+                    return COLD_TAIGA;
                 } else if (temperature < 5) {
-                    return Biome.TAIGA;
+                    return TAIGA;
                 } else if (precipitation < 5) {
-                    return Biome.DESERT;
+                    return DESERT;
                 }
-                return Biome.MESA; //TODO: this soil can also be desert i.e. saudi Arabia (base on percip?)
+                return MESA; //TODO: this soil can also be desert i.e. saudi Arabia (base on percip?)
             case 54:
             case 56:
-                return Biome.SAVANNA;
+                return SAVANNA;
             case 60:
             case 61:
             case 62:
             case 63:
             case 64:
                 if (temperature < 10) {
-                    return Biome.TAIGA;
+                    return TAIGA;
                 }
-                return Biome.FOREST;
+                return FOREST;
             case 70:
             case 72:
             case 73:
@@ -142,35 +159,35 @@ public class Terra121BiomeFilter implements IEarthBiomeFilter<Terra121BiomeFilte
             case 75:
             case 76:
             case 77:
-                return Biome.PLAINS;
+                return PLAINS;
             case 13:
             case 40:
             case 71:
             case 80:
             case 95:
             case 98:
-                return Biome.SWAMPLAND;
+                return SWAMPLAND;
             case 81:
             case 83:
             case 84:
             case 86:
-                return Biome.FOREST;
+                return FOREST;
             case 82:
             case 85:
-                return Biome.PLAINS;
+                return PLAINS;
             case 90:
             case 91:
             case 92:
             case 93:
             case 94:
-                return Biome.FOREST;
+                return FOREST;
             case 96:
-                return Biome.SAVANNA;
+                return SAVANNA;
             case 97:
-                return Biome.DESERT;
+                return DESERT;
         }
 
-        return Biome.PLAINS;
+        return PLAINS;
     }
 
     @RequiredArgsConstructor
