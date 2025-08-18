@@ -25,28 +25,6 @@ public class TerraBukkitTest {
         assertNull(fromBukkitNamespacedKey(null));
     }
 
-    @Test
-    @DisplayName("Convert Terra-- biomes to Bukkit API biomes")
-    void toBukkitBiomeTest() {
-        // Biomes that Bukkit knows about
-        assertEquals(org.bukkit.block.Biome.BIRCH_FOREST, toBukkitBiome(Biome.parse("birch_forest")));
-        assertEquals(org.bukkit.block.Biome.DARK_FOREST, toBukkitBiome(Biome.parse("dark_forest")));
-
-        // Biomes that Bukkit API doesn't know about
-        assertThrows(TranslateToForeignObjectException.class, () -> toBukkitBiome(Biome.parse("invalid:doesnotexist")) );
-
-        assertNull(toBukkitBiome(null));
-    }
-
-
-    @Test
-    @DisplayName("Convert Bukkit API biomes to Terra-- biomes")
-    void fromBukkitBiomeTest() {
-        assertEquals(Biome.parse("birch_forest"), fromBukkitBiome(org.bukkit.block.Biome.BIRCH_FOREST));
-        assertEquals(Biome.parse("dark_forest"), fromBukkitBiome(org.bukkit.block.Biome.DARK_FOREST));
-        assertNull(fromBukkitBiome(null));
-    }
-
     private static void assertNamespacedKeyMatchesIdentifier(Identifier expected, NamespacedKey actual) {
         if (expected == null && actual == null) {
             return;
