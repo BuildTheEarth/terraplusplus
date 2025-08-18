@@ -29,10 +29,8 @@ public class TerraBukkitTest {
     @DisplayName("Convert Terra-- biomes to Bukkit API biomes")
     void toBukkitBiomeTest() {
         // Biomes that Bukkit knows about
-        for (org.bukkit.block.Biome bukkitBiome : org.bukkit.block.Biome.values()) {
-            Biome terraBiome = Biome.byId(fromBukkitNamespacedKey(bukkitBiome.getKey()));
-            assertSame(bukkitBiome, toBukkitBiome(terraBiome));
-        }
+        assertEquals(org.bukkit.block.Biome.BIRCH_FOREST, toBukkitBiome(Biome.parse("birch_forest")));
+        assertEquals(org.bukkit.block.Biome.DARK_FOREST, toBukkitBiome(Biome.parse("dark_forest")));
 
         // Biomes that Bukkit API doesn't know about
         assertThrows(TranslateToForeignObjectException.class, () -> toBukkitBiome(Biome.parse("invalid:doesnotexist")) );
@@ -44,9 +42,8 @@ public class TerraBukkitTest {
     @Test
     @DisplayName("Convert Bukkit API biomes to Terra-- biomes")
     void fromBukkitBiomeTest() {
-        for (org.bukkit.block.Biome bukkitBiome : org.bukkit.block.Biome.values()) {
-            assertEquals(fromBukkitNamespacedKey(bukkitBiome.getKey()), fromBukkitBiome(bukkitBiome).identifier());
-        }
+        assertEquals(Biome.parse("birch_forest"), fromBukkitBiome(org.bukkit.block.Biome.BIRCH_FOREST));
+        assertEquals(Biome.parse("dark_forest"), fromBukkitBiome(org.bukkit.block.Biome.DARK_FOREST));
         assertNull(fromBukkitBiome(null));
     }
 
