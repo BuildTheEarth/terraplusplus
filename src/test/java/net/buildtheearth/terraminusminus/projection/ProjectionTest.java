@@ -2,12 +2,13 @@ package net.buildtheearth.terraminusminus.projection;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import net.buildtheearth.terraminusminus.TerraConstants;
+import net.buildtheearth.terraminusminus.TerraMinusMinusTest;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 
-public class ProjectionTest {
+public class ProjectionTest extends TerraMinusMinusTest {
 
     @Test
     void testBteProjection() throws JsonProcessingException, OutOfProjectionBoundsException {

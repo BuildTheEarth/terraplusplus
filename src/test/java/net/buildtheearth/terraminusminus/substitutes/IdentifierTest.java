@@ -1,11 +1,12 @@
 package net.buildtheearth.terraminusminus.substitutes;
 
+import net.buildtheearth.terraminusminus.TerraMinusMinusTest;
 import net.buildtheearth.terraminusminus.substitutes.exceptions.SubstituteParseException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class IdentifierTest {
+public class IdentifierTest extends TerraMinusMinusTest {
 
     @Test
     void canParseIdentifier() {

@@ -7,6 +7,7 @@ import java.net.URLConnection;
 import java.util.concurrent.CompletableFuture;
 
 import io.netty.buffer.ByteBuf;
+import net.buildtheearth.terraminusminus.TerraMinusMinusTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -14,7 +15,7 @@ import org.junit.jupiter.api.Timeout;
 import static java.util.concurrent.TimeUnit.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class HttpTest {
+public class HttpTest extends TerraMinusMinusTest {
 	
 	private static final String CI_USER_AGENT = "Terra-- CI";
 	
