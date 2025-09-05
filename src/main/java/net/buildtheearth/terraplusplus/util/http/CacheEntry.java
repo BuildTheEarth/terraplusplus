@@ -105,7 +105,7 @@ public class CacheEntry {
                     break;
                 }
             default: //failure
-                throw new IOException("response from server: \"" + response.status() + "\" for url " + parsed);
+                throw new UnknownHttpStatusException(response.status(), parsed);
         }
         this.location = location;
     }
