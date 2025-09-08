@@ -4,6 +4,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import lombok.NonNull;
+import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.generator.data.TreeCoverBaker;
 import net.buildtheearth.terraplusplus.projection.GeographicProjection;
 import net.buildtheearth.terraplusplus.projection.OutOfProjectionBoundsException;
@@ -50,6 +51,8 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
     }
 
     public static void main(String... args) throws OutOfProjectionBoundsException {
+        TerraConstants.IS_TEST_ENVIRONMENT = true;
+
         Bootstrap.register();
         Http.configChanged();
 
@@ -204,7 +207,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         state.initSettings();
 
         double[] proj = new double[2]; //null island
-        //proj = state.projection.fromGeo(8.57696d, 47.21763d); //steinhausen, switzerland
+        proj = state.projection.fromGeo(8.57696d, 47.21763d); //steinhausen, switzerland
         //proj = state.projection.fromGeo(12.58589, 55.68841); //copenhagen, denmark
         //proj = state.projection.fromGeo(24.7535, 59.4435); //tallinn, estonia
         //proj = state.projection.fromGeo(14.50513, 46.05108); //ljubljana, slovenia

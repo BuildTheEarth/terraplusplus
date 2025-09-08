@@ -5,11 +5,13 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoop;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.EmptyHttpHeaders;
@@ -20,15 +22,23 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SupportedCipherSuiteFilter;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import io.netty.resolver.dns.DnsServerAddresses;
+import io.netty.resolver.dns.RoundRobinDnsAddressResolverGroup;
 import io.netty.util.ReferenceCountUtil;
+import io.netty.util.concurrent.DefaultThreadFactory;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import net.buildtheearth.terraplusplus.TerraConfig;
+import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.TerraMod;
 import net.daporkchop.lib.common.function.throwing.EFunction;
-import net.daporkchop.lib.common.misc.threadfactory.PThreadFactories;
 import net.daporkchop.lib.common.reference.cache.Cached;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.NetworkSystem;
+import net.minecraft.util.LazyLoadBase;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.relauncher.Side;
 
 import javax.net.ssl.SSLException;
 import java.net.MalformedURLException;
@@ -57,14 +67,32 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 public class Http {
     protected static final long TIMEOUT = 20L;
 
-    private final ThreadFactory NETWORK_THREAD_FACTORY = PThreadFactories.builder().daemon().minPriority().name("terra++ HTTP network thread").build();
+    protected final EventLoopGroup NETWORK_EVENT_LOOP_GROUP;
 
-    protected final EventLoop NETWORK_EVENT_LOOP = (Epoll.isAvailable()
-            ? new EpollEventLoopGroup(1, NETWORK_THREAD_FACTORY) //use epoll on linux systems wherever possible
-            : new NioEventLoopGroup(1, NETWORK_THREAD_FACTORY)).next(); //this is fine because there's always exactly one network worker
+    static {
+        if (!TerraConstants.IS_TEST_ENVIRONMENT && TerraConfig.http.useVanillaNetworkThread) {
+            //use the vanilla eventloop for the current side
+            LazyLoadBase<? extends EventLoopGroup> eventLoopGroupLoader;
+            if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
+                eventLoopGroupLoader = Epoll.isAvailable() ? NetworkManager.CLIENT_EPOLL_EVENTLOOP : NetworkManager.CLIENT_NIO_EVENTLOOP;
+            } else {
+                eventLoopGroupLoader = Epoll.isAvailable() ? NetworkSystem.SERVER_EPOLL_EVENTLOOP : NetworkSystem.SERVER_NIO_EVENTLOOP;
+            }
+
+            NETWORK_EVENT_LOOP_GROUP = eventLoopGroupLoader.getValue();
+        } else {
+            //create a dedicated eventloop with one thread
+            ThreadFactory threadFactory = new DefaultThreadFactory("terra++ HTTP network thread", true, Thread.MIN_PRIORITY);
+            NETWORK_EVENT_LOOP_GROUP = Epoll.isAvailable()
+                    ? new EpollEventLoopGroup(1, threadFactory)
+                    : new NioEventLoopGroup(1, threadFactory);
+        }
+    }
 
     protected final Bootstrap DEFAULT_BOOTSTRAP = new Bootstrap()
-            .group(NETWORK_EVENT_LOOP)
+            .resolver(new RoundRobinDnsAddressResolverGroup(
+                    Epoll.isAvailable() ? EpollDatagramChannel.class : NioDatagramChannel.class,
+                    DnsServerAddresses.defaultAddresses()))
             .channel(Epoll.isAvailable() ? EpollSocketChannel.class : NioSocketChannel.class)
             .option(ChannelOption.SO_KEEPALIVE, true)
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, toInt(TimeUnit.SECONDS.toMillis(TIMEOUT)));

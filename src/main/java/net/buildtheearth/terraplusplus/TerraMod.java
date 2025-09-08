@@ -40,6 +40,11 @@ public class TerraMod {
         }
 
         TerraConstants.CC_VERSION = Loader.instance().getIndexedModList().get(CubicChunks.MODID).getVersion();
+
+        if (event.getSide() == Side.CLIENT && System.getProperty("io.netty.eventLoopThreads") == null) {
+            //set the number of Netty threads to 1 on the client, there's absolutely no reason to have more
+            System.setProperty("io.netty.eventLoopThreads", "1");
+        }
     }
 
     @EventHandler
