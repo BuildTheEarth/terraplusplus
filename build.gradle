@@ -44,21 +44,20 @@ repositories {
         name = "JitPack"
         url = "https://jitpack.io/"
     }
-    maven { //used for leveldb
+    maven {
         name = "DaPorkchop_"
         url = "https://maven.daporkchop.net/"
-    }
-    maven { //used for leveldb
-        name = "OpenCollab Snapshots"
-        url = "https://repo.opencollab.dev/snapshot/"
     }
 }
 
 dependencies {
-    deobfProvided ("com.github.OpenCubicChunks.CubicChunks:cubicchunks:f71aafb9854466ac5ffa0ccd2796921684f1d8b1") {
+    //We have to use this as deobfProvided even though there's a :dev version of the artifact because otherwise mixin
+    //prevents the mod from loading when running in a dev environment.
+    deobfProvided ("io.github.opencubicchunks:cubicchunks:1.12.2-0.0.1282.0-SNAPSHOT") {
         transitive = false
     }
-    deobfProvided ("com.github.OpenCubicChunks:CubicWorldGen:27de56d2f792513873584b2f8fd9f3082fb259ec") {
+
+    provided ("io.github.opencubicchunks:cubicworldgen:1.12.2-0.0.206.0-SNAPSHOT:dev") {
         transitive = false
     }
 

@@ -26,7 +26,7 @@ import org.apache.logging.log4j.simple.SimpleLogger;
 import org.apache.logging.log4j.util.PropertiesUtil;
 
 @Mod(modid = TerraConstants.MODID,
-        dependencies = "required-after:cubicchunks; required-after:cubicgen",
+        dependencies = "required-after:cubicchunks; required-after:cubicgen@[1.12.2-0.0.201.0,)",
         acceptableRemoteVersions = "*",
         useMetadata = true)
 public class TerraMod {

@@ -147,8 +147,8 @@ public class EarthGenerator extends BasicCubeGenerator {
                 .build(new ChunkDataLoader(this.settings));
 
         //structures
-        if (this.cubiccfg.caves) {
-            InitCubicStructureGeneratorEvent caveEvent = new InitCubicStructureGeneratorEvent(InitMapGenEvent.EventType.CAVE, new CubicCaveGenerator());
+        for (val caveConfig : this.cubiccfg.caves) {
+            InitCubicStructureGeneratorEvent caveEvent = new InitCubicStructureGeneratorEvent(InitMapGenEvent.EventType.CAVE, new CubicCaveGenerator(caveConfig));
             MinecraftForge.TERRAIN_GEN_BUS.post(caveEvent);
             this.structureGenerators.add(caveEvent.getNewGen());
         }

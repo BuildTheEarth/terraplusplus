@@ -17,7 +17,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Sets;
 import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.JsonGrammar;
 import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.api.DeserializationException;
-import io.github.opencubicchunks.cubicchunks.cubicgen.blue.endless.jankson.api.SyntaxError;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGeneratorSettings;
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.CustomGenSettingsSerialization;
 import io.github.opencubicchunks.cubicchunks.cubicgen.preset.fixer.CustomGeneratorSettingsFixer;
@@ -46,7 +45,6 @@ import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -137,36 +135,28 @@ public class EarthGeneratorSettings {
         CustomGeneratorSettings cfg;
         if (this.cwg().isEmpty()) { //use new minimal defaults
             cfg = CustomGeneratorSettings.defaults();
-            cfg.mineshafts = cfg.caves = cfg.strongholds = cfg.dungeons = cfg.ravines = false;
+            cfg.mineshafts = cfg.strongholds = cfg.dungeons = cfg.ravines = false;
+            cfg.caves.clear();
             cfg.lakes.clear();
         } else {
             try {
-                cfg = CustomGenSettingsSerialization.jankson().fromJsonCarefully(this.cwg(), CustomGeneratorSettings.class);
+                cfg = CustomGenSettingsSerialization.jankson().fromJsonCarefully(CustomGeneratorSettingsFixer.INSTANCE.fixJson(this.cwg()), CustomGeneratorSettings.class);
             } catch (PresetLoadError | DeserializationException err) {
                 throw new RuntimeException(err);
-            } catch (SyntaxError err) {
-                String message = err.getMessage() + '\n' + err.getLineMessage();
-                throw new RuntimeException(message, err);
             }
         }
-        try {
-            //cfg.waterLevel = 0;
-            MethodHandles.publicLookup()
-                    .findSetter(CustomGeneratorSettings.class, "waterLevel", int.class)
-                    .invokeExact(cfg, 0);
-        } catch (NoSuchFieldException e) {
-            //assume this is a CWG v7 preset
-            checkState(
-                    cfg.replacers.stream().anyMatch(CustomGeneratorSettings.MainSurfaceReplacerConfig.class::isInstance),
-                    "default CWG preset has no MainSurfaceReplacerConfig! %s", cfg.toJsonObject());
-            for (CustomGeneratorSettings.ReplacerConfig replacer : cfg.replacers) {
-                if (replacer instanceof CustomGeneratorSettings.MainSurfaceReplacerConfig) {
-                    ((CustomGeneratorSettings.MainSurfaceReplacerConfig) replacer).oceanLevel = 0.0d;
-                }
+
+        checkState(
+                cfg.replacers.stream().anyMatch(CustomGeneratorSettings.MainSurfaceReplacerConfig.class::isInstance),
+                "default CWG preset has no MainSurfaceReplacerConfig! %s", cfg.toJsonObject());
+
+        //set oceanLevel to 0 in all MainSurfaceReplacerConfig
+        for (CustomGeneratorSettings.ReplacerConfig replacer : cfg.replacers) {
+            if (replacer instanceof CustomGeneratorSettings.MainSurfaceReplacerConfig) {
+                ((CustomGeneratorSettings.MainSurfaceReplacerConfig) replacer).oceanLevel = 0.0d;
             }
-        } catch (Throwable e) {
-            throw new RuntimeException("failed to set CWG preset ocean level", e);
         }
+
         return cfg;
     }, ReferenceStrength.SOFT);
     protected transient final Cached<GeneratorDatasets> datasets = Cached.global(() -> new GeneratorDatasets(this), ReferenceStrength.SOFT);
