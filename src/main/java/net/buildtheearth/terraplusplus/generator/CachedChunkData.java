@@ -144,7 +144,7 @@ public class CachedChunkData extends CustomAttributeContainer {
     }
 
     public int biome(int x, int z) {
-        return this.biomes[z * 16 + x];
+        return this.biomes[z * 16 + x] & 0xFF;
     }
 
     /**

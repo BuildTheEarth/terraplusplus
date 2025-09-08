@@ -16,17 +16,15 @@ import io.github.opencubicchunks.cubicchunks.api.worldgen.structure.ICubicStruct
 import io.github.opencubicchunks.cubicchunks.api.worldgen.structure.event.InitCubicStructureGeneratorEvent;
 import io.github.opencubicchunks.cubicchunks.core.CubicChunks;
 import io.github.opencubicchunks.cubicchunks.cubicgen.BasicCubeGenerator;
-import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.BiomeBlockReplacerConfig;
 import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.CubicBiome;
-import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.IBiomeBlockReplacer;
-import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.IBiomeBlockReplacerProvider;
-import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.OceanWaterReplacer;
-import io.github.opencubicchunks.cubicchunks.cubicgen.common.biome.TerrainShapeReplacer;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.CustomGeneratorSettings;
+import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.replacer.DensityRangeReplacer;
+import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.replacer.IBiomeBlockReplacer;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicCaveGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.CubicRavineGenerator;
 import io.github.opencubicchunks.cubicchunks.cubicgen.customcubic.structure.feature.CubicStrongholdGenerator;
 import lombok.NonNull;
+import lombok.val;
 import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.generator.data.IEarthDataBaker;
@@ -59,8 +57,11 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static java.lang.Math.*;
+import static net.daporkchop.lib.common.util.PValidation.*;
 
 public class EarthGenerator extends BasicCubeGenerator {
     public static final int WATER_DEPTH_OFFSET = 1;
@@ -120,7 +121,7 @@ public class EarthGenerator extends BasicCubeGenerator {
     public final GeographicProjection projection;
     private final CustomGeneratorSettings cubiccfg;
 
-    public final IBiomeBlockReplacer[][] biomeBlockReplacers;
+    public final Map<Biome, IBiomeBlockReplacer[]> biomeBlockReplacers;
 
     private final List<ICubicStructureGenerator> structureGenerators = new ArrayList<>();
 
@@ -164,23 +165,64 @@ public class EarthGenerator extends BasicCubeGenerator {
 
         this.populators = EarthGeneratorPipelines.populators(this.settings);
 
-        BiomeBlockReplacerConfig conf = this.cubiccfg.createBiomeBlockReplacerConfig();
-        Map<Biome, List<IBiomeBlockReplacer>> biomeBlockReplacers = new IdentityHashMap<>();
-        for (Biome biome : ForgeRegistries.BIOMES) {
-            CubicBiome cubicBiome = CubicBiome.getCubic(biome);
-            Iterable<IBiomeBlockReplacerProvider> providers = cubicBiome.getReplacerProviders();
-            List<IBiomeBlockReplacer> replacers = new ArrayList<>();
-            for (IBiomeBlockReplacerProvider prov : providers) {
-                replacers.add(prov.create(world, cubicBiome, conf));
+        Predicate<CustomGeneratorSettings.ReplacerConfig> isDefaultTerrainReplacer = replacerConfig -> {
+            if (!(replacerConfig instanceof CustomGeneratorSettings.DensityRangeReplacerConfig)) {
+                return false;
             }
 
-            //remove these replacers because they're redundant
-            replacers.removeIf(replacer -> replacer instanceof TerrainShapeReplacer || replacer instanceof OceanWaterReplacer);
+            val densityReplacerConfig = (CustomGeneratorSettings.DensityRangeReplacerConfig) replacerConfig;
+            return densityReplacerConfig.biomeFilter == null
+                   && densityReplacerConfig.blockFilterType == CustomGeneratorSettings.FilterType.EXCLUDE
+                   && densityReplacerConfig.filterBlocks.isEmpty()
+                   && densityReplacerConfig.minDensity == 0.0d
+                   && densityReplacerConfig.maxDensity == Double.POSITIVE_INFINITY
+                   && densityReplacerConfig.blockInRange != null && densityReplacerConfig.blockInRange.getBlockState() == Blocks.STONE.getDefaultState()
+                   && densityReplacerConfig.blockOutOfRange == null;
+        };
 
-            biomeBlockReplacers.put(biome, replacers);
+        Predicate<CustomGeneratorSettings.ReplacerConfig> isDefaultOceanReplacer = replacerConfig -> {
+            if (!(replacerConfig instanceof CustomGeneratorSettings.DensityRangeReplacerConfig)) {
+                return false;
+            }
+
+            val densityReplacerConfig = (CustomGeneratorSettings.DensityRangeReplacerConfig) replacerConfig;
+            return densityReplacerConfig.biomeFilter == null
+                   && densityReplacerConfig.blockFilterType == CustomGeneratorSettings.FilterType.INCLUDE
+                   && densityReplacerConfig.filterBlocks.size() == 1 && densityReplacerConfig.filterBlocks.get(0).getBlockState() == Blocks.AIR.getDefaultState()
+                   && densityReplacerConfig.minDensity == Double.NEGATIVE_INFINITY
+                   && densityReplacerConfig.maxDensity == Double.POSITIVE_INFINITY
+                   && densityReplacerConfig.blockInRange != null && densityReplacerConfig.blockInRange.getBlockState() == Blocks.WATER.getDefaultState()
+                   && densityReplacerConfig.blockOutOfRange == null;
+        };
+
+        //strip default terrain and ocean replacer configs from the replacer config list, these are implemented by terra++ directly
+        List<CustomGeneratorSettings.ReplacerConfig> replacerConfigs = new ArrayList<>(this.cubiccfg.replacers);
+        if (replacerConfigs.stream().anyMatch(CustomGeneratorSettings.DensityRangeReplacerConfig.class::isInstance)) {
+            replacerConfigs.removeIf(isDefaultTerrainReplacer);
+            replacerConfigs.removeIf(isDefaultOceanReplacer);
+
+            checkState(
+                    replacerConfigs.stream().noneMatch(CustomGeneratorSettings.DensityRangeReplacerConfig.class::isInstance),
+                    "CWG preset contains a DensityRangeReplacerConfig which isn't the default terrain or ocean replacer! %s", replacerConfigs);
         }
-        this.biomeBlockReplacers = new IBiomeBlockReplacer[biomeBlockReplacers.keySet().stream().mapToInt(Biome::getIdForBiome).max().orElse(0) + 1][];
-        biomeBlockReplacers.forEach((biome, replacers) -> this.biomeBlockReplacers[Biome.getIdForBiome(biome)] = replacers.toArray(new IBiomeBlockReplacer[0]));
+
+        //construct the actual replacer instances
+        List<IBiomeBlockReplacer> replacers = replacerConfigs.stream()
+                .map(replacerConfig -> IBiomeBlockReplacer.create(world.getSeed(), replacerConfig))
+                .collect(Collectors.toList());
+
+        //apply replacer biome filters to construct the per-biome replacer lists
+        this.biomeBlockReplacers = new IdentityHashMap<>(ForgeRegistries.BIOMES.getValuesCollection().size());
+        for (Biome biome : ForgeRegistries.BIOMES) {
+            List<IBiomeBlockReplacer> filteredReplacers = new ArrayList<>(replacers.size());
+            for (int i = 0; i < replacers.size(); i++) {
+                CustomGeneratorSettings.ReplacerConfig replacerConfig = replacerConfigs.get(i);
+                if (replacerConfig.biomeFilter == null || replacerConfig.biomeFilter.test(biome)) {
+                    filteredReplacers.add(replacers.get(i));
+                }
+            }
+            this.biomeBlockReplacers.put(biome, filteredReplacers.toArray(new IBiomeBlockReplacer[0]));
+        }
     }
 
     @Override
@@ -228,7 +270,7 @@ public class EarthGenerator extends BasicCubeGenerator {
     }
 
     @Deprecated
-	@Override
+    @Override
     public CubePrimer generateCube(int cubeX, int cubeY, int cubeZ) { //legacy compat method
         CubePrimer primer = new CubePrimer();
         CachedChunkData data = this.cache.getUnchecked(new ChunkPos(cubeX, cubeZ)).join();
@@ -314,18 +356,20 @@ public class EarthGenerator extends BasicCubeGenerator {
 
                     int blockX = Coords.cubeToMinBlock(cubeX) + x;
                     int blockZ = Coords.cubeToMinBlock(cubeZ) + z;
-                    IBiomeBlockReplacer[] replacers = this.biomeBlockReplacers[data.biome(x, z) & 0xFF];
+
+                    Biome biome = Biome.getBiomeForId(data.biome(x, z));
+                    IBiomeBlockReplacer[] replacers = this.biomeBlockReplacers.get(biome);
                     for (int y = 0; y <= groundTopInCube; y++) {
                         int blockY = Coords.cubeToMinBlock(cubeY) + y;
                         double density = groundTop - y;
                         IBlockState state = stone;
                         for (IBiomeBlockReplacer replacer : replacers) {
-                            state = replacer.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
+                            state = replacer.getReplacedBlock(state, biome, blockX, blockY, blockZ, dx, -1.0d, dz, density);
                         }
 
                         //calling this explicitly increases the likelihood of JIT inlining it
                         //(for reference: previously, CliffReplacer was manually added to each biome as the last replacer)
-                        state = CliffReplacer.INSTANCE.getReplacedBlock(state, blockX, blockY, blockZ, dx, -1.0d, dz, density);
+                        state = CliffReplacer.INSTANCE.getReplacedBlock(state, biome, blockX, blockY, blockZ, dx, -1.0d, dz, density);
 
                         if (groundHeight < waterHeight && state == grass) { //hacky workaround for underwater grass
                             state = dirt;

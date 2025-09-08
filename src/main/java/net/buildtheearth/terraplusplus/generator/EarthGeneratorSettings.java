@@ -46,6 +46,7 @@ import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -135,7 +136,7 @@ public class EarthGeneratorSettings {
     protected transient final Cached<CustomGeneratorSettings> customCubic = Cached.global(() -> {
         CustomGeneratorSettings cfg;
         if (this.cwg().isEmpty()) { //use new minimal defaults
-            cfg = new CustomGeneratorSettings();
+            cfg = CustomGeneratorSettings.defaults();
             cfg.mineshafts = cfg.caves = cfg.strongholds = cfg.dungeons = cfg.ravines = false;
             cfg.lakes.clear();
         } else {
@@ -148,7 +149,24 @@ public class EarthGeneratorSettings {
                 throw new RuntimeException(message, err);
             }
         }
-        cfg.waterLevel = 0;
+        try {
+            //cfg.waterLevel = 0;
+            MethodHandles.publicLookup()
+                    .findSetter(CustomGeneratorSettings.class, "waterLevel", int.class)
+                    .invokeExact(cfg, 0);
+        } catch (NoSuchFieldException e) {
+            //assume this is a CWG v7 preset
+            checkState(
+                    cfg.replacers.stream().anyMatch(CustomGeneratorSettings.MainSurfaceReplacerConfig.class::isInstance),
+                    "default CWG preset has no MainSurfaceReplacerConfig! %s", cfg.toJsonObject());
+            for (CustomGeneratorSettings.ReplacerConfig replacer : cfg.replacers) {
+                if (replacer instanceof CustomGeneratorSettings.MainSurfaceReplacerConfig) {
+                    ((CustomGeneratorSettings.MainSurfaceReplacerConfig) replacer).oceanLevel = 0.0d;
+                }
+            }
+        } catch (Throwable e) {
+            throw new RuntimeException("failed to set CWG preset ocean level", e);
+        }
         return cfg;
     }, ReferenceStrength.SOFT);
     protected transient final Cached<GeneratorDatasets> datasets = Cached.global(() -> new GeneratorDatasets(this), ReferenceStrength.SOFT);
