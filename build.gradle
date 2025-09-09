@@ -53,7 +53,7 @@ repositories {
 dependencies {
     //We have to use this as deobfProvided even though there's a :dev version of the artifact because otherwise mixin
     //prevents the mod from loading when running in a dev environment.
-    deobfProvided ("io.github.opencubicchunks:cubicchunks:1.12.2-0.0.1282.0-SNAPSHOT") {
+    deobfProvided ("io.github.opencubicchunks:cubicchunks:1.14-dev-v0.0") {
         transitive = false
     }
 
