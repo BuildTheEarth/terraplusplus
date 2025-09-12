@@ -78,5 +78,12 @@ public class TerraConfig {
                 "Default: 1440 minutes (1 day)"
         })
         public int cacheTTL = 1440;
+
+        @Comment({
+                "If true, terra++ will process HTTP connections on Minecraft's network thread pool instead of its own dedicated thread pool.",
+                "This will slightly reduce overall system load, and should generally never have to be disabled."
+        })
+        @Config.RequiresMcRestart
+        public boolean useVanillaNetworkThread = true;
     }
 }
