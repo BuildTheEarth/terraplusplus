@@ -21,21 +21,24 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpStatusClass;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import io.netty.util.AttributeKey;
 import io.netty.util.ReferenceCountUtil;
+import io.netty.util.concurrent.Future;
+import it.unimi.dsi.fastutil.objects.ReferenceLinkedOpenHashSet;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import net.buildtheearth.terraplusplus.TerraConstants;
 import net.daporkchop.lib.common.misc.string.PStrings;
-import net.daporkchop.lib.common.util.PorkUtil;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -48,6 +51,8 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  * @author DaPorkchop_
  */
 final class HostManager extends Host {
+    private static final boolean DEBUG_LOGGING = Boolean.getBoolean("terraplusplus.http.HostManager.debugLogging");
+
     private static final AttributeKey<Request> ATTR_REQUEST = AttributeKey.valueOf(Request.class, "terra++");
 
     private final Deque<Request> pendingRequests = new ArrayDeque<>();
@@ -56,10 +61,11 @@ final class HostManager extends Host {
     private final Bootstrap bootstrap;
 
     private int maxConcurrentRequests = 1;
-    private int activeRequests;
 
-    private final Set<Channel> channels = Collections.newSetFromMap(new IdentityHashMap<>());
-    private ChannelFuture channelFuture;
+    final Set<Channel> allChannels = Collections.newSetFromMap(new IdentityHashMap<>());
+    final Set<Channel> idleChannels = new ReferenceLinkedOpenHashSet<>(); //this set impl has fast iterator removal and regular removal
+
+    private Future<?> connectFuture;
 
     public HostManager(@NonNull Host host) {
         super(host);
@@ -67,7 +73,7 @@ final class HostManager extends Host {
         this.eventLoop = NETWORK_EVENT_LOOP_GROUP.next();
         this.bootstrap = DEFAULT_BOOTSTRAP.clone()
                 .group(this.eventLoop)
-                .handler(new Initializer(new Handler()))
+                .handler(new Initializer(new Handler(), this::handleChannelClosed))
                 .remoteAddress(this.host, this.port)
                 .attr(ATTR_REQUEST, null);
     }
@@ -96,104 +102,195 @@ final class HostManager extends Host {
     }
 
     private void tryWorkOffQueue() {
-        for (Request request; this.activeRequests < this.maxConcurrentRequests && (request = this.pendingRequests.peek()) != null && this.trySendRequest0(request); ) {
-            checkState(this.pendingRequests.poll() == request, "unable to remove request from queue!");
+        assert this.eventLoop.inEventLoop() : Thread.currentThread();
+
+        if (this.pendingRequests.isEmpty()) {
+            //there are no requests in the queue, therefore there's nothing to do
+            return;
+        } else if (this.idleChannels.isEmpty()) {
+            //there are no idle channels left, so we only have to try to open a new connection
+            this.considerOpeningAnotherConnection();
+            return;
+        }
+
+        Iterator<Channel> idleChannelIterator = this.idleChannels.iterator();
+        while (true) {
+            Request request = this.pendingRequests.peek();
+            if (request == null) {
+                //there are no pending requests, do nothing
+                return;
+            } else if (request.callback.isCancelled()) {
+                //future is already completed (probably due to cancellation), remove it from the queue and proceed to the next request
+                this.pendingRequests.poll();
+                continue;
+            }
+
+            if (idleChannelIterator.hasNext()) {
+                //send the request on this channel!
+                Channel channel = idleChannelIterator.next();
+                idleChannelIterator.remove();
+
+                //we have just claimed a previously inactive channel for this request! we can remove the request from the queue and actually send it now.
+                assert this.pendingRequests.peek() == request : "request isn't at the front of the queue anymore?!?";
+
+                this.pendingRequests.poll();
+                this.sendRequest(request, channel);
+
+                //advance to the next request
+                continue;
+            }
+
+            //there aren't any idle channels left!
+            //we can try to open another connection if the parallelism limit hasn't been reached yet, but we have to stop afterwards since the request will
+            //  have to wait in the queue until the connection is opened.
+            this.considerOpeningAnotherConnection();
+            return;
         }
     }
 
-    private boolean trySendRequest0(@NonNull Request request) {
-        if (request.callback.isCancelled()) { //future is already completed (probably due to cancellation), pretend that we handled it
-            return true;
-        }
+    private void addIdleChannel(@NonNull Channel channel) {
+        assert this.eventLoop.inEventLoop() : Thread.currentThread();
 
-        for (Channel channel : this.channels) {
-            if (channel.attr(ATTR_REQUEST).compareAndSet(null, request)) { //the channel is currently inactive
-                channel.pipeline().addFirst("read_timeout", new ReadTimeoutHandler(TIMEOUT, TimeUnit.SECONDS));
-                channel.writeAndFlush(request.toNetty()); //send request
-                this.activeRequests++;
-                return true;
+        while (true) {
+            Request request = this.pendingRequests.poll();
+            if (request == null) {
+                //there are no remaining requests in the queue, just add the channel to the idle set and return
+                this.idleChannels.add(channel);
+                return;
+            } else if (request.callback.isCancelled()) {
+                //future is already completed (probably due to cancellation), remove it from the queue and proceed to the next request
+                continue;
             }
-        }
 
-        this.considerOpeningAnotherConnection();
-        return false;
+            //immediately send the next request on the channel without touching the idle set
+            this.sendRequest(request, channel);
+
+            //if there are still requests left we should try to push them out to waiting connections
+            if (!this.pendingRequests.isEmpty()) {
+                this.tryWorkOffQueue();
+            }
+            return;
+        }
+    }
+
+    private void sendRequest(@NonNull Request request, @NonNull Channel channel) {
+        checkState(channel.attr(ATTR_REQUEST).compareAndSet(null, request), "channel already has an associated request?!?");
+
+        //add read timeout handler to the front of the pipeline so that we can time out the request if the response takes too long to arrive
+        channel.pipeline().addFirst("read_timeout", new ReadTimeoutHandler(TIMEOUT, TimeUnit.SECONDS));
+
+        //send the actual http request to the server
+        channel.writeAndFlush(request.toNetty());
     }
 
     private void considerOpeningAnotherConnection() {
-        if (this.channelFuture == null) { //channelFuture is null, so there is no currently opening channel
-            (this.channelFuture = this.bootstrap.connect()).addListener((ChannelFutureListener) this::handleChannelOpened);
+        assert this.eventLoop.inEventLoop() : Thread.currentThread();
+
+        if (this.allChannels.size() >= this.maxConcurrentRequests) {
+            //refuse to open more connections than the limit
+            return;
+        }
+
+        if (this.connectFuture == null) { //channelFuture is null, so there is no currently opening channel
+            ChannelFuture connectFuture = this.bootstrap.connect();
+            this.connectFuture = connectFuture;
+            connectFuture.addListener((ChannelFutureListener) this::handleChannelConnected);
         }
     }
 
-    private void handleChannelOpened(@NonNull ChannelFuture channelFuture) {
-        checkState(channelFuture == this.channelFuture, "unknown channel future?!?");
-        this.channelFuture = null;
+    private void handleChannelConnected(@NonNull ChannelFuture channelFuture) {
+        assert this.eventLoop.inEventLoop() : Thread.currentThread();
+
+        checkState(channelFuture == this.connectFuture, "unexpected channel future?!?");
+        this.connectFuture = null;
 
         if (!channelFuture.isSuccess()) {
-            //TODO: fail pending requests only if no other connections are open
-            this.pendingRequests.forEach(r -> r.callback.handle(null, channelFuture.cause()));
-            this.pendingRequests.clear();
+            this.handleConnectionFailed(channelFuture.channel(), channelFuture.cause());
             return;
         }
 
         Channel channel = channelFuture.channel();
-        this.channels.add(channel);
-        channel.closeFuture().addListener((ChannelFutureListener) this::handleChannelClosed);
 
-        this.tryWorkOffQueue();
+        if (this.ssl) {
+            //if SSL is enabled we should wait for the SSL handshake to complete before treating the channel as ready
+            this.connectFuture = channel.pipeline().get(SslHandler.class).handshakeFuture();
+            this.connectFuture.addListener(handshakeFuture -> {
+                synchronized (this) {
+                    checkState(handshakeFuture == this.connectFuture, "unexpected handshake future?!?");
+                    this.connectFuture = null;
+
+                    if (!handshakeFuture.isSuccess()) {
+                        this.handleConnectionFailed(channel, handshakeFuture.cause());
+                        return;
+                    }
+
+                    //this channel is now ready to go, mark it as idle and then try to submit a request on it
+                    this.addIdleChannel(channel);
+                }
+            });
+        } else {
+            //this channel is now ready to go, mark it as idle and then try to submit a request on it
+            this.addIdleChannel(channel);
+        }
+    }
+
+    private void handleConnectionFailed(@NonNull Channel channel, @NonNull Throwable cause) {
+        assert this.eventLoop.inEventLoop() : Thread.currentThread();
+
+        try {
+            //TODO: fail pending requests only if no other connections are open
+            this.pendingRequests.forEach(r -> r.callback.handle(null, cause));
+            this.pendingRequests.clear();
+        } finally {
+            //make sure the channel is closed
+            channel.close();
+        }
     }
 
     private void handleChannelClosed(@NonNull ChannelFuture channelFuture) {
         Channel channel = channelFuture.channel();
-        //if the channel is still stored as an active connection, it was closed for some other reason than the
-        // server sending a "Connection: close" header, so let's double-check the channel state
-        if (this.channels.remove(channel)) {
-            Request request = channel.attr(ATTR_REQUEST).getAndSet(null);
-            if (request != null) {
-                //the channel still has a request associated with it! the channel was a keepalive channel,
-                // and the server closed it at the same time as we sent the request. let's re-submit the request
-                // so that it can be issued again on a new channel
 
-                this.pendingRequests.addFirst(request); //add to front of queue so that it doesn't have to wait through the entire queue again
-            }
+        this.allChannels.remove(channel);
+        this.idleChannels.remove(channel);
 
-            //working off the queue may open a new channel to replace this one if there are more pending requests
-            this.tryWorkOffQueue();
+        Request request = channel.attr(ATTR_REQUEST).getAndSet(null);
+        if (request != null) {
+            //if the channel still has an associated request, it was closed before receiving a response
+            // but without triggering an exception. most likely the channel was a keepalive channel,
+            // and the server closed it at the same time as we sent the request. let's re-submit the request
+            // so that it can be issued again on a new channel
+            this.pendingRequests.addFirst(request); //add to front of queue so that it doesn't have to wait through the entire queue again
         }
+
+        //working off the queue may open a new channel to replace this one if there are more pending requests
+        this.tryWorkOffQueue();
     }
 
     private void handleResponse(@NonNull Channel channel, Object msg) {
-        Request request = null;
+        //any exceptions thrown here will cause the channel to be closed
         try {
-            if (!(msg instanceof FullHttpResponse)) {
-                throw new IllegalArgumentException(PorkUtil.className(msg));
-            }
             FullHttpResponse response = (FullHttpResponse) msg;
             if (response.status().codeClass() == HttpStatusClass.INFORMATIONAL) { //do nothing
                 return;
             }
 
-            request = channel.attr(ATTR_REQUEST).getAndSet(null);
+            Request request = channel.attr(ATTR_REQUEST).getAndSet(null);
             checkState(request != null, "received response on inactive channel?!?");
 
-            this.activeRequests--; //decrement active requests counter to enable another request to be made
-
-            if (!HttpUtil.isKeepAlive(response)) { //response isn't keep-alive, close connection
-                //remove connection from active connections now to prevent it from
-                // being re-used if the close operation isn't completed before this method ends
-                this.channels.remove(channel);
-                channel.close();
-            }
-
             request.callback.handle(response, null);
-        } catch (Exception e) {
-            if (request != null) {
-                request.callback.handle(null, e);
+
+            if (!HttpUtil.isKeepAlive(response)) {
+                //response has "Connection: close" header, so we should close the connection
+                channel.close();
+            } else if (this.allChannels.size() > this.maxConcurrentRequests) {
+                //maxConcurrentRequests has been reduced and now there are too many connections open, close this channel
+                channel.close();
+            } else {
+                //the channel is idle again now that it's received a response
+                this.addIdleChannel(channel);
             }
         } finally {
             ReferenceCountUtil.release(msg);
-
-            this.tryWorkOffQueue(); //if this request is completed, another slot must have been freed up
         }
     }
 
@@ -253,8 +350,14 @@ final class HostManager extends Host {
         @NonNull
         private final ChannelHandler httpHandler;
 
+        private final @NonNull ChannelFutureListener closeChannelListener;
+
         @Override
         protected void initChannel(Channel ch) throws Exception {
+            ch.closeFuture().addListener(this.closeChannelListener);
+
+            HostManager.this.allChannels.add(ch);
+
             ch.pipeline().addLast(new WriteTimeoutHandler(TIMEOUT, TimeUnit.SECONDS));
 
             if (HostManager.this.ssl) {
@@ -284,13 +387,15 @@ final class HostManager extends Host {
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-            Request request = ctx.channel().attr(ATTR_REQUEST).getAndSet(null);
-            if (request != null) { //inform request that it failed
-                request.callback.handle(null, cause);
-                HostManager.this.activeRequests--;
+            try {
+                Request request = ctx.channel().attr(ATTR_REQUEST).getAndSet(null);
+                if (request != null) { //inform request that it failed
+                    request.callback.handle(null, cause);
+                }
+            } finally {
+                //always close the channel if an exception occurs, we won't try to recover from this
+                ctx.close();
             }
-
-            ctx.close();
         }
     }
 }

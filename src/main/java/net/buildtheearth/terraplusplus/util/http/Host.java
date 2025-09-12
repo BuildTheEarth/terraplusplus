@@ -21,7 +21,7 @@ class Host {
 
     public Host(@NonNull URL url) {
         this.host = url.getHost();
-        this.port = Math.max(url.getPort(), url.getDefaultPort());
+        this.port = url.getPort() >= 0 ? url.getPort() : url.getDefaultPort();
         this.authority = url.getAuthority();
 
         switch (url.getProtocol()) {
