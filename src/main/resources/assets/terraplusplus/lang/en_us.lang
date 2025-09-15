@@ -63,6 +63,8 @@ terraplusplus.gui.projection.stereographic.radius=Radius
 ## command messages
 terraplusplus.command.tpll.usage=Usage: /tpll <latitude> <longitude> [altitude]
 terraplusplus.command.tpll.others.usage=Usage: /tpll [target player] <latitude> <longitude> [altitude]
+terraplusplus.command.tpll.waitingElevation=Calculating elevation...
+terraplusplus.command.tpll.failedElevation=Failed to compute elevation! See server log for more information.
 
 terraplusplus.command.terra.usage=/terra
 

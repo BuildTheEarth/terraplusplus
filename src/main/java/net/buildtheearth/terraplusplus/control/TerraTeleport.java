@@ -3,6 +3,7 @@ package net.buildtheearth.terraplusplus.control;
 import io.github.opencubicchunks.cubicchunks.api.worldgen.ICubeGenerator;
 import io.github.opencubicchunks.cubicchunks.core.server.CubeProviderServer;
 import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.TerraMod;
 import net.buildtheearth.terraplusplus.dataset.IScalarDataset;
 import net.buildtheearth.terraplusplus.generator.EarthGenerator;
 import net.buildtheearth.terraplusplus.generator.EarthGeneratorPipelines;
@@ -134,6 +135,7 @@ public class TerraTeleport extends Command {
 
         CompletableFuture<Double> altFuture;
         if (Double.isNaN(altitude)) {
+            //TODO: if the column is already generated, load it and check its heightmap before querying the dataset?
             try {
                 altFuture = terrain.datasets
                         .<IScalarDataset>getCustom(EarthGeneratorPipelines.KEY_DATASET_HEIGHTS)
@@ -143,6 +145,8 @@ public class TerraTeleport extends Command {
                 sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".error.numbers")));
                 return;
             }
+
+            sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, TranslateUtil.translate(TerraConstants.MODID + ".command.tpll.waitingElevation")));
         } else {
             altFuture = CompletableFuture.completedFuture(altitude);
         }
@@ -152,7 +156,13 @@ public class TerraTeleport extends Command {
         }
         List<EntityPlayerMP> finalReceivers = receivers;
         LatLng finalDefaultCoords = defaultCoords;
-        altFuture.thenAccept(s -> FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
+        altFuture.whenComplete((y, cause) -> FMLCommonHandler.instance().getMinecraftServerInstance().addScheduledTask(() -> {
+            if (cause != null) {
+                sender.sendMessage(ChatUtil.titleAndCombine(TextFormatting.RED, TranslateUtil.translate(TerraConstants.MODID + ".command.tpll.errorElevation")));
+                TerraMod.LOGGER.warn("Exception occurred while computing elevation for command /tpll " + String.join(" ", args), cause);
+                return;
+            }
+
             for (EntityPlayerMP p : finalReceivers) {
                 if (p.getName().equalsIgnoreCase(sender.getName())) {
                     p.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Teleporting to ", TextFormatting.BLUE, DECIMAL_FORMATTER.format(finalDefaultCoords.getLat()),
@@ -164,7 +174,7 @@ public class TerraTeleport extends Command {
                     p.sendMessage(ChatUtil.titleAndCombine(TextFormatting.GRAY, "Summoned to ", TextFormatting.BLUE, TextFormatting.BLUE, DECIMAL_FORMATTER.format(finalDefaultCoords.getLat()),
                             TextFormatting.GRAY, ", ", TextFormatting.BLUE, DECIMAL_FORMATTER.format(finalDefaultCoords.getLng()), TextFormatting.GRAY));
                 }
-                p.setPositionAndUpdate(proj[0], s, proj[1]);
+                p.setPositionAndUpdate(proj[0], y, proj[1]);
             }
         }));
     }
