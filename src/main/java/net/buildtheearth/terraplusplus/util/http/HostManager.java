@@ -334,7 +334,8 @@ final class HostManager extends Host {
             request.headers()
                     .set(this.headers)
                     .set(HttpHeaderNames.HOST, HostManager.this.authority)
-                    .set(HttpHeaderNames.USER_AGENT, PStrings.fastFormat("%s/%s CubicChunks/%s", TerraConstants.MODID, TerraConstants.VERSION, TerraConstants.CC_VERSION));
+                    .set(HttpHeaderNames.USER_AGENT, PStrings.fastFormat("%s/%s CubicChunks/%s", TerraConstants.MODID, TerraConstants.VERSION, TerraConstants.CC_VERSION))
+                    .set(HttpHeaderNames.ACCEPT_ENCODING, "gzip, deflate");
             HttpUtil.setKeepAlive(request, true);
             return request;
         }
