@@ -26,6 +26,10 @@ allprojects {
         }
     }
 
+    java {
+        withSourcesJar()
+    }
+
     dependencies {
         // Annotations
         compileOnly "org.projectlombok:lombok:1.18.38"
