@@ -102,6 +102,8 @@ public class Http {
         }
     }
 
+    public static final RequestOptions DEFAULT_REQUEST_OPTIONS = RequestOptions.builder().build();
+
     @Getter @Setter
     private static String userAgent = fastFormat("%s/%s", TerraConstants.LIB_NAME, TerraConstants.LIB_VERSION);
 
@@ -113,6 +115,7 @@ public class Http {
      * Asynchronously gets the contents of the given resource.
      *
      * @param url the url of the resource to get
+     * @param options client behavior options for this request
      * @return a {@link CompletableFuture} which will be completed with the resource data, or {@code null} if the resource isn't found
      */
     public CompletableFuture<ByteBuf> get(@NonNull String url, @NonNull RequestOptions options) {
@@ -303,6 +306,17 @@ public class Http {
 
         new State().step(url);
         return future;
+    }
+
+    /**
+     * Asynchronously gets the contents of the given resource,
+     * with the default request options.
+     *
+     * @param url the url of the resource to get
+     * @return a {@link CompletableFuture} which will be completed with the resource data, or {@code null} if the resource isn't found
+     */
+    public CompletableFuture<ByteBuf> get(@NonNull String url) {
+        return get(url, DEFAULT_REQUEST_OPTIONS);
     }
 
     /**
