@@ -5,11 +5,13 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoop;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.EmptyHttpHeaders;
@@ -20,7 +22,11 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SupportedCipherSuiteFilter;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import io.netty.resolver.dns.DefaultDnsServerAddressStreamProvider;
+import io.netty.resolver.dns.RoundRobinDnsAddressResolverGroup;
 import io.netty.util.ReferenceCountUtil;
+import io.netty.util.concurrent.DefaultThreadFactory;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -29,7 +35,6 @@ import net.buildtheearth.terraminusminus.TerraConfig;
 import net.buildtheearth.terraminusminus.TerraConstants;
 import net.buildtheearth.terraminusminus.TerraMinusMinus;
 import net.daporkchop.lib.common.function.throwing.EFunction;
-import net.daporkchop.lib.common.misc.threadfactory.PThreadFactories;
 import net.daporkchop.lib.common.reference.cache.Cached;
 
 import javax.net.ssl.SSLException;
@@ -60,14 +65,20 @@ import static net.daporkchop.lib.common.util.PValidation.*;
 public class Http {
     protected static final long TIMEOUT = 20L;
 
-    private final ThreadFactory NETWORK_THREAD_FACTORY = PThreadFactories.builder().daemon().minPriority().name("terra-- HTTP network thread").build();
+    protected final EventLoopGroup NETWORK_EVENT_LOOP_GROUP;
 
-    protected final EventLoop NETWORK_EVENT_LOOP = (Epoll.isAvailable()
-            ? new EpollEventLoopGroup(1, NETWORK_THREAD_FACTORY) //use epoll on linux systems wherever possible
-            : new NioEventLoopGroup(1, NETWORK_THREAD_FACTORY)).next(); //this is fine because there's always exactly one network worker
+    static {
+        //create a dedicated eventloop with one thread
+        ThreadFactory threadFactory = new DefaultThreadFactory("terra-- HTTP network thread", true, Thread.MIN_PRIORITY);
+        NETWORK_EVENT_LOOP_GROUP = Epoll.isAvailable()
+                ? new EpollEventLoopGroup(1, threadFactory)
+                : new NioEventLoopGroup(1, threadFactory);
+    }
 
     protected final Bootstrap DEFAULT_BOOTSTRAP = new Bootstrap()
-            .group(NETWORK_EVENT_LOOP)
+            .resolver(new RoundRobinDnsAddressResolverGroup(
+                    Epoll.isAvailable() ? EpollDatagramChannel.class : NioDatagramChannel.class,
+                    DefaultDnsServerAddressStreamProvider.INSTANCE))
             .channel(Epoll.isAvailable() ? EpollSocketChannel.class : NioSocketChannel.class)
             .option(ChannelOption.SO_KEEPALIVE, true)
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, toInt(TimeUnit.SECONDS.toMillis(TIMEOUT)));
@@ -104,13 +115,9 @@ public class Http {
      * @param url the url of the resource to get
      * @return a {@link CompletableFuture} which will be completed with the resource data, or {@code null} if the resource isn't found
      */
-    public CompletableFuture<ByteBuf> get(@NonNull String url) {
+    public CompletableFuture<ByteBuf> get(@NonNull String url, @NonNull RequestOptions options) {
         CompletableFuture<ByteBuf> future = new CompletableFuture<>();
-        get(url, future);
-        return future;
-    }
 
-    public void get(@NonNull String _url, @NonNull CompletableFuture<ByteBuf> future) {
         class State implements BiConsumer<ByteBuf, Throwable>, HostManager.Callback {
             URL parsed;
             Path cacheFile;
@@ -126,6 +133,8 @@ public class Http {
 
             @Override
             public synchronized void accept(ByteBuf cachedData, Throwable throwable) { //stage 1: handle value from cache
+                checkState(options.readFromCache, "readFromCache is disabled, so how did we get here?!?");
+
                 if (throwable != null) {
                     TerraMinusMinus.LOGGER.error("Unable to read cache for " + this.parsed, throwable);
                 }
@@ -180,6 +189,7 @@ public class Http {
                         future.complete(cachedData.retain());
                         return;
                     case CacheEntry.STATUS_REDIRECT: //redirect
+                        checkState(options.followRedirects, "don't know how to handle an HTTP redirect when followRedirects is disabled!");
                         this.step(cacheEntry.location);
                         return;
                     default:
@@ -241,7 +251,7 @@ public class Http {
                         ByteBuf toCacheData = UnpooledByteBufAllocator.DEFAULT.compositeBuffer(2)
                                 .addComponent(true, cacheEntryBuffer)
                                 .addComponent(true, copiedBuffer.retainedSlice());
-                        if (!cacheEntry.noCache && this.cacheFile != null) { //store in cache
+                        if (options.writeToCache && !cacheEntry.noCache && this.cacheFile != null) { //store in cache
                             Disk.write(this.cacheFile, toCacheData);
                         } else { //manually release the data that would have been written to cache
                             toCacheData.release();
@@ -282,7 +292,7 @@ public class Http {
                     return;
                 }
 
-                if (TerraConfig.http.cache) { //attempt to read from cache
+                if (options.readFromCache) { //attempt to read from cache
                     this.cacheFile = Disk.cacheFileFor(this.parsed.toString());
                     Disk.read(this.cacheFile).whenComplete(this);
                 } else { //send the actual request
@@ -291,7 +301,8 @@ public class Http {
             }
         }
 
-        new State().step(_url);
+        new State().step(url);
+        return future;
     }
 
     /**
@@ -315,11 +326,11 @@ public class Http {
      * @param parseFunction a function to use to parse the response body
      * @return the parsed response body
      */
-    public static <T> CompletableFuture<T> getFirst(@NonNull String[] urls, @NonNull EFunction<ByteBuf, T> parseFunction) {
+    public static <T> CompletableFuture<T> getFirst(@NonNull String[] urls, @NonNull RequestOptions options, @NonNull EFunction<ByteBuf, T> parseFunction) {
         checkArg(urls.length > 0, "must provide at least one url");
 
         if (urls.length == 1) {
-            return getSingle(urls[0], parseFunction);
+            return getSingle(urls[0], options, parseFunction);
         }
 
         class State implements BiConsumer<T, Throwable> {
@@ -355,7 +366,7 @@ public class Http {
 
             protected void advance() {
                 if (++this.i < urls.length) {
-                    getSingle(urls[this.i], parseFunction).whenComplete(this);
+                    getSingle(urls[this.i], options, parseFunction).whenComplete(this);
                 } else if (this.foundMissing) { //the best result from any of the URLs was a 404
                     if (this.suppressed != null) {
                         RuntimeException e = new RuntimeException();
@@ -383,8 +394,8 @@ public class Http {
      * @param parseFunction a function to use to parse the response body
      * @return the parsed response body
      */
-    public static <T> CompletableFuture<T> getSingle(@NonNull String url, @NonNull EFunction<ByteBuf, T> parseFunction) {
-        return get(url)
+    public static <T> CompletableFuture<T> getSingle(@NonNull String url, @NonNull RequestOptions options, @NonNull EFunction<ByteBuf, T> parseFunction) {
+        return get(url, options)
                 .thenCompose(buf -> buf == null
                         ? CompletableFuture.completedFuture(null)
                         : CompletableFuture.supplyAsync(() -> {
@@ -436,5 +447,31 @@ public class Http {
                 dst.complete(v);
             }
         });
+    }
+
+    /**
+     * Options for controlling the behavior of outgoing HTTP requests.
+     *
+     * @author DaPorkchop_
+     */
+    @Builder(toBuilder = true)
+    public static final class RequestOptions {
+        /**
+         * If {@code true}, we will attempt to load the URL from the cache before sending the request to the server.
+         */
+        @Builder.Default
+        public final boolean readFromCache = TerraConfig.http.cache;
+
+        /**
+         * If {@code true}, we will store the received HTTP response body in the cache.
+         */
+        @Builder.Default
+        public final boolean writeToCache = TerraConfig.http.cache;
+
+        /**
+         * If {@code true}, we will recursively follow HTTP redirects.
+         */
+        @Builder.Default
+        public final boolean followRedirects = true;
     }
 }

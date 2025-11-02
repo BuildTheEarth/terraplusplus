@@ -8,6 +8,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.EventLoop;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpClientCodec;
@@ -48,6 +49,8 @@ final class HostManager extends Host {
     private static final AttributeKey<Request> ATTR_REQUEST = AttributeKey.valueOf(Request.class, "terra--");
 
     private final Deque<Request> pendingRequests = new ArrayDeque<>();
+
+    private final EventLoop eventLoop;
     private final Bootstrap bootstrap;
 
     private int maxConcurrentRequests = 1;
@@ -59,7 +62,9 @@ final class HostManager extends Host {
     public HostManager(@NonNull Host host) {
         super(host);
 
+        this.eventLoop = NETWORK_EVENT_LOOP_GROUP.next();
         this.bootstrap = DEFAULT_BOOTSTRAP.clone()
+                .group(this.eventLoop)
                 .handler(new Initializer(new Handler()))
                 .remoteAddress(this.host, this.port)
                 .attr(ATTR_REQUEST, null);
@@ -72,7 +77,7 @@ final class HostManager extends Host {
      * @param callback a {@link Callback} that will be notified once the request is completed
      */
     public void submit(@NonNull String path, @NonNull Callback callback, @NonNull HttpHeaders headers) {
-        NETWORK_EVENT_LOOP.submit(() -> { //force execution on network thread
+        this.eventLoop.submit(() -> { //force execution on network thread
             this.pendingRequests.add(new Request(path, callback, headers)); //add to request queue
 
             this.tryWorkOffQueue();

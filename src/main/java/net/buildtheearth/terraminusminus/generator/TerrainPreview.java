@@ -199,7 +199,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         state.initSettings();
 
         double[] proj = new double[2]; //null island
-        //proj = state.projection.fromGeo(8.57696d, 47.21763d); //steinhausen, switzerland
+        proj = state.projection.fromGeo(8.57696d, 47.21763d); //steinhausen, switzerland
         //proj = state.projection.fromGeo(12.58589, 55.68841); //copenhagen, denmark
         //proj = state.projection.fromGeo(24.7535, 59.4435); //tallinn, estonia
         //proj = state.projection.fromGeo(14.50513, 46.05108); //ljubljana, slovenia

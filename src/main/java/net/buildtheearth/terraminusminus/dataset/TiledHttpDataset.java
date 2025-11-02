@@ -48,6 +48,7 @@ public abstract class TiledHttpDataset<T> extends TiledDataset<T> {
 
         return Http.getFirst(
                 Arrays.stream(urls).map(url -> Http.formatUrl(properties, url)).toArray(String[]::new),
+                Http.RequestOptions.builder().build(),
                 data -> this.decode(pos.x(), pos.z(), data));
     }
 }
