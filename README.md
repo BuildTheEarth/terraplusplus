@@ -10,10 +10,13 @@
 
 Terra-- is a fork of Terra++ intended to strip down dependencies to Minecraft and Forge so it can be used safely in as dependency for other projects (this is not a mod).
 
-## How to use ?
+In particular, it is ships the map projection code as well as the world generation engine and its HTTP client.
 
-### :warning: This project is still experimental
+## How to use it in your project?
 
+Terra-- is available at [maven.smyler.net](https://maven.smyler.net/releases).
+You need to add that repository in your `pom.xml` or `build.gradle` build files,
+and then declare 
 Just add the required maven repositories to your `build.gradle`, and declare Terraminusminus as a dependency.
 
 I.e.:
@@ -28,12 +31,6 @@ repositories {
     
     // Classic JCenter repository that has most of what we need
     jcenter()
-    
-    // DaPorkchop's repo for PorkLib
-    maven {
-        name = "DaPorkchop_"
-        url = "https://maven.daporkchop.net/"
-    }
     
 }
 
@@ -54,10 +51,17 @@ dependencies {
 }
 ```
 
-### Release channels
+### Versioning
 
-At this point, only branch snapshots are available.
-You can browse the available builds at [maven.smyler.net](https://maven.smyler.net/#/snapshots/net/buildtheearth/terraminusminus).
+Terra-- versions are split into two parts, the first of which represents the semver-compliant Terra-- API version and the second the Minecraft content compatibility version.
+
+For example, version `2.0.0-1.21.4` implements version `2.0.0` of the Terra-- API and aims to be compatible with Minecraft `1.21.4`.
+
+The Minecraft compatibility version influences the content of the default data files (e.g. [`osm.json5`](src/main/resources/net/buildtheearth/terraminusminus/dataset/osm/osm.json5)),
+as well as the versions of dependencies Terra-- has in common with Minecraft (e.g. Gson).
+
+
+Snapshot builds are available at [maven.smyler.net](https://maven.smyler.net/#/snapshots/net/buildtheearth/terraminusminus).
 
 ## APIs:
 
