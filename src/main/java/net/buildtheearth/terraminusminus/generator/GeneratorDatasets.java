@@ -6,7 +6,7 @@ import net.buildtheearth.terraminusminus.projection.GeographicProjection;
 import net.buildtheearth.terraminusminus.util.CustomAttributeContainer;
 
 /**
- * Wrapper class which contains all of the datasets used by {@link EarthGenerator}.
+ * Wrapper class which contains all of the datasets used for generation.
  *
  * @author DaPorkchop_
  */

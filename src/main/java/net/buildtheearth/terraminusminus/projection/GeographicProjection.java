@@ -99,7 +99,7 @@ public interface GeographicProjection {
      * Indicates whether or not the north pole is projected to the north of the south pole on the projected space,
      * assuming Minecraft's coordinate system cardinal directions for the projected space (north is negative Z).
      *
-     * @return north pole Z <= south pole Z
+     * @return north pole Z &lt;= south pole Z
      */
     default boolean upright() {
         try {

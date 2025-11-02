@@ -82,11 +82,12 @@ public class Disk {
      * If this is not manually called before using any method that makes use of the cache,
      * the cache root will be automatically set to <code>$CWD/terraminusminus/cache</code>,
      * and further attempts to call this method will result in an {@link IllegalStateException} being thrown.
+     * <br>
+     * This method and its implementation are unique to Terra--,
+     * as Terra++ is hardcoded to use <code>.minecraft/terraplusplus/cache</code>.
      *
      * @param cacheDir the root of the cache
      *
-     * @apiNote This method and its implementation are unique to Terra--,
-     * as Terra++ is hardcoded to use <code>.minecraft/terraplusplus/cache</code>.
      */
     public void setCacheRoot(@NonNull File cacheDir) throws IllegalStateException {
         checkState(cacheRoot == null, "cache root is already set");
@@ -108,11 +109,12 @@ public class Disk {
      * If this is not manually called before Terra-- needs to load a configuration file,
      * the config root will be automatically set to <code>$CWD/terraminusminus/config</code>,
      * and further attempts to call this method will result in an {@link IllegalStateException} being thrown.
+     * <br>
+     * This method and its implementation are unique to Terra--,
+     * as Terra++ is hardcoded to use <code>.minecraft/terraplusplus/config</code>.
      *
      * @param configDir the root of the cache
      *
-     * @apiNote This method and its implementation are unique to Terra--,
-     * as Terra++ is hardcoded to use <code>.minecraft/terraplusplus/config</code>.
      */
     public void setConfigRoot(@NonNull File configDir) {
         checkState(configRoot == null, "config root is already set");

@@ -24,8 +24,8 @@ import static java.util.Objects.*;
  * Identifier as represented as text in the following format: <code>namespace:path</code>.
  * <br><br>
  * This class is immutable and thread safe.
- *
- * @implNote this implementation of the resource location concept is more restrictive than vanilla Minecraf's
+ * <br>
+ * This implementation of the resource location concept is more restrictive than vanilla Minecraft's
  *           with the values it accepts for the namespace and path.
  *
  * @see <a href="https://minecraft.wiki/w/Resource_location">Minecraft wiki page on resource locations</a>
