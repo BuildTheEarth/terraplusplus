@@ -187,6 +187,40 @@
     },
 
     //
+    // Austria
+    // https://data.europa.eu/data/datasets/land-ooe_digitales-gelandemodell-dgm
+    //
+
+    {
+        "dataset": {
+            "urls": [
+                "https://cloud.daporkchop.net/gis/dem/earth/at/DGM1_Austria/17/${x}/${z}.tiff"
+            ],
+            "projection": {
+                "web_mercator": {
+                    "zoom": 17
+                }
+            },
+            "resolution": 256,
+            "blend": "NEAR",
+            "parse": {
+                "parse_tiff_auto": {}
+            }
+        },
+        "bounds": {
+            "minX": 9.02579849294785,
+            "maxX": 17.91740138638459,
+            "minZ": 45.80165940670314,
+            "maxZ": 49.21305319392045
+        },
+        "zooms": {
+            "min": 0,
+            "max": 1
+        },
+        "priority": 100.0
+    },
+
+    //
     // Czechia (technically only prague for now)
     // https://www.geoportalpraha.cz/cs/data/metadata/609AB233-4F4B-4010-A6E0-011E232E2390
     //

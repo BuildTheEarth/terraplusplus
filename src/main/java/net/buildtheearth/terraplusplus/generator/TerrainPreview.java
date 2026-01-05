@@ -237,6 +237,7 @@ public class TerrainPreview extends CacheLoader<TilePos, CompletableFuture<Buffe
         //proj = state.projection.fromGeo(-77.03627, 38.89729); //washington d.c., united states
         //proj = state.projection.fromGeo(-119.6442, 39.3121); //virginia city, nevada, united states
         //proj = state.projection.fromGeo(-112.94600, 37.28508); //zion canyon, utah, united states
+        //proj = state.projection.fromGeo(11.775895, 47.269340); //hochfügen, austria
         state.setView(floorI(proj[0]) >> 4, floorI(proj[1]) >> 4, 0);
 
         state.update();
