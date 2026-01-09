@@ -7,11 +7,9 @@ import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollDatagramChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.EmptyHttpHeaders;
@@ -22,8 +20,6 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SupportedCipherSuiteFilter;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import io.netty.resolver.dns.DnsServerAddresses;
-import io.netty.resolver.dns.RoundRobinDnsAddressResolverGroup;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import lombok.Builder;
@@ -32,6 +28,7 @@ import lombok.experimental.UtilityClass;
 import net.buildtheearth.terraplusplus.TerraConfig;
 import net.buildtheearth.terraplusplus.TerraConstants;
 import net.buildtheearth.terraplusplus.TerraMod;
+import net.buildtheearth.terraplusplus.util.netty.AsyncDefaultResolverGroup;
 import net.daporkchop.lib.common.function.throwing.EFunction;
 import net.daporkchop.lib.common.reference.cache.Cached;
 import net.minecraft.network.NetworkManager;
@@ -50,7 +47,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
@@ -90,9 +89,20 @@ public class Http {
     }
 
     protected final Bootstrap DEFAULT_BOOTSTRAP = new Bootstrap()
-            .resolver(new RoundRobinDnsAddressResolverGroup(
-                    Epoll.isAvailable() ? EpollDatagramChannel.class : NioDatagramChannel.class,
-                    DnsServerAddresses.defaultAddresses()))
+            //perform name lookups asynchronously so that we can open connections without blocking the server thread.
+            //
+            //we aren't using the round-robin implementation (RoundRobinAsyncDefaultResolverGroup) here because it can return IPv6 addresses even if the host doesn't
+            //support IPv6, resulting in connection failed errors. specifically, the default behavior of java.net.InetAddress.getAllByName() (tested on Linux, but
+            //probably the same on other platforms) is to return IPv6 addresses for name lookups if there is ANY network interface on the system with an IPv6 address.
+            //critically, this includes loopback and link-local addresses, which most systems will enable by default in all circumstances, so java.net.InetAddress.getAllByName()
+            //can end up returning IPv6 addresses which would become candidates for round-robin selection even if the system cannot reach the public internet over IPv6.
+            //this problem *can* be mitigated using JVM flags to explicitly prefer the IPv4 stack, but in the interest of having things work out-of-the-box (and also
+            //because the round-robin load balancing is unlikely to make much of any difference in practice) i've chosen to disable the round-robin stuff.
+            .resolver(new AsyncDefaultResolverGroup(
+                    new ThreadPoolExecutor(0, 1,
+                            1L, TimeUnit.SECONDS,
+                            new SynchronousQueue<>(),
+                            new DefaultThreadFactory("terra++ DNS thread", true, Thread.MIN_PRIORITY))))
             .channel(Epoll.isAvailable() ? EpollSocketChannel.class : NioSocketChannel.class)
             .option(ChannelOption.SO_KEEPALIVE, true)
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, toInt(TimeUnit.SECONDS.toMillis(TIMEOUT)));
