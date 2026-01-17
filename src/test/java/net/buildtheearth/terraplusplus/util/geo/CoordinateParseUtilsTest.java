@@ -14,6 +14,7 @@ public class CoordinateParseUtilsTest {
 
     @Test
     public void testValid() {
+        // DMS format (degrees minutes seconds)
         this.testValidStringParsing("02°49'52\"N131°47'03\"E", 131.784167, 2.831111);
         this.testValidStringParsing("02°49'52''N 131°47'03''E", 131.784167, 2.831111);
         this.testValidStringParsing("02°49'52\"n 131°47'03\"E", 131.784167, 2.831111);
@@ -22,11 +23,14 @@ public class CoordinateParseUtilsTest {
         this.testValidStringParsing("02°49'52\"N 131°47'03\"W", -131.784167, 2.831111);
         this.testValidStringParsing("02°49'52\"s 131°47'03\"w", -131.784167, -2.831111);
 
+        // Various decimal variations
         this.testValidStringParsing("2.831111s 131.784167w", -131.784167, -2.831111);
         this.testValidStringParsing("-2.831111 -131.784167", -131.784167, -2.831111);
         this.testValidStringParsing("2,831111s 131,784167w", -131.784167, -2.831111);
         this.testValidStringParsing("-2,831111 -131,784167", -131.784167, -2.831111);
+        this.testValidStringParsing("33.452242° -112.070295°", -112.070295, 33.452242);
 
+        // With various separators between lat and long
         this.testValidStringParsing("02°49'52\"N;131°47'03\"E", 131.784167, 2.831111);
         this.testValidStringParsing("2.831111s;131.784167w", -131.784167, -2.831111);
         this.testValidStringParsing("-2.831111;-131.784167", -131.784167, -2.831111);
@@ -36,7 +40,7 @@ public class CoordinateParseUtilsTest {
         this.testValidStringParsing("-2.831111, -131.784167", -131.784167, -2.831111);
         this.testValidStringParsing("41.86086476755931, -87.7630805146585", -87.763081, 41.860865);
 
-        // Comma variant of the above
+        // Variants of the above with a comma as the decimal separator
         this.testValidStringParsing("2,831111s;131,784167w", -131.784167, -2.831111);
         this.testValidStringParsing("-2,831111;-131,784167", -131.784167, -2.831111);
         this.testValidStringParsing("2,831111s 131,784167w", -131.784167, -2.831111);
