@@ -41,10 +41,6 @@ configurations {
 
 repositories {
     maven {
-        name = "JitPack"
-        url = "https://jitpack.io/"
-    }
-    maven {
         name = "DaPorkchop_"
         url = "https://maven.daporkchop.net/"
     }
