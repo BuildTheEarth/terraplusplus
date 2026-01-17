@@ -132,8 +132,8 @@ public final class CoordinateParseUtils {
             // Try with literal values
             for (Function<String, Double> format: NUMBER_PARSERS) {
                 try {
-                    double lat = format.apply(latlon[0]);
-                    double lon = format.apply(latlon[1]);
+                    double lat = parseDecimal(latlon[0], format);
+                    double lon = parseDecimal(latlon[1], format);
                     return validateAndRound(lat, lon);
                 } catch (Exception ignored) {
                 }
@@ -209,7 +209,7 @@ public final class CoordinateParseUtils {
 
     }
 
-    static double parseDMS(String coord, boolean lat, Function<String, Double> format) {
+    private static double parseDMS(String coord, boolean lat, Function<String, Double> format) {
         final String DIRS = lat ? "NS" : "EOW";
         coord = coord.trim().toUpperCase();
 
@@ -240,6 +240,15 @@ public final class CoordinateParseUtils {
             }
         }
         throw new IllegalArgumentException();
+    }
+
+    private static double parseDecimal(String coord, Function<String, Double> format) {
+        // Remove any potential trailing ° (degrees) symbol
+        if (coord.endsWith("°")) {
+            coord = coord.substring(0, coord.length() - 1).trim();
+        }
+
+        return format.apply(coord);
     }
 
     private static double coordFromMatcher(Matcher m, int idx1, int idx2, int idx3, String sign, Function<String, Double> format) {
