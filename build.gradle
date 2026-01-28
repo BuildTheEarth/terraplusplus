@@ -41,10 +41,6 @@ configurations {
 
 repositories {
     maven {
-        name = "JitPack"
-        url = "https://jitpack.io/"
-    }
-    maven {
         name = "DaPorkchop_"
         url = "https://maven.daporkchop.net/"
     }
@@ -61,7 +57,7 @@ dependencies {
         transitive = false
     }
 
-    shade "com.github.DaMatrix:commons-imaging:4c6c5dfe6401a884cb4cf53fb838c99e1dfb104c"
+    shade "org.apache.commons:commons-imaging:1.0.0-alpha5"
 
     shade "com.fasterxml.jackson.core:jackson-databind:2.11.2"
 
