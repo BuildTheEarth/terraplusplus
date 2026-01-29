@@ -57,7 +57,7 @@ dependencies {
         transitive = false
     }
 
-    shade "org.apache.commons:commons-imaging:1.0.0-alpha5"
+    shade "org.apache.commons:commons-imaging:1.0.0-alpha6"
 
     shade "com.fasterxml.jackson.core:jackson-databind:2.11.2"
 
