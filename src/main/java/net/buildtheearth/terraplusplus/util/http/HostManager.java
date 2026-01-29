@@ -199,7 +199,12 @@ final class HostManager extends Host {
     }
 
     private void handleChannelConnected(@NonNull ChannelFuture channelFuture) {
-        assert this.eventLoop.inEventLoop() : Thread.currentThread();
+        if (!this.eventLoop.inEventLoop()) {
+            //in certain cases (most notably, if the DNS lookup is performed asynchronously), the ChannelFuture returned by Bootstrap#connect() may be completed by a thread outside of the
+            //EventLoop used for this host. we'll explicitly switch to the event loop thread to avoid any potential data races.
+            this.eventLoop.execute(() -> this.handleChannelConnected(channelFuture));
+            return;
+        }
 
         checkState(channelFuture == this.connectFuture, "unexpected channel future?!?");
         this.connectFuture = null;
@@ -232,6 +237,25 @@ final class HostManager extends Host {
             //this channel is now ready to go, mark it as idle and then try to submit a request on it
             this.addIdleChannel(channel);
         }
+    }
+
+    private void handleChannelSslHandshakeComplete(@NonNull Channel channel, @NonNull Future<?> handshakeFuture) {
+        if (!this.eventLoop.inEventLoop()) {
+            //i don't think this is possible, but i'll handle it anyway just in case
+            this.eventLoop.execute(() -> this.handleChannelSslHandshakeComplete(channel, handshakeFuture));
+            return;
+        }
+
+        checkState(handshakeFuture == this.connectFuture, "unexpected handshake future?!?");
+        this.connectFuture = null;
+
+        if (!handshakeFuture.isSuccess()) {
+            this.handleConnectionFailed(channel, handshakeFuture.cause());
+            return;
+        }
+
+        //this channel is now ready to go, mark it as idle and then try to submit a request on it
+        this.addIdleChannel(channel);
     }
 
     private void handleConnectionFailed(@NonNull Channel channel, @NonNull Throwable cause) {
