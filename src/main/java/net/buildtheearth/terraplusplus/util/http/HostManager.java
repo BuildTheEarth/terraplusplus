@@ -219,20 +219,7 @@ final class HostManager extends Host {
         if (this.ssl) {
             //if SSL is enabled we should wait for the SSL handshake to complete before treating the channel as ready
             this.connectFuture = channel.pipeline().get(SslHandler.class).handshakeFuture();
-            this.connectFuture.addListener(handshakeFuture -> {
-                synchronized (this) {
-                    checkState(handshakeFuture == this.connectFuture, "unexpected handshake future?!?");
-                    this.connectFuture = null;
-
-                    if (!handshakeFuture.isSuccess()) {
-                        this.handleConnectionFailed(channel, handshakeFuture.cause());
-                        return;
-                    }
-
-                    //this channel is now ready to go, mark it as idle and then try to submit a request on it
-                    this.addIdleChannel(channel);
-                }
-            });
+            this.connectFuture.addListener(handshakeFuture -> this.handleChannelSslHandshakeComplete(channel, handshakeFuture));
         } else {
             //this channel is now ready to go, mark it as idle and then try to submit a request on it
             this.addIdleChannel(channel);
