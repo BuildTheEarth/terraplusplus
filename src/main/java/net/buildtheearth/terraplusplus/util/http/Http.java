@@ -47,7 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -101,7 +101,7 @@ public class Http {
             .resolver(new AsyncDefaultResolverGroup(
                     new ThreadPoolExecutor(0, 1,
                             1L, TimeUnit.SECONDS,
-                            new SynchronousQueue<>(),
+                            new LinkedBlockingQueue<>(),
                             new DefaultThreadFactory("terra++ DNS thread", true, Thread.MIN_PRIORITY))))
             .channel(Epoll.isAvailable() ? EpollSocketChannel.class : NioSocketChannel.class)
             .option(ChannelOption.SO_KEEPALIVE, true)
