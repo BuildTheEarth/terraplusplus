@@ -6,15 +6,15 @@ buildscript {
         }
         maven {
             name = "Minecraft Forge"
-            url = "https://files.minecraftforge.net/maven"
+            url = "https://maven.minecraftforge.net/"
         }
     }
     dependencies {
-        classpath "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
+        classpath "net.minecraftforge.gradle:ForgeGradle:3.+"
         classpath "com.github.jengelman.gradle.plugins:shadow:4.0.0"
     }
 }
-apply plugin: "net.minecraftforge.gradle.forge"
+apply plugin: "net.minecraftforge.gradle"
 apply plugin: "com.github.johnrengelman.shadow"
 apply plugin: "maven-publish"
 
@@ -27,11 +27,19 @@ compileJava {
 }
 
 minecraft {
-    version = "1.12.2-14.23.5.2847"
-    runDir = "run"
+    mappings channel: "stable", version: "39-1.12"
 
-    mappings = "stable_39"
-    makeObfSourceJar = false
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+        }
+
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+        }
+    }
 }
 
 configurations {
@@ -47,13 +55,15 @@ repositories {
 }
 
 dependencies {
-    //We have to use this as deobfProvided even though there's a :dev version of the artifact because otherwise mixin
-    //prevents the mod from loading when running in a dev environment.
-    deobfProvided ("io.github.opencubicchunks:cubicchunks:1.12.2-0.0.1282.0-SNAPSHOT") {
+    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2864'
+
+    // We have to use this as deobfProvided even though there's a :dev version of the artifact because otherwise mixin
+    // prevents the mod from loading when running in a dev environment.
+    implementation fg.deobf("io.github.opencubicchunks:cubicchunks:1.12.2-0.0.1282.0-SNAPSHOT") {
         transitive = false
     }
 
-    provided ("io.github.opencubicchunks:cubicworldgen:1.12.2-0.0.206.0-SNAPSHOT:dev") {
+    implementation("io.github.opencubicchunks:cubicworldgen:1.12.2-0.0.206.0-SNAPSHOT:dev") {
         transitive = false
     }
 
@@ -74,14 +84,13 @@ dependencies {
 processResources {
     // this will ensure that this task is redone when the versions change.
     inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
 
     // replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
 
         // replace version and mcversion
-        expand 'version': project.version, 'mcversion': project.minecraft.version
+        expand 'version': project.version
     }
 
     // copy everything else except the mcmod.info
@@ -121,9 +130,6 @@ publishing {
             artifacts.clear()
             artifact(shadowJar) {
                 classifier = ""
-            }
-            artifact sourceJar {
-                classifier "sources"
             }
         }
     }
