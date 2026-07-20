@@ -33,11 +33,15 @@ minecraft {
         client {
             workingDirectory project.file('run')
             property 'forge.logging.console.level', 'debug'
+            property 'fml.coreMods.load', 'io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod,io.github.opencubicchunks.cubicchunks.cubicgen.asm.coremod.CubicGenCoreMod'
+            property 'mixin.env.disableRefMap', 'true'
         }
 
         server {
             workingDirectory project.file('run')
             property 'forge.logging.console.level', 'debug'
+            property 'fml.coreMods.load', 'io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod,io.github.opencubicchunks.cubicchunks.cubicgen.asm.coremod.CubicGenCoreMod'
+            property 'mixin.env.disableRefMap', 'true'
         }
     }
 }
