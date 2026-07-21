@@ -1,12 +1,13 @@
 package net.buildtheearth.terraplusplus.util;
 
+import org.junit.jupiter.api.Test;
+
 import static net.daporkchop.lib.common.util.PValidation.checkState;
 
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.junit.Test;
 
 /**
  * @author DaPorkchop_
