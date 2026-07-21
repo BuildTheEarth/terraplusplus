@@ -92,6 +92,33 @@ test {
     }
 }
 
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [
+            minecraft_version: minecraft_version,
+            mod_id: mod_id,
+            mod_name: mod_name,
+            mod_url: mod_url,
+            mod_version: project.version,
+    ]
+    inputs.properties replaceProperties
+
+    filesMatching(['mcmod.info', 'pack.mcmeta']) {
+        expand replaceProperties + [project: project]
+    }
+}
+
+// Example for how to get properties into the manifest for reading at runtime.
+tasks.named('jar', Jar).configure {
+    manifest {
+        attributes([
+                'Specification-Title'     : mod_id,
+                'Specification-Version'   : project.version,
+                'Implementation-Title'    : project.name,
+                'Implementation-Version'  : project.jar.archiveVersion,
+        ])
+    }
+}
+
 publishing {
     publications {
         maven(MavenPublication) {

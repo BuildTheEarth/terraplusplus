@@ -1,11 +1,11 @@
 [
   {
-    "modid": "terraplusplus",
-    "name": "TerraPlusPlus",
+    "modid": "${mod_id}",
+    "name": "${mod_name}",
     "description": "A feature-rich fork of Terra121 focusing on performance.",
-    "version": "${version}",
-    "mcversion": "1.12.2",
-    "url": "https://buildtheearth.net",
+    "version": "${mod_version}",
+    "mcversion": "${minecraft_version}",
+    "url": "${mod_url}",
     "updateUrl": "",
     "authorList": [
       "DaPorkchop_",
