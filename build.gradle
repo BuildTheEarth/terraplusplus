@@ -6,7 +6,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath "net.minecraftforge.gradle:ForgeGradle:4.+"
+        classpath "net.minecraftforge.gradle:ForgeGradle:6.+"
     }
 }
 apply plugin: "net.minecraftforge.gradle"
@@ -68,7 +68,7 @@ dependencies {
         exclude group: "io.netty"
     }
 
-    testCompile "junit:junit:4.12"
+    testImplementation "junit:junit:4.12"
 
     implementation "org.projectlombok:lombok:1.18.16"
     annotationProcessor "org.projectlombok:lombok:1.18.16"
