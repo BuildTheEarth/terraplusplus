@@ -1,21 +1,15 @@
 buildscript {
     repositories {
         maven {
-            name = "Gradle Plugins"
-            url = "https://plugins.gradle.org/m2/"
-        }
-        maven {
             name = "Minecraft Forge"
             url = "https://maven.minecraftforge.net/"
         }
     }
     dependencies {
         classpath "net.minecraftforge.gradle:ForgeGradle:4.+"
-        classpath "com.github.jengelman.gradle.plugins:shadow:4.0.0"
     }
 }
 apply plugin: "net.minecraftforge.gradle"
-apply plugin: "com.github.johnrengelman.shadow"
 apply plugin: "maven-publish"
 
 version = "1.1.0." + ('git rev-list --count HEAD'.execute().text.trim()) + "-1.12.2"
@@ -46,11 +40,6 @@ minecraft {
     }
 }
 
-configurations {
-    shade
-    compile.extendsFrom shade
-}
-
 repositories {
     maven {
         name = "DaPorkchop_"
@@ -71,17 +60,17 @@ dependencies {
         transitive = false
     }
 
-    shade "org.apache.commons:commons-imaging:1.0.0-alpha5"
+    implementation "org.apache.commons:commons-imaging:1.0.0-alpha5"
 
-    shade "com.fasterxml.jackson.core:jackson-databind:2.11.2"
+    implementation "com.fasterxml.jackson.core:jackson-databind:2.11.2"
 
-    shade("net.daporkchop.lib:binary:0.5.7-SNAPSHOT")  {
+    implementation("net.daporkchop.lib:binary:0.5.7-SNAPSHOT")  {
         exclude group: "io.netty"
     }
 
     testCompile "junit:junit:4.12"
 
-    compile "org.projectlombok:lombok:1.18.16"
+    implementation "org.projectlombok:lombok:1.18.16"
     annotationProcessor "org.projectlombok:lombok:1.18.16"
 }
 
@@ -103,25 +92,6 @@ processResources {
     }
 }
 
-shadowJar {
-    classifier = null
-    configurations = [project.configurations.shade]
-
-    exclude 'module-info.class'
-}
-build.dependsOn shadowJar
-
-reobf { //reobfuscate the shaded JAR
-    shadowJar {}
-}
-
-//relocate all shaded dependencies
-task relocateShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation) {
-    target = tasks.shadowJar
-    prefix = "net.buildtheearth.terraplusplus.dep"
-}
-shadowJar.dependsOn relocateShadowJar
-
 publishing {
     publications {
         maven(MavenPublication) {
@@ -132,9 +102,6 @@ publishing {
             from components.java
 
             artifacts.clear()
-            artifact(shadowJar) {
-                classifier = ""
-            }
         }
     }
 }
