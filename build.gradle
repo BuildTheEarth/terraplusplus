@@ -24,18 +24,29 @@ minecraft {
     mappings channel: "stable", version: "39-1.12"
 
     runs {
-        client {
+        configureEach {
             workingDirectory project.file('run')
+
+            // Log4J log level for stdout
             property 'forge.logging.console.level', 'debug'
+
+            // FML debugging info dumps (comma-separated list)
+            // - "SCAN": For mods scan.
+            // - "REGISTRIES": For firing of registry events.
+            // - "REGISTRYDUMP": For getting the contents of all registries.
+            property 'forge.logging.markers', 'SCAN'
+
+            // Handle coremods:
+            // - instruct FML to load the CC and CWG coremods as it doesn't know how to find them in the ForgeGradle 3+ dev environment
+            // - instruct Mixin to not use obfuscated names in the deobfuscated dev environment
             property 'fml.coreMods.load', 'io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod,io.github.opencubicchunks.cubicchunks.cubicgen.asm.coremod.CubicGenCoreMod'
             property 'mixin.env.disableRefMap', 'true'
         }
 
+        client { }
+
         server {
-            workingDirectory project.file('run')
-            property 'forge.logging.console.level', 'debug'
-            property 'fml.coreMods.load', 'io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod,io.github.opencubicchunks.cubicchunks.cubicgen.asm.coremod.CubicGenCoreMod'
-            property 'mixin.env.disableRefMap', 'true'
+            args 'nogui'
         }
     }
 }
@@ -50,7 +61,7 @@ repositories {
 dependencies {
     minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2864'
 
-    // We have to use this as deobfProvided even though there's a :dev version of the artifact because otherwise mixin
+    // We have to explicitly deobfuscate this instead of using the :dev version of the artifact because otherwise mixin
     // prevents the mod from loading when running in a dev environment.
     implementation fg.deobf("io.github.opencubicchunks:cubicchunks:1.12.2-0.0.1282.0-SNAPSHOT") {
         transitive = false
