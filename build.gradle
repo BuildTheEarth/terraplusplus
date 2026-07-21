@@ -12,7 +12,7 @@ buildscript {
 apply plugin: "net.minecraftforge.gradle"
 apply plugin: "maven-publish"
 
-version = "1.1.0." + ('git rev-list --count HEAD'.execute().text.trim()) + "-1.12.2"
+version = "${mod_version_base}." + ('git rev-list --count HEAD'.execute().text.trim()) + "-${minecraft_version}"
 group = "net.buildtheearth"
 archivesBaseName = "terraplusplus"
 
@@ -21,7 +21,7 @@ compileJava {
 }
 
 minecraft {
-    mappings channel: "stable", version: "39-1.12"
+    mappings channel: mapping_channel, version: mapping_version
 
     runs {
         configureEach {
@@ -59,30 +59,27 @@ repositories {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2864'
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    implementation "org.projectlombok:lombok:${lombok_version}"
+    annotationProcessor "org.projectlombok:lombok:${lombok_version}"
 
     // We have to explicitly deobfuscate this instead of using the :dev version of the artifact because otherwise mixin
     // prevents the mod from loading when running in a dev environment.
-    implementation fg.deobf("io.github.opencubicchunks:cubicchunks:1.12.2-0.0.1282.0-SNAPSHOT") {
+    implementation fg.deobf("io.github.opencubicchunks:cubicchunks:${cubicchunks_version}") {
+        transitive = false
+    }
+    implementation("io.github.opencubicchunks:cubicworldgen:${cubicworldgen_version}:dev") {
         transitive = false
     }
 
-    implementation("io.github.opencubicchunks:cubicworldgen:1.12.2-0.0.206.0-SNAPSHOT:dev") {
-        transitive = false
-    }
-
-    implementation "org.apache.commons:commons-imaging:1.0.0-alpha5"
-
-    implementation "com.fasterxml.jackson.core:jackson-databind:2.11.2"
-
-    implementation("net.daporkchop.lib:binary:0.5.7-SNAPSHOT")  {
+    implementation "org.apache.commons:commons-imaging:${apache_commons_imaging_version}"
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
+    implementation("net.daporkchop.lib:binary:${porklib_version}")  {
         exclude group: "io.netty"
     }
 
-    implementation "org.projectlombok:lombok:1.18.16"
-    annotationProcessor "org.projectlombok:lombok:1.18.16"
-
-    testImplementation(platform('org.junit:junit-bom:5.14.4'))
+    testImplementation(platform("org.junit:junit-bom:${junit_version}"))
     testImplementation('org.junit.jupiter:junit-jupiter')
     testRuntimeOnly('org.junit.platform:junit-platform-launcher')
 }
