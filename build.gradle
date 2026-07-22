@@ -1,25 +1,19 @@
-buildscript {
-    repositories {
-        maven {
-            name = "Minecraft Forge"
-            url = "https://maven.minecraftforge.net/"
-        }
-    }
-    dependencies {
-        classpath "net.minecraftforge.gradle:ForgeGradle:6.+"
-    }
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '6.+'
 }
-apply plugin: "net.minecraftforge.gradle"
-apply plugin: "maven-publish"
 
 version = "${mod_version_base}." + ('git rev-list --count HEAD'.execute().text.trim()) + "-${minecraft_version}"
 group = "net.buildtheearth"
-archivesBaseName = "terraplusplus"
-
-compileJava {
-    sourceCompatibility = targetCompatibility = "1.8"
+base {
+    archivesName = mod_id
 }
 
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+
+println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
     mappings channel: mapping_channel, version: mapping_version
 
@@ -84,6 +78,9 @@ dependencies {
     testRuntimeOnly('org.junit.platform:junit-platform-launcher')
 }
 
+eclipse {
+    synchronizationTasks 'genEclipseRuns'
+}
 
 test {
     useJUnitPlatform()
@@ -107,7 +104,6 @@ tasks.named('processResources', ProcessResources).configure {
     }
 }
 
-// Example for how to get properties into the manifest for reading at runtime.
 tasks.named('jar', Jar).configure {
     manifest {
         attributes([
@@ -117,6 +113,16 @@ tasks.named('jar', Jar).configure {
                 'Implementation-Version'  : project.jar.archiveVersion,
         ])
     }
+}
+
+sourceSets.each {
+    def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
+    it.output.resourcesDir = dir
+    it.java.destinationDirectory = dir
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
 }
 
 publishing {
