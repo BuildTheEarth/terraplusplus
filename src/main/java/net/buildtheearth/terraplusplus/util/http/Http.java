@@ -35,6 +35,7 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.NetworkSystem;
 import net.minecraft.util.LazyLoadBase;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.IFMLSidedHandler;
 import net.minecraftforge.fml.relauncher.Side;
 
 import javax.net.ssl.SSLException;
@@ -72,7 +73,8 @@ public class Http {
         if (!TerraConstants.IS_TEST_ENVIRONMENT && TerraConfig.http.useVanillaNetworkThread) {
             //use the vanilla eventloop for the current side
             LazyLoadBase<? extends EventLoopGroup> eventLoopGroupLoader;
-            if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
+            IFMLSidedHandler fmlSideDelegate = FMLCommonHandler.instance().getSidedDelegate();
+            if (fmlSideDelegate != null && fmlSideDelegate.getSide() == Side.CLIENT) {
                 eventLoopGroupLoader = Epoll.isAvailable() ? NetworkManager.CLIENT_EPOLL_EVENTLOOP : NetworkManager.CLIENT_NIO_EVENTLOOP;
             } else {
                 eventLoopGroupLoader = Epoll.isAvailable() ? NetworkSystem.SERVER_EPOLL_EVENTLOOP : NetworkSystem.SERVER_NIO_EVENTLOOP;
