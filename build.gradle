@@ -147,3 +147,39 @@ publishing {
         }
     }
 }
+
+tasks.register('forgeGradleMixinCacheCompatibilityHack') {
+    group 'FG compatibility hacks'
+    description 'Renames the ForgeGradle v3+ deobfuscated dependency cache to the name used by ForgeGradle v2 and symlinks the modern name, so that MixinPlatformAgentFMLLegacy properly qualifies those dependencies.'
+    
+    doLast {
+        def fgCacheDir = file("${gradle.gradleUserHomeDir}/caches/forge_gradle")
+        def oldDir = file("${fgCacheDir}/deobf_dependencies")
+        def newDir = file("${fgCacheDir}/deobfedDeps")
+        
+        if (!oldDir.exists() || !oldDir.isDirectory()) {
+            println "ForgeGradle 3+ deobfuscated dependency cache not found at: ${oldDir}"
+            return
+        }
+        println "Found ForgeGradle 3+ deobfuscated dependency cache at at: ${oldDir}"
+        
+        if (newDir.exists()) {
+            println "ForgeGradle 2 deobfuscated dependency already exists at: ${oldDir}, nothing to do"
+            return
+        }
+        println "Will move cache to ForgeGradle 2 location at: ${newDir}"
+
+        try {
+            oldDir.renameTo(newDir)
+            java.nio.file.Files.createSymbolicLink(oldDir.toPath(), newDir.toPath())
+            println "Hacky workaround for MixinPlatformAgentFMLLegacy installed"
+        } catch (Exception e) {
+            throw new GradleException("Failed to create required symlink", e)
+        }
+    }
+}
+afterEvaluate {
+    tasks.named('prepareRuns') {
+        dependsOn forgeGradleMixinCacheCompatibilityHack
+    }
+}
