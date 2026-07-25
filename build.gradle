@@ -45,6 +45,15 @@ minecraft {
     }
 }
 
+// RetroGradle compatibility options for Minecraft < 1.13 support on ForgeGradle 3+.
+// All enabled by default since FG detects Minecraft 1.12.2.
+legacy {
+    // Doesn't play well with ForgeGradle 6 and the latest Forge version in runClient/runServer
+    // (adds the jar to the classpath instead of the compiled classes, but doesn't generate the JAR...).
+    // Things work well when it is disabled.
+    fixClasspath = false
+}
+
 repositories {
     maven {
         name = "DaPorkchop_"
