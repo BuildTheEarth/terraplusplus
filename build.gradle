@@ -2,7 +2,7 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.minecraftforge.gradle' version '6.+'
+    id 'net.minecraftforge.gradle' version '5.1.74'
 }
 
 version = "${mod_version_base}." + ('git rev-list --count HEAD'.execute().text.trim()) + "-${minecraft_version}"
@@ -51,7 +51,7 @@ legacy {
     // Doesn't play well with ForgeGradle 6 and the latest Forge version in runClient/runServer
     // (adds the jar to the classpath instead of the compiled classes, but doesn't generate the JAR...).
     // Things work well when it is disabled.
-    fixClasspath = false
+    fixClasspath = true
 }
 
 repositories {
@@ -124,11 +124,13 @@ tasks.named('jar', Jar).configure {
     }
 }
 
-sourceSets.each {
+/*
+sourceSets.each '{
     def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
     it.output.resourcesDir = dir
     it.java.destinationDirectory = dir
 }
+*/
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
