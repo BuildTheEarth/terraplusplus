@@ -1,9 +1,9 @@
 package net.buildtheearth.terraplusplus.util.geo;
-import org.junit.Assert;
-import org.junit.Test;
 
-import static org.junit.Assert.*;
 
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author SmylerMC
@@ -111,11 +111,11 @@ public class CoordinateParseUtilsTest {
 
     private void testValidStringParsing(String string, double longitude, double latitude) {
         LatLng latLng = CoordinateParseUtils.parseVerbatimCoordinates(string);
-        Assert.assertNotNull(String.format("Failed to parse a valid coordinate string: %s", string), latLng);
+        assertNotNull(latLng, String.format("Failed to parse a valid coordinate string: %s", string));
         final double lng = latLng.getLng();
         final double lat = latLng.getLat();
-        Assert.assertEquals("Parsed a wrong longitude value", longitude, lng, PRECISION);
-        Assert.assertEquals("Parsed a wrong latitude value", latitude, lat, PRECISION);
+        assertEquals(longitude, lng, PRECISION, "Parsed a wrong longitude value");
+        assertEquals(latitude, lat, PRECISION, "Parsed a wrong latitude value");
     }
 
     private void testInvalidStringParsing(String string) {
