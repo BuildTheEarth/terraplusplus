@@ -99,6 +99,29 @@ public class HttpTest {
     }
 
     @Test
+    void canRetryOnConnectionClosed() throws ExecutionException, InterruptedException, IOException {
+        final String response = "Hello, World!";
+
+        AtomicInteger counter = new AtomicInteger(0);
+
+        HttpHandler handler = exchange -> {
+            boolean shouldFail = counter.incrementAndGet() < 3;
+            try (OutputStream os = exchange.getResponseBody()) {
+                if (shouldFail) {
+                    return;
+                }
+                exchange.getResponseHeaders().set("Cache-Control", "no-cache");
+                exchange.getResponseHeaders().set("Content-Type", "text/plain");
+                exchange.sendResponseHeaders(200, response.getBytes().length);
+                os.write(response.getBytes());
+            }
+        };
+        try(TestHttpEndpoint endpoint = new TestHttpEndpoint("/retryUntilNotClosed", handler)) {
+            endpoint.getAndAssertStringBody("?time=" + currentTimeMillis(), response);
+        }
+    }
+
+    @Test
     void canRefreshStaleResponseFromLastModified() throws ExecutionException, InterruptedException, IOException {
         final String response = "Cached content";
         final String suffix = "?time=" + currentTimeMillis();
