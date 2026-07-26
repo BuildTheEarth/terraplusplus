@@ -4,6 +4,9 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import io.netty.buffer.ByteBuf;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -16,9 +19,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.System.*;
 import static java.lang.Thread.*;
+import static java.util.concurrent.TimeUnit.*;
 import static org.apache.http.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@Timeout(value = 20, unit = SECONDS)
 public class HttpTest {
 
     @Test
@@ -29,7 +34,7 @@ public class HttpTest {
             try (OutputStream os = exchange.getResponseBody()) {
                 exchange.getResponseHeaders().set("Cache-Control", "no-cache");
                 exchange.getResponseHeaders().set("Content-Type", "text/plain");
-                exchange.sendResponseHeaders(200, response.getBytes().length);
+                exchange.sendResponseHeaders(SC_OK, response.getBytes().length);
                 os.write(response.getBytes());
             }
         };
@@ -50,7 +55,7 @@ public class HttpTest {
             try (OutputStream os = exchange.getResponseBody()) {
                 exchange.getResponseHeaders().set("Cache-Control", "max-age=100");
                 exchange.getResponseHeaders().set("Content-Type", "text/plain");
-                exchange.sendResponseHeaders(200, response.getBytes().length);
+                exchange.sendResponseHeaders(SC_OK, response.getBytes().length);
                 os.write(response.getBytes());
             }
         };
@@ -112,13 +117,95 @@ public class HttpTest {
                 }
                 exchange.getResponseHeaders().set("Cache-Control", "no-cache");
                 exchange.getResponseHeaders().set("Content-Type", "text/plain");
-                exchange.sendResponseHeaders(200, response.getBytes().length);
+                exchange.sendResponseHeaders(SC_OK, response.getBytes().length);
                 os.write(response.getBytes());
             }
         };
         try(TestHttpEndpoint endpoint = new TestHttpEndpoint("/retryUntilNotClosed", handler)) {
             endpoint.getAndAssertStringBody("?time=" + currentTimeMillis(), response);
         }
+    }
+
+    @Test
+    void canRetryOnConnectionTimeout() throws ExecutionException, InterruptedException, IOException {
+        final String response = "Hello, World!";
+
+        AtomicInteger counter = new AtomicInteger(0);
+
+        HttpHandler handler = exchange -> {
+            boolean shouldTimeout = counter.incrementAndGet() < 2;
+            if (shouldTimeout) {
+                try {
+                    sleep(5_000);  // Will trigger io.netty.handler.timeout.ReadTimeoutException in the client
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                return;
+            }
+
+            try (OutputStream os = exchange.getResponseBody()) {
+                exchange.getResponseHeaders().set("Cache-Control", "no-cache");
+                exchange.getResponseHeaders().set("Content-Type", "text/plain");
+                exchange.sendResponseHeaders(SC_OK, response.getBytes().length);
+                os.write(response.getBytes());
+            }
+        };
+        try(TestHttpEndpoint endpoint = new TestHttpEndpoint("/retryUntilNotTimeout", handler)) {
+            endpoint.getAndAssertStringBody("?time=" + currentTimeMillis(), response);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { SC_REQUEST_TIMEOUT, 429, SC_BAD_GATEWAY, SC_SERVICE_UNAVAILABLE, SC_GATEWAY_TIMEOUT})
+    void canRetryOnHttpRetriableStatusCodes(int status) throws ExecutionException, InterruptedException, IOException {
+        final String response = "Hello, World!";
+        final String plzRetryResponse = "Please retry";
+
+        AtomicInteger counter = new AtomicInteger(0);
+
+        HttpHandler handler = exchange -> {
+            try (OutputStream os = exchange.getResponseBody()) {
+            boolean shouldBeUnavailable = counter.incrementAndGet() < 3;
+                if (shouldBeUnavailable) {
+                    exchange.sendResponseHeaders(status, plzRetryResponse.getBytes().length);
+                    os.write(plzRetryResponse.getBytes());
+                    return;
+                }
+                exchange.getResponseHeaders().set("Cache-Control", "no-cache");
+                exchange.getResponseHeaders().set("Content-Type", "text/plain");
+                exchange.sendResponseHeaders(SC_OK, response.getBytes().length);
+                os.write(response.getBytes());
+            }
+        };
+        try(TestHttpEndpoint endpoint = new TestHttpEndpoint("/retrySuccess", handler)) {
+            endpoint.getAndAssertStringBody("?time=" + currentTimeMillis(), response);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {
+            SC_BAD_REQUEST, SC_UNAUTHORIZED, SC_FORBIDDEN, SC_NOT_FOUND, SC_METHOD_NOT_ALLOWED, SC_NOT_ACCEPTABLE, SC_GONE,
+            SC_INTERNAL_SERVER_ERROR, SC_NOT_IMPLEMENTED})
+    void doesNotRetryOnNonRetriableStatusCodes(final int status) {
+        final String body = "plz don't retry";
+
+        AtomicInteger counter = new AtomicInteger(0);
+
+        HttpHandler handler = exchange -> {
+            counter.incrementAndGet();
+            try (OutputStream os = exchange.getResponseBody()) {
+                exchange.getResponseHeaders().set("Content-Type", "text/plain");
+                exchange.sendResponseHeaders(status, body.getBytes().length);
+                os.write(body.getBytes());
+            }
+        };
+        try(TestHttpEndpoint endpoint = new TestHttpEndpoint("/notRetryable", handler)) {
+            Http.get(endpoint.url() + "?time=" + currentTimeMillis() + "&code=" + status).get();
+        } catch (Throwable ignored) {
+            // It's ok if it throws an exception, as long as it did not retry
+        }
+
+        assertEquals(1, counter.get());
     }
 
     @Test

@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.channel.ChannelException;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
@@ -11,10 +12,7 @@ import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.netty.handler.codec.http.EmptyHttpHeaders;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http2.Http2SecurityUtil;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
@@ -37,8 +35,10 @@ import net.minecraft.util.LazyLoadBase;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.IFMLSidedHandler;
 import net.minecraftforge.fml.relauncher.Side;
+import org.apache.logging.log4j.Level;
 
 import javax.net.ssl.SSLException;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -56,6 +56,8 @@ import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static io.netty.handler.codec.http.HttpMethod.*;
+import static java.util.Objects.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
@@ -234,6 +236,12 @@ public class Http {
             @Override
             public synchronized void handle(FullHttpResponse response, Throwable throwable) { //stage 2: handle HTTP response
                 try {
+                    if (this.shouldRetry(response, throwable)) {
+                        TerraMod.LOGGER.warn("Retrying request: {} (status: {}, throwable: {})", this.parsed, response == null ? null : response.status(), throwable);
+                        managerFor(this.parsed).submit(this.parsed.getFile(), this, this.nextHeaders);
+                        return;
+                    }
+
                     //if cacheEntry is non-null, it means we're currently attempting to refresh a stale entry
 
                     if (throwable != null) {
@@ -292,6 +300,17 @@ public class Http {
                 } finally {
                     this.releaseCacheEntry();
                 }
+            }
+
+            synchronized boolean shouldRetry(FullHttpResponse response, Throwable throwable) {
+                checkState(response != null || throwable != null, "Response and throwable are both null");
+                if (!isRetryableMethod(GET)) {  // We only do GET requests in here
+                    return false;
+                }
+                if (throwable != null) {
+                    return isRetryableException(throwable);
+                }
+                return isRetryableStatus(response.status().code());
             }
 
             synchronized void step(@NonNull String url) {
@@ -511,4 +530,40 @@ public class Http {
         @Builder.Default
         public final boolean followRedirects = true;
     }
+
+    private static boolean isRetryableMethod(@NonNull HttpMethod method) {
+        requireNonNull(method);
+        return method.equals(GET) || method.equals(HEAD) || method.equals(OPTIONS) || method.equals(TRACE);
+    }
+    private static boolean isRetryableException(@NonNull Throwable throwable) {
+        requireNonNull(throwable);
+        while (throwable != null) {
+            if (throwable instanceof IOException) {
+                return true;
+            }
+            if (throwable instanceof ChannelException) {
+                return true;  // IO error in Netty
+            }
+            throwable = throwable.getCause();
+        }
+        return false;
+    }
+
+    private static boolean isRetryableStatus(int status) {
+        if (status < 400) {
+            return false;  // Not an error at all
+        }
+        switch (status) {
+            case 408:  // Request Timeout
+            case 429:  // Too Many Requests
+            case 500:  // Internal Server Error
+            case 502:  // Bad Gateway
+            case 503:  // Service Unavailable
+            case 504:  // Gateway Timeout
+                return true;
+            default:
+                return false;
+        }
+    }
+
 }
