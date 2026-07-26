@@ -337,11 +337,11 @@ final class HostManager extends Host {
     @ToString
     private final class Request {
         @NonNull
-        protected final String path;
+        private final String path;
         @NonNull
-        protected final Callback callback;
+        private final Callback callback;
         @NonNull
-        protected final HttpHeaders headers;
+        private final HttpHeaders headers;
 
         public HttpRequest toNetty() {
             DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, this.path);

@@ -35,7 +35,6 @@ import net.minecraft.util.LazyLoadBase;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.IFMLSidedHandler;
 import net.minecraftforge.fml.relauncher.Side;
-import org.apache.logging.log4j.Level;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
@@ -67,9 +66,9 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @UtilityClass
 public class Http {
-    protected static final long TIMEOUT = 20L;
+    static final long TIMEOUT = 20L;
 
-    protected final EventLoopGroup NETWORK_EVENT_LOOP_GROUP;
+    final EventLoopGroup NETWORK_EVENT_LOOP_GROUP;
 
     static {
         if (!TerraConstants.IS_TEST_ENVIRONMENT && TerraConfig.http.useVanillaNetworkThread) {
@@ -92,7 +91,7 @@ public class Http {
         }
     }
 
-    protected final Bootstrap DEFAULT_BOOTSTRAP = new Bootstrap()
+    final Bootstrap DEFAULT_BOOTSTRAP = new Bootstrap()
             //perform name lookups asynchronously so that we can open connections without blocking the server thread.
             //
             //we aren't using the round-robin implementation (RoundRobinAsyncDefaultResolverGroup) here because it can return IPv6 addresses even if the host doesn't
@@ -111,13 +110,13 @@ public class Http {
             .option(ChannelOption.SO_KEEPALIVE, true)
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, toInt(TimeUnit.SECONDS.toMillis(TIMEOUT)));
 
-    protected final SslContext SSL_CONTEXT;
+    final SslContext SSL_CONTEXT;
 
-    protected final Map<Host, HostManager> MANAGERS = new ConcurrentHashMap<>();
+    private final Map<Host, HostManager> MANAGERS = new ConcurrentHashMap<>();
 
-    protected final int MAX_CONTENT_LENGTH = Integer.MAX_VALUE; //impossibly large, no requests will actually be this big but whatever
+    final int MAX_CONTENT_LENGTH = Integer.MAX_VALUE; //impossibly large, no requests will actually be this big but whatever
 
-    protected static final Cached<Matcher> URL_FORMATTING_MATCHER_CACHE = Cached.regex(Pattern.compile("\\$\\{([a-z0-9.]+)}"));
+    private static final Cached<Matcher> URL_FORMATTING_MATCHER_CACHE = Cached.regex(Pattern.compile("\\$\\{([a-z0-9.]+)}"));
 
     static {
         try {
@@ -495,7 +494,7 @@ public class Http {
         }
     }
 
-    protected <T> void copyResultTo(@NonNull CompletableFuture<T> src, @NonNull CompletableFuture<T> dst) {
+    private <T> void copyResultTo(@NonNull CompletableFuture<T> src, @NonNull CompletableFuture<T> dst) {
         src.whenComplete((v, t) -> {
             if (t != null) {
                 dst.completeExceptionally(t);

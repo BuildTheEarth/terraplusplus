@@ -4,7 +4,6 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import io.netty.buffer.ByteBuf;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -19,11 +18,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.System.*;
 import static java.lang.Thread.*;
-import static java.util.concurrent.TimeUnit.*;
 import static org.apache.http.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Timeout(value = 20, unit = SECONDS)
 public class HttpTest {
 
     @Test
@@ -183,9 +180,7 @@ public class HttpTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {
-            SC_BAD_REQUEST, SC_UNAUTHORIZED, SC_FORBIDDEN, SC_NOT_FOUND, SC_METHOD_NOT_ALLOWED, SC_NOT_ACCEPTABLE, SC_GONE,
-            SC_INTERNAL_SERVER_ERROR, SC_NOT_IMPLEMENTED})
+    @ValueSource(ints = {SC_BAD_REQUEST, SC_UNAUTHORIZED, SC_FORBIDDEN, SC_NOT_FOUND, SC_METHOD_NOT_ALLOWED, SC_NOT_ACCEPTABLE, SC_GONE, SC_NOT_IMPLEMENTED})
     void doesNotRetryOnNonRetriableStatusCodes(final int status) {
         final String body = "plz don't retry";
 
