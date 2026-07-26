@@ -57,8 +57,10 @@ import java.util.regex.Pattern;
 
 import static io.netty.handler.codec.http.HttpMethod.*;
 import static java.lang.Integer.*;
+import static java.lang.Math.*;
 import static java.lang.System.*;
 import static java.util.Objects.*;
+import static java.util.concurrent.TimeUnit.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
@@ -243,12 +245,17 @@ public class Http {
                     this.requestAttempts++;
 
                     if (this.shouldRetry(response, throwable)) {
+                        long delayMillis = backoffDelayMillis(this.requestAttempts + 1);
                         TerraMod.LOGGER.warn(
-                                "Retry: {} attempt[{}/{}] reason[status: {}, throwable: {}]",
+                                "Will retry: {} attempt[{}/{}] delay[{}ms] reason[status: {}, throwable: {}]",
                                 this.parsed,
                                 this.requestAttempts + 1, options.maxTries,
+                                delayMillis,
                                 response == null ? null : response.status(), throwable);
-                        managerFor(this.parsed).submit(this.parsed.getFile(), this, this.nextHeaders);
+                        NETWORK_EVENT_LOOP_GROUP.schedule(
+                                () -> managerFor(this.parsed).submit(this.parsed.getFile(), this, this.nextHeaders),
+                                delayMillis, MILLISECONDS
+                        );
                         return;
                     }
 
@@ -586,6 +593,29 @@ public class Http {
             default:
                 return false;
         }
+    }
+
+    /**
+     * Exponential backoff delay in milliseconds for a given attempt.
+     * <br>
+     * Timings:
+     * <ul>
+     * <li>1st attempt: 0ms</li>
+     * <li>2nd attempt: 100ms</li>
+     * <li>3rd attempt: 400ms</li>
+     * <li>4th attempt: 1.6s</li>
+     * <li>5th attempt: 6.4s</li>
+     * </ul>
+     *
+     * @param attempt the attempt number
+     * @return the delay to wait before retrying, in milliseconds
+     */
+    private static long backoffDelayMillis(int attempt) {
+        if (attempt <= 1) {
+            return 0L;
+        }
+        double backoffSeconds = 0.1 * Math.pow(4, attempt - 2);
+        return round(backoffSeconds * 1000);
     }
 
 }

@@ -263,6 +263,37 @@ public class HttpTest {
         }
     }
 
+    @Test
+    void isDoingExponentialBackoff() throws Exception {
+        final String response = "Internal server error";
+        final AtomicInteger counter = new AtomicInteger();
+        final long[] timings = new long[5];
+        HttpHandler handler = exchange -> {
+            int i = counter.getAndIncrement();
+            timings[i] = System.currentTimeMillis();
+            exchange.sendResponseHeaders(SC_INTERNAL_SERVER_ERROR, response.getBytes().length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(response.getBytes());
+            }
+        };
+        try (TestHttpEndpoint endpoint = new TestHttpEndpoint("/errorToCheckBackoff", handler)) {
+            Http.RequestOptions options = Http.RequestOptions.builder().maxTries(timings.length).build();
+            try {
+                Http.get(endpoint.url(), options).get();
+            } catch (Exception ignored) {
+                // It's ok to fail as long as it tried the expected number of times
+            }
+            assertEquals(timings.length, counter.get());
+            long[] timingDeltas = new long[timings.length - 1];
+            for (int i = 1; i < timings.length; i++) {
+                timingDeltas[i-1] = timings[i] - timings[i - 1];
+            }
+            for (int i = 1; i < timingDeltas.length; i++) {
+                assertTrue(timingDeltas[i] > timingDeltas[i - 1] * 2);
+            }
+        }
+    }
+
     static class TestHttpEndpoint implements Closeable {
         final InetSocketAddress address = new InetSocketAddress("127.0.0.1", randPort());
         final HttpServer server;
