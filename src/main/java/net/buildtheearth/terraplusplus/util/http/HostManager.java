@@ -32,6 +32,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import net.buildtheearth.terraplusplus.TerraConstants;
+import net.buildtheearth.terraplusplus.TerraMod;
 import net.daporkchop.lib.common.misc.string.PStrings;
 
 import java.util.ArrayDeque;
@@ -270,6 +271,8 @@ final class HostManager extends Host {
             // but without triggering an exception. most likely the channel was a keepalive channel,
             // and the server closed it at the same time as we sent the request. let's re-submit the request
             // so that it can be issued again on a new channel
+            String protoPart = this.ssl ? "https://" : "http://";
+            TerraMod.LOGGER.info("Channel closed early, re-submitting request: {}{}{}", protoPart, this.authority, request.path);
             this.pendingRequests.addFirst(request); //add to front of queue so that it doesn't have to wait through the entire queue again
         }
 
@@ -334,11 +337,11 @@ final class HostManager extends Host {
     @ToString
     private final class Request {
         @NonNull
-        protected final String path;
+        private final String path;
         @NonNull
-        protected final Callback callback;
+        private final Callback callback;
         @NonNull
-        protected final HttpHeaders headers;
+        private final HttpHeaders headers;
 
         public HttpRequest toNetty() {
             DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, this.path);

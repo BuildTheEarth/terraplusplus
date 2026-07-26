@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.channel.ChannelException;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
@@ -11,10 +12,7 @@ import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.http.DefaultHttpHeaders;
-import io.netty.handler.codec.http.EmptyHttpHeaders;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpHeaders;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http2.Http2SecurityUtil;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
@@ -35,9 +33,11 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.NetworkSystem;
 import net.minecraft.util.LazyLoadBase;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.IFMLSidedHandler;
 import net.minecraftforge.fml.relauncher.Side;
 
 import javax.net.ssl.SSLException;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -55,6 +55,12 @@ import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static io.netty.handler.codec.http.HttpMethod.*;
+import static java.lang.Integer.*;
+import static java.lang.Math.*;
+import static java.lang.System.*;
+import static java.util.Objects.*;
+import static java.util.concurrent.TimeUnit.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
 /**
@@ -64,15 +70,16 @@ import static net.daporkchop.lib.common.util.PValidation.*;
  */
 @UtilityClass
 public class Http {
-    protected static final long TIMEOUT = 20L;
+    static final long TIMEOUT = 20L;
 
-    protected final EventLoopGroup NETWORK_EVENT_LOOP_GROUP;
+    final EventLoopGroup NETWORK_EVENT_LOOP_GROUP;
 
     static {
         if (!TerraConstants.IS_TEST_ENVIRONMENT && TerraConfig.http.useVanillaNetworkThread) {
             //use the vanilla eventloop for the current side
             LazyLoadBase<? extends EventLoopGroup> eventLoopGroupLoader;
-            if (FMLCommonHandler.instance().getSide() == Side.CLIENT) {
+            IFMLSidedHandler fmlSideDelegate = FMLCommonHandler.instance().getSidedDelegate();
+            if (fmlSideDelegate != null && fmlSideDelegate.getSide() == Side.CLIENT) {
                 eventLoopGroupLoader = Epoll.isAvailable() ? NetworkManager.CLIENT_EPOLL_EVENTLOOP : NetworkManager.CLIENT_NIO_EVENTLOOP;
             } else {
                 eventLoopGroupLoader = Epoll.isAvailable() ? NetworkSystem.SERVER_EPOLL_EVENTLOOP : NetworkSystem.SERVER_NIO_EVENTLOOP;
@@ -88,7 +95,7 @@ public class Http {
         }
     }
 
-    protected final Bootstrap DEFAULT_BOOTSTRAP = new Bootstrap()
+    final Bootstrap DEFAULT_BOOTSTRAP = new Bootstrap()
             //perform name lookups asynchronously so that we can open connections without blocking the server thread.
             //
             //we aren't using the round-robin implementation (RoundRobinAsyncDefaultResolverGroup) here because it can return IPv6 addresses even if the host doesn't
@@ -107,13 +114,13 @@ public class Http {
             .option(ChannelOption.SO_KEEPALIVE, true)
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, toInt(TimeUnit.SECONDS.toMillis(TIMEOUT)));
 
-    protected final SslContext SSL_CONTEXT;
+    final SslContext SSL_CONTEXT;
 
-    protected final Map<Host, HostManager> MANAGERS = new ConcurrentHashMap<>();
+    private final Map<Host, HostManager> MANAGERS = new ConcurrentHashMap<>();
 
-    protected final int MAX_CONTENT_LENGTH = Integer.MAX_VALUE; //impossibly large, no requests will actually be this big but whatever
+    final int MAX_CONTENT_LENGTH = Integer.MAX_VALUE; //impossibly large, no requests will actually be this big but whatever
 
-    protected static final Cached<Matcher> URL_FORMATTING_MATCHER_CACHE = Cached.regex(Pattern.compile("\\$\\{([a-z0-9.]+)}"));
+    private static final Cached<Matcher> URL_FORMATTING_MATCHER_CACHE = Cached.regex(Pattern.compile("\\$\\{([a-z0-9.]+)}"));
 
     static {
         try {
@@ -125,6 +132,8 @@ public class Http {
             throw new RuntimeException("unable to create ssl context", e);
         }
     }
+
+    public static final int DEFAULT_REQUEST_TRY_COUNT = parseInt(getProperty("terraplusplus.http.defaultRequestTryCount", "5"));
 
     public static final RequestOptions DEFAULT_REQUEST_OPTIONS = RequestOptions.builder().build();
 
@@ -149,6 +158,7 @@ public class Http {
             CacheEntry cacheEntry;
             ByteBuf cachedData;
             HttpHeaders nextHeaders = EmptyHttpHeaders.INSTANCE;
+            int requestAttempts = 0;
 
             @Override
             public synchronized boolean isCancelled() {
@@ -232,6 +242,23 @@ public class Http {
             @Override
             public synchronized void handle(FullHttpResponse response, Throwable throwable) { //stage 2: handle HTTP response
                 try {
+                    this.requestAttempts++;
+
+                    if (this.shouldRetry(response, throwable)) {
+                        long delayMillis = this.getRetryDelayMillis();
+                        TerraMod.LOGGER.warn(
+                                "Will retry: {} attempt[{}/{}] delay[{}ms] reason[status: {}, throwable: {}]",
+                                this.parsed,
+                                this.requestAttempts + 1, options.maxTries,
+                                delayMillis,
+                                response == null ? null : response.status(), throwable);
+                        NETWORK_EVENT_LOOP_GROUP.schedule(
+                                () -> managerFor(this.parsed).submit(this.parsed.getFile(), this, this.nextHeaders),
+                                delayMillis, MILLISECONDS
+                        );
+                        return;
+                    }
+
                     //if cacheEntry is non-null, it means we're currently attempting to refresh a stale entry
 
                     if (throwable != null) {
@@ -290,6 +317,26 @@ public class Http {
                 } finally {
                     this.releaseCacheEntry();
                 }
+            }
+
+            synchronized boolean shouldRetry(FullHttpResponse response, Throwable throwable) {
+                checkState(response != null || throwable != null, "Response and throwable are both null");
+                if (this.requestAttempts >= options.maxTries) {
+                    return false;  // Time to give up
+                }
+                if (!isRetryableMethod(GET)) {  // We only do GET requests in here
+                    return false;
+                }
+                if (throwable != null) {
+                    return isRetryableException(throwable);
+                }
+                return isRetryableStatus(response.status().code());
+            }
+
+            synchronized long getRetryDelayMillis() {
+                long baseDelay = backoffDelayMillis(this.requestAttempts + 1);
+                double factor = 1 + (Math.random() * options.retryDelayJitterFactor * 2) - options.retryDelayJitterFactor;
+                return (long) (baseDelay * factor);
             }
 
             synchronized void step(@NonNull String url) {
@@ -464,7 +511,7 @@ public class Http {
         for (String entry : TerraConfig.http.maxConcurrentRequests) {
             if (matcher.reset(entry).matches()) {
                 try {
-                    setMaximumConcurrentRequestsTo(matcher.group(2), Integer.parseInt(matcher.group(1)));
+                    setMaximumConcurrentRequestsTo(matcher.group(2), parseInt(matcher.group(1)));
                 } catch (Exception e) {
                     TerraMod.LOGGER.error("Invalid entry: \"" + entry + '"', e);
                 }
@@ -474,7 +521,7 @@ public class Http {
         }
     }
 
-    protected <T> void copyResultTo(@NonNull CompletableFuture<T> src, @NonNull CompletableFuture<T> dst) {
+    private <T> void copyResultTo(@NonNull CompletableFuture<T> src, @NonNull CompletableFuture<T> dst) {
         src.whenComplete((v, t) -> {
             if (t != null) {
                 dst.completeExceptionally(t);
@@ -508,5 +555,80 @@ public class Http {
          */
         @Builder.Default
         public final boolean followRedirects = true;
+
+        /**
+         * The maximum number of attempts for the request.
+         * If the first request fails and is retriable, it will be retried up to {@code maxTries - 1} times.
+         * The request will not be retried if the failure reason is not compatible with a retry.
+         * Values lower than {@code 1} will be treated as {@code 1}.
+         */
+        @Builder.Default
+        public final int maxTries = DEFAULT_REQUEST_TRY_COUNT;
+
+        /**
+         * The amount jitter factor to use when calculating the retry delays.
+         * The base retry delay will be multiplied by a random value between {@code 1 - retryDelayJitterFactor} and {@code 1 + retryDelayJitterFactor}.
+         */
+        @Builder.Default
+        public final float retryDelayJitterFactor = 0.5f;
     }
+
+    private static boolean isRetryableMethod(@NonNull HttpMethod method) {
+        requireNonNull(method);
+        return method.equals(GET) || method.equals(HEAD) || method.equals(OPTIONS) || method.equals(TRACE);
+    }
+    private static boolean isRetryableException(@NonNull Throwable throwable) {
+        requireNonNull(throwable);
+        while (throwable != null) {
+            if (throwable instanceof IOException) {
+                return true;
+            }
+            if (throwable instanceof ChannelException) {
+                return true;  // IO error in Netty
+            }
+            throwable = throwable.getCause();
+        }
+        return false;
+    }
+
+    private static boolean isRetryableStatus(int status) {
+        if (status < 400) {
+            return false;  // Not an error at all
+        }
+        switch (status) {
+            case 408:  // Request Timeout
+            case 429:  // Too Many Requests
+            case 500:  // Internal Server Error
+            case 502:  // Bad Gateway
+            case 503:  // Service Unavailable
+            case 504:  // Gateway Timeout
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Exponential backoff delay in milliseconds for a given attempt.
+     * <br>
+     * Timings:
+     * <ul>
+     * <li>1st attempt: 0ms</li>
+     * <li>2nd attempt: 100ms</li>
+     * <li>3rd attempt: 400ms</li>
+     * <li>4th attempt: 1.6s</li>
+     * <li>5th attempt: 6.4s</li>
+     * </ul>
+     *
+     * @param attempt the attempt number
+     * @return the delay to wait before retrying, in milliseconds
+     */
+    private static long backoffDelayMillis(int attempt) {
+        if (attempt <= 1) {
+            return 0L;
+        }
+        double backoffSeconds = 0.1 * Math.pow(4, attempt - 2);
+        return round(backoffSeconds * 1000);
+    }
+
 }

@@ -1,42 +1,57 @@
-buildscript {
-    repositories {
-        maven {
-            name = "Gradle Plugins"
-            url = "https://plugins.gradle.org/m2/"
-        }
-        maven {
-            name = "Minecraft Forge"
-            url = "https://files.minecraftforge.net/maven"
-        }
-    }
-    dependencies {
-        classpath "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
-        classpath "com.github.jengelman.gradle.plugins:shadow:4.0.0"
-    }
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '5.1.74'
 }
-apply plugin: "net.minecraftforge.gradle.forge"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "maven-publish"
 
-version = "1.1.0." + ('git rev-list --count HEAD'.execute().text.trim()) + "-1.12.2"
+version = "${mod_version_base}." + ('git rev-list --count HEAD'.execute().text.trim()) + "-${minecraft_version}"
 group = "net.buildtheearth"
-archivesBaseName = "terraplusplus"
-
-compileJava {
-    sourceCompatibility = targetCompatibility = "1.8"
+base {
+    archivesName = mod_id
 }
 
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+
+println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
-    version = "1.12.2-14.23.5.2847"
-    runDir = "run"
+    mappings channel: mapping_channel, version: mapping_version
 
-    mappings = "stable_39"
-    makeObfSourceJar = false
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+
+            // Log4J log level for stdout
+            property 'forge.logging.console.level', 'debug'
+
+            // FML debugging info dumps (comma-separated list)
+            // - "SCAN": For mods scan.
+            // - "REGISTRIES": For firing of registry events.
+            // - "REGISTRYDUMP": For getting the contents of all registries.
+            property 'forge.logging.markers', 'SCAN'
+
+            // Handle coremods:
+            // - instruct FML to load the CC and CWG coremods as it doesn't know how to find them in the ForgeGradle 3+ dev environment
+            // - instruct Mixin to not use obfuscated names in the deobfuscated dev environment
+            property 'fml.coreMods.load', 'io.github.opencubicchunks.cubicchunks.core.asm.coremod.CubicChunksCoreMod,io.github.opencubicchunks.cubicchunks.cubicgen.asm.coremod.CubicGenCoreMod'
+            property 'mixin.env.disableRefMap', 'true'
+        }
+
+        client { }
+
+        server {
+            args 'nogui'
+        }
+    }
 }
 
-configurations {
-    shade
-    compile.extendsFrom shade
+// RetroGradle compatibility options for Minecraft < 1.13 support on ForgeGradle 3+.
+// All enabled by default since FG detects Minecraft 1.12.2.
+legacy {
+    // Doesn't play well with ForgeGradle 6 and the latest Forge version in runClient/runServer
+    // (adds the jar to the classpath instead of the compiled classes, but doesn't generate the JAR...).
+    // Things work well when it is disabled.
+    fixClasspath = true
 }
 
 repositories {
@@ -47,67 +62,79 @@ repositories {
 }
 
 dependencies {
-    //We have to use this as deobfProvided even though there's a :dev version of the artifact because otherwise mixin
-    //prevents the mod from loading when running in a dev environment.
-    deobfProvided ("io.github.opencubicchunks:cubicchunks:1.12.2-0.0.1282.0-SNAPSHOT") {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+
+    implementation "org.projectlombok:lombok:${lombok_version}"
+    annotationProcessor "org.projectlombok:lombok:${lombok_version}"
+
+    // We have to explicitly deobfuscate this instead of using the :dev version of the artifact because otherwise mixin
+    // prevents the mod from loading when running in a dev environment.
+    implementation fg.deobf("io.github.opencubicchunks:cubicchunks:${cubicchunks_version}") {
+        transitive = false
+    }
+    implementation("io.github.opencubicchunks:cubicworldgen:${cubicworldgen_version}:dev") {
         transitive = false
     }
 
-    provided ("io.github.opencubicchunks:cubicworldgen:1.12.2-0.0.206.0-SNAPSHOT:dev") {
-        transitive = false
-    }
-
-    shade "org.apache.commons:commons-imaging:1.0.0-alpha5"
-
-    shade "com.fasterxml.jackson.core:jackson-databind:2.11.2"
-
-    shade("net.daporkchop.lib:binary:0.5.7-SNAPSHOT")  {
+    implementation "org.apache.commons:commons-imaging:${apache_commons_imaging_version}"
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jackson_version}"
+    implementation("net.daporkchop.lib:binary:${porklib_version}")  {
         exclude group: "io.netty"
     }
 
-    testCompile "junit:junit:4.12"
-
-    compile "org.projectlombok:lombok:1.18.16"
-    annotationProcessor "org.projectlombok:lombok:1.18.16"
+    testImplementation(platform("org.junit:junit-bom:${junit_version}"))
+    testImplementation('org.junit.jupiter:junit-jupiter')
+    testRuntimeOnly('org.junit.platform:junit-platform-launcher')
 }
 
-processResources {
-    // this will ensure that this task is redone when the versions change.
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+eclipse {
+    synchronizationTasks 'genEclipseRuns'
+}
 
-    // replace stuff in mcmod.info, nothing else
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-
-        // replace version and mcversion
-        expand 'version': project.version, 'mcversion': project.minecraft.version
-    }
-
-    // copy everything else except the mcmod.info
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
     }
 }
 
-shadowJar {
-    classifier = null
-    configurations = [project.configurations.shade]
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [
+            minecraft_version: minecraft_version,
+            mod_id: mod_id,
+            mod_name: mod_name,
+            mod_url: mod_url,
+            mod_version: project.version,
+    ]
+    inputs.properties replaceProperties
 
-    exclude 'module-info.class'
-}
-build.dependsOn shadowJar
-
-reobf { //reobfuscate the shaded JAR
-    shadowJar {}
+    filesMatching(['mcmod.info', 'pack.mcmeta']) {
+        expand replaceProperties + [project: project]
+    }
 }
 
-//relocate all shaded dependencies
-task relocateShadowJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation) {
-    target = tasks.shadowJar
-    prefix = "net.buildtheearth.terraplusplus.dep"
+tasks.named('jar', Jar).configure {
+    manifest {
+        attributes([
+                'Specification-Title'     : mod_id,
+                'Specification-Version'   : project.version,
+                'Implementation-Title'    : project.name,
+                'Implementation-Version'  : project.jar.archiveVersion,
+        ])
+    }
 }
-shadowJar.dependsOn relocateShadowJar
+
+/*
+sourceSets.each '{
+    def dir = layout.buildDirectory.dir("sourcesSets/$it.name")
+    it.output.resourcesDir = dir
+    it.java.destinationDirectory = dir
+}
+*/
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
 
 publishing {
     publications {
@@ -119,12 +146,42 @@ publishing {
             from components.java
 
             artifacts.clear()
-            artifact(shadowJar) {
-                classifier = ""
-            }
-            artifact sourceJar {
-                classifier "sources"
-            }
         }
+    }
+}
+
+tasks.register('forgeGradleMixinCacheCompatibilityHack') {
+    group 'FG compatibility hacks'
+    description 'Renames the ForgeGradle v3+ deobfuscated dependency cache to the name used by ForgeGradle v2 and symlinks the modern name, so that MixinPlatformAgentFMLLegacy properly qualifies those dependencies.'
+    
+    doLast {
+        def fgCacheDir = file("${gradle.gradleUserHomeDir}/caches/forge_gradle")
+        def oldDir = file("${fgCacheDir}/deobf_dependencies")
+        def newDir = file("${fgCacheDir}/deobfedDeps")
+        
+        if (!oldDir.exists() || !oldDir.isDirectory()) {
+            println "ForgeGradle 3+ deobfuscated dependency cache not found at: ${oldDir}"
+            return
+        }
+        println "Found ForgeGradle 3+ deobfuscated dependency cache at at: ${oldDir}"
+        
+        if (newDir.exists()) {
+            println "ForgeGradle 2 deobfuscated dependency already exists at: ${oldDir}, nothing to do"
+            return
+        }
+        println "Will move cache to ForgeGradle 2 location at: ${newDir}"
+
+        try {
+            oldDir.renameTo(newDir)
+            java.nio.file.Files.createSymbolicLink(oldDir.toPath(), newDir.toPath())
+            println "Hacky workaround for MixinPlatformAgentFMLLegacy installed"
+        } catch (Exception e) {
+            throw new GradleException("Failed to create required symlink", e)
+        }
+    }
+}
+afterEvaluate {
+    tasks.named('prepareRuns') {
+        dependsOn forgeGradleMixinCacheCompatibilityHack
     }
 }
