@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Map;
@@ -20,6 +21,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static java.time.ZoneOffset.*;
 
 /**
  * @author DaPorkchop_
@@ -137,7 +140,8 @@ public class CacheEntry {
         if (this.etag != null) {
             headers.set(HttpHeaderNames.IF_NONE_MATCH, this.etag);
         } else if (this.staleTime >= 0L) {
-            headers.set(HttpHeaderNames.IF_MODIFIED_SINCE, DateTimeFormatter.RFC_1123_DATE_TIME.format(Instant.ofEpochMilli(this.time)));
+            ZonedDateTime lastModified = Instant.ofEpochMilli(this.time).atZone(UTC);
+            headers.set(HttpHeaderNames.IF_MODIFIED_SINCE, DateTimeFormatter.RFC_1123_DATE_TIME.format(lastModified));
         }
     }
 

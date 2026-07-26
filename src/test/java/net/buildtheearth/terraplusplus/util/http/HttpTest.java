@@ -15,6 +15,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.System.*;
+import static java.lang.Thread.*;
+import static org.apache.http.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class HttpTest {
@@ -57,6 +59,76 @@ public class HttpTest {
             assertEquals(1, requestCounter.get());
             endpoint.getAndAssertStringBody(suffix, response); // Should hit the cache
             assertEquals(1, requestCounter.get());
+        }
+    }
+
+    @Test
+    void canRefreshStaleResponseFromEtag() throws ExecutionException, InterruptedException, IOException {
+        final String response = "Cached content";
+        final String etag = "foobar";
+        final String suffix = "?time=" + currentTimeMillis();
+
+        final AtomicInteger initialRequestCounter = new AtomicInteger(0);
+        final AtomicInteger refreshRequestCounter = new AtomicInteger(0);
+
+        HttpHandler handler = exchange -> {
+            try (OutputStream os = exchange.getResponseBody()) {
+                String expectedEtag = exchange.getRequestHeaders().getFirst("If-None-Match");
+                if (expectedEtag != null && expectedEtag.equals(etag)) {
+                    refreshRequestCounter.incrementAndGet();
+                    exchange.sendResponseHeaders(SC_NOT_MODIFIED, -1);
+                    return;
+                }
+                initialRequestCounter.incrementAndGet();
+                    exchange.getResponseHeaders().set("Cache-Control", "max-age=1");
+                    exchange.getResponseHeaders().set("Etag", etag);
+                    exchange.getResponseHeaders().set("Content-Type", "text/plain");
+                    exchange.sendResponseHeaders(SC_OK, response.getBytes().length);
+                    os.write(response.getBytes());
+            }
+        };
+        try(TestHttpEndpoint endpoint = new TestHttpEndpoint("/withEtag", handler)) {
+            endpoint.getAndAssertStringBody(suffix, response);
+            assertEquals(1, initialRequestCounter.get());
+            assertEquals(0, refreshRequestCounter.get());
+            sleep(1_100);  // Let the cache expire
+            endpoint.getAndAssertStringBody(suffix, response); // Should hit the cache but not be fresh
+            assertEquals(1, initialRequestCounter.get());
+            assertEquals(1, refreshRequestCounter.get());
+        }
+    }
+
+    @Test
+    void canRefreshStaleResponseFromLastModified() throws ExecutionException, InterruptedException, IOException {
+        final String response = "Cached content";
+        final String suffix = "?time=" + currentTimeMillis();
+
+        final AtomicInteger initialRequestCounter = new AtomicInteger(0);
+        final AtomicInteger refreshRequestCounter = new AtomicInteger(0);
+
+        HttpHandler handler = exchange -> {
+            try (OutputStream os = exchange.getResponseBody()) {
+                boolean ifModifiedSince = exchange.getRequestHeaders().containsKey("If-Modified-Since");
+                if (ifModifiedSince) {
+                    refreshRequestCounter.incrementAndGet();
+                    exchange.sendResponseHeaders(SC_NOT_MODIFIED, -1);
+                    return;
+                }
+                initialRequestCounter.incrementAndGet();
+                exchange.getResponseHeaders().set("Cache-Control", "max-age=1");
+                exchange.getResponseHeaders().set("Content-Type", "text/plain");
+                exchange.sendResponseHeaders(SC_OK, response.getBytes().length);
+                os.write(response.getBytes());
+            }
+        };
+        try(TestHttpEndpoint endpoint = new TestHttpEndpoint("/withDate", handler)) {
+            endpoint.getAndAssertStringBody(suffix, response);
+            assertEquals(1, initialRequestCounter.get());
+            assertEquals(0, refreshRequestCounter.get());
+            sleep(1_100);  // Let the cache expire
+            endpoint.getAndAssertStringBody(suffix, response); // Should hit the cache but not be fresh
+            assertEquals(1, initialRequestCounter.get());
+            assertEquals(1, refreshRequestCounter.get());
         }
     }
 
