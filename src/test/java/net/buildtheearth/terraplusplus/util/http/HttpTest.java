@@ -277,7 +277,10 @@ public class HttpTest {
             }
         };
         try (TestHttpEndpoint endpoint = new TestHttpEndpoint("/errorToCheckBackoff", handler)) {
-            Http.RequestOptions options = Http.RequestOptions.builder().maxTries(timings.length).build();
+            Http.RequestOptions options = Http.RequestOptions.builder()
+                    .maxTries(timings.length)
+                    .retryDelayJitterFactor(0f)
+                    .build();
             try {
                 Http.get(endpoint.url(), options).get();
             } catch (Exception ignored) {

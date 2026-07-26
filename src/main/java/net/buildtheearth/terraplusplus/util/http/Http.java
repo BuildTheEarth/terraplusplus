@@ -245,7 +245,7 @@ public class Http {
                     this.requestAttempts++;
 
                     if (this.shouldRetry(response, throwable)) {
-                        long delayMillis = backoffDelayMillis(this.requestAttempts + 1);
+                        long delayMillis = this.getRetryDelayMillis();
                         TerraMod.LOGGER.warn(
                                 "Will retry: {} attempt[{}/{}] delay[{}ms] reason[status: {}, throwable: {}]",
                                 this.parsed,
@@ -331,6 +331,12 @@ public class Http {
                     return isRetryableException(throwable);
                 }
                 return isRetryableStatus(response.status().code());
+            }
+
+            synchronized long getRetryDelayMillis() {
+                long baseDelay = backoffDelayMillis(this.requestAttempts + 1);
+                double factor = 1 + (Math.random() * options.retryDelayJitterFactor * 2) - options.retryDelayJitterFactor;
+                return (long) (baseDelay * factor);
             }
 
             synchronized void step(@NonNull String url) {
@@ -558,6 +564,13 @@ public class Http {
          */
         @Builder.Default
         public final int maxTries = DEFAULT_REQUEST_TRY_COUNT;
+
+        /**
+         * The amount jitter factor to use when calculating the retry delays.
+         * The base retry delay will be multiplied by a random value between {@code 1 - retryDelayJitterFactor} and {@code 1 + retryDelayJitterFactor}.
+         */
+        @Builder.Default
+        public final float retryDelayJitterFactor = 0.5f;
     }
 
     private static boolean isRetryableMethod(@NonNull HttpMethod method) {
