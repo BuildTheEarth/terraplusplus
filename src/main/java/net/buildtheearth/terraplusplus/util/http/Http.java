@@ -56,6 +56,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static io.netty.handler.codec.http.HttpMethod.*;
+import static java.lang.Integer.*;
+import static java.lang.System.*;
 import static java.util.Objects.*;
 import static net.daporkchop.lib.common.util.PValidation.*;
 
@@ -129,6 +131,8 @@ public class Http {
         }
     }
 
+    public static final int DEFAULT_REQUEST_TRY_COUNT = parseInt(getProperty("terraplusplus.http.defaultRequestTryCount", "5"));
+
     public static final RequestOptions DEFAULT_REQUEST_OPTIONS = RequestOptions.builder().build();
 
     private HostManager managerFor(@NonNull URL url) {
@@ -152,6 +156,7 @@ public class Http {
             CacheEntry cacheEntry;
             ByteBuf cachedData;
             HttpHeaders nextHeaders = EmptyHttpHeaders.INSTANCE;
+            int requestAttempts = 0;
 
             @Override
             public synchronized boolean isCancelled() {
@@ -235,8 +240,14 @@ public class Http {
             @Override
             public synchronized void handle(FullHttpResponse response, Throwable throwable) { //stage 2: handle HTTP response
                 try {
+                    this.requestAttempts++;
+
                     if (this.shouldRetry(response, throwable)) {
-                        TerraMod.LOGGER.warn("Retrying request: {} (status: {}, throwable: {})", this.parsed, response == null ? null : response.status(), throwable);
+                        TerraMod.LOGGER.warn(
+                                "Retry: {} attempt[{}/{}] reason[status: {}, throwable: {}]",
+                                this.parsed,
+                                this.requestAttempts + 1, options.maxTries,
+                                response == null ? null : response.status(), throwable);
                         managerFor(this.parsed).submit(this.parsed.getFile(), this, this.nextHeaders);
                         return;
                     }
@@ -303,6 +314,9 @@ public class Http {
 
             synchronized boolean shouldRetry(FullHttpResponse response, Throwable throwable) {
                 checkState(response != null || throwable != null, "Response and throwable are both null");
+                if (this.requestAttempts >= options.maxTries) {
+                    return false;  // Time to give up
+                }
                 if (!isRetryableMethod(GET)) {  // We only do GET requests in here
                     return false;
                 }
@@ -484,7 +498,7 @@ public class Http {
         for (String entry : TerraConfig.http.maxConcurrentRequests) {
             if (matcher.reset(entry).matches()) {
                 try {
-                    setMaximumConcurrentRequestsTo(matcher.group(2), Integer.parseInt(matcher.group(1)));
+                    setMaximumConcurrentRequestsTo(matcher.group(2), parseInt(matcher.group(1)));
                 } catch (Exception e) {
                     TerraMod.LOGGER.error("Invalid entry: \"" + entry + '"', e);
                 }
@@ -528,6 +542,15 @@ public class Http {
          */
         @Builder.Default
         public final boolean followRedirects = true;
+
+        /**
+         * The maximum number of attempts for the request.
+         * If the first request fails and is retriable, it will be retried up to {@code maxTries - 1} times.
+         * The request will not be retried if the failure reason is not compatible with a retry.
+         * Values lower than {@code 1} will be treated as {@code 1}.
+         */
+        @Builder.Default
+        public final int maxTries = DEFAULT_REQUEST_TRY_COUNT;
     }
 
     private static boolean isRetryableMethod(@NonNull HttpMethod method) {

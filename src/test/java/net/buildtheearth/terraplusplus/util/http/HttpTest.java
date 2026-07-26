@@ -4,6 +4,8 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import io.netty.buffer.ByteBuf;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -21,6 +23,7 @@ import static java.lang.Thread.*;
 import static org.apache.http.HttpStatus.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@Execution(value = ExecutionMode.CONCURRENT)
 public class HttpTest {
 
     @Test
@@ -237,6 +240,29 @@ public class HttpTest {
         }
     }
 
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 3})
+    void respectsMaxTriesInRequestOptions(int maxTries) throws Exception {
+        final String response = "Internal server errro";
+        final AtomicInteger counter = new AtomicInteger();
+        HttpHandler handler = exchange -> {
+            counter.incrementAndGet();
+            exchange.sendResponseHeaders(SC_INTERNAL_SERVER_ERROR, response.getBytes().length);
+            try(OutputStream os = exchange.getResponseBody()) {
+                os.write(response.getBytes());
+            }
+        };
+        try(TestHttpEndpoint endpoint = new TestHttpEndpoint("/error", handler)) {
+            Http.RequestOptions options = Http.RequestOptions.builder().maxTries(maxTries).build();
+            try {
+                Http.get(endpoint.url() + "?maxTries=" + maxTries, options).get();
+            } catch (Exception ignored) {
+                // It's ok to fail as long as it tried the expected number of times
+            }
+            assertEquals(maxTries, counter.get());
+        }
+    }
+
     static class TestHttpEndpoint implements Closeable {
         final InetSocketAddress address = new InetSocketAddress("127.0.0.1", randPort());
         final HttpServer server;
@@ -258,12 +284,15 @@ public class HttpTest {
             this.server.stop(10);
         }
 
-        void getAndAssertStringBody(String suffix, String expectedBody) throws ExecutionException, InterruptedException {
+        void getAndAssertStringBody(Http.RequestOptions options, String suffix, String expectedBody) throws ExecutionException, InterruptedException {
             ByteBuf buffer = Http.get(this.url() + suffix).get();
             byte[] data = new byte[buffer.readableBytes()];
             buffer.readBytes(data);
             String text = new String(data, StandardCharsets.UTF_8);
             assertEquals(expectedBody, text);
+        }
+        void getAndAssertStringBody(String suffix, String expectedBody) throws ExecutionException, InterruptedException {
+            this.getAndAssertStringBody(Http.DEFAULT_REQUEST_OPTIONS, suffix, expectedBody);
         }
     }
 
